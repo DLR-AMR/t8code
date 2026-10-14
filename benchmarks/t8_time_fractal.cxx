@@ -290,10 +290,12 @@ t8_construct_fractal (int level_initial, int level_end, const int iterative, con
 
   for (int run = 0; run < runs; run++) {
     if (output) {
-      cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     }
     else {
-      cmesh = t8_cmesh_new_bigmesh (eclass, trees, sc_MPI_COMM_WORLD);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_bigmesh (cmesh, eclass, trees, sc_MPI_COMM_WORLD);
     }
 
     t8_forest_init (&forest);

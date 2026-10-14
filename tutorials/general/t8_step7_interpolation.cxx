@@ -33,7 +33,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h> /* geometrical information of the forest */
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_io.h>
@@ -290,7 +290,9 @@ t8_interpolation ()
   const t8_scheme *scheme = t8_scheme_new_default ();
 
   /* Construct a cmesh */
-  t8_cmesh_t cmesh = t8_cmesh_new_from_class (T8_ECLASS_HEX, sc_MPI_COMM_WORLD);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_from_class (cmesh, T8_ECLASS_HEX, sc_MPI_COMM_WORLD);
 
   /* Construct a forest with one tree */
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);

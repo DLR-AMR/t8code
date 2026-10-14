@@ -36,6 +36,7 @@
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
 
 /**
  * A struct to hold the information about a ghost facejoin.
@@ -522,6 +523,13 @@ t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   T8_ASSERT (cmesh != NULL);
 
+#if T8_ENABLE_DEBUG
+  /* Verify the boundary condition handler if there is one. */
+  if (cmesh->boundary_condition_handler != nullptr) {
+    T8_ASSERT (cmesh->boundary_condition_handler->verify ());
+  }
+#endif
+
   if (cmesh->set_partition) {
     /* partitioned commit */
     t8_cmesh_commit_partitioned_new (cmesh, comm);
@@ -546,7 +554,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (comm != sc_MPI_COMM_NULL);
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
   SC_CHECK_ABORT (0 <= cmesh->dimension && cmesh->dimension <= T8_ECLASS_MAX_DIM,
                   "Dimension of the cmesh is not set properly. This error may be "
                   "caused by empty cmesh partitions whose dimension can't be "

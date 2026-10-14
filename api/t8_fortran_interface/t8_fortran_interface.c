@@ -106,7 +106,10 @@ t8_fortran_MPI_Comm_delete (sc_MPI_Comm *Ccomm)
 t8_cmesh_t
 t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm)
 {
-  return t8_cmesh_new_periodic_tri (*Ccomm);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_periodic_tri (cmesh, *Ccomm);
+  return cmesh;
 }
 
 t8_forest_t

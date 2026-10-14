@@ -40,7 +40,7 @@
 
 #include <cmath>
 #include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_types/t8_vec.hxx>                  /* Basic operations on 3D vectors. */
+#include <t8_vector/t8_vec.hxx>                 /* Basic operations on 3D vectors. */
 #include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>             /* save forest */
@@ -81,7 +81,9 @@ struct data_per_element
 static t8_forest_t
 t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
 {
-  t8_cmesh_t cmesh = t8_cmesh_new_periodic (comm, dim);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_periodic (cmesh, comm, dim);
 
   const t8_scheme *scheme = t8_scheme_new_default ();
   struct t8_step3_adapt_data adapt_data = {

@@ -30,12 +30,13 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
-#include <t8_types/t8_vec.h>
+#include <t8_vector/t8_vec.h>
 #include <t8_helper_functions/t8_mat.h>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
-#include <t8_schemes/t8_default/t8_default_c_interface.h> /* default refinement scheme. */
+#include <t8_schemes/t8_default/t8_default_c_interface.h>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions.hxx>
 
 /**
  * This function calculates an 'equal' partition for the cmesh based on the \a number_trees supplied
@@ -78,12 +79,12 @@ t8_cmesh_examples_compute_and_set_partition_range (t8_cmesh_t cmesh, const t8_gl
  * If offset is nonzero, then set_partition must be true and the cmesh is
  * partitioned and has all trees in conn as local trees.
  * The offsets on the different processes must add up! */
-static t8_cmesh_t
-t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_partition, t8_gloidx_t offset)
+static void
+t8_cmesh_new_from_p4est_ext (t8_cmesh_t cmesh, void *conn, int dim, sc_MPI_Comm comm, int set_partition,
+                             t8_gloidx_t offset)
 {
 #define _T8_CMESH_P48_CONN(_ENTRY) \
   (dim == 2 ? ((p4est_connectivity_t *) conn)->_ENTRY : ((p8est_connectivity_t *) conn)->_ENTRY)
-  t8_cmesh_t cmesh;
   t8_gloidx_t ltree;
   p4est_topidx_t treevertex;
   double vertices[24]; /* Only 4 * 3 = 12 used in 2d */
@@ -116,8 +117,6 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
   /* TODO: Check offsets for consistency */
   num_tvertices = 1 << dim; /*vertices per tree. 4 if dim = 2 and 8 if dim = 3. */
   num_faces = dim == 2 ? 4 : 6;
-  /* basic setup */
-  t8_cmesh_init (&cmesh);
   /* We use the linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   /* Add each tree to cmesh and get vertex information for each tree */
@@ -188,41 +187,56 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
   /* Commit the constructed cmesh */
   t8_cmesh_commit (cmesh, comm);
 
-  return cmesh;
 #undef _T8_CMESH_P48_CONN
 }
 
-t8_cmesh_t
-t8_cmesh_new_from_p4est (p4est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition)
+void
+t8_cmesh_new_from_p4est (t8_cmesh_t cmesh, p4est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition)
 {
-  return t8_cmesh_new_from_p4est_ext (conn, 2, comm, do_partition, 0);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
+  t8_cmesh_new_from_p4est_ext (cmesh, conn, 2, comm, do_partition, 0);
 }
 
-t8_cmesh_t
-t8_cmesh_new_from_p8est (p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition)
+void
+t8_cmesh_new_from_p8est (t8_cmesh_t cmesh, p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition)
 {
-  return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_partition, 0);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
+  t8_cmesh_new_from_p4est_ext (cmesh, conn, 3, comm, do_partition, 0);
 }
 
-static t8_cmesh_t
-t8_cmesh_new_vertex (sc_MPI_Comm comm)
+static void
+t8_cmesh_new_vertex (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   double vertices[3] = { 0, 0, 0 };
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_VERTEX);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 1);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-static t8_cmesh_t
-t8_cmesh_new_line (sc_MPI_Comm comm)
+static void
+t8_cmesh_new_line (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /* clang-format off */
   double vertices[6] = {
     0, 0, 0,
@@ -230,19 +244,21 @@ t8_cmesh_new_line (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_LINE);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 2);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-static t8_cmesh_t
-t8_cmesh_new_tri (sc_MPI_Comm comm)
+static void
+t8_cmesh_new_tri (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /* clang-format off */
   double vertices[9] = {
     0, 0, 0,
@@ -251,19 +267,21 @@ t8_cmesh_new_tri (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-static t8_cmesh_t
-t8_cmesh_new_tet (sc_MPI_Comm comm)
+static void
+t8_cmesh_new_tet (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /* clang-format off */
   double vertices[12] = {
     1, 1, 1,
@@ -273,19 +291,21 @@ t8_cmesh_new_tet (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-static t8_cmesh_t
-t8_cmesh_new_quad (sc_MPI_Comm comm)
+static void
+t8_cmesh_new_quad (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /* clang-format off */
   double vertices[12] = {
     0, 0, 0,
@@ -295,19 +315,21 @@ t8_cmesh_new_quad (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-static t8_cmesh_t
-t8_cmesh_new_hex (sc_MPI_Comm comm)
+static void
+t8_cmesh_new_hex (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /* clang-format off */
   double vertices[24] = {
     0, 0, 0,
@@ -321,19 +343,21 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 8);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
+void
+t8_cmesh_new_pyramid_deformed (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /* clang-format off */
   double vertices[15] = {
     -1, -2, 0.5,
@@ -344,19 +368,21 @@ t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 5);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-static t8_cmesh_t
-t8_cmesh_new_pyramid (sc_MPI_Comm comm)
+static void
+t8_cmesh_new_pyramid (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /* clang-format off */
   double vertices[15] = {
     0, 0, 0,
@@ -367,19 +393,21 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 5);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-static t8_cmesh_t
-t8_cmesh_new_prism (sc_MPI_Comm comm)
+static void
+t8_cmesh_new_prism (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /* clang-format off */
   double vertices[18] = {
     0, 0, 0,
@@ -391,66 +419,78 @@ t8_cmesh_new_prism (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PRISM);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 6);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_from_class (const t8_eclass_t eclass, const sc_MPI_Comm comm)
+void
+t8_cmesh_new_from_class (t8_cmesh_t cmesh, const t8_eclass_t eclass, const sc_MPI_Comm comm)
 {
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   switch (eclass) {
   case T8_ECLASS_VERTEX:
-    return t8_cmesh_new_vertex (comm);
+    t8_cmesh_new_vertex (cmesh, comm);
     break;
   case T8_ECLASS_LINE:
-    return t8_cmesh_new_line (comm);
+    t8_cmesh_new_line (cmesh, comm);
     break;
   case T8_ECLASS_TRIANGLE:
-    return t8_cmesh_new_tri (comm);
+    t8_cmesh_new_tri (cmesh, comm);
     break;
   case T8_ECLASS_QUAD:
-    return t8_cmesh_new_quad (comm);
+    t8_cmesh_new_quad (cmesh, comm);
     break;
   case T8_ECLASS_TET:
-    return t8_cmesh_new_tet (comm);
+    t8_cmesh_new_tet (cmesh, comm);
     break;
   case T8_ECLASS_HEX:
-    return t8_cmesh_new_hex (comm);
+    t8_cmesh_new_hex (cmesh, comm);
     break;
   case T8_ECLASS_PYRAMID:
-    return t8_cmesh_new_pyramid (comm);
+    t8_cmesh_new_pyramid (cmesh, comm);
     break;
   case T8_ECLASS_PRISM:
-    return t8_cmesh_new_prism (comm);
+    t8_cmesh_new_prism (cmesh, comm);
     break;
   default:
     SC_ABORT ("Invalid eclass\n");
-    return nullptr;
   }
 }
 
-t8_cmesh_t
-t8_cmesh_new_empty (sc_MPI_Comm comm, [[maybe_unused]] const int do_partition, const int dimension)
+void
+t8_cmesh_new_empty (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
 
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_dimension (cmesh, dimension);
   t8_cmesh_commit (cmesh, comm);
   T8_ASSERT (t8_cmesh_is_empty (cmesh));
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, [[maybe_unused]] int do_partition, int periodic)
+void
+t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic)
 {
+  return t8_cmesh_new_hypercube_hybrid_ext (cmesh, comm, periodic, false);
+}
+
+void
+t8_cmesh_new_hypercube_hybrid_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic, int use_boundary_conditions)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   int i;
-  t8_cmesh_t cmesh;
   t8_locidx_t vertices[8];
   double vertices_coords_temp[24];
   double attr_vertices[24];
@@ -477,16 +517,22 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, [[maybe_unused]] int do_partiti
   };
   /* clang-format on */
 
-  t8_cmesh_init (&cmesh);
-  /* This cmesh consists of 6 tets, 6 prisms and 3 hexes */
+  const std::string internal = "internal";
+  const std::string boundary = "boundary";
+  std::array<t8_boundary_conditions<std::string>, 16> boundary_conditions;
+
+  /* This cmesh consists of 6 tets, 6 prisms and 4 hexes */
   for (i = 0; i < 6; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_TET);
+    boundary_conditions[i].assign (t8_eclass_num_faces[T8_ECLASS_TET], boundary);
   }
   for (i = 6; i < 12; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
+    boundary_conditions[i].assign (t8_eclass_num_faces[T8_ECLASS_PRISM], boundary);
   }
   for (i = 12; i < 16; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_HEX);
+    boundary_conditions[i].assign (t8_eclass_num_faces[T8_ECLASS_HEX], boundary);
   }
 
   /* We use standard linear geometry */
@@ -499,11 +545,24 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, [[maybe_unused]] int do_partiti
    * They are essentially the tetrahedral hypercube scaled by 0.5 */
   t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5, null_vec);
   t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
+  boundary_conditions[0][2] = internal;
+  boundary_conditions[1][1] = internal;
   t8_cmesh_set_join (cmesh, 1, 2, 2, 1, 0);
+  boundary_conditions[1][2] = internal;
+  boundary_conditions[2][1] = internal;
   t8_cmesh_set_join (cmesh, 2, 3, 2, 1, 0);
+  boundary_conditions[2][2] = internal;
+  boundary_conditions[3][1] = internal;
   t8_cmesh_set_join (cmesh, 3, 4, 2, 1, 0);
+  boundary_conditions[3][2] = internal;
+  boundary_conditions[4][1] = internal;
   t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
+  boundary_conditions[4][2] = internal;
+  boundary_conditions[5][1] = internal;
   t8_cmesh_set_join (cmesh, 5, 0, 2, 1, 0);
+  boundary_conditions[5][2] = internal;
+  boundary_conditions[0][1] = internal;
+
   vertices[0] = 0;
   vertices[1] = 1;
   vertices[2] = 5;
@@ -555,6 +614,8 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, [[maybe_unused]] int do_partiti
   t8_cmesh_set_tree_vertices (cmesh, 7, attr_vertices, 6);
 
   t8_cmesh_set_join (cmesh, 6, 7, 2, 1, 0);
+  boundary_conditions[6][2] = internal;
+  boundary_conditions[7][1] = internal;
   /* trees 8 and 9 */
   t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5, shift[1]);
   vertices[0] = 0;
@@ -572,6 +633,8 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, [[maybe_unused]] int do_partiti
   t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords_temp, attr_vertices, 6);
   t8_cmesh_set_tree_vertices (cmesh, 9, attr_vertices, 6);
   t8_cmesh_set_join (cmesh, 8, 9, 2, 1, 0);
+  boundary_conditions[8][2] = internal;
+  boundary_conditions[9][1] = internal;
   /* trees 10 an 11 */
   t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5, shift[2]);
   vertices[0] = 0;
@@ -589,14 +652,28 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, [[maybe_unused]] int do_partiti
   t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords_temp, attr_vertices, 6);
   t8_cmesh_set_tree_vertices (cmesh, 11, attr_vertices, 6);
   t8_cmesh_set_join (cmesh, 10, 11, 1, 2, 0);
+  boundary_conditions[10][1] = internal;
+  boundary_conditions[11][2] = internal;
 
   /* Connect prisms and tets */
   t8_cmesh_set_join (cmesh, 0, 6, 0, 3, 0);
+  boundary_conditions[0][0] = internal;
+  boundary_conditions[6][3] = internal;
   t8_cmesh_set_join (cmesh, 1, 7, 0, 3, 1);
+  boundary_conditions[1][0] = internal;
+  boundary_conditions[7][3] = internal;
   t8_cmesh_set_join (cmesh, 2, 8, 0, 3, 0);
+  boundary_conditions[2][0] = internal;
+  boundary_conditions[8][3] = internal;
   t8_cmesh_set_join (cmesh, 3, 9, 0, 3, 1);
+  boundary_conditions[3][0] = internal;
+  boundary_conditions[9][3] = internal;
   t8_cmesh_set_join (cmesh, 4, 11, 0, 3, 0);
+  boundary_conditions[4][0] = internal;
+  boundary_conditions[11][3] = internal;
   t8_cmesh_set_join (cmesh, 5, 10, 0, 3, 1);
+  boundary_conditions[5][0] = internal;
+  boundary_conditions[10][3] = internal;
 
   /************************************/
   /*  The hexahedra                   */
@@ -613,53 +690,190 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, [[maybe_unused]] int do_partiti
   }
   /* Join the hexes */
   t8_cmesh_set_join (cmesh, 12, 14, 5, 4, 0);
+  boundary_conditions[12][5] = internal;
+  boundary_conditions[14][4] = internal;
   t8_cmesh_set_join (cmesh, 13, 14, 3, 2, 0);
+  boundary_conditions[13][3] = internal;
+  boundary_conditions[14][2] = internal;
   t8_cmesh_set_join (cmesh, 14, 15, 0, 1, 0);
+  boundary_conditions[14][0] = internal;
+  boundary_conditions[15][1] = internal;
 
   /* Join the prisms and hexes */
   t8_cmesh_set_join (cmesh, 6, 13, 0, 4, 1);
+  boundary_conditions[6][0] = internal;
+  boundary_conditions[13][4] = internal;
   t8_cmesh_set_join (cmesh, 7, 12, 0, 2, 0);
+  boundary_conditions[7][0] = internal;
+  boundary_conditions[12][2] = internal;
   t8_cmesh_set_join (cmesh, 8, 12, 0, 0, 1);
+  boundary_conditions[8][0] = internal;
+  boundary_conditions[12][0] = internal;
   t8_cmesh_set_join (cmesh, 9, 15, 0, 4, 0);
+  boundary_conditions[9][0] = internal;
+  boundary_conditions[15][4] = internal;
   t8_cmesh_set_join (cmesh, 10, 13, 0, 0, 0);
+  boundary_conditions[10][0] = internal;
+  boundary_conditions[13][0] = internal;
   t8_cmesh_set_join (cmesh, 11, 15, 0, 2, 1);
+  boundary_conditions[11][0] = internal;
+  boundary_conditions[15][2] = internal;
 
   if (periodic) {
     /* Connect the sides of the cube to make it periodic */
     /* tets to prisms */
     t8_cmesh_set_join (cmesh, 0, 8, 3, 4, 0);
+    boundary_conditions[0][3] = internal;
+    boundary_conditions[8][4] = internal;
     t8_cmesh_set_join (cmesh, 5, 9, 3, 4, 0);
+    boundary_conditions[5][3] = internal;
+    boundary_conditions[9][4] = internal;
     t8_cmesh_set_join (cmesh, 3, 7, 3, 4, 0);
+    boundary_conditions[3][3] = internal;
+    boundary_conditions[7][4] = internal;
     t8_cmesh_set_join (cmesh, 4, 6, 3, 4, 0);
+    boundary_conditions[4][3] = internal;
+    boundary_conditions[6][4] = internal;
     t8_cmesh_set_join (cmesh, 1, 10, 3, 4, 0);
+    boundary_conditions[1][3] = internal;
+    boundary_conditions[10][4] = internal;
     t8_cmesh_set_join (cmesh, 2, 11, 3, 4, 0);
+    boundary_conditions[2][3] = internal;
+    boundary_conditions[11][4] = internal;
     /* prism to hex */
     t8_cmesh_set_join (cmesh, 6, 12, 1, 3, 0);
+    boundary_conditions[6][1] = internal;
+    boundary_conditions[12][3] = internal;
     t8_cmesh_set_join (cmesh, 9, 12, 2, 1, 0);
+    boundary_conditions[9][2] = internal;
+    boundary_conditions[12][1] = internal;
     t8_cmesh_set_join (cmesh, 7, 13, 2, 5, 0);
+    boundary_conditions[7][2] = internal;
+    boundary_conditions[13][5] = internal;
     t8_cmesh_set_join (cmesh, 11, 13, 1, 1, 0);
+    boundary_conditions[11][1] = internal;
+    boundary_conditions[13][1] = internal;
     t8_cmesh_set_join (cmesh, 8, 15, 1, 5, 0);
+    boundary_conditions[8][1] = internal;
+    boundary_conditions[15][5] = internal;
     t8_cmesh_set_join (cmesh, 10, 15, 2, 3, 0);
+    boundary_conditions[10][2] = internal;
+    boundary_conditions[15][3] = internal;
     /* hex to hex */
     t8_cmesh_set_join (cmesh, 12, 14, 4, 5, 0);
+    boundary_conditions[12][4] = internal;
+    boundary_conditions[14][5] = internal;
     t8_cmesh_set_join (cmesh, 13, 14, 2, 3, 0);
+    boundary_conditions[13][2] = internal;
+    boundary_conditions[14][3] = internal;
     t8_cmesh_set_join (cmesh, 14, 15, 1, 0, 0);
+    boundary_conditions[14][1] = internal;
+    boundary_conditions[15][0] = internal;
+  }
+
+  if (use_boundary_conditions) {
+    for (size_t itree = 0; itree < 16; ++itree) {
+      t8_cmesh_set_boundary_conditions (cmesh, itree, boundary_conditions[itree]);
+    }
   }
 
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
+}
+
+void
+t8_cmesh_new_hypercube_hybrid_2D (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+  {
+    /* clang-format off */
+  double vertices[60] = { /* All vertices of all trees. Partly duplicated */
+    0, 0, 0,              /* tree 0, triangle */
+    0.5, 0, 0,
+    0.5, 0.5, 0,
+    0, 0, 0,              /* tree 1, triangle */
+    0.5, 0.5, 0,
+    0, 0.5, 0,
+    0.5, 0, 0,            /* tree 2, quad */
+    1, 0, 0, 0.5,
+    0.5, 0, 1, 0.5,
+    0, 0, 0.5, 0,         /* tree 3, quad */
+    0.5, 0.5, 0,
+    0, 1, 0,
+    0.5, 1, 0,
+    0.5, 0.5, 0,          /* tree 4, triangle */
+    1, 0.5, 0,
+    1, 1, 0,
+    0.5, 0.5, 0,          /* tree 5, triangle */
+    1, 1, 0,
+    0.5, 1, 0
+  };
+    /* clang-format on */
+
+    /*
+   *  This is how the cmesh looks like. The numbers are the tree numbers:
+   *
+   *   +---+---+
+   *   |   |5 /|
+   *   | 3 | / |
+   *   |   |/ 4|
+   *   +---+---+
+   *   |1 /|   |
+   *   | / | 2 |
+   *   |/0 |   |
+   *   +---+---+
+   */
+
+    /* Use linear geometry */
+    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
+
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+    t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
+    t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_QUAD);
+    t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_QUAD);
+    t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_TRIANGLE);
+    t8_cmesh_set_tree_class (cmesh, 5, T8_ECLASS_TRIANGLE);
+
+    t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
+    t8_cmesh_set_tree_vertices (cmesh, 1, vertices + 9, 3);
+    t8_cmesh_set_tree_vertices (cmesh, 2, vertices + 18, 4);
+    t8_cmesh_set_tree_vertices (cmesh, 3, vertices + 30, 4);
+    t8_cmesh_set_tree_vertices (cmesh, 4, vertices + 42, 3);
+    t8_cmesh_set_tree_vertices (cmesh, 5, vertices + 51, 3);
+
+    t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
+    t8_cmesh_set_join (cmesh, 0, 2, 0, 0, 0);
+    t8_cmesh_set_join (cmesh, 1, 3, 0, 2, 1);
+    t8_cmesh_set_join (cmesh, 2, 4, 3, 2, 0);
+    t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
+    t8_cmesh_set_join (cmesh, 4, 5, 1, 2, 0);
+
+    t8_cmesh_commit (cmesh, comm);
+  }
 }
 
 /* The unit cube is constructed from trees of the same eclass.
  * For triangles the square is divided along the (0,0) -- (1,1) diagonal.
- * For prisms the front (y=0) and back (y=1) face are divided into triangles
+ * For prisms the bottom (z=0) and top (z=1) faces are divided into triangles
  * as above.
  */
 /* TODO: upgrade with int x,y,z for periodic faces */
-t8_cmesh_t
-t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int do_partition, int periodic)
+void
+t8_cmesh_new_hypercube (t8_cmesh_t *pcmesh, t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int do_partition,
+                        int periodic)
 {
-  t8_cmesh_t cmesh;
+  /* Unlike every other generator, this function may need to replace the cmesh handle
+   * itself (see t8_cmesh_bcast below), so it operates on a local copy of *pcmesh and
+   * writes the final handle back at the end. */
+  t8_cmesh_t cmesh = *pcmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   int const num_trees_for_hypercube[T8_ECLASS_COUNT] = { 1, 1, 1, 2, 1, 6, 2, 3 };
   int i;
   t8_locidx_t vertices[8];
@@ -683,7 +897,6 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   if (!do_bcast || mpirank == 0) {
-    t8_cmesh_init (&cmesh);
     for (i = 0; i < num_trees_for_hypercube[eclass]; i++) {
       t8_cmesh_set_tree_class (cmesh, i, eclass);
     }
@@ -734,7 +947,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
       t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 6);
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
-        t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 0);
+        t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 1);
         t8_cmesh_set_join (cmesh, 0, 0, 3, 4, 0);
         t8_cmesh_set_join (cmesh, 1, 1, 3, 4, 0);
       }
@@ -829,7 +1042,10 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
   }
   if (do_bcast) {
     if (mpirank != 0) {
-      cmesh = nullptr;
+      /* On non-root ranks cmesh was initialized by the caller but never used:
+       * t8_cmesh_bcast allocates its own cmesh for these ranks, so the unused,
+       * uncommitted one is released first. */
+      t8_cmesh_destroy (&cmesh);
     }
     cmesh = t8_cmesh_bcast (cmesh, 0, comm);
   }
@@ -847,7 +1063,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
 
   /* Commit the constructed cmesh */
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
+  *pcmesh = cmesh;
 }
 
 /** This is just a helper function that was needed when we update the
@@ -924,7 +1140,6 @@ static void
 t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const double *boundary, const t8_locidx_t quads_x,
                           const t8_locidx_t quads_y, const int use_axis_aligned_geom, const int offset)
 {
-  T8_ASSERT (!t8_cmesh_is_committed (cmesh));
   T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE);
   /* x axes */
   T8_ASSERT (boundary[3] > boundary[0]);
@@ -1047,7 +1262,6 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
                           const t8_locidx_t hexs_y, const t8_locidx_t hexs_z, const int use_axis_aligned_geom,
                           const int offset)
 {
-  T8_ASSERT (!t8_cmesh_is_committed (cmesh));
   /* x axes */
   T8_ASSERT (boundary[3] > boundary[0]);
   T8_ASSERT (boundary[9] > boundary[6]);
@@ -1243,12 +1457,17 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   T8_ASSERT (box_hexs[0] == hexs_x + 1);
 }
 
-t8_cmesh_t
-t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary,
+void
+t8_cmesh_new_hypercube_pad_ext (t8_cmesh_t cmesh, const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary,
                                 t8_locidx_t polygons_x, t8_locidx_t polygons_y, t8_locidx_t polygons_z,
                                 const int periodic_x, const int periodic_y, const int periodic_z,
                                 const int use_axis_aligned, const int set_partition, t8_gloidx_t offset)
 {
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID, "Pyramids are not yet supported.");
 
   int use_offset;
@@ -1284,9 +1503,6 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
     T8_ASSERT (polygons_z > 0);
     break;
   }
-
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
 
   if (use_axis_aligned) {
     t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh);
@@ -1496,33 +1712,48 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
   }
 
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int use_axis_aligned)
+void
+t8_cmesh_new_hypercube_pad (t8_cmesh_t cmesh, const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary,
+                            t8_locidx_t polygons_x, t8_locidx_t polygons_y, t8_locidx_t polygons_z,
+                            const int use_axis_aligned)
 {
-  return t8_cmesh_new_hypercube_pad_ext (eclass, comm, boundary, polygons_x, polygons_y, polygons_z, 0, 0, 0,
-                                         use_axis_aligned, 0, 0);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
+  t8_cmesh_new_hypercube_pad_ext (cmesh, eclass, comm, boundary, polygons_x, polygons_y, polygons_z, 0, 0, 0,
+                                  use_axis_aligned, 0, 0);
 }
 
-static t8_cmesh_t
-t8_cmesh_new_brick_2d_ext (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const int periodic_x, const int periodic_y,
-                           sc_MPI_Comm comm, const int set_partition, const t8_gloidx_t offset)
+static void
+t8_cmesh_new_brick_2d_ext (t8_cmesh_t cmesh, const t8_gloidx_t num_x, const t8_gloidx_t num_y, const int periodic_x,
+                           const int periodic_y, sc_MPI_Comm comm, const int set_partition, const t8_gloidx_t offset)
 {
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   const double boundary[12]
     = { 0.0, 0.0, 0.0, (double) num_x, 0.0, 0.0, 0.0, (double) num_y, 0.0, (double) num_x, (double) num_y, 0.0 };
 
-  return t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_QUAD, comm, boundary, num_x, num_y, 0, periodic_x, periodic_y, 0, 0,
-                                         set_partition, offset);
+  t8_cmesh_new_hypercube_pad_ext (cmesh, T8_ECLASS_QUAD, comm, boundary, num_x, num_y, 0, periodic_x, periodic_y, 0, 0,
+                                  set_partition, offset);
 }
 
-static t8_cmesh_t
-t8_cmesh_new_brick_3d_ext (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z,
+static void
+t8_cmesh_new_brick_3d_ext (t8_cmesh_t cmesh, const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z,
                            const int periodic_x, const int periodic_y, const int periodic_z, sc_MPI_Comm comm,
                            const int set_partition, const t8_gloidx_t offset)
 {
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   const double boundary[24] = { 0.0,
                                 0.0,
                                 0.0,
@@ -1548,22 +1779,32 @@ t8_cmesh_new_brick_3d_ext (const t8_gloidx_t num_x, const t8_gloidx_t num_y, con
                                 (double) num_y,
                                 (double) num_z };
 
-  return t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_HEX, comm, boundary, num_x, num_y, num_z, periodic_x, periodic_y,
-                                         periodic_z, 0, set_partition, offset);
+  t8_cmesh_new_hypercube_pad_ext (cmesh, T8_ECLASS_HEX, comm, boundary, num_x, num_y, num_z, periodic_x, periodic_y,
+                                  periodic_z, 0, set_partition, offset);
 }
 
-t8_cmesh_t
-t8_cmesh_new_brick_2d (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const int x_periodic, const int y_periodic,
-                       sc_MPI_Comm comm)
+void
+t8_cmesh_new_brick_2d (t8_cmesh_t cmesh, const t8_gloidx_t num_x, const t8_gloidx_t num_y, const int x_periodic,
+                       const int y_periodic, sc_MPI_Comm comm)
 {
-  return t8_cmesh_new_brick_2d_ext (num_x, num_y, x_periodic, y_periodic, comm, 0, 0);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
+  t8_cmesh_new_brick_2d_ext (cmesh, num_x, num_y, x_periodic, y_periodic, comm, 0, 0);
 }
 
-t8_cmesh_t
-t8_cmesh_new_brick_3d (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z, const int x_periodic,
-                       const int y_periodic, const int z_periodic, sc_MPI_Comm comm)
+void
+t8_cmesh_new_brick_3d (t8_cmesh_t cmesh, const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z,
+                       const int x_periodic, const int y_periodic, const int z_periodic, sc_MPI_Comm comm)
 {
-  return t8_cmesh_new_brick_3d_ext (num_x, num_y, num_z, x_periodic, y_periodic, z_periodic, comm, 0, 0);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
+  t8_cmesh_new_brick_3d_ext (cmesh, num_x, num_y, num_z, x_periodic, y_periodic, z_periodic, comm, 0, 0);
 }
 
 /* On each process, create a num_x by num_y (by num_z) brick connectivity and
@@ -1581,11 +1822,15 @@ t8_cmesh_new_brick_3d (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t
  * Leads to the cmesh |_|  |_|_|
  * which is partitioned accordingly.
  */
-t8_cmesh_t
-t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic, int y_periodic,
-                              int z_periodic, sc_MPI_Comm comm)
+void
+t8_cmesh_new_disjoint_bricks (t8_cmesh_t cmesh, t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic,
+                              int y_periodic, int z_periodic, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   t8_gloidx_t num_trees, offset;
   int dim;
 
@@ -1610,10 +1855,10 @@ t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t 
    * num_x times num_y elements */
   if (num_trees > 0) {
     if (dim == 2) {
-      cmesh = t8_cmesh_new_brick_2d_ext (num_x, num_y, x_periodic, y_periodic, comm, 1, offset + 1);
+      t8_cmesh_new_brick_2d_ext (cmesh, num_x, num_y, x_periodic, y_periodic, comm, 1, offset + 1);
     }
     else {
-      cmesh = t8_cmesh_new_brick_3d_ext (num_x, num_y, num_z, x_periodic, y_periodic, z_periodic, comm, 1, offset + 1);
+      t8_cmesh_new_brick_3d_ext (cmesh, num_x, num_y, num_z, x_periodic, y_periodic, z_periodic, comm, 1, offset + 1);
     }
   }
   else {
@@ -1622,18 +1867,19 @@ t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t 
     offset = 0;
 
     /* Create empty cmesh. */
-    t8_cmesh_init (&cmesh);
     t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
     t8_cmesh_commit (cmesh, comm);
   }
-
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
+void
+t8_cmesh_new_periodic_line_more_trees (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /* clang-format off */
   double vertices[12] = {
     0, 0, 0,
@@ -1643,7 +1889,6 @@ t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
@@ -1657,12 +1902,16 @@ t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
   t8_cmesh_set_join (cmesh, 1, 2, 1, 0, 0);
   t8_cmesh_set_join (cmesh, 2, 0, 1, 0, 0);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_periodic_tri (sc_MPI_Comm comm)
+void
+t8_cmesh_new_periodic_tri (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /* clang-format off */
   double vertices[18] = {
     0, 0, 0,
@@ -1674,9 +1923,6 @@ t8_cmesh_new_periodic_tri (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_t cmesh;
-
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
@@ -1688,12 +1934,16 @@ t8_cmesh_new_periodic_tri (sc_MPI_Comm comm)
   t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
   t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 1);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
+void
+t8_cmesh_new_periodic_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /* clang-format off */
   double vertices[60] = {                                        /* Just all vertices of all trees. partly duplicated */
     0, 0, 0,              /* tree 0, triangle */
@@ -1718,8 +1968,6 @@ t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_t cmesh;
-
   /*
    *  This is how the cmesh looks like. The numbers are the tree numbers:
    *
@@ -1734,7 +1982,6 @@ t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
    *   +---+---+
    */
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
@@ -1768,14 +2015,16 @@ t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
   t8_cmesh_set_join (cmesh, 4, 5, 1, 2, 0);
 
   t8_cmesh_commit (cmesh, comm);
-
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim)
+void
+t8_cmesh_new_periodic (t8_cmesh_t cmesh, sc_MPI_Comm comm, int dim)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   t8_eclass_t tree_class;
   /* clang-format off */
   double vertices[24] = {
@@ -1791,7 +2040,6 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim)
   /* clang-format on */
 
   T8_ASSERT (dim == 1 || dim == 2 || dim == 3);
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
@@ -1819,16 +2067,17 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim)
     t8_cmesh_set_join (cmesh, 0, 0, 4, 5, 0);
   }
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
+void
+t8_cmesh_new_bigmesh (t8_cmesh_t cmesh, t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
-  int i;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
 
-  t8_cmesh_init (&cmesh);
+  int i;
 
   for (i = 0; i < num_trees; i++) {
     t8_cmesh_set_tree_class (cmesh, i, eclass);
@@ -1840,13 +2089,16 @@ t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
   }
 
   t8_cmesh_commit (cmesh, comm);
-
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
+void
+t8_cmesh_new_line_zigzag (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   int i;
   /* clang-format off */
   double vertices[18] = {
@@ -1859,9 +2111,6 @@ t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_t cmesh;
-
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
@@ -1877,19 +2126,21 @@ t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
   t8_cmesh_set_tree_vertices (cmesh, 2, vertices + 12, 2);
 
   t8_cmesh_commit (cmesh, comm);
-
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
+void
+t8_cmesh_new_prism_cake (t8_cmesh_t cmesh, sc_MPI_Comm comm, int num_of_prisms)
 {
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   int i, j;
   /*num_of_prisms Prism a 6 vertices a 3 coords */
   /* TODO: This seems too be a lot of memory, can we also get by with only
      6 * 3 doubles? */
   double *vertices = T8_ALLOC (double, num_of_prisms * 6 * 3);
-  t8_cmesh_t cmesh;
   double const degrees = 360. / num_of_prisms;
 
   T8_ASSERT (num_of_prisms > 2);
@@ -1914,7 +2165,6 @@ t8_cmesh_new_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
       }
     }
   }
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
@@ -1930,14 +2180,16 @@ t8_cmesh_new_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
   }
   t8_cmesh_commit (cmesh, comm);
   T8_FREE (vertices);
-
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_prism_deformed (sc_MPI_Comm comm)
+void
+t8_cmesh_new_prism_deformed (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /* clang-format off */
   double vertices[18] = {
     -1, -0.5, 0.25,
@@ -1949,13 +2201,11 @@ t8_cmesh_new_prism_deformed (sc_MPI_Comm comm)
   };
   /* clang-format on */
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PRISM);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 6);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
 /*rotates counterclockwise*/
@@ -1986,13 +2236,17 @@ prism_rotate (double vertices[18], int rotation)
   }
 }
 
-t8_cmesh_t
-t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm)
+void
+t8_cmesh_new_prism_cake_funny_oriented (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   int i, j;
   /*6 Prism a 6 vertices a 3 coords */
   double vertices[108];
-  t8_cmesh_t cmesh;
 
   for (i = 0; i < 6; i++) {
     for (j = 0; j < 6; j++) {
@@ -2020,7 +2274,6 @@ t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm)
   prism_rotate (vertices + 72, 1);
   prism_rotate (vertices + 90, 2);
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
@@ -2039,7 +2292,6 @@ t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm)
     t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 18, 6);
   }
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
 /* Creates a mesh consisting of 8 prisms. The first 6 prisms are constructed, by
@@ -2048,13 +2300,17 @@ t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm)
  * z-axis. The first of these prisms is connected to the third prism via its tri-
  * angular bottom. The last prisms is out of this circle. Some prisms are rotated,
  * such that we get a variety of face-connections. */
-t8_cmesh_t
-t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
+void
+t8_cmesh_new_prism_geometry (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   int i, j;
   /*8 Prism a 6 vertices a 3 coords */
   double vertices[144];
-  t8_cmesh_t cmesh;
 
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 6; j++) {
@@ -2121,7 +2377,6 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
   prism_rotate (vertices + 36, 1);
   prism_rotate (vertices + 72, 2);
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
@@ -2146,15 +2401,18 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
     t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 18, 6);
   }
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
 /* Construct a tetrahedral cmesh that has all possible face to face
  * connections and orientations. */
-t8_cmesh_t
-t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
+void
+t8_cmesh_new_tet_orientation_test (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   int i;
   /* clang-format off */
   double vertices_coords[12] = {
@@ -2169,7 +2427,6 @@ t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
   double translate[3] = { 1, 0, 0 };
   const t8_gloidx_t num_trees = 24;
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
@@ -2236,17 +2493,19 @@ t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
     t8_cmesh_set_tree_vertices (cmesh, i, translated_coords, 4);
   }
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm)
+void
+t8_cmesh_new_hybrid_gate (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   double vertices[32];
   int i;
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
@@ -2360,17 +2619,19 @@ t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm)
   t8_cmesh_set_tree_vertices (cmesh, 4, vertices, 8);
 
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm)
+void
+t8_cmesh_new_hybrid_gate_deformed (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   double vertices[32];
   int i;
 
-  t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
@@ -2516,17 +2777,18 @@ t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm)
   t8_cmesh_set_tree_vertices (cmesh, 4, vertices, 8);
 
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
+void
+t8_cmesh_new_full_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   double vertices[24];
   int i;
-
-  t8_cmesh_init (&cmesh);
 
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
@@ -2631,18 +2893,21 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
   t8_cmesh_examples_compute_and_set_partition_range (cmesh, 4, 3, comm);
 
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
+void
+t8_cmesh_new_pyramid_cake (t8_cmesh_t cmesh, sc_MPI_Comm comm, int num_of_pyra)
 {
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   /*num_of_pyra pyras a 5 vertices a 3 coords */
   /* TODO: This seems to be a lot of memory, can we also get by with only
      5 * 3 doubles? */
   int current_pyra, pyra_vertices;
   double *vertices = T8_ALLOC (double, num_of_pyra * 5 * 3);
-  t8_cmesh_t cmesh;
   const double degrees = 360. / num_of_pyra;
   int mpirank, mpiret;
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
@@ -2669,7 +2934,6 @@ t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
       }
     }
   }
-  t8_cmesh_init (&cmesh);
   for (current_pyra = 0; current_pyra < num_of_pyra; current_pyra++) {
     t8_cmesh_set_tree_class (cmesh, current_pyra, T8_ECLASS_PYRAMID);
     t8_cmesh_set_join (cmesh, current_pyra, (current_pyra == (num_of_pyra - 1) ? 0 : current_pyra + 1), 0, 1, 0);
@@ -2678,14 +2942,16 @@ t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_commit (cmesh, comm);
   T8_FREE (vertices);
-
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
+void
+t8_cmesh_new_long_brick_pyramid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int num_cubes)
 {
-  t8_cmesh_t cmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   int current_cube, current_pyra_in_current_cube;
   t8_locidx_t vertices[5];
   double attr_vertices[15];
@@ -2706,7 +2972,6 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (num_cubes > 0);
-  t8_cmesh_init (&cmesh);
   for (current_cube = 0; current_cube < num_cubes; current_cube++) {
     for (current_pyra_in_current_cube = 0; current_pyra_in_current_cube < 3; current_pyra_in_current_cube++) {
       t8_cmesh_set_tree_class (cmesh, current_cube * 3 + current_pyra_in_current_cube, T8_ECLASS_PYRAMID);
@@ -2761,17 +3026,19 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
   }
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, const int do_partition, sc_MPI_Comm comm,
-                           const int package_id)
+void
+t8_cmesh_new_row_of_cubes (t8_cmesh_t cmesh, t8_locidx_t num_trees, const int set_attributes, const int do_partition,
+                           sc_MPI_Comm comm, const int package_id)
 {
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
   T8_ASSERT (num_trees > 0);
 
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
   /* clang-format off */
@@ -2817,16 +3084,15 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
 
   /* Commit the constructed cmesh */
   t8_cmesh_commit (cmesh, comm);
-
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
+void
+t8_cmesh_new_quadrangulated_disk (t8_cmesh_t cmesh, const double radius, sc_MPI_Comm comm)
 {
-  /* Initialization of the mesh */
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
 
   const double inner_radius = 0.6;
   const double outer_radius = 1.0;
@@ -2919,15 +3185,15 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_MPI_Comm comm)
+void
+t8_cmesh_new_triangulated_spherical_surface_octahedron (t8_cmesh_t cmesh, const double radius, sc_MPI_Comm comm)
 {
-  /* Initialization of the mesh */
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
 
   t8_cmesh_register_geometry<t8_geometry_triangulated_spherical_surface> (cmesh);
 
@@ -2999,15 +3265,15 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc_MPI_Comm comm)
+void
+t8_cmesh_new_triangulated_spherical_surface_icosahedron (t8_cmesh_t cmesh, const double radius, sc_MPI_Comm comm)
 {
-  /* Initialization of the mesh */
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
 
   t8_cmesh_register_geometry<t8_geometry_triangulated_spherical_surface> (cmesh);
 
@@ -3145,15 +3411,15 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_triangulated_spherical_surface_cube (const double radius, sc_MPI_Comm comm)
+void
+t8_cmesh_new_triangulated_spherical_surface_cube (t8_cmesh_t cmesh, const double radius, sc_MPI_Comm comm)
 {
-  // Initialization of the mesh.
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
 
   t8_cmesh_register_geometry<t8_geometry_tessellated_spherical_surface> (cmesh);
 
@@ -3234,15 +3500,15 @@ t8_cmesh_new_triangulated_spherical_surface_cube (const double radius, sc_MPI_Co
 
   // Commit the mesh.
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm comm)
+void
+t8_cmesh_new_quadrangulated_spherical_surface (t8_cmesh_t cmesh, const double radius, sc_MPI_Comm comm)
 {
-  /* Initialization of the mesh */
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
 
   t8_cmesh_register_geometry<t8_geometry_tessellated_spherical_surface> (cmesh); /* Use spherical geometry */
 
@@ -3303,20 +3569,20 @@ t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm 
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-using t8_inner_sphere_creator_t = t8_cmesh_t (const double, sc_MPI_Comm);
+using t8_inner_sphere_creator_t = void (t8_cmesh_t, const double, sc_MPI_Comm);
 
-static t8_cmesh_t
-t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
+static void
+t8_cmesh_new_spherical_shell (t8_cmesh_t cmesh, t8_eclass_t eclass, t8_geometry_c *geometry,
                               t8_inner_sphere_creator_t inner_sphere_creator, const double inner_radius,
                               const double shell_thickness, const int num_levels, const int num_layers,
                               sc_MPI_Comm comm)
 {
-  /* Initialization of the mesh */
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
 
   t8_cmesh_register_geometry (cmesh, geometry);
 
@@ -3330,9 +3596,13 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
   sc_MPI_Comm_rank (comm, &mpi_rank);
   sc_MPI_Comm_split (comm, mpi_rank, mpi_rank, &local_comm);
 
-  /* Create 2D quadrangulated spherical surface of given refinement level per patch. */
-  t8_forest_t forest = t8_forest_new_uniform (inner_sphere_creator (1.0, local_comm), t8_scheme_new_default (),
-                                              num_levels, 0, local_comm);
+  /* Create 2D quadrangulated spherical surface of given refinement level per patch.
+   * This inner cmesh is purely an intermediate construct used to seed the 2D forest
+   * below; it is independent of the (outer) shell cmesh being built. */
+  t8_cmesh_t inner_cmesh;
+  t8_cmesh_init (&inner_cmesh);
+  inner_sphere_creator (inner_cmesh, 1.0, local_comm);
+  t8_forest_t forest = t8_forest_new_uniform (inner_cmesh, t8_scheme_new_default (), num_levels, 0, local_comm);
 
   /* clang-format off */
   const int ntrees = t8_forest_get_local_num_leaf_elements (forest) * num_layers; /* Number of 3D cmesh elements resp. trees. */
@@ -3440,35 +3710,46 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
-
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_prismed_spherical_shell_icosahedron (const double inner_radius, const double shell_thickness,
-                                                  const int num_levels, const int num_layers, sc_MPI_Comm comm)
+void
+t8_cmesh_new_prismed_spherical_shell_icosahedron (t8_cmesh_t cmesh, const double inner_radius,
+                                                  const double shell_thickness, const int num_levels,
+                                                  const int num_layers, sc_MPI_Comm comm)
 {
-  return t8_cmesh_new_spherical_shell (T8_ECLASS_PRISM, new t8_geometry_prismed_spherical_shell (),
-                                       t8_cmesh_new_triangulated_spherical_surface_icosahedron, inner_radius,
-                                       shell_thickness, num_levels, num_layers, comm);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
+  t8_cmesh_new_spherical_shell (cmesh, T8_ECLASS_PRISM, new t8_geometry_prismed_spherical_shell (),
+                                t8_cmesh_new_triangulated_spherical_surface_icosahedron, inner_radius, shell_thickness,
+                                num_levels, num_layers, comm);
 }
 
-t8_cmesh_t
-t8_cmesh_new_prismed_spherical_shell_octahedron (const double inner_radius, const double shell_thickness,
-                                                 const int num_levels, const int num_layers, sc_MPI_Comm comm)
+void
+t8_cmesh_new_prismed_spherical_shell_octahedron (t8_cmesh_t cmesh, const double inner_radius,
+                                                 const double shell_thickness, const int num_levels,
+                                                 const int num_layers, sc_MPI_Comm comm)
 {
-  return t8_cmesh_new_spherical_shell (T8_ECLASS_PRISM, new t8_geometry_prismed_spherical_shell (),
-                                       t8_cmesh_new_triangulated_spherical_surface_octahedron, inner_radius,
-                                       shell_thickness, num_levels, num_layers, comm);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
+  t8_cmesh_new_spherical_shell (cmesh, T8_ECLASS_PRISM, new t8_geometry_prismed_spherical_shell (),
+                                t8_cmesh_new_triangulated_spherical_surface_octahedron, inner_radius, shell_thickness,
+                                num_levels, num_layers, comm);
 }
 
-t8_cmesh_t
-t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_trees,
-                                    const int num_layers, sc_MPI_Comm comm)
+void
+t8_cmesh_new_cubed_spherical_shell (t8_cmesh_t cmesh, const double inner_radius, const double shell_thickness,
+                                    const int num_trees, const int num_layers, sc_MPI_Comm comm)
 {
-  /* Initialization of the mesh */
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
 
   t8_cmesh_register_geometry<t8_geometry_cubed_spherical_shell> (cmesh); /* Use spherical geometry. */
 
@@ -3574,15 +3855,15 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
+void
+t8_cmesh_new_cubed_sphere (t8_cmesh_t cmesh, const double radius, sc_MPI_Comm comm)
 {
-  /* Initialization of the mesh. */
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
 
   const double inner_radius = 0.6;
   const double outer_radius = 1.0;
@@ -3722,5 +4003,4 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
 }
