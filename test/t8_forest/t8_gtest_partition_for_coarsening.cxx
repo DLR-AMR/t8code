@@ -221,8 +221,14 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   t8_cmesh_ref (cmesh);
   scheme->ref ();
 
+  // Partition the cmesh according to the uniform base forest, if necessary.
+  t8_cmesh_t forest_cmesh = cmesh;
+  if (t8_cmesh_is_partitioned (cmesh)) {
+    forest_cmesh = t8_cmesh_derive_partitioned (cmesh, level, scheme, sc_MPI_COMM_WORLD);
+  }
+
   // Create initial, uniform base forest.
-  t8_forest_t uniform_forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t uniform_forest = t8_forest_new_uniform (forest_cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
 #if T8_ENABLE_DEBUG
   // If debug mode and an additional manual flag are set, write forest to vtk.

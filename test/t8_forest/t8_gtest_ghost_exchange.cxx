@@ -189,8 +189,12 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
     scheme->ref ();
     /* ref the cmesh since we reuse it */
     t8_cmesh_ref (cmesh);
+    t8_cmesh_t forest_cmesh = cmesh;
+    if (t8_cmesh_is_partitioned (cmesh)) {
+      forest_cmesh = t8_cmesh_derive_partitioned (cmesh, level, scheme, sc_MPI_COMM_WORLD);
+    }
     /* Create a uniformly refined forest */
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
+    t8_forest_t forest = t8_forest_new_uniform (forest_cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
     /* exchange ghost data */
     t8_test_ghost_exchange_data_int (forest);
     t8_test_ghost_exchange_data_id (forest);

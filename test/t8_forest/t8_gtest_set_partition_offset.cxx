@@ -124,8 +124,14 @@ TEST_P (t8_test_set_partition_offset_test, test_set_partition_offset)
   t8_cmesh_ref (cmesh);
   scheme->ref ();
 
+  // Partition the cmesh according to the uniform base forest, if necessary.
+  t8_cmesh_t forest_cmesh = cmesh;
+  if (t8_cmesh_is_partitioned (cmesh)) {
+    forest_cmesh = t8_cmesh_derive_partitioned (cmesh, level, scheme, sc_MPI_COMM_WORLD);
+  }
+
   // Create initial, uniform base forest.
-  t8_forest_t base_forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t base_forest = t8_forest_new_uniform (forest_cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
   // ----------------------------------------
   // ----- (2.) Gather forest on rank 0 -----

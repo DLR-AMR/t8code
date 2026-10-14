@@ -52,7 +52,11 @@ struct forest_user_data: public testing::TestWithParam<std::tuple<int, cmesh_exa
     // Increase reference counters of cmesh and scheme to avoid reaching zero.
     t8_cmesh_ref (cmesh);
     scheme->ref ();
-    forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
+    t8_cmesh_t forest_cmesh = cmesh;
+    if (t8_cmesh_is_partitioned (cmesh)) {
+      forest_cmesh = t8_cmesh_derive_partitioned (cmesh, 1, scheme, sc_MPI_COMM_WORLD);
+    }
+    forest = t8_forest_new_uniform (forest_cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override

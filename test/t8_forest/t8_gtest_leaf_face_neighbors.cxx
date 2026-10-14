@@ -67,6 +67,9 @@ class forest_face_neighbors: public testing::TestWithParam<std::tuple<int, cmesh
     const int max_adapt_level = uniform_level + adapt_levels;
     const bool do_ghost = true;
     const bool do_recursive_adapt = true;
+    if (t8_cmesh_is_partitioned (cmesh)) {
+      cmesh = t8_cmesh_derive_partitioned (cmesh, uniform_level, scheme, sc_MPI_COMM_WORLD);
+    }
     forests[0] = t8_forest_new_uniform (cmesh, scheme, uniform_level, do_ghost, sc_MPI_COMM_WORLD);
     cmesh = t8_forest_get_cmesh (forests[0]);
     t8_forest_ref (forests[0]);
@@ -602,6 +605,9 @@ struct forest_face_neighbors_subface: public testing::TestWithParam<std::tuple<i
     const t8_scheme *scheme = create_from_scheme_id (scheme_id);
     const bool do_ghost = true;
     const bool do_recursive_adapt = false;
+    if (t8_cmesh_is_partitioned (cmesh)) {
+      cmesh = t8_cmesh_derive_partitioned (cmesh, base_level, scheme, sc_MPI_COMM_WORLD);
+    }
     t8_forest_t base_forest = t8_forest_new_uniform (cmesh, scheme, base_level, do_ghost, sc_MPI_COMM_WORLD);
 
     // Refine some elements of forest once (and store the resulting forest as member variable).

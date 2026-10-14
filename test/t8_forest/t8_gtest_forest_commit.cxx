@@ -160,8 +160,12 @@ TEST_P (forest_commit, test_forest_commit)
     int maxlevel = level + 2;
     /* ref the cmesh since we reuse it */
     t8_cmesh_ref (cmesh);
+    t8_cmesh_t forest_cmesh = cmesh;
+    if (t8_cmesh_is_partitioned (cmesh)) {
+      forest_cmesh = t8_cmesh_derive_partitioned (cmesh, level, scheme, sc_MPI_COMM_WORLD);
+    }
     /* Create a uniformly refined forest */
-    forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (forest_cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
     /* We need to use forest twice, so we ref it */
     t8_forest_ref (forest);
     /* Adapt, balance and partition the forest */

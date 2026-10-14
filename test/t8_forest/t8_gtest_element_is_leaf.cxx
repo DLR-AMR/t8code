@@ -64,6 +64,9 @@ struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, i
       GTEST_SKIP ();
     }
 
+    if (t8_cmesh_is_partitioned (cmesh)) {
+      cmesh = t8_cmesh_derive_partitioned (cmesh, level, scheme, sc_MPI_COMM_WORLD);
+    }
     forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
     int maxlevel = level + 2;
