@@ -169,26 +169,39 @@ t8_step7_mesh_interpolation (TMeshClass &mesh, const char *initial_prefix, const
 {
 
   /* The parameters for the adaptation. */
-  const adapt_user_data adapt_data = { { 0.5, 0.5, 1 }, 0.2, 0.4 };
+  const adapt_data adapt_params = { { 0.5, 0.5, 1 }, 0.2, 0.4 };
 
+  t8_global_productionf (" [mesh_step7] \n");
+  t8_global_productionf (" [mesh_step7] Calculating element data. \n");
   /* Compute and set the initial element data. */
-  set_initial_element_data (mesh, adapt_data.midpoint);
+  set_initial_element_data (mesh, adapt_params.midpoint);
 
   /* Write the uniform mesh with its data. */
   write_vtu (mesh, initial_prefix);
-  t8_global_productionf (" [step7] Wrote uniform mesh with data to %s*.\n", initial_prefix);
+  t8_global_productionf (" [mesh_step7] \n");
+  t8_global_productionf (" [mesh_step7] Wrote uniform mesh with data to %s*.\n", initial_prefix);
 
   /* Set the adaptation and interpolation flags. */
-  mesh.set_adapt (mesh_class::mesh_adapt_callback_wrapper<adapt_user_data> (adapt_callback<mesh_class>, adapt_data));
-  mesh.set_interpolate_callback (interpolate_callback<mesh_class>);
+  t8_global_productionf (" [mesh_step7] \n");
+  t8_global_productionf (" [mesh_step7] Setting adaption flag. \n");
+  mesh.set_adapt (
+    TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (adapt_callback_sphere<TMeshClass>, adapt_params));
+  t8_global_productionf (" [mesh_step7] \n");
+  t8_global_productionf (" [mesh_step7] Setting interpolation flag. \n");
+  mesh.set_interpolate_callback (interpolate_callback<TMeshClass>);
+  t8_global_productionf (" [mesh_step7] \n");
+  t8_global_productionf (" [mesh_step7] Setting partition flag. \n");
   mesh.set_partition ();
 
   /* Commit the mesh to change it according to all set flags. */
+  t8_global_productionf (" [mesh_step7] \n");
+  t8_global_productionf (" [mesh_step7] Committing the mesh. \n");
   mesh.commit ();
 
   /* Write the adapted mesh with the interpolated data. */
   write_vtu (mesh, adapted_prefix);
-  t8_global_productionf (" [step7] Wrote adapted mesh with data to %s*.\n", adapted_prefix);
+  t8_global_productionf (" [mesh_step7] \n");
+  t8_global_productionf (" [mesh_step7] Wrote adapted mesh with data to %s*.\n", adapted_prefix);
 }
 
 /** Entry point of the program. */
@@ -209,14 +222,26 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
   t8_init (SC_LP_PRODUCTION);
+
+  /* Print starting message to the root process. */
+  t8_global_productionf (" [mesh_step7] \n");
+  t8_global_productionf (" [mesh_step7] Hello, this is the interpolation example of t8code using the mesh handle.\n");
+  t8_global_productionf (
+    " [mesh_step7] In this example we will adapt a mesh with user data and interpolate that data to prevent errors.\n");
+
   { /* Scope for the mesh. It is destroyed and cleaned up automatically at the end of the scope. */
     /* Construct a uniformly refined mesh handle on the coarse mesh using the default scheme. */
+    t8_global_productionf (" [mesh_step7] \n");
+    t8_global_productionf (" [mesh_step7] Creating a uniform hybrid mesh. \n");
+
     auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, comm);
 
     /* Define the element data, adapt the mesh and interpolate the element data accordingly. */
-    t8_step7_mesh_interpolation (mesh, prefix_uniform_mesh, prefix_adapted_mesh);
+    t8_step7_mesh_interpolation (*mesh, prefix_uniform_mesh, prefix_adapted_mesh);
 
   } /* End of mesh scope. */
+  t8_global_productionf (" [mesh_step7] \n");
+  t8_global_productionf (" [mesh_step7] Finished all steps successfully, cleaning up. \n");
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
