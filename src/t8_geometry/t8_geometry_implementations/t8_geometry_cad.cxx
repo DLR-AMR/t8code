@@ -1468,7 +1468,7 @@ const double *
 t8_geometry_cad::get_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid,
                                                const int attribute_dimension, const int attribute_index)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (attribute_dimension == 1 || attribute_dimension == 2);
   T8_ASSERT ((attribute_dimension == 1 && (attribute_index < T8_ECLASS_MAX_EDGES))
              || (attribute_dimension == 2 && (attribute_index < T8_ECLASS_MAX_FACES)));
