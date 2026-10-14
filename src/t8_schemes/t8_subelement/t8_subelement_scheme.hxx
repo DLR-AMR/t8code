@@ -33,6 +33,7 @@
 #include <sc_functions.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
+#include <t8_eclass/t8_eclass.h>
 #include "t8_subelement_traits.hxx"
 #include <utility>
 #include <algorithm>
@@ -135,7 +136,8 @@ struct t8_subelement_scheme_common:
     return true;  // Potentially there are subelements.
   }
 
-  /** Return the maximum allowed level for any element of a given class.
+  /** Return the maximum allowed level for any element of a given class. 
+   * This maxlevel is for the underlying scheme level, the subelement level is independent of this.
    * \return                      The maximum allowed level for elements of class \b ts.
    */
   constexpr int
@@ -157,7 +159,7 @@ struct t8_subelement_scheme_common:
     if (!element_is_subelement (elem)) {
       return derived ().underlying_scheme.element_get_num_corners (element_to_standalone (elem));
     }
-    return TSubelementSchemeSpecialization::subelement_get_num_corners (as_subelement (elem));
+    return t8_eclass_num_vertices[element_get_shape (elem)];
   }
 
   /** Compute the number of faces of a given element.
@@ -171,7 +173,7 @@ struct t8_subelement_scheme_common:
     if (!element_is_subelement (elem)) {
       return derived ().underlying_scheme.element_get_num_faces (element_to_standalone (elem));
     }
-    return TSubelementSchemeSpecialization::subelement_get_num_faces (as_subelement (elem));
+    return t8_eclass_num_faces[element_get_shape (elem)];
   }
 
   /** Compute the maximum number of faces of a given element and all of its descendants.
@@ -188,7 +190,7 @@ struct t8_subelement_scheme_common:
 
   /** Return the shape of an allocated element.
    * \param [in] elem     The element to be considered
-   * \return              The shape of the element as an eclass
+   * \return              The shape of the element as an eclass.
    */
   t8_element_shape_t
   element_get_shape (const t8_element_t *elem) const noexcept
@@ -200,17 +202,20 @@ struct t8_subelement_scheme_common:
     return TSubelementSchemeSpecialization::subelement_get_shape (as_subelement (elem));
   }
 
-  /** Not implemented for this scheme.
+  /** Return the corner number of an element's face corner.
    * \param [in] element  The element.
    * \param [in] face     A face index for \a element.
    * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
-  static int
-  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int face,
-                           [[maybe_unused]] const int corner) noexcept
+  int
+  element_get_face_corner (const t8_element_t *element, const int face, const int corner) const noexcept
   {
-    SC_ABORT ("element_get_face_corner is not implemented for subelements yet.\n");
+    T8_ASSERT (element_is_valid (element));
+    if (element_is_subelement (element)) {
+      return t8_face_vertex_to_tree_vertex[element_get_shape (element)][face][corner];
+    }
+    return derived ().underlying_scheme.element_get_face_corner (element_to_standalone (element), face, corner);
   }
 
   /** Not implemented for this scheme.
@@ -239,26 +244,24 @@ struct t8_subelement_scheme_common:
     if (!element_is_subelement (elem)) {
       return derived ().underlying_scheme.element_get_face_shape (element_to_standalone (elem), face);
     }
-    return TSubelementSchemeSpecialization::subelement_get_face_shape (as_subelement (elem), face);
+    return (t8_element_shape_t) t8_eclass_face_types[element_get_shape (elem)][face];
   }
 
-  /** Return the level of a particular element. For subelements, the level is the level of the parent + 1.
-    * \param [in] elem    The element whose level should be returned.
-    * \return             The level of \b elem.
-    */
+  /** Return the level of a particular element. 
+   * \note By convention, subelements have the same level as their parent. 
+   *       Subelements have their own "subelement level" in the refinement tree. 
+   *       This level is only for the underlying refinement scheme.
+   * \param [in] elem    The element whose level should be returned.
+   * \return             The level of \b elem.
+   */
   int
   element_get_level (const t8_element_t *elem) const noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    // Get level of the parent.
-    const int level = derived ().underlying_scheme.element_get_level (element_to_standalone (elem));
-    if (!element_is_subelement (elem)) {
-      return level;
-    }
-    return level + 1;
+    return derived ().underlying_scheme.element_get_level (element_to_standalone (elem));
   }
 
-  // ################################################____GENERAL HELPERS____#############################################
+  // ################################################____GENERAL HELPERS____############################################
 
   /** Copy all entries of \b source to \b dest. \b dest must be an existing
    *  element. No memory is allocated by this function.
@@ -277,9 +280,6 @@ struct t8_subelement_scheme_common:
   }
 
   /** Check if two elements are equal. 
-  * \note For subelements, it is only checked that the type is equal and not the id!!
-  * (This is because the linear id is the same for all subelements and sometimes, the wrong subelement is found. 
-  * At the moment, this is not a problem.)
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
   * \return            true if the elements are equal, false if they are not equal
@@ -290,7 +290,7 @@ struct t8_subelement_scheme_common:
     T8_ASSERT (element_is_valid (elem1) && element_is_valid (elem2));
     const auto *el1 = as_subelement (elem1);
     const auto *el2 = as_subelement (elem2);
-    if (el1->subelement_type != el2->subelement_type) {
+    if (el1->subelement_type != el2->subelement_type || el1->subelement_id != el2->subelement_id) {
       return 0;
     }
     return derived ().underlying_scheme.element_is_equal (subelement_to_standalone (el1),
@@ -834,7 +834,7 @@ struct t8_subelement_scheme_common:
   // ################################################____LINEAR ID____################################################
 
   /** Initialize the entries of an allocated element according to a given linear id in a uniform refinement.
-   * \note This is not implemented for subelements.
+   * \note A uniform refinement contains no subelements. The result is always a regular element (subelement_type 0).
    * \param [in,out] elem The element whose entries will be set.
    * \param [in] level    The level of the uniform refinement to consider.
    * \param [in] id       The linear id. id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
@@ -842,14 +842,14 @@ struct t8_subelement_scheme_common:
   void
   element_set_linear_id (t8_element_t *elem, const t8_element_level level, t8_linearidx_t id) const noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem), "element_set_linear_id is not implemented for subelements yet.\n");
+    unset_subelement_values (as_subelement (elem));
     derived ().underlying_scheme.element_set_linear_id (element_to_standalone (elem), level, id);
+    T8_ASSERT (element_is_valid (elem));
   }
 
   /** Compute the linear id of a given element in a hypothetical uniform refinement of a given level.
-   * \note that the id of a subelement equals the id of its parent.
-   * Therefore, the binary search (for example used in the leaf_face_neighbor function) will find a random subelement 
-   * of the transition cell which might not be the desired neighbor of a given element. 
+   * \note The linear id of a subelement equals the linear id of its parent!
+   *       Therefore, all subelements of the same parent have the same linear id.
    * \param [in] elem     The element whose id we compute.
    * \param [in] level    The level of the uniform refinement to consider.
    * \return              The linear id of the element.
@@ -858,6 +858,7 @@ struct t8_subelement_scheme_common:
   element_get_linear_id (const t8_element_t *elem, const t8_element_level level) const noexcept
   {
     T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (0 <= level && level <= get_maxlevel ());
     return derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level);
   }
 
@@ -898,19 +899,27 @@ struct t8_subelement_scheme_common:
     return derived ().underlying_scheme.count_leaves_from_root (level);
   }
 
-  /** Compare two elements.
-   * \note This is not implemented for subelements.
+  /** Compare two elements by their position on the space-filling curve.
+   * Subelements of the underlying element are ordered by their subelement_id.
    * \param [in] elem1  The first element.
    * \param [in] elem2  The second element.
+   * \return <0 if elem1 < elem2, 0 if equal, >0 if elem1 > elem2.
    */
   int
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem1) && !element_is_subelement (elem2),
-                    "element_compare is not implemented for subelements yet.\n");
-    return derived ().underlying_scheme.element_compare (element_to_standalone (elem1), element_to_standalone (elem2));
+    T8_ASSERT (element_is_valid (elem1) && element_is_valid (elem2));
+    const int compare_standalone
+      = derived ().underlying_scheme.element_compare (element_to_standalone (elem1), element_to_standalone (elem2));
+    if (compare_standalone != 0) {
+      return compare_standalone;
+    }
+    SC_CHECK_ABORT (
+      as_subelement (elem1)->subelement_type == as_subelement (elem2)->subelement_type,
+      "ERROR: Cannot compare two subelements with the same parent element but different subelement types.");
+    // Same underlying element: subelements are ordered by id.
+    return as_subelement (elem1)->subelement_id - as_subelement (elem2)->subelement_id;
   }
-
   // ################################################____VISUALIZATION____##############################################
 
   /** Compute the coordinates of a given element vertex inside a reference tree 
