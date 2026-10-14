@@ -26,7 +26,8 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_private.h>
-#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
+#include <test/t8_gtest_adapt_callbacks.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_schemes.hxx>
 
@@ -38,31 +39,6 @@
 
 /* Maximum uniform level for forest. */
 #define T8_IS_BOUNDARY_MAX_LVL 3
-
-/* Adapt a forest such that always the child with ID=1 (i.e. the second child)
- * family is refined and no other elements. This results in a highly
- * imbalanced forest. */
-static int
-t8_test_adapt_first_child (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                           [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
-                           [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme_c *scheme,
-                           [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                           t8_element_t *elements[])
-{
-  int level = scheme->element_get_level (tree_class, elements[0]);
-
-  /* we set a maximum refinement level as forest user data */
-  int maxlevel = *(int *) t8_forest_get_user_data (forest);
-  if (level >= maxlevel) {
-    /* Do not refine after the maxlevel */
-    return 0;
-  }
-  int child_id = scheme->element_get_child_id (tree_class, elements[0]);
-  if (child_id == 1) {
-    return 1;
-  }
-  return 0;
-}
 
 /* In a quad forest remove the first (ID = 0) and fourth (ID = 3) child of each element.
  * This will reside in a forest where each element and each face is a boundary element.
