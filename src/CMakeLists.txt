@@ -91,6 +91,12 @@ if( T8CODE_ENABLE_VTK )
 endif()
 
 if( T8CODE_ENABLE_OCC )
+    string (REGEX MATCH "^[0-9]+\\.[0-9]+"
+  T8CODE_OCC_VERSION_USED "${OCC_VERSION_STRING}")
+    # Define T8_OCC_VERSION_USED for internal and external use in source files.
+    # Note, external libraries linking against t8code (i.e. using find_package ( T8CODE REQUIRED )) can
+    # use T8_OCC_VERSION_USED in source code and T8CODE_VTK_VERSION_USED (defined in config.cmake.in) in their CMake scripts.
+    target_compile_definitions( T8 PUBLIC T8_OCC_VERSION_USED="${T8CODE_OCC_VERSION_USED}" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_OCC=1 )
     target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )

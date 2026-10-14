@@ -31,16 +31,44 @@
 #include <gtest/gtest.h>
 #if T8_ENABLE_OCC
 #include <gp_Pnt.hxx>
+#include <Standard_Version.hxx>
 #endif
 
-/* Check whether we can successfully execute VTK code */
-TEST (t8_test_occ_linkage, test_gp_Pnt)
+/* Test correct macro dependencies.
+ * Will throw a compile time error if T8_OCC_VERSION_USED
+ * is defined but T8_ENABLE_OCC is not. */
+#ifndef T8_ENABLE_OCC
+#ifdef T8_OCC_VERSION_USED
+#error Configuration error: T8_OCC_VERSION_USED is defined despite \
+ T8_ENABLE_OCC not being defined.
+#endif
+#endif
+
+/* Check whether T8_OCC_VERSION_USED equals OCC_VERSION_STRING */
+TEST (t8_gtest_occ_linkage, t8_test_occ_version_number)
 {
 #if T8_ENABLE_OCC
+  /* Compare the macro generated at configuration time with the linked runtime string */
+  ASSERT_FALSE (strcmp (T8_OCC_VERSION_USED, OCC_VERSION_STRING))
+    << "Linked OCC version (" << OCC_VERSION_STRING << ") does not equal the version t8code was configured with ("
+    << T8_OCC_VERSION_USED << ").\n";
 
-  EXPECT_NO_THROW (gp_Pnt pnt = gp_Pnt (); pnt.SetX (1););
-  t8_global_productionf ("Successfully created occ gp_Pnt object.\n");
+  if (!strcmp (T8_OCC_VERSION_USED, OCC_VERSION_STRING)) {
+    t8_debugf ("Using OCC version %s.\n", OCC_VERSION_STRING);
+  }
+#endif
+}
+
+/* Check whether we can successfully execute OCC code */
+TEST (t8_gtest_occ_linkage, test_gp_Pnt)
+{
+#if T8_ENABLE_OCC
+  EXPECT_NO_THROW ({
+    gp_Pnt pnt = gp_Pnt ();
+    pnt.SetX (1);
+  });
+  t8_debugf ("Successfully created occ gp_Pnt object.\n");
 #else
-  t8_global_productionf ("This version of t8code is not compiled with occ support.\n");
+  t8_debugf ("This version of t8code is not compiled with occ support.\n");
 #endif
 }
