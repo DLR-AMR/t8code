@@ -31,7 +31,7 @@
 #define T8_GEOMETRY_BASE_H
 
 #include <t8.h>
-#include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_c_interface.h>
 
 T8_EXTERN_C_BEGIN ();
 

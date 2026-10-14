@@ -20,13 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry.h
- * Typedef for the t8_geometry class in order to be usable as a pointer
- * from .c files.
+/** \file t8_geometry_c_interface.h
+ * C interface of the geometry module. Defines the typedef for the t8_geometry class in order to be usable as a
+ * pointer from .c files.
  */
 
-#ifndef T8_GEOMETRY_H
-#define T8_GEOMETRY_H
+#pragma once
 
 #include <t8.h>
 #include <t8_helper_functions/t8_refcount.h>
@@ -114,5 +113,3 @@ int
 t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid);
 
 T8_EXTERN_C_END ();
-
-#endif /* !T8_GEOMETRY_H */
