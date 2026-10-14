@@ -40,9 +40,8 @@ t8_rbf::solve ()
 {
   const size_t num_boundary_nodes = boundary_nodes.size ();
   /** Check if there are any boundary nodes. */
-  if (num_boundary_nodes == 0) {
-    t8_errorf ("ERROR: Boundary nodes are not added correctly. The current RBF instance has no boundary nodes\n.");
-  }
+  SC_CHECK_ABORT (num_boundary_nodes != 0,
+                  "ERROR: Boundary nodes are not added correctly. The current RBF instance has no boundary nodes\n.");
 
   /** Fill the displacement vector with the values of the boundary nodes' displacements. */
   Eigen::MatrixXd displacements (num_boundary_nodes, 3);

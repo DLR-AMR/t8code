@@ -36,13 +36,11 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 
 static double
-calculate_local_support_radius (t8_cmesh_t cmesh, const std::vector<std::pair<t8_locidx_t, int>> &tree_list,
-                                int current_global_vertex_id, const t8_3D_vec &displacements)
+calculate_mean_neighbor_distance (t8_cmesh_t cmesh, const std::vector<std::pair<t8_locidx_t, int>> &tree_list,
+                                  t8_gloidx_t current_global_vertex_id)
 {
   double total_distance = 0.0;
 
-  double displacement_magnitude = std::sqrt (displacements[0] * displacements[0] + displacements[1] * displacements[1]
-                                             + displacements[2] * displacements[2]);
   /** Get the first tree where this vertex exists. */
   const auto &first_tree = tree_list.front ();
   const t8_locidx_t first_tree_id = first_tree.first;
@@ -107,23 +105,18 @@ calculate_local_support_radius (t8_cmesh_t cmesh, const std::vector<std::pair<t8
     total_distance += std::sqrt (distance_x * distance_x + distance_y * distance_y + distance_z * distance_z);
   }
 
-  double grading_factor = 2.0;
-
-  return (total_distance / static_cast<double> (unique_neighbors.size ()))
-         * (1.0 + grading_factor * displacement_magnitude);
+  return (total_distance / static_cast<double> (unique_neighbors.size ()));
 }
 
-std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node>
-t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad_handle *cad,
-                                                                    const t8_rbf_function_type rbf_type,
-                                                                    const double scale_factor_support_radius)
+std::unordered_map<t8_gloidx_t, t8_mesh_deformation_node>
+t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad_handle *cad)
 {
   T8_ASSERT (t8_cmesh_is_committed (associated_cmesh));
 
   const int mesh_dimension = t8_cmesh_get_dimension (associated_cmesh);
 
   /* Map from global vertex id -> displacement vector. */
-  std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node> boundary_node_data;
+  std::unordered_map<t8_gloidx_t, t8_mesh_deformation_node> boundary_node_data;
 
   for (const auto &global_vertex : *(associated_cmesh->vertex_connectivity)) {
 
@@ -222,20 +215,18 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       const double old_y = old_coords[3 * local_corner_index + 1];
       const double old_z = old_coords[3 * local_corner_index + 2];
 
-      t8_rbf_boundary_node node;
+      t8_mesh_deformation_node node;
 
       node.position = { old_x, old_y, old_z };
 
       /* Calculate the displacement of the vertex which should be then done in the deformation. */
       node.displacement = { new_coords.X () - old_x, new_coords.Y () - old_y, new_coords.Z () - old_z };
 
-      node.weight.fill (0.0);
+      /* Calculate the mesh neighbor distance from the node, which can be used to calcuslate the radius for a compat RBF. */
+      node.mean_neighbor_distance = calculate_mean_neighbor_distance (associated_cmesh, tree_list, global_vertex_id);
 
-      if (rbf_type == T8_RBF_CP_C2) {
-        node.local_support_radius
-          = scale_factor_support_radius
-            * calculate_local_support_radius (associated_cmesh, tree_list, global_vertex_id, node.displacement);
-      }
+      /* Set the global id of the node.*/
+      node.global_id = global_vertex_id;
       boundary_node_data[global_vertex_id] = node;
     }
   }
@@ -244,17 +235,14 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
 void
 t8_cmesh_mesh_deformation::apply_vertex_displacements (
-  std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node> &boundary_node_data, std::shared_ptr<t8_cad_handle> cad,
-  const t8_rbf_function_type rbf_type)
+  std::unordered_map<t8_gloidx_t, t8_mesh_deformation_node> &boundary_node_data, std::shared_ptr<t8_cad_handle> cad)
 {
   T8_ASSERT (t8_cmesh_is_committed (associated_cmesh));
 
-  t8_rbf rbf_handler (rbf_type);
+  SC_CHECK_ABORT (deformation_method != nullptr, "No deformation method set. Call set_deformation_method first.\n");
 
-  rbf_handler.set_boundary_nodes (std::move (boundary_node_data));
-
-  /** Calculate the weights. */
-  rbf_handler.solve ();
+  std::unordered_map<t8_gloidx_t, t8_3D_vec> vertex_displacements;
+  std::vector<t8_mesh_deformation_node> inner_nodes;
 
   /** Iterate over all vertices in the displacement map. */
   for (const auto &global_vertex : *(associated_cmesh->vertex_connectivity)) {
@@ -281,14 +269,11 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
 
     const int mesh_dimension = t8_cmesh_get_dimension (associated_cmesh);
 
-    /** Contains the displacement whether its a boundary node or an inner node. */
-    t8_3D_vec final_displacement;
-
     /* Check if this vertex is a boundary node. 
       If so, we can use the already known displacement extracted from the new CAD geometry input given.*/
     if (first_tree_entity_dim < mesh_dimension && first_tree_entity_dim >= 0) {
 
-      final_displacement = rbf_handler.get_boundary_displacement (global_vertex_id);
+      vertex_displacements[global_vertex_id] = boundary_node_data.at (global_vertex_id).displacement;
     }
     /** If it is an inner node, we do not know the displacement right away and need to interpolate to get the new coordinates. */
     else {
@@ -302,17 +287,27 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
       }
 
       /** Save the initial coordinates of the inner node. */
-      t8_rbf_node inner_node;
+      t8_mesh_deformation_node inner_node;
       inner_node.global_id = global_vertex_id;
       inner_node.position = { vertex_coords[3 * first_tree.second], vertex_coords[3 * first_tree.second + 1],
                               vertex_coords[3 * first_tree.second + 2] };
-
-      /** Calculate the displacement of the inner node. */
-      rbf_handler.interpolate (inner_node);
-      final_displacement = inner_node.displacement;
+      inner_nodes.push_back (inner_node);
     }
+  }
 
+  deformation_method->set_boundary_nodes (boundary_node_data);
+  deformation_method->solve ();
+
+  for (auto &inner_node : inner_nodes) {
+    deformation_method->interpolate (inner_node);
+    vertex_displacements[inner_node.global_id] = inner_node.displacement;
+  }
+
+  for (const auto &global_vertex : *(associated_cmesh->vertex_connectivity)) {
+    /** Get the global vertex ID of the current vertex. */
+    t8_gloidx_t global_vertex_id = global_vertex.first;
     /** Update the vertex coordinates in each tree. */
+    const auto &tree_list = global_vertex.second;
     for (const auto &[tree_id, local_vertex_index] : tree_list) {
       /** Get the vertex coordinates of the current tree. */
       double *tree_vertex_coords = (double *) t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (),
@@ -322,7 +317,8 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
       if (tree_vertex_coords != nullptr) {
         /** Update the coordinates of the vertex. */
         for (int coord_index = 0; coord_index < 3; ++coord_index) {
-          tree_vertex_coords[3 * local_vertex_index + coord_index] += final_displacement[coord_index];
+          tree_vertex_coords[3 * local_vertex_index + coord_index]
+            += vertex_displacements.at (global_vertex_id)[coord_index];
         }
       }
     }
