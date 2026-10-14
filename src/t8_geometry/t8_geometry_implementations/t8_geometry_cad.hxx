@@ -204,7 +204,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
    * \param [in] geometries List of integers that identify the geometries.
    * \param [in] num_geometries Number of geometries to register for this tree.
-   * \note This function is usually only used explicitly by t8code examples.
+   * \note This function is usually only used explicitly by t8code examples and cmesh readers.
    */
   static void
   set_tree_geometries (const t8_cmesh_t cmesh, const t8_gloidx_t cmesh_gtreeid, const int attribute_dimension,
