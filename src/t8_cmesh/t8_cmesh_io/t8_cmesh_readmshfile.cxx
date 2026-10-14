@@ -1080,9 +1080,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       parameters[0] = edge_nodes[0].parameters[0];
       parameters[1] = edge_nodes[1].parameters[0];
 
-      t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (),
-                              T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, parameters,
-                              2 * sizeof (double), 0);
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, tree_count, 1, i_tree_edges, parameters, 2);
     }
     /*----------------------------------------- End of edge-curve linkage -----------------------------------------*/
 
@@ -1186,9 +1184,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       parameters[2] = edge_nodes[1].parameters[0];
       parameters[3] = edge_nodes[1].parameters[1];
 
-      t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (),
-                              T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, parameters,
-                              4 * sizeof (double), 0);
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, tree_count, 1, i_tree_edges, parameters, 4);
     }
   }
   /* Remove the -1 used to lock the edges */
