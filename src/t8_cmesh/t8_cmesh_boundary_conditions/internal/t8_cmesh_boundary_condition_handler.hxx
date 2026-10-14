@@ -160,15 +160,16 @@ struct t8_cmesh_boundary_condition_handler
   inline void
   register_boundary_condition (TString &&boundary_condition)
   {
-    const std::string boundary_condition_string { boundary_condition };
-    const boundary_condition_hash hash = hash_boundary_condition_name (boundary_condition_string);
-
-    [[maybe_unused]] const auto inserted
-      = m_boundary_conditions.try_emplace (hash, std::move (boundary_condition_string));
+    const std::string_view boundary_condition_view = boundary_condition;
+    const boundary_condition_hash hash = hash_boundary_condition_name (boundary_condition_view);
+    const auto [position, inserted] = m_boundary_conditions.try_emplace (hash, boundary_condition_view);
+    /* If the hash is already registered, it has to belong to the same name. Otherwise two names collide. */
+    SC_CHECK_ABORTF (inserted || position->second == boundary_condition_view,
+                     "ERROR: The boundary conditions \"%s\" and \"%s\" have the same hash.\n",
+                     position->second.c_str (), std::string (boundary_condition_view).c_str ());
 
 #if T8_ENABLE_DEBUG
-    if (inserted.second) {
-      const std::string_view boundary_condition_view = boundary_condition;
+    if (inserted) {
       t8_debugf ("Registered boundary condition %.*s\n", static_cast<int> (boundary_condition_view.size ()),
                  boundary_condition_view.data ());
     }
