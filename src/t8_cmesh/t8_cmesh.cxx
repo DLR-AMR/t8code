@@ -25,6 +25,7 @@
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -1240,9 +1241,8 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
     cmesh->set_partition_scheme->unref ();
   }
 
-  if (cmesh->vertex_connectivity != nullptr) {
-    delete cmesh->vertex_connectivity;
-  }
+  delete cmesh->vertex_connectivity;
+  delete cmesh->boundary_condition_handler;
 
   T8_FREE (cmesh);
   *pcmesh = nullptr;
