@@ -99,11 +99,9 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   const double time_balance = t8_forest_profile_get_balance_time (profiling_forest, &balance_rounds);
   const double time_ghost = t8_forest_profile_get_ghost_time (profiling_forest, &ghosts_sent);
   const double time_ghost_wait = t8_forest_profile_get_ghostexchange_waittime (profiling_forest);
-#if T8_ENABLE_MPI
   const double time_cmesh_offsets = t8_forest_profile_get_cmesh_offsets_runtime (profiling_forest);
   const double time_forest_offsets = t8_forest_profile_get_forest_offsets_runtime (profiling_forest);
   const double time_first_descendant = t8_forest_profile_get_first_descendant_runtime (profiling_forest);
-#endif
 
   // (5) Simple sanity checks.
   // -------------------------
@@ -116,28 +114,24 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   EXPECT_GT (time_adapt, 0.0);
   EXPECT_GT (time_partition, 0.0);
   EXPECT_GT (time_balance, 0.0);
+  EXPECT_GT (time_cmesh_offsets, 0.0);
+  EXPECT_GT (time_first_descendant, 0.0);
+  EXPECT_GT (time_forest_offsets, 0.0);
 
   // Integers
   EXPECT_GT (balance_rounds, 0);
   EXPECT_GE (procs_sent, 0);
   EXPECT_LT (procs_sent, mpisize);
 
-#if T8_ENABLE_MPI
-  // Tests valid only with MPI, but then even on one process.
-  EXPECT_GT (time_cmesh_offsets, 0.0);
-  EXPECT_GT (time_first_descendant, 0.0);
-  EXPECT_GT (time_forest_offsets, 0.0);
-#endif
+  // Stats
+  EXPECT_GT (commit_stats->average, 0.0);
 
-  // Tests only valid for parallel execution.
+  // The ghost statistics are only non-zero for parallel execution.
   if (mpisize > 1) {
     EXPECT_GT (ghosts_sent, 0);
     EXPECT_GT (time_ghost, 0.0);
     EXPECT_GT (time_ghost_wait, 0.0);
   }
-
-  // Stats
-  EXPECT_GT (commit_stats->average, 0.0);
 
   // (6) Sanity checks comparing stats and times.
   // --------------------------------------------
@@ -149,10 +143,8 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   EXPECT_LE (time_balance, balance_stats->max);
   EXPECT_GE (balance_rounds, balance_rounds_stats->min);
   EXPECT_LE (balance_rounds, balance_rounds_stats->max);
-#if T8_ENABLE_MPI
   EXPECT_GE (time_ghost, ghost_stats->min);
   EXPECT_LE (time_ghost, ghost_stats->max);
-#endif
 
   // (7) Memory clean up.
   // --------------------
