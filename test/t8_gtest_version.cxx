@@ -109,3 +109,10 @@ TEST (t8_gtest_version, check_version_number_has_major_minor_patch)
   ASSERT_EQ (minor_string_to_int, minor);
   ASSERT_EQ (patch_string_to_int, patch);
 }
+
+TEST (t8_gtest_version, check_version_point_string)
+{
+  const char *version_point = t8_get_version_point_string ();
+  /* This should not be nullptr. Change the test if we move away from using point-string */
+  ASSERT_STRNE (version_point, nullptr);
+}
