@@ -35,14 +35,19 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 
+/**
+ * Calculates the mean euclidean distance from a given vertex based on its neighbors.
+ * The result will later be multiplied with the scaling factor chosen by the user.
+ * \param [in] cmesh The mesh.
+ * \param [in] tree_list The list of trees where the vertex is present.
+ * \param [in] current_global_vertex_id The global ID of the current vertex.
+ * \return The local support radius.
+ */
 static double
-calculate_local_support_radius (t8_cmesh_t cmesh, const std::vector<std::pair<t8_locidx_t, int>> &tree_list,
-                                const t8_gloidx_t current_global_vertex_id, const t8_3D_vec &displacements)
+t8_calculate_mean_neighbor_distance (t8_cmesh_t cmesh, const std::vector<std::pair<t8_locidx_t, int>> &tree_list,
+                                     const t8_gloidx_t current_global_vertex_id)
 {
   double total_distance = 0.0;
-
-  const double displacement_magnitude = std::sqrt (
-    displacements[0] * displacements[0] + displacements[1] * displacements[1] + displacements[2] * displacements[2]);
   /* Get the first tree where the current boundary vertex (with ID current_global_vertex_id) exists. */
   const auto &first_tree = tree_list.front ();
   const t8_locidx_t first_tree_id = first_tree.first;
@@ -107,11 +112,8 @@ calculate_local_support_radius (t8_cmesh_t cmesh, const std::vector<std::pair<t8
 
     total_distance += std::sqrt (distance_x * distance_x + distance_y * distance_y + distance_z * distance_z);
   }
-
-  const double grading_factor = 2.0;
-
-  return (total_distance / static_cast<double> (unique_neighbors.size ()))
-         * (1.0 + grading_factor * displacement_magnitude);
+  /* Return the average distance. */
+  return total_distance / static_cast<double> (unique_neighbors.size ());
 }
 
 std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node>
@@ -234,7 +236,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       if (rbf_type == T8_RBF_CPC2) {
         node.local_support_radius
           = scale_factor_support_radius
-            * calculate_local_support_radius (associated_cmesh, tree_list, global_vertex_id, node.displacement);
+            * t8_calculate_mean_neighbor_distance (associated_cmesh, tree_list, global_vertex_id);
       }
       boundary_node_data[global_vertex_id] = node;
     }

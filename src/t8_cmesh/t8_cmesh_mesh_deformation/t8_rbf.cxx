@@ -26,10 +26,11 @@
 
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx>
-#include <t8_types/t8_vec.h>
+#include <t8_vector/t8_vec.h>
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <Eigen/SparseLU>
+#include <limits>
 
 /*
  * Solves the linear system A * alpha = displacements to find the weight. 
@@ -121,15 +122,16 @@ t8_rbf::solve_globally_supported_rbf (const Eigen::MatrixXd &displacements, cons
       /* Calculate the distance between the current pair of boundary nodes. */
       const double distance = t8_dist (boundary_nodes[row].position, boundary_nodes[col].position);
       /* Evaluate the radial basis function for the current distance and write the value to the interpolation matrix. */
-      const double psi = rbf_function->evaluate (distance, 0.0);
+      const double psi = rbf_function->evaluate (distance);
       interpolation_matrix (row, col) = psi;
       interpolation_matrix (col, row) = psi;
     }
   }
   Eigen::PartialPivLU<Eigen::MatrixXd> solver (interpolation_matrix);
 
-  if (solver.info () != Eigen::Success) {
-    t8_errorf ("ERROR: The global RBF system could not be solved with LU-Decomposition.\n");
+  /* PartialPivLU assumes an invertible matrix, so we check the estimated reciprocal condition number. */
+  if (solver.rcond () < std::numeric_limits<double>::epsilon ()) {
+    t8_errorf ("ERROR: The interpolation matrix is singular or nearly singular. The linear system cannot be solved.\n");
   }
 
   return solver.solve (displacements);

@@ -27,11 +27,15 @@
 
 #include <vector>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <unordered_map>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
+
+/** Support radius used for globally supported RBFs, which have no finite support. */
+constexpr double T8_RBF_GLOBAL_SUPPORT = std::numeric_limits<double>::infinity ();
 
 /** 
  * The available RBF function types. 
@@ -64,8 +68,8 @@ struct t8_rbf_boundary_node: public t8_rbf_node
   /** The calculated RBF coefficient alpha. This is needed for the interpolation to distribute the influence of the boundary nodes. 
   * This weight represents the fixed influence assigned to each boundary node. */
   t8_3D_vec weight;
-  /** The local support radius for the  boundary node. */
-  double local_support_radius;
+  /** The local support radius for the  boundary node. Only used for compactly supported RBFs. */
+  double local_support_radius = T8_RBF_GLOBAL_SUPPORT;
 };
 
 /** A base struct representing a radial basis function. */
@@ -77,11 +81,11 @@ struct t8_rbf_function
   /**
    * Evaluate the radial basis function.
    * \param[in] distance The euclidean distance between two points.
-   * \param[in] radius The support radius.
+   * \param[in] radius The support radius. Defaults to T8_RBF_GLOBAL_SUPPORT for globally supported RBFs.
    * \return The function value.
    */
   virtual double
-  evaluate (double distance, double radius) const
+  evaluate (const double distance, const double radius = T8_RBF_GLOBAL_SUPPORT) const
     = 0;
 
   /** 
@@ -116,6 +120,8 @@ struct t8_rbf_cpc2: public t8_rbf_function
   double
   evaluate (const double distance, const double radius) const override
   {
+    /* CPC2 is compactly supported and requires a finite, positive support radius. */
+    T8_ASSERT (std::isfinite (radius) && radius > 0.0);
     const double normalized_distance = distance / radius;
     if (normalized_distance < 1.0) {
       return std::pow (1.0 - normalized_distance, 4) * (4.0 * normalized_distance + 1.0);
@@ -209,27 +215,29 @@ struct t8_rbf
   set_boundary_nodes (std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node>&& boundary_node_data)
   {
     boundary_nodes.clear ();
+    boundary_node_index_map.clear ();
     boundary_nodes.reserve (boundary_node_data.size ());
+    boundary_node_index_map.reserve (boundary_node_data.size ());
     for (auto& [global_vertex_id, boundary_node] : boundary_node_data) {
 
       boundary_node.global_id = global_vertex_id;
-
+      /* Remember the position of this node in boundary_nodes for a fast lookup by its global ID. */
+      boundary_node_index_map[global_vertex_id] = boundary_nodes.size ();
       boundary_nodes.push_back (std::move (boundary_node));
     }
   }
 
   /** 
-   * Search for the displacement of a specific boundary node with its associated global ID.
+   * Look up the displacement of a specific boundary node with its associated global ID.
    * \param [in] global_id The global ID of the boundary node.
    * \return The displacement vector of the boundary node. 
    */
   t8_3D_vec
   get_boundary_displacement (const t8_gloidx_t global_id) const
   {
-    for (const auto& node : boundary_nodes) {
-      if (node.global_id == global_id) {
-        return node.displacement;
-      }
+    const auto found_node = boundary_node_index_map.find (global_id);
+    if (found_node != boundary_node_index_map.end ()) {
+      return boundary_nodes[found_node->second].displacement;
     }
     /* If the boundary node can not be found in the list of boundary nodes. */
     t8_errorf ("ERROR: The boundary node %" T8_GLOIDX_FORMAT " is missing in the boundary node list.\n", global_id);
@@ -291,6 +299,8 @@ struct t8_rbf
   solve_globally_supported_rbf (const Eigen::MatrixXd& displacements, const size_t num_boundary_nodes) const;
   /** List of all registered support nodes. */
   std::vector<t8_rbf_boundary_node> boundary_nodes;
+  /** Map from global node IDs to their indices in the boundary_nodes vector. */
+  std::unordered_map<t8_gloidx_t, size_t> boundary_node_index_map;
   /** Pointer to the radial basis function. */
   std::unique_ptr<t8_rbf_function> rbf_function;
 };
