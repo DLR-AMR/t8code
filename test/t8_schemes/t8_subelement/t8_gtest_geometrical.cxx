@@ -37,7 +37,7 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_subelement.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 
 #include <vector>
 
