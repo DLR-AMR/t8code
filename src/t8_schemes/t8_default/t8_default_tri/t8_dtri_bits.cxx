@@ -20,15 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtri_bits.c
- *  Implements functions declared in \ref t8_dtri_bits.h.
+/** \file t8_dtri_bits.cxx
+ *  Implements functions declared in \ref t8_dtri_bits.hxx.
  */
 
 #ifndef T8_DTRI_TO_DTET
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 #else
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
 #endif
 
