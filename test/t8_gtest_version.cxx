@@ -115,4 +115,6 @@ TEST (t8_gtest_version, check_version_point_string)
   const char *version_point = t8_get_version_point_string ();
   /* This should not be nullptr. Change the test if we move away from using point-string */
   ASSERT_STRNE (version_point, nullptr);
+  /* The version string should not be empty. Change the test if we move away from using point-string */
+  ASSERT_STRNE (version_point, "");
 }
