@@ -32,8 +32,8 @@
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_types/t8_vec.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.h>
+#include <t8_vector/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 
 #include <BRep_Builder.hxx>
