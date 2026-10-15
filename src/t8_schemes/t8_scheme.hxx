@@ -133,10 +133,8 @@ struct t8_scheme
   static inline decltype (auto)
   dispatch_to (const scheme_var &scheme, TArgs... args)
   {
-    /* The dispatch table guarantees that the index matches. Telling the compiler lets it drop the check in get_if. */
-    if (scheme.index () != TIndex) {
-      __builtin_unreachable ();
-    }
+    /* The dispatch table guarantees that the index matches. */
+    T8_ASSERT (scheme.index () == TIndex);
     return TFunc {}(*std::get_if<TIndex> (&scheme), args...);
   }
 
