@@ -121,7 +121,7 @@ struct t8_scheme
     rc; /**< The reference count of the scheme. Mutable so that the class can be const and the ref counter is still mutable. TODO: Replace by shared_ptr when forest becomes a class. */
 
   /** Call \a TFunc on the alternative \a TIndex of an eclass scheme variant.
-   * This is one entry of the dispatch table built by \ref make_dispatch_table.
+   * This is one entry of the dispatch table built by make_dispatch_table.
    * \tparam TIndex   The index of the variant alternative.
    * \tparam TFunc    A captureless callable that takes the eclass scheme and \a args.
    * \tparam TArgs    The types of the arguments.
@@ -140,7 +140,7 @@ struct t8_scheme
     return TFunc {}(*std::get_if<TIndex> (&scheme), args...);
   }
 
-  /** Build a table with one \ref dispatch_to function pointer per variant alternative.
+  /** Build a table with one dispatch_to function pointer per variant alternative.
    * \tparam TFunc      A captureless callable that takes the eclass scheme and the arguments.
    * \tparam TArgs      The types of the arguments.
    * \tparam TIndices   The indices of all variant alternatives.
