@@ -73,7 +73,7 @@ t8_adapt_data adapt_data = {
  * Adapts the mesh around a circle of radius \a radius centered at \a midpoint:
  * Elements on the circle are refined to \a maxlevel, relaxing linearly to \a minlevel over a band of width \a delta.
  * The closer an element is to the circle, the finer it gets: elements right on the circle are refined to maxlevel,
- * elements delta or more away stay at minlevel, and in between the level scales linearly with the distance to the 
+ * elements delta or more away stay at minlevel, and in between the level scales linearly with the distance to the
  * circle.
  * \param [in] forest       The current forest that is in construction.
  * \param [in] forest_from  The forest from which we adapt (here, the uniform forest).
@@ -132,7 +132,7 @@ t8_adapt_forest (t8_forest_t forest)
 }
 
 /** Balance a forest, i.e. enforce that neighboring elements differ by at most one
- * refinement level (a 2:1 balance). 
+ * refinement level (a 2:1 balance).
  * \param[in] forest Forest to be balanced.
  */
 t8_forest_t
@@ -149,7 +149,7 @@ t8_forest_balance (t8_forest_t forest)
  *
  * Runs the full demonstration pipeline (uniform -> adapt -> balance ->
  * remove hanging nodes -> discard -> adapt -> balance -> remove), writing the
- * forest to VTK after each stage. 
+ * forest to VTK after each stage.
  */
 int
 main (int argc, char **argv)
@@ -166,7 +166,7 @@ main (int argc, char **argv)
   /* Hybrid 2D hypercube: a mesh containing both quad and triangle trees. */
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
-  t8_cmesh_new_2D_hypercube_hybrid (cmesh, comm);
+  t8_cmesh_new_hypercube_hybrid_2D (cmesh, comm);
   /* Uniform forest using the subelement scheme (required for hanging-node resolution). */
   const int level = 0;
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), level, 0, comm);

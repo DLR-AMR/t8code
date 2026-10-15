@@ -47,7 +47,7 @@ namespace t8_mesh_handle
  * \param [in] comm          MPI communicator to use.
  * \param [in] do_face_ghost If true, a layer of ghost elements is created.
  * \tparam TMeshClass        The mesh handle class.
- * \return                   Unique pointer to a uniformly refined mesh handle with coarse mesh \a cmesh and refinement level \a level, 
+ * \return                   Unique pointer to a uniformly refined mesh handle with coarse mesh \a cmesh and refinement level \a level,
  *                           partitioned across the processes in \a comm.
  */
 template <T8MeshType TMeshClass>
@@ -76,7 +76,7 @@ handle_new_uniform_default (const t8_cmesh_t cmesh, const int level, const sc_MP
 }
 
 // --- A very small fraction of example coarse meshes is wrapped here for easy access and for the use in tests. ---
-/** Hybercube with 6 Tets, 6 Prism, 4 Hex. Refined uniformly to given level using the default scheme.
+/** Hypercube with 6 Tets, 6 Prism, 4 Hex. Refined uniformly to given level using the default scheme.
  * \param [in] level         An initial uniform refinement level.
  * \param [in] comm          MPI communicator to use.
  * \param [in] do_face_ghost If true, a layer of ghost elements is created.
@@ -96,7 +96,7 @@ handle_hypercube_hybrid_uniform_default (const int level, const sc_MPI_Comm comm
   return handle_new_uniform_default<TMeshClass> (cmesh, level, comm, do_face_ghost);
 }
 
-/** Construct hybercube from one primitive tree class. Refined uniformly to given level using the default scheme.
+/** Construct hypercube from one primitive tree class. Refined uniformly to given level using the default scheme.
  * \param [in] eclass        This element class determines the dimension and the number of trees needed to construct a cube.
  * \param [in] level         An initial uniform refinement level.
  * \param [in] comm          MPI communicator to use.
