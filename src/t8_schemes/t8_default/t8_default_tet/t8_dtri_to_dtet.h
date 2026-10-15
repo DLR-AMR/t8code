@@ -70,7 +70,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_type_cid_to_Iloc t8_dtet_type_cid_to_Iloc               /**< Wrapper of tri variable to tet.*/
 #define t8_dtri_face_corner t8_dtet_face_corner                         /**< Wrapper of tri variable to tet.*/
 
-/** Functions in t8_dtri_bits.h. */
+/** Functions in t8_dtri_bits.hxx. */
 #define t8_dtri_is_equal t8_dtet_is_equal                                   /**< Wrapper of tri function to tet.*/
 #define t8_dtri_copy t8_dtet_copy                                           /**< Wrapper of tri function to tet.*/
 #define t8_dtri_compare t8_dtet_compare                                     /**< Wrapper of tri function to tet.*/
