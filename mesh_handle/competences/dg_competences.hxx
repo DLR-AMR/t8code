@@ -21,7 +21,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /** \file dg_competences.hxx
- * Mesh competences that are useful for discontinuous Galerkin methods. This includes the storage of the remote 
+ * Mesh competences that are useful for discontinuous Galerkin methods. This includes the storage of the remote
  * ranks of the ghost elements and the face connectivity.
  */
 
@@ -41,8 +41,8 @@ namespace t8_mesh_handle
 inline constexpr int LOCAL_RANK = -1;
 
 /**
- * This mesh competence provides the competence to store a vector with the ranks of the according elements. 
- * This is always \a LOCAL_RANK for the local elements. The interesting parts are the ghost elements. 
+ * This mesh competence provides the competence to store a vector with the ranks of the according elements.
+ * This is always \a LOCAL_RANK for the local elements. The interesting parts are the ghost elements.
  * The order of the vector is the same as in the mesh handle.
  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
@@ -121,10 +121,7 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
   int
   get_local_rank () const
   {
-    int mpirank;
-    const int mpiret = sc_MPI_Comm_rank (t8_forest_get_mpicomm (this->underlying ().get_forest ()), &mpirank);
-    SC_CHECK_MPI (mpiret);
-    return mpirank;
+    return t8_forest_get_mpirank (this->underlying ().get_forest ());
   }
 
  protected:
@@ -139,7 +136,7 @@ enum class face_type {
   MPI_CONFORMAL,  ///< Exactly 2 sides, same level, exactly one remote.
   /** Mortar where at least one side (large or small) is remote.
    * If the large side is remote, the face may be \c incomplete: it lists only the small sides that are owned by this
-   * rank. Small sides owned by a third rank are not reachable. Do not assume sides.size() equals the number of 
+   * rank. Small sides owned by a third rank are not reachable. Do not assume sides.size() equals the number of
    * children of the large element.
    */
   MPI_MORTAR,
@@ -158,14 +155,14 @@ struct face_side
 struct face
 {
   face_type type;  ///< The face type of the face, see \ref face_type for the possible types and their meaning.
-  /** The face sides of different elements adjacent to this face. 
+  /** The face sides of different elements adjacent to this face.
    * Order conventions for the sides in the vector depend on the face type:
    * - BOUNDARY: sides[0]     = the single local side
    * - CONFORMAL / MPI_CONFORMAL: sides[0] = primary (smaller handle id); sides[1] = secondary.
    *                              For MPI_CONFORMAL the local side is always the primary side with the smaller handle id (local ids < ghost ids).
-   * - MORTAR / MPI_MORTAR: sides[0] = large side; 
+   * - MORTAR / MPI_MORTAR: sides[0] = large side;
    *                        sides[1..N] = small sides (in face-corner order of the large element)
-   *                        For MPI_MORTAR with a remote large side, sides[1..N] are exactly the locally owned 
+   *                        For MPI_MORTAR with a remote large side, sides[1..N] are exactly the locally owned
    *                        small sides and N may be smaller than the number of face children of the large element.
    */
   std::vector<face_side> sides;
@@ -173,23 +170,23 @@ struct face
 };
 
 /**
- * Mesh competence to build a unique vector of faces, where each face appears exactly once. 
+ * Mesh competence to build a unique vector of faces, where each face appears exactly once.
  * This is useful for DG methods, where we need to loop over faces and access the neighboring elements across the face.
  * This mesh competence should be combined with the competence \ref remote_ranks_mesh_competence.
  * Each vector entry is of type \ref face and we have the following uniqueness rules for the face types specified in
  * \ref face_type :
  * - BOUNDARY: only one local side exists, always added.
- * - CONFORMAL / MPI_CONFORMAL: added by the side whose element has the smaller handle_id. 
+ * - CONFORMAL / MPI_CONFORMAL: added by the side whose element has the smaller handle_id.
  *      For a local–ghost pair the local element always has the smaller id (local ids < ghost ids),
  *      so the local side is always the one that inserts the face.
- * - MORTAR / MPI_MORTAR: the large (coarser) side owns the face and inserts it (also for ghosts). 
+ * - MORTAR / MPI_MORTAR: the large (coarser) side owns the face and inserts it (also for ghosts).
  *      The small sides are specified in sides.
  * A face is built from the sides that are visible on this rank. For a mortar whose large side is
  * a ghost, only the locally owned small sides are recorded and the same face is recorded on the other
  * ranks holding the remaining small sides, each with its own subset. Codes that need the complete
  * mortar on one rank must exchange the small-side lists separately.
  * Additionally, a vector is built that holds the face indices for each element.
- * 
+ *
  * \tparam TUnderlying Use the \ref mesh with specified competences as template parameter.
  */
 template <typename TUnderlying>
@@ -197,8 +194,8 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
 {
  public:
   /**
-   * Build \a m_faces so that every face touching at least one local element appears exactly once. 
-   * Simultaneously populate \a m_element_face_vector so that m_element_face_vector[element_handle_id][face_id] gives the 
+   * Build \a m_faces so that every face touching at least one local element appears exactly once.
+   * Simultaneously populate \a m_element_face_vector so that m_element_face_vector[element_handle_id][face_id] gives the
    * index of the corresponding face in m_faces.
    */
   void
