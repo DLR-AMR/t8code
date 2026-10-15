@@ -25,6 +25,12 @@
 #include <t8_element/t8_element_shape.h>
 #include <test/t8_gtest_macros.hxx>
 
+/** \file
+ * This file consists of several test all around the shape of an element.
+ * Properties of the Look-up tables are tested. If easily possible the correctness is tested, too.
+ * 
+ */
+
 struct gtest_shapes: public testing::TestWithParam<t8_eclass_t>
 {
  protected:
