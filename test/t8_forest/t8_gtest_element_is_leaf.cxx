@@ -57,8 +57,8 @@ struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, i
     scheme = create_from_scheme_id (scheme_id);
     const int level = std::get<1> (GetParam ());
     t8_cmesh_t cmesh = std::get<2> (GetParam ())->cmesh_create ();
-    if (t8_cmesh_is_empty (cmesh)) {
-      /* forest_commit does not support empty cmeshes, we skip this case */
+    if (t8_cmesh_is_empty (cmesh) || !t8_test_scheme_supports_cmesh (scheme_id, cmesh, sc_MPI_COMM_WORLD)) {
+      /* forest_commit does not support empty cmeshes, we skip this case and cmeshes that the scheme does not support */
       scheme->unref ();
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
