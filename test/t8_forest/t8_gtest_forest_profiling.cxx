@@ -114,10 +114,19 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   EXPECT_GT (time_adapt, 0.0);
   EXPECT_GT (time_partition, 0.0);
   EXPECT_GT (time_balance, 0.0);
+
+#if T8_ENABLE_MPI
+  // If t8code is compiled with MPI, these timings are measured and should thus be nonzero,
+  // even if run on only one "parallel" process.
   EXPECT_GT (time_cmesh_offsets, 0.0);
   EXPECT_GT (time_first_descendant, 0.0);
   EXPECT_GT (time_forest_offsets, 0.0);
-
+#else
+  // If t8code is compiled without MPI, these timings remain zero.
+  EXPECT_EQ (time_cmesh_offsets, 0.0);
+  EXPECT_EQ (time_first_descendant, 0.0);
+  EXPECT_EQ (time_forest_offsets, 0.0);
+#endif
   // Integers
   EXPECT_GT (balance_rounds, 0);
   EXPECT_GE (procs_sent, 0);
