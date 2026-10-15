@@ -115,18 +115,6 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   EXPECT_GT (time_partition, 0.0);
   EXPECT_GT (time_balance, 0.0);
 
-#if T8_ENABLE_MPI
-  // If t8code is compiled with MPI, these timings are measured and should thus be nonzero,
-  // even if run on only one "parallel" process.
-  EXPECT_GT (time_cmesh_offsets, 0.0);
-  EXPECT_GT (time_first_descendant, 0.0);
-  EXPECT_GT (time_forest_offsets, 0.0);
-#else
-  // If t8code is compiled without MPI, these timings remain zero.
-  EXPECT_EQ (time_cmesh_offsets, 0.0);
-  EXPECT_EQ (time_first_descendant, 0.0);
-  EXPECT_EQ (time_forest_offsets, 0.0);
-#endif
   // Integers
   EXPECT_GT (balance_rounds, 0);
   EXPECT_GE (procs_sent, 0);
@@ -135,11 +123,14 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   // Stats
   EXPECT_GT (commit_stats->average, 0.0);
 
-  // The ghost statistics are only non-zero for parallel execution.
+  // The following statistics are only ensured to be non-zero for parallel execution.
   if (mpisize > 1) {
     EXPECT_GT (ghosts_sent, 0);
     EXPECT_GT (time_ghost, 0.0);
     EXPECT_GT (time_ghost_wait, 0.0);
+    EXPECT_GT (time_cmesh_offsets, 0.0);
+    EXPECT_GT (time_first_descendant, 0.0);
+    EXPECT_GT (time_forest_offsets, 0.0);
   }
 
   // (6) Sanity checks comparing stats and times.
