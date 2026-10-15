@@ -56,6 +56,7 @@ TEST_P (gtest_shapes, shape_num_faces)
 {
   const int dim = t8_eclass_to_dimension[(t8_eclass_t) shape];
   EXPECT_LE (t8_element_shape_num_faces (shape), t8_element_shape_max_num_faces (dim));
+  EXPECT_GE (t8_element_shape_num_faces (shape), 0);
 }
 
 TEST_P (gtest_shapes, shape_compare)
