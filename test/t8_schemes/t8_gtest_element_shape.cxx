@@ -67,7 +67,8 @@ TEST_P (gtest_shapes, shape_compare)
 TEST_P (gtest_shapes, shape_string)
 {
   const char* shape_string = t8_element_shape_to_string (shape);
-  EXPECT_TRUE (shape_string != nullptr);
+  EXPECT_NE (shape_string, nullptr);
+  EXPECT_STRNE (shape_string, "");
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_shapes, gtest_shapes, AllEclasses, print_eclass);
