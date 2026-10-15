@@ -34,7 +34,7 @@
         },
         {
             "name": "EIGEN",
-            "depends_on_cmake_option": "T8CODE_ENABLE_EIGEN",
+            "depends_on_cmake_option": "T8CODE_FETCH_EIGEN",
             "cmake_option_install_value": "ON",
             "source": {
                 "type": "git",

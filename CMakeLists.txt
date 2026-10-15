@@ -58,6 +58,7 @@ option( T8CODE_ENABLE_EIGEN "Enable t8code's features which rely on Eigen" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
+cmake_dependent_option( T8CODE_USE_SYSTEM_EIGEN "Use system-installed Eigen library" OFF "T8CODE_ENABLE_EIGEN" OFF )
 
 option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
@@ -175,6 +176,13 @@ else()
     set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -w" CACHE STRING "" FORCE)
 endif()
 
+# Eigen is only downloaded if it is enabled and no system-installed Eigen should be used.
+if( T8CODE_ENABLE_EIGEN AND NOT T8CODE_USE_SYSTEM_EIGEN )
+    set( T8CODE_FETCH_EIGEN ON )
+else()
+    set( T8CODE_FETCH_EIGEN OFF )
+endif()
+
 # Capture the list of variables before adding the thirdparty libraries to mark the added ones as advanced.
 get_cmake_property(_vars_before_thirdparty VARIABLES )
 
@@ -268,6 +276,10 @@ endif()
 
 if ( T8CODE_USE_SYSTEM_P4EST )
     find_package( P4EST REQUIRED )
+endif()
+
+if ( T8CODE_USE_SYSTEM_EIGEN )
+    find_package( Eigen3 REQUIRED NO_MODULE )
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )

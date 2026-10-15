@@ -43,6 +43,7 @@ t8_rbf::solve ()
   /* Check if there are any boundary nodes. */
   if (num_boundary_nodes == 0) {
     t8_errorf ("ERROR: Boundary nodes are not added correctly. The current RBF instance has no boundary nodes.\n");
+    SC_ABORT ("The RBF instance has no boundary nodes.");
   }
 
   /* Fill the displacement vector with the values of the boundary nodes' displacements. */
@@ -52,15 +53,10 @@ t8_rbf::solve ()
       = Eigen::Vector3d (boundary_nodes[inode].displacement[0], boundary_nodes[inode].displacement[1],
                          boundary_nodes[inode].displacement[2]);
   }
-  /* Weight vector. */
-  Eigen::MatrixXd alpha;
-
-  if (rbf_function->is_compactly_supported ()) {
-    alpha = solve_compactly_supported_rbf (displacements, num_boundary_nodes);
-  }
-  else {
-    alpha = solve_globally_supported_rbf (displacements, num_boundary_nodes);
-  }
+  /* Calculate the weights with the solver that fits the support of the RBF. */
+  const Eigen::MatrixXd alpha = rbf_function->is_compactly_supported ()
+                                  ? solve_compactly_supported_rbf (displacements, num_boundary_nodes)
+                                  : solve_globally_supported_rbf (displacements, num_boundary_nodes);
   /* Copy the calculated weights back to the boundary nodes. */
   for (size_t inode = 0; inode < num_boundary_nodes; ++inode) {
     boundary_nodes[inode].weight[0] = alpha (inode, 0);

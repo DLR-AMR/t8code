@@ -36,15 +36,15 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 
 /**
- * Calculates the mean euclidean distance from a given vertex based on its neighbors.
+ * Calculates the mean euclidean distance from a given vertex based on its neighbor vertices.
  * The result will later be multiplied with the scaling factor chosen by the user.
  * \param [in] cmesh The mesh.
  * \param [in] tree_list The list of trees where the vertex is present.
  * \param [in] current_global_vertex_id The global ID of the current vertex.
- * \return The local support radius.
+ * \return The mean distance to the neighbor vertices.
  */
 static double
-t8_calculate_mean_neighbor_distance (t8_cmesh_t cmesh, const std::vector<std::pair<t8_locidx_t, int>> &tree_list,
+t8_calculate_mean_neighbor_distance (const t8_cmesh_t cmesh, const std::vector<std::pair<t8_locidx_t, int>> &tree_list,
                                      const t8_gloidx_t current_global_vertex_id)
 {
   double total_distance = 0.0;
@@ -282,11 +282,11 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
 
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
 
-    /* Contains the displacement whether its a boundary node or an inner node. */
+    /* Contains the displacement whether it is a boundary node or an inner node. */
     t8_3D_vec final_displacement;
 
     /* Check if this vertex is a boundary node. 
-      If so, we can use the already known displacement extracted from the new CAD geometry input given.*/
+       If so, we can use the already known displacement extracted from the new CAD geometry input given. */
     if (first_tree_entity_dim < mesh_dimension && first_tree_entity_dim >= 0) {
 
       final_displacement = rbf_handler.get_boundary_displacement (global_vertex_id);

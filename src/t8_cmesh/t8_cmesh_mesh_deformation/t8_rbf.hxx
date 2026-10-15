@@ -161,7 +161,7 @@ struct t8_rbf_tps: public t8_rbf_function
    * \return The function value psi.  
    */
   double
-  evaluate (double distance, [[maybe_unused]] double radius) const override
+  evaluate (const double distance, [[maybe_unused]] const double radius) const override
   {
     if (distance < 1e-12) {
       return 0.0;
@@ -190,7 +190,7 @@ struct t8_rbf
   /** Constructor. 
    * \param [in] rbf_type        The RBF type to be used.
   */
-  t8_rbf (t8_rbf_function_type rbf_type)
+  t8_rbf (const t8_rbf_function_type rbf_type)
   {
 
     if (rbf_type == T8_RBF_CPC2) {
