@@ -70,15 +70,8 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
   }
 
  protected:
-  /** Base constructor with no arguments. We need this since it
-   * can be called from derived class constructors. */
-  t8_forest_ghost_definition_w_search ()
-  {
-  }
-
-  /**
-   * Fills the remote ghosts using a tree-based search.
-   * \param [in,out]    forest     The forest.
+  /** Fills the remote ghosts using a tree-based search.
+   * \param [in,out] forest     The forest.
    */
   void
   fill_remote_ghosts (t8_forest_t forest) override;
