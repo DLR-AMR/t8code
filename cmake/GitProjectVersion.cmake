@@ -42,7 +42,7 @@ else()
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/version.txt")
         file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version.txt" VERSION_CONTENT)
         # Extract the version number 
-        string(REGEX MATCH "Version ([0-9])\.([0-9]+)\.([0-9]+)-([0-9]+\.[0-9]+)" VERSION_MATCH "${VERSION_CONTENT}" )
+        string(REGEX MATCH "Version ([0-9])\.([0-9]+)\.([0-9]+)-([0-9]+(\.[0-9]+)*)" VERSION_MATCH "${VERSION_CONTENT}" )
         if (VERSION_MATCH)
             # The version number will be in ${CMAKE_MATCH_1}
             set(T8CODE_VERSION_NUMBERS "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
