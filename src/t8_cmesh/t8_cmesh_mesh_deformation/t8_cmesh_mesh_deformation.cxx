@@ -248,6 +248,8 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
 {
   T8_ASSERT (t8_cmesh_is_committed (associated_cmesh));
 
+  const int mesh_dimension = t8_cmesh_get_dimension (associated_cmesh);
+
   t8_rbf rbf_handler (rbf_type);
 
   rbf_handler.set_boundary_nodes (std::move (boundary_node_data));
@@ -277,8 +279,6 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
     }
 
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
-
-    const int mesh_dimension = t8_cmesh_get_dimension (associated_cmesh);
 
     /* Contains the displacement whether its a boundary node or an inner node. */
     t8_3D_vec final_displacement;

@@ -115,13 +115,15 @@ t8_rbf::solve_globally_supported_rbf (const Eigen::MatrixXd &displacements, cons
   Eigen::MatrixXd interpolation_matrix (num_boundary_nodes, num_boundary_nodes);
   /* Fill the interpolation matrix with the values of the radial basis function psi evaluated at the pairwise euclidean distances between all boundary nodes. */
   for (size_t row = 0; row < num_boundary_nodes; ++row) {
-    /* Because of the symmetric property of the distance between nodes, we only need to compute the upper triangular part of the matrix 
-       * and can mirror the values to the lower triangular part. */
-    for (size_t col = 0; col < num_boundary_nodes; ++col) {
+    /* Because of the symmetric property of the distance between nodes, we only need to compute the upper triangular part (including the diagonal) of the matrix 
+     * and can mirror the values to the lower triangular part. */
+    for (size_t col = row; col < num_boundary_nodes; ++col) {
       /* Calculate the distance between the current pair of boundary nodes. */
       const double distance = t8_dist (boundary_nodes[row].position, boundary_nodes[col].position);
       /* Evaluate the radial basis function for the current distance and write the value to the interpolation matrix. */
-      interpolation_matrix (row, col) = rbf_function->evaluate (distance, 0.0);
+      const double psi = rbf_function->evaluate (distance, 0.0);
+      interpolation_matrix (row, col) = psi;
+      interpolation_matrix (col, row) = psi;
     }
   }
   Eigen::PartialPivLU<Eigen::MatrixXd> solver (interpolation_matrix);
