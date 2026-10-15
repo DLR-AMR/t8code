@@ -31,7 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh_handle.hxx>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <t8_eclass/t8_eclass.h>
 #include <vector>
 #include <span>
