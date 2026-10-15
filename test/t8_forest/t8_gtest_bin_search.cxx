@@ -158,11 +158,21 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
         //     so it cannot be greater than ielement.
         EXPECT_LE (search_index, ielement);
 
+#if T8_TEST_LEVEL_INT == 2
+        // For T8_TEST_LEVEL_BASIC, only check ielement and search_index produce the same linear ID
+        // to save runtime.
+        const int last_check_elem = search_index;
+#else
+        // For other test levels, check all elements from ielement to search_index produce the same linear ID.
+        const int last_check_elem = ielement;
+#endif
+
         // (ii) All leaves from search_index to ielement must have the same linear ID on lower_level.
-        for (int i = search_index; i <= ielement; i++) {
-          const t8_element_t *leaf_i = t8_forest_get_leaf_element_in_tree (forest, itree, i);
-          const t8_linearidx_t lin_id = scheme->element_get_linear_id (tree_class, leaf_i, lower_level);
-          EXPECT_EQ (element_id_at_lower_level, lin_id);
+        for (int ileaf = search_index; ileaf <= last_check_elem; ileaf++) {
+          const t8_element_t *leaf_i = t8_forest_get_leaf_element_in_tree (forest, itree, ileaf);
+          const t8_linearidx_t leaf_lin_id_at_lower_level
+            = scheme->element_get_linear_id (tree_class, leaf_i, lower_level);
+          EXPECT_EQ (element_id_at_lower_level, leaf_lin_id_at_lower_level);
         }
       }
 
@@ -251,11 +261,21 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
         //     so it cannot be lower than ielement.
         EXPECT_GE (search_index, ielement);
 
+#if T8_TEST_LEVEL_INT == 2
+        // For T8_TEST_LEVEL_BASIC, only check ielement and search_index produce the same linear ID
+        // to save runtime.
+        const int first_check_elem = search_index;
+#else
+        // For other test levels, check all elements from ielement to search_index produce the same linear ID.
+        const int first_check_elem = ielement;
+#endif
+
         // (ii) All leaves from ielement to search_index must have the same linear ID on lower_level.
-        for (int i = ielement; i <= search_index; i++) {
-          const t8_element_t *leaf_i = t8_forest_get_leaf_element_in_tree (forest, itree, i);
-          const t8_linearidx_t lin_id = scheme->element_get_linear_id (tree_class, leaf_i, lower_level);
-          EXPECT_EQ (element_id_at_lower_level, lin_id);
+        for (int ileaf = first_check_elem; ileaf <= search_index; ileaf++) {
+          const t8_element_t *leaf_i = t8_forest_get_leaf_element_in_tree (forest, itree, ileaf);
+          const t8_linearidx_t leaf_lin_id_at_lower_level
+            = scheme->element_get_linear_id (tree_class, leaf_i, lower_level);
+          EXPECT_EQ (element_id_at_lower_level, leaf_lin_id_at_lower_level);
         }
       }
 
