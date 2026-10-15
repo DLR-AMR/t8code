@@ -46,7 +46,7 @@
 #define T8_VTK_FLOAT_TYPE double
 #endif
 
-#define T8_VTK_FORMAT_STRING "ascii"  /**< Format string for vtk */
+#define T8_VTK_FORMAT_STRING "ascii" /**< Format string for vtk */
 /* Maximal string length for the description in t8_vtk_data_field_t. Arbitrary, but fixed. */
 #define T8_VTK_MAX_STRING_LENGTH 1024
 
