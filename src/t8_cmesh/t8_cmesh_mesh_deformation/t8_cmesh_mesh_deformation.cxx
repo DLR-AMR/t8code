@@ -328,7 +328,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
   }
 
   /* Update the cad geometry. */
-  t8_geometry_handler *geometry_handler = associated_cmesh->geometry_handler;
+  detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (associated_cmesh);
   T8_ASSERT (geometry_handler != nullptr);
 
   for (auto geom = geometry_handler->begin (); geom != geometry_handler->end (); ++geom) {
