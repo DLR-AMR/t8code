@@ -142,7 +142,9 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
           << element_id_at_next_level << ". Expected: " << ielement << " got: " << search_index;
       }
 
-      // Test this leaf element for all lower levels
+      // For all lower levels, we compute the corresponding linear ID of the current leaf.
+      // We then run the binary search for that ID and level and check whether the results
+      // are as expected.
       for (int lower_level = element_level - 1; lower_level >= 0; lower_level--) {
 
         // Determine the linear ID the element had on lower_level.
@@ -245,7 +247,9 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
           << element_id_at_next_level << ". Expected: " << ielement << " got: " << search_index;
       }
 
-      // Test this leaf element for all lower levels
+      // For all lower levels, we compute the corresponding linear ID of the current leaf.
+      // We then run the binary search for that ID and level and check whether the results
+      // are as expected.
       for (int lower_level = element_level - 1; lower_level >= 0; lower_level--) {
 
         // Determine the linear ID the element had on lower_level.
