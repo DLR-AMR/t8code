@@ -52,7 +52,7 @@
 
 TEST (test_geometry, test_geometry_handler_register)
 {
-  t8_geometry_handler geom_handler;
+  detail::t8_geometry_handler geom_handler;
 
   t8_debugf ("Testing geometry handler register and get geometry.\n");
   /* Throw every implemented geometry at the handler and let it search for it. */
