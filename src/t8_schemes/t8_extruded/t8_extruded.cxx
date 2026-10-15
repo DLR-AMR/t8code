@@ -68,9 +68,9 @@ t8_extruded_num_lateral_faces (const t8_eclass_t eclass)
 {
   switch (eclass) {
   case T8_ECLASS_HEX:
-    return t8_extruded_scheme_hex::num_lateral_faces;
+    return t8_extruded_scheme_hex::tree_num_lateral_faces;
   case T8_ECLASS_PRISM:
-    return t8_extruded_scheme_prism::num_lateral_faces;
+    return t8_extruded_scheme_prism::tree_num_lateral_faces;
   default:
     return -1;
   }

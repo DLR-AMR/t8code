@@ -35,7 +35,7 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_schemes/t8_extruded/t8_extruded.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <cmath>
 
 /** The parameters of the refinement. */

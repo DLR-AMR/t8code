@@ -50,32 +50,33 @@
 #include <cstring>
 #include <utility>
 
-/** Scheme for extruded elements.
- * \tparam TEclass     The 3D element class of the extruded trees.
- * \tparam TBaseScheme The scheme of the 2D base elements.
- * \tparam TBaseElem   The element type of \a TBaseScheme.
+/** Return the 3D element class obtained by extruding a 2D element class.
+ * \param [in] base_eclass The 2D element class.
+ * \return The extruded element class, or T8_ECLASS_INVALID if \a base_eclass cannot be extruded.
  */
-template <t8_eclass_t TEclass, class TBaseScheme, class TBaseElem>
-struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<TEclass, TBaseScheme, TBaseElem>>
+constexpr t8_eclass_t
+t8_extruded_eclass (const t8_eclass_t base_eclass)
 {
- public:
-  /** The eclass of the base elements. */
-  static constexpr t8_eclass_t base_eclass = TBaseScheme::get_eclass ();
-  /** The number of faces of a base element, which is also the number of lateral faces. */
-  static constexpr int num_lateral_faces = t8_eclass_num_faces[base_eclass];
-  /** The number of vertices of a base element. */
-  static constexpr int num_base_vertices = t8_eclass_num_vertices[base_eclass];
-  /** The face number of the bottom face. The top face is \a bottom_face + 1. */
-  static constexpr int bottom_face = num_lateral_faces;
+  switch (base_eclass) {
+  case T8_ECLASS_QUAD:
+    return T8_ECLASS_HEX;
+  case T8_ECLASS_TRIANGLE:
+    return T8_ECLASS_PRISM;
+  default:
+    return T8_ECLASS_INVALID;
+  }
+}
 
-  // TODO extruded: do we use static_assert?
-  static_assert (t8_eclass_to_dimension[base_eclass] == 2, "The base scheme of an extruded scheme must be 2D.");
-  static_assert (t8_eclass_to_dimension[TEclass] == 3, "An extruded scheme must be 3D.");
-  static_assert (t8_eclass_num_faces[TEclass] == num_lateral_faces + 2,
-                 "The eclass must have the base faces plus a bottom and a top face.");
-  static_assert (t8_eclass_num_vertices[TEclass] == 2 * num_base_vertices,
-                 "The eclass must have twice as many vertices as the base eclass.");
-
+/** Scheme for extruded elements.
+ * - tree class is deduced from the tree class of the base scheme via \ref t8_extruded_eclass.
+ * - shapes of elements are deduced from the shape of its base element
+ * - the bottom face of an extruded element is the face after its lateral faces
+ * \tparam TBaseScheme The scheme of the 2D base elements.
+ */
+template <class TBaseScheme>
+struct t8_extruded_scheme:
+  public t8_scheme_helpers<t8_extruded_eclass (TBaseScheme::get_eclass ()), t8_extruded_scheme<TBaseScheme>>
+{
   // TODO extruded: do we use private? or protected?
  private:
   TBaseScheme base_scheme; /**< The scheme of the 2D base elements. */
@@ -92,23 +93,57 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
  private:
   // ################################################____HELPERS____####################################################
 
-  /** Return true if \a face is a lateral face. */
-  static constexpr bool
-  is_lateral_face (const int face)
+  /** Return the number of lateral faces of an element, which is the number of faces of its base element.
+   * \param [in] elem The element.
+   * \return The number of lateral faces of \a elem.
+   */
+  inline int
+  num_lateral_faces (const t8_element_t *elem) const
   {
-    return face < num_lateral_faces;
+    return base_scheme.element_get_num_faces (elem);
+  }
+
+  /** Return the number of vertices of the base element of an element.
+   * \param [in] elem The element.
+   * \return The number of vertices of the base element of \a elem.
+   */
+  inline int
+  num_base_vertices (const t8_element_t *elem) const
+  {
+    return base_scheme.element_get_num_corners (elem);
+  }
+
+  /** Return the face number of the bottom face of an element. The top face is the bottom face + 1.
+   * \param [in] elem The element.
+   * \return The face number of the bottom face of \a elem.
+   */
+  inline int
+  bottom_face (const t8_element_t *elem) const
+  {
+    return num_lateral_faces (elem);
+  }
+
+  /** Return true if \a face is a lateral face of \a elem.
+   * \param [in] elem The element.
+   * \param [in] face A face of \a elem.
+   * \return True if \a face is a lateral face of \a elem.
+   */
+  inline bool
+  is_lateral_face (const t8_element_t *elem, const int face) const
+  {
+    return face < num_lateral_faces (elem);
   }
 
  public:
   // ################################################____GENERAL INFO____###############################################
 
   /** Return the size of an extruded element.
-   * \return The size of an element.
+   * \return The size of an element of the base scheme.
    */
-  static constexpr size_t
-  get_element_size (void) noexcept
+  inline size_t
+  get_element_size (void) const
   {
-    return sizeof (TBaseElem);
+    return base_scheme.get_element_size ();
   }
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
@@ -144,40 +179,43 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
    * \param [in] elem The element.
    * \return The shape of the element.
    */
-  static constexpr t8_element_shape_t
-  element_get_shape ([[maybe_unused]] const t8_element_t *elem)
+  inline t8_element_shape_t
+  element_get_shape (const t8_element_t *elem) const
   {
-    return TEclass;
+    T8_ASSERT (element_is_valid (elem));
+    const t8_element_shape_t shape = t8_extruded_eclass (base_scheme.element_get_shape (elem));
+    T8_ASSERT (shape != T8_ECLASS_INVALID);
+    return shape;
   }
 
   /** Compute the number of corners of a given element.
    * \param [in] elem The element.
    * \return The number of corners of the element.
    */
-  static constexpr int
-  element_get_num_corners ([[maybe_unused]] const t8_element_t *elem)
+  inline int
+  element_get_num_corners (const t8_element_t *elem) const
   {
-    return t8_eclass_num_vertices[TEclass];
+    return 2 * num_base_vertices (elem);
   }
 
   /** Compute the number of faces of a given element.
    * \param [in] elem The element.
    * \return The number of faces of the element.
    */
-  static constexpr int
-  element_get_num_faces ([[maybe_unused]] const t8_element_t *elem)
+  inline int
+  element_get_num_faces (const t8_element_t *elem) const
   {
-    return t8_eclass_num_faces[TEclass];
+    return num_lateral_faces (elem) + 2;
   }
 
   /** Compute the maximum number of faces of a given element and all of its descendants.
    * \param [in] elem The element.
    * \return The maximum number of faces of the element and its descendants.
    */
-  static constexpr int
-  element_get_max_num_faces ([[maybe_unused]] const t8_element_t *elem)
+  inline int
+  element_get_max_num_faces (const t8_element_t *elem) const
   {
-    return t8_eclass_num_faces[TEclass];
+    return base_scheme.element_get_max_num_faces (elem) + 2;
   }
 
   /** Compute the shape of the face of an element.
@@ -185,10 +223,15 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
    * \param [in] face     A face of \a elem.
    * \return              The element shape of the face.
    */
-  static constexpr t8_element_shape_t
-  element_get_face_shape ([[maybe_unused]] const t8_element_t *elem, const int face)
+  inline t8_element_shape_t
+  element_get_face_shape (const t8_element_t *elem, const int face) const
   {
-    return (t8_element_shape_t) t8_eclass_face_types[TEclass][face];
+    T8_ASSERT (0 <= face && face < element_get_num_faces (elem));
+    if (is_lateral_face (elem, face)) {
+      /* A face of the base element is always a line, an extruded line is always a quad. */
+      return T8_ECLASS_QUAD;
+    }
+    return base_scheme.element_get_shape (elem);
   }
 
   // ################################################____ORDER____######################################################
@@ -288,13 +331,19 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
 
   /** Return the number of children of an element when it is refined.
    * \param [in] elem   The element whose number of children is returned.
+   * \param [in] additional_arguments Additional arguments that are passed to the base scheme, e.g. a subelement type.
+   * \tparam TArgs      Types of the additional arguments. Only available if the base scheme supports them.
    * \return            The number of children of \a elem if it is to be refined according to the base scheme.
    */
+  template <typename... TArgs>
+    requires requires (const TBaseScheme &scheme, const t8_element_t *elem, TArgs &&...args) {
+      scheme.element_get_num_children (elem, std::forward<TArgs> (args)...);
+    }
   inline int
-  element_get_num_children (const t8_element_t *elem) const
+  element_get_num_children (const t8_element_t *elem, TArgs &&...additional_arguments) const
   {
     T8_ASSERT (element_is_valid (elem));
-    return base_scheme.element_get_num_children (elem);
+    return base_scheme.element_get_num_children (elem, std::forward<TArgs> (additional_arguments)...);
   }
 
   /** Return the max number of children of an element of this class.
@@ -323,13 +372,20 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
    * \param [in] elem          This must be a valid element, bigger than maxlevel.
    * \param [in] length        The length of the output array \a c must match the number of children.
    * \param [in,out] children  The storage for these \a length elements must exist. On output, all children are valid.
+   * \param [in] additional_arguments Additional arguments that are passed to the base scheme, e.g. a subelement type.
+   * \tparam TArgs             Types of the additional arguments. Only available if the base scheme supports them.
    */
+  template <typename... TArgs>
+    requires requires (const TBaseScheme &scheme, const t8_element_t *elem, const int length, t8_element_t *children[],
+                       TArgs &&...args) {
+      scheme.element_get_children (elem, length, children, std::forward<TArgs> (args)...);
+    }
   inline void
-  element_get_children (const t8_element_t *elem, const int length, t8_element_t *children[]) const
+  element_get_children (const t8_element_t *elem, const int length, t8_element_t *children[],
+                        TArgs &&...additional_arguments) const
   {
     T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (length == element_get_num_children (elem));
-    base_scheme.element_get_children (elem, length, children);
+    base_scheme.element_get_children (elem, length, children, std::forward<TArgs> (additional_arguments)...);
     for (int ichild = 0; ichild < length; ++ichild) {
       T8_ASSERT (element_is_valid (children[ichild]));
     }
@@ -407,7 +463,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < element_get_num_faces (elem));
-    if (is_lateral_face (face)) {
+    if (is_lateral_face (elem, face)) {
       return base_scheme.element_get_num_face_children (elem, face);
     }
     /* All children touch the bottom and the top face. */
@@ -424,14 +480,14 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_face_corner (const t8_element_t *elem, const int face, const int corner) const
   {
     T8_ASSERT (0 <= face && face < element_get_num_faces (elem));
-    if (is_lateral_face (face)) {
+    if (is_lateral_face (elem, face)) {
       /* A face of the base scheme is always a line, an extruded line is always a quad */
       T8_ASSERT (0 <= corner && corner < 4);
       /* The lateral face is the base face at the bottom (corner 0, 1) and at the top (corner 2, 3). */
-      return base_scheme.element_get_face_corner (elem, face, corner % 2) + num_base_vertices * (corner / 2);
+      return base_scheme.element_get_face_corner (elem, face, corner % 2) + num_base_vertices (elem) * (corner / 2);
     }
-    T8_ASSERT (0 <= corner && corner < num_base_vertices);
-    return corner + num_base_vertices * (face - bottom_face);
+    T8_ASSERT (0 <= corner && corner < num_base_vertices (elem));
+    return corner + num_base_vertices (elem) * (face - bottom_face (elem));
   }
 
   /** Return the face numbers of the faces sharing an element's corner.
@@ -446,9 +502,9 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
     T8_ASSERT (0 <= corner && corner < element_get_num_corners (elem));
     T8_ASSERT (0 <= face && face < 3);
     if (face < 2) {
-      return base_scheme.element_get_corner_face (elem, corner % num_base_vertices, face);
+      return base_scheme.element_get_corner_face (elem, corner % num_base_vertices (elem), face);
     }
-    return bottom_face + corner / num_base_vertices;
+    return bottom_face (elem) + corner / num_base_vertices (elem);
   }
 
   /** Given an element and a face of the element, compute all children of the element that touch the face.
@@ -468,7 +524,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (num_children == element_get_num_face_children (elem, face));
-    if (!is_lateral_face (face)) {
+    if (!is_lateral_face (elem, face)) {
       /* All children touch the bottom and the top face. */
       element_get_children (elem, num_children, children);
       if (child_indices != NULL) {
@@ -495,9 +551,10 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_face_get_child_face (const t8_element_t *elem, const int face, const int face_child) const
   {
     T8_ASSERT (element_is_valid (elem));
-    if (is_lateral_face (face)) {
+    if (is_lateral_face (elem, face)) {
       return base_scheme.element_face_get_child_face (elem, face, face_child);
     }
+    /* The children of the regular refinement have the shape of \a elem. */
     return face;
   }
 
@@ -512,10 +569,11 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_face_get_parent_face (const t8_element_t *elem, const int face) const
   {
     T8_ASSERT (element_is_valid (elem));
-    if (is_lateral_face (face)) {
+    if (is_lateral_face (elem, face)) {
       return base_scheme.element_face_get_parent_face (elem, face);
     }
-    return face;
+    /* The parent is a regular element, which has the shape of the tree. */
+    return tree_bottom_face + face - bottom_face (elem);
   }
 
   /** Given a face of an element and a level coarser than (or equal to) the element's level, return the face number
@@ -530,10 +588,11 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_face_get_ancestor_face (const t8_element_t *elem, const int ancestor_level, const int face) const
   {
     T8_ASSERT (element_is_valid (elem));
-    if (is_lateral_face (face)) {
+    if (is_lateral_face (elem, face)) {
       return base_scheme.element_face_get_ancestor_face (elem, ancestor_level, face);
     }
-    return face;
+    /* The ancestor is a regular element, which has the shape of the tree. */
+    return tree_bottom_face + face - bottom_face (elem);
   }
 
   /** Given an element and a face of this element. If the face lies on the tree boundary, return the face number of
@@ -546,10 +605,11 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_tree_face (const t8_element_t *elem, const int face) const
   {
     T8_ASSERT (element_is_valid (elem));
-    if (is_lateral_face (face)) {
+    if (is_lateral_face (elem, face)) {
       return base_scheme.element_get_tree_face (elem, face);
     }
-    return face;
+    /* The bottom and top face of the element may have different numbers than those of the tree. */
+    return tree_bottom_face + face - bottom_face (elem);
   }
 
   /** Transform a face element between two trees.
@@ -584,12 +644,13 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_extrude_face (const t8_element_t *face, t8_element_t *elem, const int root_face,
                         const t8_scheme *scheme) const
   {
-    T8_ASSERT (0 <= root_face && root_face < element_get_num_faces (elem));
+    // TODO extruded: upper bound?
+    T8_ASSERT (0 <= root_face);
     if (!is_lateral_face (root_face)) {
       /* The bottom and top faces are elements of the base scheme. */
       base_scheme.element_copy (face, elem);
       T8_ASSERT (element_is_valid (elem));
-      return root_face;
+      return bottom_face (elem) + root_face - tree_bottom_face;
     }
     // TODO extruded: correct?
     /* Build the boundary line of the base element from the in-plane coordinate of the face and extrude it. */
@@ -615,7 +676,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
                                      const int level) const
   {
     T8_ASSERT (element_is_valid (elem));
-    if (is_lateral_face (face)) {
+    if (is_lateral_face (elem, face)) {
       base_scheme.element_get_first_descendant_face (elem, face, first_desc, level);
       T8_ASSERT (element_is_valid (first_desc));
     }
@@ -636,7 +697,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
                                     const int level) const
   {
     T8_ASSERT (element_is_valid (elem));
-    if (is_lateral_face (face)) {
+    if (is_lateral_face (elem, face)) {
       base_scheme.element_get_last_descendant_face (elem, face, last_desc, level);
       T8_ASSERT (element_is_valid (last_desc));
     }
@@ -660,7 +721,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < element_get_num_faces (elem));
-    if (!is_lateral_face (face)) {
+    if (!is_lateral_face (elem, face)) {
       base_scheme.element_copy (elem, boundary);
       return;
     }
@@ -685,7 +746,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_is_root_boundary (const t8_element_t *elem, const int face) const
   {
     T8_ASSERT (element_is_valid (elem));
-    if (is_lateral_face (face)) {
+    if (is_lateral_face (elem, face)) {
       return base_scheme.element_is_root_boundary (elem, face);
     }
     /* Every element spans the whole tree height. */
@@ -708,14 +769,14 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (element_is_valid (neigh));
     T8_ASSERT (neigh_face != NULL);
-    if (is_lateral_face (face)) {
+    if (is_lateral_face (elem, face)) {
       const int is_inside = base_scheme.element_get_face_neighbor_inside (elem, neigh, face, neigh_face);
       T8_ASSERT (element_is_valid (neigh));
       return is_inside;
     }
     // TODO extruded: correct?
     base_scheme.element_copy (elem, neigh);
-    *neigh_face = face == bottom_face ? bottom_face + 1 : bottom_face;
+    *neigh_face = face == bottom_face (elem) ? bottom_face (elem) + 1 : bottom_face (elem);
     /* Since elements span the whole tree height, the neighbor is always outside. */
     return false;
   }
@@ -818,8 +879,8 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= vertex && vertex < element_get_num_corners (elem));
-    base_scheme.element_get_vertex_reference_coords (elem, vertex % num_base_vertices, coords);
-    coords[2] = vertex / num_base_vertices;
+    base_scheme.element_get_vertex_reference_coords (elem, vertex % num_base_vertices (elem), coords);
+    coords[2] = vertex / num_base_vertices (elem);
   }
 
   /** Convert points in the reference space of an element to points in the reference space of the tree.
@@ -997,7 +1058,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
 };
 
 /** The extruded hex scheme: default quads extruded in z-direction. */
-using t8_extruded_scheme_hex = t8_extruded_scheme<T8_ECLASS_HEX, t8_default_scheme_quad, p4est_quadrant_t>;
+using t8_extruded_scheme_hex = t8_extruded_scheme<t8_default_scheme_quad>;
 
 /** The extruded prism scheme: default triangles extruded in z-direction. */
-using t8_extruded_scheme_prism = t8_extruded_scheme<T8_ECLASS_PRISM, t8_default_scheme_tri, t8_dtri_t>;
+using t8_extruded_scheme_prism = t8_extruded_scheme<t8_default_scheme_tri>;
