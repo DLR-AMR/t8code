@@ -150,18 +150,18 @@ do
   if [ -n "$TRAILING_LINES" ]; then
       status=1
       if [[ $NO_CHANGE == "TRUE" ]]; then
-        echo "ERROR Trailing whitespace found on the following line(s) in $file:"
+        echo "ERROR Trailing whitespace found on the following line(s) in $arg:"
         echo "$TRAILING_LINES" | sed 's/^/    /'
       else
         sed -i 's/[[:blank:]]*$//' "$arg"
       fi
   fi
 
-  CRLF_LINES=$(grep -n $'\r' "$arg")
+  CRLF_LINES=$(grep -n $'\r$' "$arg")
   if [ -n "$CRLF_LINES" ]; then
-    status = 1
+    status=1
     if [[ $NO_CHANGE == "TRUE" ]]; then
-      echo "ERROR: Windows/CRLF line-endings found on the following line(s) in $file:"
+      echo "ERROR: Windows/CRLF line-endings found on the following line(s) in $arg:"
       echo "$CRLF_LINES" | sed 's/^/    /'
     else
       sed -i 's/\r$//' "$arg"
