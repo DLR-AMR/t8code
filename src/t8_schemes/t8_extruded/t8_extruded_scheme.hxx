@@ -77,6 +77,14 @@ template <class TBaseScheme>
 struct t8_extruded_scheme:
   public t8_scheme_helpers<t8_extruded_eclass (TBaseScheme::get_eclass ()), t8_extruded_scheme<TBaseScheme>>
 {
+ public:
+  /** The tree class of the base trees. */
+  static constexpr t8_eclass_t base_eclass = TBaseScheme::get_eclass ();
+  /** The number of lateral faces of an extruded tree. */
+  static constexpr int tree_num_lateral_faces = t8_eclass_num_faces[base_eclass];
+  /** The face number of the bottom face of an extruded tree. */
+  static constexpr int tree_bottom_face = tree_num_lateral_faces;
+
   // TODO extruded: do we use private? or protected?
  private:
   TBaseScheme base_scheme; /**< The scheme of the 2D base elements. */
@@ -646,7 +654,9 @@ struct t8_extruded_scheme:
   {
     // TODO extruded: upper bound?
     T8_ASSERT (0 <= root_face);
-    if (!is_lateral_face (root_face)) {
+
+    // not a lateral tree face
+    if (root_face >= t8_eclass_num_faces[base_eclass]) {
       /* The bottom and top faces are elements of the base scheme. */
       base_scheme.element_copy (face, elem);
       T8_ASSERT (element_is_valid (elem));
