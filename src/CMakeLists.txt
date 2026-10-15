@@ -197,21 +197,19 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_scheme.cxx
     t8_schemes/t8_default/t8_default.cxx
     t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
-    t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.c
     t8_schemes/t8_default/t8_default_line/t8_default_line.cxx
-    t8_schemes/t8_default/t8_default_line/t8_dline_bits.c
+    t8_schemes/t8_default/t8_default_line/t8_dline_bits.cxx
     t8_schemes/t8_default/t8_default_prism/t8_default_prism.cxx
-    t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.c
+    t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.cxx
-    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c
+    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c
     t8_schemes/t8_default/t8_default_quad/t8_default_quad.cxx
-    t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.cxx
     t8_schemes/t8_default/t8_default_tet/t8_default_tet.cxx
-    t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.c
+    t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.cxx
     t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.c
     t8_schemes/t8_default/t8_default_tri/t8_default_tri.cxx
-    t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c
+    t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.cxx
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_vector/t8_vec.cxx
@@ -275,6 +273,15 @@ install( DIRECTORY t8_cmesh
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
+
+# t8_cmesh_geometry_handler_internal.hxx is included by the public t8_cmesh_geometry.hxx
+# (functions in detail namespace, not meant for users), so it must be installed despite
+# the t8_cmesh_internal exclusion above.
+install( FILES
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_geometry_handler_internal.hxx
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_internal
+)
+
 install( DIRECTORY t8_data
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING
