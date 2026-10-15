@@ -28,12 +28,12 @@
  *
  * Face numbering: The lateral faces 0, ..., F-1 are the extrusions of the F faces of the base element.
  * Face F is the bottom and face F + 1 the top face. Vertex v is the base vertex v % V at the bottom (v < V) or
- * the top (v >= V), where V is the number of base vertices. This matches the default hex (and prism) conventions.
+ * the top (v >= V), where V is the number of base vertices. This matches the default hex and prism conventions.
  *
  * The face elements of lateral faces are quads in the scheme of the face eclass. Since the element spans the whole tree
  * height, the lateral face element stores the in-plane coordinate in x and 0 in y. The z-part is ignored when
  * extruding the face again. This is only consistent, if all trees glued at lateral faces have parallel extrusion
- * directions, see \ref t8_cmesh_is_extrusion_compatible.
+ * directions, see \ref t8_extruded_cmesh_tree_is_compatible.
  */
 
 #pragma once
@@ -49,6 +49,21 @@
 #include <cstdio>
 #include <cstring>
 #include <utility>
+
+/** Check whether a local hex or prism tree of a cmesh is compatible with the extruded schemes.
+ * The extruded elements span the whole tree height, so the extrusion (z-) directions of neighboring trees have to be
+ * parallel. That is, for each face of the tree:
+ *  - The neighbor tree also uses an extruded scheme.
+ *  - A lateral face (hex: 0, ..., 3, prism: 0, 1, 2) is only connected to a lateral face, such that the z-axes of
+ *    both trees are parallel (possibly with opposite directions).
+ *  - The bottom and top face (hex: 4, 5, prism: 3, 4) are only connected to the bottom or top face of another tree.
+ * \param [in] scheme   The scheme containing the extruded schemes.
+ * \param [in] cmesh    A committed cmesh.
+ * \param [in] ltreeid  A local tree of \a cmesh, whose class uses an extruded scheme in \a scheme.
+ * \return              True if all face connections of the tree are compatible, false otherwise.
+ */
+bool
+t8_extruded_cmesh_tree_is_compatible (const t8_scheme *scheme, const t8_cmesh_t cmesh, const t8_locidx_t ltreeid);
 
 /** Scheme for extruded elements.
  * \tparam TEclass     The 3D element class of the extruded trees.
@@ -109,6 +124,20 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   get_element_size (void) noexcept
   {
     return sizeof (TBaseElem);
+  }
+
+  /** Check whether a local tree of a cmesh can be used with the extruded scheme,
+   * see \ref t8_extruded_cmesh_tree_is_compatible.
+   * \param [in] scheme   The scheme this eclass scheme is part of.
+   * \param [in] cmesh    A committed cmesh.
+   * \param [in] ltreeid  A local tree of \a cmesh of class \a TEclass.
+   * \return              True if the face connections of the tree are compatible.
+   */
+  inline bool
+  cmesh_tree_is_compatible (const t8_scheme *scheme, const t8_cmesh_t cmesh, const t8_locidx_t ltreeid) const
+  {
+    T8_ASSERT (t8_cmesh_get_tree_class (cmesh, ltreeid) == TEclass);
+    return t8_extruded_cmesh_tree_is_compatible (scheme, cmesh, ltreeid);
   }
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.

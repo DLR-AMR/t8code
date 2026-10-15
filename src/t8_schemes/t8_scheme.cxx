@@ -47,6 +47,15 @@ t8_scheme_unref (t8_scheme_c **pscheme)
   }
 }
 
+int
+t8_scheme_cmesh_is_compatible (const t8_scheme_c *scheme, struct t8_cmesh *cmesh)
+{
+  T8_ASSERT (scheme != NULL);
+  T8_ASSERT (cmesh != NULL);
+
+  return scheme->cmesh_is_compatible (cmesh);
+}
+
 size_t
 t8_element_get_element_size (const t8_scheme_c *scheme, const t8_eclass_t tree_class)
 {

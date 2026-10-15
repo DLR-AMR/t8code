@@ -37,6 +37,9 @@
  */
 typedef struct t8_scheme t8_scheme_c;
 
+/* Forward declaration of the cmesh, since t8_cmesh.h includes this header. */
+struct t8_cmesh;
+
 T8_EXTERN_C_BEGIN ();
 
 /** Increase the reference counter of a scheme.
@@ -57,6 +60,15 @@ t8_scheme_ref (t8_scheme_c *scheme);
  */
 void
 t8_scheme_unref (t8_scheme_c **pscheme);
+
+/** Check whether all local trees of a cmesh can be used with a scheme.
+ * \param [in] scheme   A scheme.
+ * \param [in] cmesh    A committed cmesh.
+ * \return              True if all local trees and their face connections are supported by \a scheme.
+ * \note This function is not collective. It only checks the local trees of \a cmesh.
+ */
+int
+t8_scheme_cmesh_is_compatible (const t8_scheme_c *scheme, struct t8_cmesh *cmesh);
 
 /** Return the size of any element of a given class.
  * \return                      The size of an element of class \b ts.

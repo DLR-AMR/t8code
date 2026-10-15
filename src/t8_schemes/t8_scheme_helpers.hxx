@@ -30,6 +30,9 @@
 #include <t8_element/t8_element.h>
 #include <t8_types/t8_crtp.hxx>
 #include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh.h>
+
+struct t8_scheme;
 
 /**
   * Class which provides helper functions and default implementations for different schemes.
@@ -63,6 +66,20 @@ struct t8_scheme_helpers: public t8_crtp_basic<TUnderlyingEclassScheme>
   get_eclass (void) noexcept
   {
     return TEclass;
+  }
+
+  /** Check whether a local tree of a cmesh can be used with this eclass scheme.
+   * By default, all trees and face connections are supported.
+   * \param [in] scheme   The scheme this eclass scheme is part of, to look up the schemes of neighbor trees.
+   * \param [in] cmesh    A committed cmesh.
+   * \param [in] ltreeid  A local tree of \a cmesh of class \a TEclass.
+   * \return              True if the tree and its face connections are supported.
+   */
+  inline bool
+  cmesh_tree_is_compatible ([[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const t8_cmesh_t cmesh,
+                            [[maybe_unused]] const t8_locidx_t ltreeid) const
+  {
+    return true;
   }
 
   /** Given a face of an element and a level coarser than (or equal to)

@@ -100,7 +100,6 @@ main (int argc, char **argv)
     t8_cmesh_t cmesh;
     t8_cmesh_init (&cmesh);
     t8_cmesh_new_brick_3d (cmesh, num_x, num_y, num_z, 0, 0, 0, comm);
-    SC_CHECK_ABORT (t8_cmesh_is_extrusion_compatible (cmesh), "The cmesh is not compatible with extruded hexes.");
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_extruded (), level, 0, comm);
     t8_global_productionf ("Uniform forest of level %i with %lli elements.\n", level,
