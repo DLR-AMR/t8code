@@ -114,6 +114,7 @@ configure_file(
 
 add_t8_cpp_test( NAME t8_gtest_cmesh_bcast_parallel     SOURCES t8_cmesh/t8_gtest_bcast.cxx )
 add_t8_cpp_test( NAME t8_gtest_eclass_serial            SOURCES t8_gtest_eclass.cxx )
+add_t8_cpp_test( NAME t8_gtest_element_shape_serial     SOURCES t8_schemes/t8_gtest_element_shape.cxx )
 add_t8_cpp_test( NAME t8_gtest_mat_serial               SOURCES t8_gtest_mat.cxx )
 add_t8_cpp_test( NAME t8_gtest_refcount_serial          SOURCES t8_gtest_refcount.cxx )
 add_t8_cpp_test( NAME t8_gtest_occ_linkage_serial       SOURCES t8_gtest_occ_linkage.cxx )
@@ -169,7 +170,6 @@ add_t8_cpp_test( NAME t8_gtest_recursive_serial             SOURCES t8_forest_in
 add_t8_cpp_test( NAME t8_gtest_iterate_replace_parallel     SOURCES t8_forest_incomplete/t8_gtest_iterate_replace.cxx )
 add_t8_cpp_test( NAME t8_gtest_empty_local_tree_parallel    SOURCES t8_forest_incomplete/t8_gtest_empty_local_tree.cxx )
 add_t8_cpp_test( NAME t8_gtest_empty_global_tree_parallel   SOURCES t8_forest_incomplete/t8_gtest_empty_global_tree.cxx )
-add_t8_cpp_test( NAME t8_gtest_element_shape_serial         SOURCES t8_schemes/t8_gtest_element_shape.cxx )
 
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     add_t8_cpp_test( NAME t8_gtest_geometry_negative_volume_serial      SOURCES t8_geometry/t8_gtest_geometry_negative_volume.cxx )
