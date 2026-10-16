@@ -497,7 +497,8 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   const auto face_1_points = face_point_ids[*opposite_face];
 
   /* Now we can drop face 0 and the opposite face, since we do not need it anymore.
-   * We delete the opposite face first, since deleting the 0th face would shift the ids. */
+   * We delete the opposite face first, since deleting the 0th face would shift the ids.
+   * We do this directly on the lists, since they are just copies of the original lists. */
   face_ids.erase (face_ids.begin () + *opposite_face);
   face_point_ids.erase (face_point_ids.begin () + *opposite_face);
   face_normals.erase (face_normals.begin () + *opposite_face);
