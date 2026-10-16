@@ -378,7 +378,6 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * \note The adaptation is carried out only when \ref commit is called.
    * \note We currently do not provide the functionality to delete elements.
    * \note This setting can be combined with \ref set_balance, \ref set_partition and \ref set_ghost.
-   * Adaptation is always the first operation; see \ref commit for the order in which the operations are executed.
    */
   void
   set_adapt (adapt_callback_type adapt_callback)
@@ -402,9 +401,6 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * If element data is set, it is repartitioned accordingly.
    * \note The partition is carried out only when \ref commit is called.
    * \note This setting can be combined with \ref set_adapt, \ref set_balance and \ref set_ghost.
-   * If \ref set_balance is called as well, the mesh is repartitioned in each balance step, unless element data is
-   * interpolated. In that case, the mesh is partitioned once after the interpolation.
-   * See \ref commit for the order in which the operations are executed.
    * \param [in] set_for_coarsening If true, the partitions are chosen such that coarsening
    *        an element once is a process local operation. Default is false.
    */
@@ -422,9 +418,6 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * If element data is set, it is interpolated if the mesh has the \ref interpolate_element_data_mesh_competence
    * and discarded otherwise (see \ref commit).
    * \note This setting can be combined with \ref set_adapt, \ref set_partition and \ref set_ghost.
-   * Balancing only repartitions the mesh if \ref set_partition is called as well and no element data is
-   * interpolated. In that case, the mesh is repartitioned in each balance step for performance reasons.
-   * See \ref commit for the order in which the operations are executed.
    */
   void
   set_balance ()
@@ -432,17 +425,15 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     if (m_uncommitted_forest == nullptr) {
       t8_forest_init (&m_uncommitted_forest);
     }
-    // We do not repartition while balancing in general, as we typically want to work with data that needs to be
-    // interpolated on one process. We may change the flag in the commit routine if we called partition and do not
-    //  interpolate data.
+    // We repartition while balancing only if \ref set_partition is called as well and no element data is
+    // interpolated (that needs to remain on one process). In most cases, we work with data, such that we set
+    // no_repartition = true as default. We may change the flag in the commit routine.
     const bool no_repartition = true;
     t8_forest_set_balance (m_uncommitted_forest, m_forest, no_repartition);
   }
 
   /** Enable or disable the creation of a layer of ghost elements.
    * If element data is set, the data of the ghost elements is exchanged on \ref commit.
-   * \note The ghost layer is always created last, after all other operations of the commit.
-   * See \ref commit for the order in which the operations are executed.
    * \param [in]      do_ghost  If true a ghost layer will be created.
    * \param [in]      ghost_type Controls which neighbors count as ghost elements,
    *                             currently only T8_GHOST_FACES is supported. This value
@@ -461,12 +452,25 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * This call updates the internal state of the mesh.
    * The forest used to define the mesh handle is replaced in this function.
    * The previous forest is unreferenced. Call \ref t8_forest_ref before if you want to keep it alive.
-   * Specialize the update with calls like \ref set_adapt, \ref set_balance, \ref set_partition and \ref set_ghost
-   * first. The order of these calls does not matter. The requested operations are always executed in the order below,
-   * where operations not requested are skipped.
    *
+   * Specialize the update with calls like \ref set_adapt, \ref set_balance, \ref set_partition and \ref set_ghost
+   * first. The order of these calls does not matter.
+   *
+   * If element data is set (see \ref element_data_mesh_competence), it is updated as follows:
+   * - If the mesh is adapted or balanced and has the \ref interpolate_element_data_mesh_competence, the data is
+   *   interpolated with the callback set by \ref interpolate_element_data_mesh_competence::set_interpolate_callback.
+   * - If the mesh is adapted or balanced without this competence, the data does not match the elements anymore and is
+   *   discarded. Use \ref element_data_mesh_competence_impl::set_element_data to provide new data.
+   * - If the mesh is partitioned, the data is repartitioned accordingly.
+   * - If a ghost layer exists, the data of the ghost elements is exchanged. This is also done if only 
+   *   \ref set_ghost was called.
+   */
+  void
+  commit ()
+  {
+    /* The operations are always executed in the following order, where operations not requested are skipped.
    * If element data is interpolated, i.e. element data is set, the mesh has the
-   * \ref interpolate_element_data_mesh_competence and \ref set_adapt or \ref set_balance was called:
+   * interpolate_element_data_mesh_competence and set_adapt or set_balance was called:
    *  1. Adapt
    *  2. Balance (without repartitioning)
    *  3. Interpolation of the element data
@@ -475,31 +479,19 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    *  6. Ghost
    *  7. Exchange of the ghost data
    *
-   * Otherwise:
+   * Otherwise if no data is interpolated:
    *  1. Adapt
    *  2. Partition
    *  3. Balance (repartitioning in each balance step if \ref set_partition was called)
    *  4. Repartitioning of the element data
    *  5. Ghost
    *  6. Exchange of the ghost data
-   *
-   * If element data is set (see \ref element_data_mesh_competence), it is updated as follows:
-   * - If the mesh is adapted or balanced and has the \ref interpolate_element_data_mesh_competence, the data is
-   *   interpolated with the callback set by \ref interpolate_element_data_mesh_competence::set_interpolate_callback.
-   * - If the mesh is adapted or balanced without this competence, the data does not match the elements anymore and is
-   *   discarded. Use \ref element_data_mesh_competence_impl::set_element_data to provide new data.
-   * - If the mesh is partitioned, the data is repartitioned accordingly.
-   * - If a ghost layer exists, the data of the ghost elements is exchanged. This is also done if only
-   *   \ref set_ghost was called.
    */
-  void
-  commit ()
-  {
     if (m_uncommitted_forest == nullptr) {
       t8_forest_init (&m_uncommitted_forest);
     }
-    /* It can happen that the user only calls set_ghost before commit.
-     * This does not set the set_from member of the forest and we copy the current forest in this case. */
+    // It can happen that the user only calls set_ghost before commit.
+    // This does not set the set_from member of the forest and we copy the current forest in this case.
     if (m_uncommitted_forest->set_from == NULL) {
       t8_forest_set_copy (m_uncommitted_forest, m_forest);
     }
@@ -553,8 +545,8 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
       }
     }
     else if (balance_set && partition_set) {
-      /* No data has to be interpolated. The forest commit carries out adapt, partition and balance in this order.
-       * To keep the load balanced, the balancing repartitions the mesh in each balance step. */
+      // No data has to be interpolated. The forest commit carries out adapt, partition and balance in this order.
+      // To keep the load balanced, the balancing repartitions the mesh in each balance step.
       t8_forest_set_balance (m_uncommitted_forest, nullptr, false);
     }
 
