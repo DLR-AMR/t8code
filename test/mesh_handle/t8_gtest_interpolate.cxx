@@ -111,7 +111,7 @@ TEST (t8_gtest_handle_interpolate, test_interpolate_data)
 
   // Adapt the mesh and set all options.
   mesh->set_adapt (adapt_callback_coarsen_left_refine_middle<mesh_class>);
-  mesh->set_balance (true);
+  mesh->set_balance ();
   mesh->set_partition ();
   mesh->set_ghost ();
   mesh->set_interpolate_callback (mesh_class::mesh_interpolate_callback_wrapper<interpolate_user_data> (
