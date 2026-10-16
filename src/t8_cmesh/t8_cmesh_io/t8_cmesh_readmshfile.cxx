@@ -1221,7 +1221,8 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
  * They are stored as arrays of long ints.
  * If cad geometry is used, the geometry is passed as a pointer here.
  * We cannot access this geometry over the cmesh interface since the cmesh
- * is not committed yet. */
+ * is not committed yet.
+ * On failure, std::nullopt is returned and the caller has to destroy the cmesh. */
 static std::optional<t8_msh_tree_vertex_indices>
 t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table &vertices, const int dim,
                                const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
@@ -1255,7 +1256,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
       t8_global_errorf ("Premature end of line while reading num trees.\n");
       t8_debugf ("The line is %s", line);
       free (line);
-      t8_cmesh_destroy (&cmesh);
       return std::nullopt;
     }
   }
@@ -1270,7 +1270,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
     t8_global_errorf ("Premature end of line while reading num trees and num blocks.\n");
     t8_debugf ("The line is %s", line);
     free (line);
-    t8_cmesh_destroy (&cmesh);
     return std::nullopt;
   }
   num_trees = lnum_trees;
@@ -1288,7 +1287,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
     if (retval < 0) {
       t8_global_errorf ("Premature end of line while reading trees.\n");
       free (line);
-      t8_cmesh_destroy (&cmesh);
       return std::nullopt;
     }
     retval = sscanf (line, "%i %li %i %li", &entity_dim, &entity_tag, &ele_type, &num_ele_in_block);
@@ -1297,7 +1295,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
       t8_global_errorf ("Error while reading element block information.\n");
       t8_debugf ("The line is %s", line);
       free (line);
-      t8_cmesh_destroy (&cmesh);
       return std::nullopt;
     }
     /* Check if the tree type is supported */
@@ -1305,7 +1302,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         || t8_msh_tree_type_to_eclass[ele_type] == T8_ECLASS_COUNT) {
       t8_global_errorf ("tree type %i is not supported by t8code.\n", ele_type);
       free (line);
-      t8_cmesh_destroy (&cmesh);
       return std::nullopt;
     }
     eclass = t8_msh_tree_type_to_eclass[ele_type];
@@ -1325,7 +1321,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         if (retval < 0) {
           t8_global_errorf ("Premature end of line while reading trees.\n");
           free (line);
-          t8_cmesh_destroy (&cmesh);
           return std::nullopt;
         }
       }
@@ -1337,7 +1332,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         if (retval < 0) {
           t8_global_errorf ("Premature end of line while reading trees.\n");
           free (line);
-          t8_cmesh_destroy (&cmesh);
           return std::nullopt;
         }
         t8_cmesh_set_tree_class (cmesh, tree_count, eclass);
@@ -1363,7 +1357,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
             t8_global_errorf ("Premature end of line while reading tree.\n");
             t8_debugf ("The line is %s", line);
             free (line);
-            t8_cmesh_destroy (&cmesh);
             return std::nullopt;
           }
           /* Get node from the hashtable */
@@ -1403,7 +1396,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
           if (!t8_cmesh_process_tree_geometry (cmesh, eclass, dim, tree_count, cad_geometry_base, linear_geometry_base,
                                                tree_nodes)) {
             free (line);
-            t8_cmesh_destroy (&cmesh);
             return std::nullopt;
           }
 
@@ -1417,7 +1409,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
   free (line);
   if (tree_count == 0) {
     t8_global_errorf ("Warning: No %iD elements found in msh file.\n", dim);
-    t8_cmesh_destroy (&cmesh);
     return std::nullopt;
   }
   return std::make_optional<t8_msh_tree_vertex_indices> (vertex_indices);
