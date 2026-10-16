@@ -35,6 +35,9 @@
  * \param [in] forest The input forest, which may contain hanging nodes. 
  *        \a forest must be committed before calling this function. Please note that the scheme provided with the 
  *         forest has to be a fitting subelement scheme.
+ *         Every tree class of \a forest must have a subelement implementation in the scheme, see
+ *         \ref t8_eclass_scheme_is_subelement. For \ref t8_scheme_new_subelement these are quadrilaterals and
+ *         triangles. This is checked in debug mode.
  * \return A new forest with the same number of trees and the same connectivity, but conformal without hanging nodes. 
  * \note \a forest is unreferenced during this. 
  */
