@@ -54,6 +54,11 @@ struct forest_commit: public testing::TestWithParam<std::tuple<int, cmesh_exampl
       scheme->unref ();
       GTEST_SKIP ();
     }
+    if (!t8_test_scheme_supports_cmesh (scheme_id, cmesh, sc_MPI_COMM_WORLD)) {
+      /* The scheme does not support this cmesh. */
+      scheme->unref ();
+      GTEST_SKIP ();
+    }
   }
   void
   TearDown () override

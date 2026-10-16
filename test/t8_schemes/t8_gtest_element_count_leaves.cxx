@@ -66,14 +66,15 @@ TEST_P (class_element_leaves, test_element_count_leaves_root)
     ASSERT_EQ (leaf_count, compare_value)
       << "Incorrect leaf count " << leaf_count << " at eclass " << t8_eclass_to_string[eclass] << " and level " << level
       << " (expecting " << compare_value << ")";
-    /* Multiply the compare_value with 2^dim (= number of children per element) */
+    /* Multiply the compare_value with the number of children per element */
     if (eclass == T8_ECLASS_PYRAMID) {
       sum1 *= 8;
       sum2 *= 6;
       compare_value = 2 * sum1 - sum2;
     }
     else {
-      compare_value *= 1 << t8_eclass_to_dimension[eclass];
+      // TODO extruded: ok to rely on get_max_num_children instead?
+      compare_value *= scheme->get_max_num_children (eclass);
     }
   }
 }
