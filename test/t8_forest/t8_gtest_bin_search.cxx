@@ -142,6 +142,42 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
           << element_id_at_next_level << ". Expected: " << ielement << " got: " << search_index;
       }
 
+      // For all lower levels, we compute the corresponding linear ID of the current leaf.
+      // We then run the binary search for that ID and level and check whether the results
+      // are as expected.
+      for (int lower_level = element_level - 1; lower_level >= 0; lower_level--) {
+
+        // Determine the linear ID the element had on lower_level.
+        const t8_linearidx_t element_id_at_lower_level
+          = scheme->element_get_linear_id (tree_class, leaf_element, lower_level);
+
+        // Run binary search through leaves.
+        const t8_locidx_t search_index = t8_forest_bin_search_upper (leaves, element_id_at_lower_level, lower_level);
+
+        // Check result
+        // ------------
+        // (i) The returned index has to be the smallest one with the same linear ID on lower_level,
+        //     so it cannot be greater than ielement.
+        EXPECT_LE (search_index, ielement);
+
+#if T8_TEST_LEVEL_INT == 2
+        // For T8_TEST_LEVEL_BASIC, only check ielement and search_index produce the same linear ID
+        // to save runtime.
+        const int last_check_elem = search_index;
+#else
+        // For other test levels, check all elements from ielement to search_index produce the same linear ID.
+        const int last_check_elem = ielement;
+#endif
+
+        // (ii) All leaves from search_index to ielement must have the same linear ID on lower_level.
+        for (int ileaf = search_index; ileaf <= last_check_elem; ileaf++) {
+          const t8_element_t *leaf_i = t8_forest_get_leaf_element_in_tree (forest, itree, ileaf);
+          const t8_linearidx_t leaf_lin_id_at_lower_level
+            = scheme->element_get_linear_id (tree_class, leaf_i, lower_level);
+          EXPECT_EQ (element_id_at_lower_level, leaf_lin_id_at_lower_level);
+        }
+      }
+
       // Construct an element that is definitely not in the array and
       // does not have an element of smaller id in the array. We expect -1 as return.
       // We take the first element of the forest and subtract 1 from its id.
@@ -209,6 +245,42 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
         EXPECT_EQ (search_index, ielement)
           << "Found wrong position of level " << element_level + 1 << " leaf element with id "
           << element_id_at_next_level << ". Expected: " << ielement << " got: " << search_index;
+      }
+
+      // For all lower levels, we compute the corresponding linear ID of the current leaf.
+      // We then run the binary search for that ID and level and check whether the results
+      // are as expected.
+      for (int lower_level = element_level - 1; lower_level >= 0; lower_level--) {
+
+        // Determine the linear ID the element had on lower_level.
+        const t8_linearidx_t element_id_at_lower_level
+          = scheme->element_get_linear_id (tree_class, leaf_element, lower_level);
+
+        // Run binary search through leaves.
+        const t8_locidx_t search_index = t8_forest_bin_search_lower (leaves, element_id_at_lower_level, lower_level);
+
+        // Check result
+        // ------------
+        // (i) The returned index has to be the largest one with the same linear ID on lower_level,
+        //     so it cannot be lower than ielement.
+        EXPECT_GE (search_index, ielement);
+
+#if T8_TEST_LEVEL_INT == 2
+        // For T8_TEST_LEVEL_BASIC, only check ielement and search_index produce the same linear ID
+        // to save runtime.
+        const int first_check_elem = search_index;
+#else
+        // For other test levels, check all elements from ielement to search_index produce the same linear ID.
+        const int first_check_elem = ielement;
+#endif
+
+        // (ii) All leaves from ielement to search_index must have the same linear ID on lower_level.
+        for (int ileaf = first_check_elem; ileaf <= search_index; ileaf++) {
+          const t8_element_t *leaf_i = t8_forest_get_leaf_element_in_tree (forest, itree, ileaf);
+          const t8_linearidx_t leaf_lin_id_at_lower_level
+            = scheme->element_get_linear_id (tree_class, leaf_i, lower_level);
+          EXPECT_EQ (element_id_at_lower_level, leaf_lin_id_at_lower_level);
+        }
       }
 
       // Construct an element that is definitely not in the array and
