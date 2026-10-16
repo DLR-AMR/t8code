@@ -48,7 +48,7 @@
 TEST (t8_gtest_occ_linkage, t8_test_occ_version_number)
 {
 #if T8_ENABLE_OCC
-  /* Compare the macro generated at configuration time with the linked runtime string */
+  /* Compare the macro generated at configuration time with the linked compile time string */
   ASSERT_FALSE (strcmp (T8_OCC_VERSION_USED, OCC_VERSION_STRING))
     << "Linked OCC version (" << OCC_VERSION_STRING << ") does not equal the version t8code was configured with ("
     << T8_OCC_VERSION_USED << ").\n";
