@@ -497,7 +497,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   const auto face_1_points = face_point_ids[*opposite_face];
 
   /* Now we can drop face 0 and the opposite face, since we do not need it anymore.
-     * We delete the opposite face first, since deleting the 0th face would shift the ids. */
+   * We delete the opposite face first, since deleting the 0th face would shift the ids. */
   face_ids.erase (face_ids.begin () + *opposite_face);
   face_point_ids.erase (face_point_ids.begin () + *opposite_face);
   face_normals.erase (face_normals.begin () + *opposite_face);
@@ -508,7 +508,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   /* ------------------------- 3. Compute orientation of face 1 ------------------------- */
 
   /* We now have to find the orientation of the face. For this we can take any OpenFOAM face which contains the 0th vertex.
-     * The 1st vertex will be saved right next to it. */
+   * The 1st vertex will be saved right next to it. */
   const size_t face_0_vertex_0 = points[0].value ();
   std::span<size_t>::iterator found_face_0_vertex_0;
   const auto check_face = std::find_if (
