@@ -33,14 +33,14 @@
 
 #include <t8.h>
 #include <t8_eclass/t8_eclass.h>
-#include "../t8_subelement_scheme.hxx"
+#include "../t8_specialization_interface.hxx"
 #include <array>
 #include <bit>
 
 /** Maximum subelement type. The subelement type ranges from 0 (= no subelement, normal standalone
  * triangle) to 6. Type 7 would mean in binary representation that all faces are hanging, but in
  * that case the element is refined by the standard recursive refinement instead. */
-#define T8_TRI_MAX_SUBELEMENT_TYPE 6
+#define T8_SUB_TRI_MAX_SUBELEMENT_TYPE 6
 
 /** Subelement scheme for triangular elements.
  * A triangle is transitioned into triangular subelements. The subelement type encodes which of the
@@ -51,17 +51,9 @@
  * Please have a look at \a vertex_coords_of_subelement for the definition of the subelement ids for triangles.
  */
 struct t8_subelem_scheme_hanging_nodes_tri:
-  public t8_subelement_scheme_common<T8_ECLASS_TRIANGLE, t8_subelem_scheme_hanging_nodes_tri>
+  public t8_subelement_scheme_interface<T8_ECLASS_TRIANGLE, t8_subelem_scheme_hanging_nodes_tri>
 {
  public:
-  /** The recursive scheme used for the underlying (standalone) triangle elements. Whenever the
-   * subelement logic is not needed, the scheme forwards to this underlying scheme. */
-  using TUnderlyingScheme = typename t8_subelement_traits<t8_subelem_scheme_hanging_nodes_tri>::UnderlyingScheme;
-  /** The subelement element type (an underlying element plus a subelement type and id). */
-  using TSubelementType = typename t8_subelement_traits<t8_subelem_scheme_hanging_nodes_tri>::SubelementType;
-
-  TUnderlyingScheme underlying_scheme {}; /**< Instance of the underlying standalone scheme. */
-
   /** Compute the maximum number of faces of a given element and all of its descendants.
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
@@ -97,60 +89,20 @@ struct t8_subelem_scheme_hanging_nodes_tri:
   static int
   subelement_get_number_of_valid_types () noexcept
   {
-    return T8_TRI_MAX_SUBELEMENT_TYPE;
+    return T8_SUB_TRI_MAX_SUBELEMENT_TYPE;
   }
 
   /** Get the number of subelements an element is refined into for a specific type.
    * \param [in] elem   The element whose number of children is returned.
    * \param [in] subelement_type The subelement type used for refinement.
+   *             It must hold 1<= \a subelement_type <= T8_SUB_TRI_MAX_SUBELEMENT_TYPE.
    * \return                     The number of subelements the triangle is split into (hanging faces + 1).
    */
-  int
-  subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type) const noexcept
+  static int
+  subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type) noexcept
   {
-    if (subelement_type == 0) {
-      return underlying_scheme.element_get_num_children (this->element_to_standalone (elem));
-    }
     const int num_hanging_faces = std::popcount (static_cast<unsigned int> (subelement_type));
     return num_hanging_faces + 1;
-  }
-
-  /** This defines how an element is refined into subelements using a specified subelement type.
-   * \param [in] elem          The element to be refined.
-   * \param [in] length        The length of the output array \a c must match the number of subelements.   
-   *                           See \ref element_get_num_children.
-   * \param [in, out] c        An array of allocated elements that will be filled with the subelements of \a elem. 
-   * \param [in] subelem_type  The subelement type to be used for refinement. This is a binary encoding of the
-   *                           hanging faces.
-   */
-  void
-  subelement_get_children (const t8_element_t *elem, [[maybe_unused]] const int length, t8_element_t *c[],
-                           int subelem_type) const noexcept
-  {
-    const TSubelementType *element = this->as_subelement (elem);
-    TSubelementType **c_as_subelements = reinterpret_cast<TSubelementType **> (c);
-    const int num_subelements = this->subelement_get_num_children (elem, subelem_type);
-    T8_ASSERT (length == num_subelements);
-
-    T8_ASSERT (subelem_type >= 1 && subelem_type <= T8_TRI_MAX_SUBELEMENT_TYPE);
-    T8_ASSERT (!this->element_is_subelement (elem));
-    T8_ASSERT (this->element_is_valid (elem));
-#if T8_ENABLE_DEBUG
-    {
-      for (int j = 0; j < num_subelements; j++) {
-        T8_ASSERT (this->element_is_valid (c[j]));
-      }
-    }
-#endif
-
-    /* Setting the parameter values for different subelements. */
-    for (int sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
-      underlying_scheme.element_copy (this->subelement_to_standalone (element),
-                                      this->subelement_to_standalone (c_as_subelements[sub_id_counter]));
-      c_as_subelements[sub_id_counter]->subelement_type = subelem_type;
-      c_as_subelements[sub_id_counter]->subelement_id = sub_id_counter;
-      T8_ASSERT (this->element_is_valid (c[sub_id_counter]));
-    }
   }
 
   /** Convert points in the reference space of a (triangular) subelement to points in the reference
