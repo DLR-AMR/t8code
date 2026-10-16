@@ -33,13 +33,12 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8.h>
-#include "t8_forest/t8_forest_types.h"
 #include "t8_vtk/t8_vtk_writer_helper.hxx"
 #include "t8_vtk/t8_vtk_write_ASCII.hxx"
 
 #include <string>
 #include <t8_vtk/t8_vtk.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 
 #if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>

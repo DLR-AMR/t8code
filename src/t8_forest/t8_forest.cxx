@@ -26,8 +26,8 @@
 
 #include <sc_statistics.h>
 #include <t8_helper_functions/t8_refcount.h>
-#include <t8_types/t8_vec.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.h>
+#include <t8_vector/t8_vec.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_types.h>
@@ -2954,6 +2954,14 @@ t8_forest_is_committed (const t8_forest_t forest)
   return forest != nullptr && t8_refcount_is_active (&forest->rc) && forest->committed;
 }
 
+int
+t8_forest_has_incomplete_trees (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->incomplete_trees == 0 || forest->incomplete_trees == 1);
+  return forest->incomplete_trees;
+}
+
 static void
 t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 {
@@ -3041,6 +3049,13 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
   forest->set_adapt_recursive = -1;
   forest->set_balance = -1;
   forest->set_for_coarsening = -1;
+}
+
+t8_forest_t
+t8_forest_get_set_from (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  return forest->set_from;
 }
 
 void
@@ -3577,11 +3592,7 @@ t8_forest_commit (t8_forest_t forest)
     forest->do_ghost = 0;
   }
 #if T8_ENABLE_DEBUG
-  if (!(t8_scheme_has_subelement_scheme (forest->scheme))) {
-    // This does not work for subelements as the linear id cannot be defined.
-    // It is just a test so it is fine to skip this for subelements.
-    t8_forest_partition_test_boundary_element (forest);
-  }
+  t8_forest_partition_test_boundary_element (forest);
 #endif
 }
 
@@ -3667,6 +3678,22 @@ t8_forest_get_mpicomm (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   return forest->mpicomm;
+}
+
+int
+t8_forest_get_mpirank (const t8_forest_t forest)
+{
+  T8_ASSERT (forest != nullptr);
+  T8_ASSERT (forest->mpirank >= 0);
+  return forest->mpirank;
+}
+
+int
+t8_forest_get_mpisize (const t8_forest_t forest)
+{
+  T8_ASSERT (forest != nullptr);
+  T8_ASSERT (forest->mpisize > 0);
+  return forest->mpisize;
 }
 
 t8_gloidx_t
