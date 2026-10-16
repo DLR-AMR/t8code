@@ -169,6 +169,7 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_partition.cxx
     t8_forest/t8_forest_partition_for_coarsening.cxx
     t8_forest/t8_forest_pfc_helper.cxx
+    t8_forest/t8_forest_pfc_message.cxx
     t8_forest/t8_forest.cxx
     t8_forest/t8_forest_private.cxx
     t8_forest/t8_forest_ghost/t8_forest_ghost.cxx
@@ -197,21 +198,19 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_scheme.cxx
     t8_schemes/t8_default/t8_default.cxx
     t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
-    t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.c
     t8_schemes/t8_default/t8_default_line/t8_default_line.cxx
-    t8_schemes/t8_default/t8_default_line/t8_dline_bits.c
+    t8_schemes/t8_default/t8_default_line/t8_dline_bits.cxx
     t8_schemes/t8_default/t8_default_prism/t8_default_prism.cxx
-    t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.c
+    t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.cxx
-    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c
+    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c
     t8_schemes/t8_default/t8_default_quad/t8_default_quad.cxx
-    t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.cxx
     t8_schemes/t8_default/t8_default_tet/t8_default_tet.cxx
-    t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.c
+    t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.cxx
     t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.c
     t8_schemes/t8_default/t8_default_tri/t8_default_tri.cxx
-    t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c
+    t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.cxx
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_vector/t8_vec.cxx
@@ -307,8 +306,8 @@ install( DIRECTORY t8_forest
   FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
-    PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
     PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
+    PATTERN "t8_forest/t8_forest_types.h" EXCLUDE
 )
 install( DIRECTORY t8_geometry
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}

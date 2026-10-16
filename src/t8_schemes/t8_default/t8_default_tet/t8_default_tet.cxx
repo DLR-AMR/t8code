@@ -22,8 +22,8 @@
 
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
 #include <t8_schemes/t8_scheme.hxx>
 
@@ -250,7 +250,7 @@ t8_default_scheme_tet::element_get_tree_face (const t8_element_t *elem, int face
 /* Construct the inner element from a boundary element. */
 /* This function is defined here instead of in t8_dri_bits.c since
  * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist
- * both in t8_dtri_bits.c. This would be needed by an implementation, at least
+ * both in t8_dtri_bits.cxx. This would be needed by an implementation, at least
  * for tets. */
 int
 t8_default_scheme_tet::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
@@ -323,9 +323,9 @@ t8_default_scheme_tet::element_get_last_descendant_face (const t8_element_t *ele
 }
 
 /* Construct the boundary element at a specific face. */
-/* This function is defined here instead of in t8_dtet_bits.c since
+/* This function is defined here instead of in t8_dtet_bits.cxx since
  * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist
- * both in t8_dtet_bits.c. */
+ * both in t8_dtet_bits.cxx. */
 void
 t8_default_scheme_tet::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
                                                   [[maybe_unused]] const t8_scheme *scheme) const
