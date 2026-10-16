@@ -30,7 +30,7 @@
 #include <src/t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
 
-/** Adapt a forest such that always the first child of a
+/** Adapt a forest such that always the child with ID=1 (i.e. the second child)
  * family is refined and no other elements. This results in a highly
  * imbalanced forest.
  *
