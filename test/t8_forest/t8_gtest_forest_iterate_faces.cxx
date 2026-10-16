@@ -119,7 +119,7 @@ t8_test_face_callback (const t8_forest_t forest, const t8_locidx_t ltreeid, cons
     EXPECT_GE (tree_leaf_index, 0);
     EXPECT_LT (tree_leaf_index, t8_forest_get_tree_num_leaf_elements (forest, ltreeid));
 
-    ++data->leaf_count;
+    ++(data->leaf_count);
 
     // Inserting the index must succeed because each leaf is visited only once.
     EXPECT_TRUE (data->leaf_indices.insert (tree_leaf_index).second);
