@@ -461,18 +461,18 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   constexpr t8_eclass_t eclass = T8_ECLASS_HEX;
 
   /** Orientation of the OpenFOAM face with regard to the t8code face.
-   * t8 corner 0 -> foam corner <orientation.first>
-   * same normal direction <orientation.second> = 1, different normal direction<orientation.second> = -1
+   * t8 corner 0 -> foam corner <orientation.first_node>
+   * same normal direction -> <orientation.same_normal_dir> = true, different normal direction -> false
    */
-  std::pair<u_int8_t, bool> orientation;
+  t8_foam_face_orientation orientation;
   /** Normal of the t8 face. 1 points outward, 0 inward. */
   bool t8_face_normal;
 
   /* ------------------------- 1. Assign face 0 ------------------------- */
   t8_face_normal = t8_eclass_face_orientation[eclass][0];
-  /* Orientation.second is true, if both face normals point in the same direction */
-  orientation.second = (t8_face_normal == face_normals[0]);
-  orientation.first = 0;
+  /* orientation.same_normal_dir is true, if both face normals point in the same direction */
+  orientation.same_normal_dir = (t8_face_normal == face_normals[0]);
+  orientation.first_node = 0;
 
   /* Now, we assign the first face to be face 0. */
   faces[0].emplace (face_ids[0]);
@@ -492,7 +492,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
               "ERROR: Could not find the opposite face for hex reconstruction. Maybe this cell was falsely classified "
               "as a hex\n");
   t8_face_normal = t8_eclass_face_orientation[eclass][1];
-  orientation.second = (t8_face_normal == face_normals[*opposite_face]);
+  orientation.same_normal_dir = (t8_face_normal == face_normals[*opposite_face]);
   faces[1].emplace (face_ids[*opposite_face]);
   const auto face_1_points = face_point_ids[*opposite_face];
 
@@ -540,10 +540,10 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   /* Now we can compute the complete orientation of face 1. */
   const auto face_1_vertex_0_iterator = std::find (face_1_points.begin (), face_1_points.end (), face_1_vertex_0);
   T8_ASSERT (face_1_vertex_0_iterator != face_1_points.end ());
-  orientation.first = face_1_vertex_0_iterator - face_1_points.begin ();
+  orientation.first_node = face_1_vertex_0_iterator - face_1_points.begin ();
 
   /* After that we add the remaining four points, completing the vertices of the cell */
-  face_orientations[1] = orientation.first;
+  face_orientations[1] = orientation.first_node;
   for (u_int8_t i_face_point = 0; i_face_point < t8_eclass_num_vertices[T8_ECLASS_QUAD]; ++i_face_point) {
     const u_int8_t foam_point_id = t8_face_vertex_to_foam_point (T8_ECLASS_QUAD, orientation, i_face_point);
     points[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][1][i_face_point]].emplace (face_1_points[foam_point_id]);

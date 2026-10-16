@@ -44,6 +44,15 @@
 #include <unordered_set>
 
 /**
+ * Orientation of an OpenFOAM face with regard to the corresponding t8code face.
+ */
+struct t8_foam_face_orientation
+{
+  u_int8_t first_node;  /**< The foam face-vertex, which corresponds to the t8code face-vertex 0. */
+  bool same_normal_dir; /**< True, if the face normals of the foam and the t8code face point in the same direction. */
+};
+
+/**
  * Reads an OpenFOAM case into t8code data structures.
  */
 struct t8_openfoam_reader
@@ -166,14 +175,12 @@ struct t8_openfoam_reader
    * Given a face eclass and orientation, this function converts the face id of a t8code face-vertex id to the corresponding
    * OpenFOAM (foam) face-vertex id.
    * \param [in] face_class         The eclass of the face (triangle or quad)
-   * \param [in] orientation        The orientation of the face (int and bool, the first is the foam vertex,
-   *                                which corresponds to the t8code vertex 0 and the second is 1, if both face
-   *                                normals point in the same direction and 0 otherwise)
+   * \param [in] orientation        The orientation of the foam face with regard to the t8code face
    * \param [in] t8_face_vertex_id  The t8 face-vertex id to convert
    * \return                        The converted foam face-vertex id
    */
   constexpr static u_int8_t
-  t8_face_vertex_to_foam_point (t8_eclass_t face_class, std::pair<u_int8_t, bool> orientation,
+  t8_face_vertex_to_foam_point (t8_eclass_t face_class, const t8_foam_face_orientation orientation,
                                 u_int8_t t8_face_vertex_id)
   {
     /* While t8code uses the z-order for quads, OpenFOAM uses an anti-clockwise numeration.
@@ -184,11 +191,12 @@ struct t8_openfoam_reader
     }
 
     /* The OpenFOAM face point belonging to the current t8_face_vertex is calculated via the orientation
-     * (orientation.second tells us if we count up +1 or down -1 depending on the fact that the face normals point
-     * in the same direction and orientation.first tells us which foam point is located at t8 vertex 0) and the current t8_face_vertex.
+     * (orientation.same_normal_dir tells us if we count up +1 or down -1 depending on the fact that the face normals
+     * point in the same direction and orientation.first_node tells us which foam point is located at t8 vertex 0)
+     * and the current t8_face_vertex.
      * We add t8_eclass_num_vertices[face_class] once, so that we never take a mod of a negative value. */
-    const int order = orientation.second ? 1 : -1;
-    return (order * t8_face_vertex_id + orientation.first + t8_eclass_num_vertices[face_class])
+    const int order = orientation.same_normal_dir ? 1 : -1;
+    return (order * t8_face_vertex_id + orientation.first_node + t8_eclass_num_vertices[face_class])
            % t8_eclass_num_vertices[face_class];
   }
 
