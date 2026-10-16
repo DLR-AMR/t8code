@@ -27,7 +27,7 @@
 #include <cmath>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
-#include <t8_types/t8_vec.h>
+#include <t8_vector/t8_vec.h>
 
 void
 t8_geometry_quadrangulated_disk::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
