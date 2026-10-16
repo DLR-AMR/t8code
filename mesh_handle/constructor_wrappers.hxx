@@ -25,6 +25,9 @@
  * Additionally, a very small fraction of example coarse meshes is wrapped directly for easy access and
  * for the use in tests.
  * See \ref t8_cmesh_examples.h for more exemplary cmeshes to be put into the wrapper constructors.
+ *
+ * The wrappers return a std::unique_ptr because the mesh handle is neither copyable nor movable:
+ * The unique pointer keeps that address stable while the handle can still be moved, e.g. into members or test fixtures.
  */
 
 #pragma once
