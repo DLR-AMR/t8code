@@ -32,7 +32,6 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 
-#include <t8_forest/t8_forest_types.h> /* TODO: This file should not be included from an application */
 /* This function refines every element */
 static int
 t8_basic_adapt_refine (__attribute__ ((unused)) t8_forest_t forest, __attribute__ ((unused)) t8_forest_t forest_from,
