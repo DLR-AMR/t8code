@@ -22,7 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_custom_competence.cxx
- * Checks that custom-defined competences can be used as template parameters for the mesh. 
+ * Checks that custom-defined competences can be used as template parameters for the mesh.
  */
 
 #include <gtest/gtest.h>
@@ -43,8 +43,8 @@ template <typename TUnderlying>
 struct dummy_get_level: public t8_crtp_operator<TUnderlying, dummy_get_level>
 {
  public:
-  /** Getter for the level of the element. This function needs to access several members 
-   *     of the element such that we need the crtp structure here. 
+  /** Getter for the level of the element. This function needs to access several members
+   *     of the element such that we need the crtp structure here.
    * \return Level of the element.
    */
   t8_element_level
@@ -75,8 +75,8 @@ struct dummy_trivial: public t8_crtp_operator<TUnderlying, dummy_trivial>
   }
 };
 
-/** This tests checks that custom defined competences can be used for \ref t8_mesh_handle::mesh 
- *  and that we can use the functionality defined in the competence. 
+/** This tests checks that custom defined competences can be used for \ref t8_mesh_handle::mesh
+ *  and that we can use the functionality defined in the competence.
  * Also checks that we can use more than one custom competence and that predefined competences can be additionally used.
  */
 TEST (t8_gtest_custom_competence, custom_competence)

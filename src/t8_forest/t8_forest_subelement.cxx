@@ -66,10 +66,10 @@ t8_discard_subelements_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_un
   return 0;
 }
 
-/** Adapt callback for hanging node resolution. 
+/** Adapt callback for hanging node resolution.
  * We use the face enumeration to determine which subelement type to use for the transition cell.
- * Every face has a flag parameter, which is set to 1, if there is a neighbour with a higher level 
- * and to 0, if the level of the neighbour is at most the level of the element.   
+ * Every face has a flag parameter, which is set to 1, if there is a neighbour with a higher level
+ * and to 0, if the level of the neighbour is at most the level of the element.
  * If all faces are hanging, we use the normal 1:8 refinement and return 1.
  * Otherwise, we use subelements and add 1 to every type, to avoid refine = 1.
  * \param [in] forest       The forest to which the new elements belong.

@@ -100,7 +100,7 @@ t8_dpyramid_face_child_face (const t8_dpyramid_t *p, const int face, const int f
 /** Given the facenumber of a pyramid, return the shape of the face
  * \param[in] pyra       Input pyramid
  * \param[in] face       The facenumber
- * \return               the shape of the face  
+ * \return               the shape of the face
 */
 t8_element_shape_t
 t8_dpyramid_face_shape (const t8_dpyramid_t *pyra, int face);
@@ -121,7 +121,7 @@ t8_dpyramid_get_face_corner (const t8_dpyramid_t *pyra, int face, int corner);
 void
 t8_dpyramid_boundary_face (const t8_dpyramid_t *p, const int face, t8_element_t *boundary);
 
-/** Given a boundary face inside the root pyramids's face construct the element inside the root pyramid that has the 
+/** Given a boundary face inside the root pyramids's face construct the element inside the root pyramid that has the
  * given face as a face.
  * \param [in] face      A face element.
  * \param [in,out] p     An allocated element. The entries will be filled with the data of the element that has \a face
@@ -132,7 +132,7 @@ t8_dpyramid_boundary_face (const t8_dpyramid_t *p, const int face, t8_element_t 
 int
 t8_dpyramid_extrude_face (const t8_element_t *face, t8_dpyramid_t *p, const int root_face);
 
-/** Compare two elements. returns negative if p1 < p2, zero if p1 equals p2 and positive if p1 > p2. 
+/** Compare two elements. returns negative if p1 < p2, zero if p1 equals p2 and positive if p1 > p2.
  * If p2 is a copy of p1 then the elements are equal.
  * \param[in] p1    A pyramid
  * \param[in] p2    Another pyramid
@@ -195,7 +195,7 @@ t8_dpyramid_is_inside_root (const t8_dpyramid_t *p);
 int
 t8_dpyramid_tet_boundary (const t8_dpyramid_t *p, const int face);
 
-/** compute if a given element lies on the tree boundary and return the face number of the tree face. 
+/** compute if a given element lies on the tree boundary and return the face number of the tree face.
  * If not the return value is arbitrary
  * \param [in] p     pyramid
  * \param [in] face     a face of \a p
@@ -228,7 +228,7 @@ t8_dpyramid_first_descendant_face (const t8_dpyramid_t *p, const int face, t8_dp
 /** Compute the last descendant of a pyramid at a given level. This is the descendant of
  * the pyramid in a uniform level refinement that has the largest id.
  * \param [in] p        pyramid whose descendant is computed.
- * \param [out] desc    Existing pyramid whose data will be filled with the data of \a p's last descendant on level 
+ * \param [out] desc    Existing pyramid whose data will be filled with the data of \a p's last descendant on level
  *                      \a level.
  * \param [in] level    The refinement level. Must be greater than \a p's refinement level.
  */
@@ -294,7 +294,7 @@ t8_dpyramid_num_faces (const t8_dpyramid_t *p);
 int
 t8_dpyramid_max_num_faces (const t8_dpyramid_t *p);
 
-/** Given a face of an element return the face number of the parent of the element that matches the element's face. 
+/** Given a face of an element return the face number of the parent of the element that matches the element's face.
  * Or return -1 if no face of the parent matches the face.
  * \param [in] elem Input pyramid
  * \param [in] face a face of \a elem
@@ -318,9 +318,9 @@ t8_dpyramid_ancestor_id (const t8_dpyramid_t *p, const int level);
 void
 t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level, t8_dpyramid_t *ancestor);
 
-/** Compute the type of a pyramid at a given level. Starting from its own level, we iterate over the levels and 
- * compute the type of this level. If p is a tetrahedron, we compute it in a tetrahedral fashion up unto the last 
- * level where p is a tet and continue in a pyramidal fashion 
+/** Compute the type of a pyramid at a given level. Starting from its own level, we iterate over the levels and
+ * compute the type of this level. If p is a tetrahedron, we compute it in a tetrahedral fashion up unto the last
+ * level where p is a tet and continue in a pyramidal fashion
  * \param [in] p      Input pyramid
  * \param [in] level  The level at which the type is computed
  * \return            The type of \a p at level \a level. */
