@@ -38,7 +38,6 @@
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
 #include <t8_forest/t8_forest_iterate.h>
-#include <t8_forest/t8_forest_types.h>
 #include <vector>
 #include <functional>
 #include <memory>
@@ -382,7 +381,8 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   void
   set_adapt (adapt_callback_type adapt_callback)
   {
-    SC_CHECK_ABORT (m_forest->incomplete_trees == 0, "The mesh handle can't adapt forests with incomplete trees.\n");
+    SC_CHECK_ABORT (!t8_forest_has_incomplete_trees (m_forest),
+                    "The mesh handle can't adapt forests with incomplete trees.\n");
     if (m_uncommitted_forest == nullptr) {
       t8_forest_init (&m_uncommitted_forest);
     }
@@ -492,7 +492,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     }
     // It can happen that the user only calls set_ghost before commit.
     // This does not set the set_from member of the forest and we copy the current forest in this case.
-    if (m_uncommitted_forest->set_from == NULL) {
+    if (t8_forest_get_set_from (m_uncommitted_forest) == nullptr) {
       t8_forest_set_copy (m_uncommitted_forest, m_forest);
     }
 

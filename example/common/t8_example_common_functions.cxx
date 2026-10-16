@@ -24,7 +24,7 @@
   * that are used in more than one example. */
 
 #include <example/common/t8_example_common.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 
 double
 t8_levelset_sphere (const t8_3D_vec &x, [[maybe_unused]] const double t, void *data)
