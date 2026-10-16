@@ -38,6 +38,7 @@
 #include <optional>
 #include <vector>
 #include <array>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <t8_misc/t8_windows.h>
@@ -1783,6 +1784,23 @@ t8_cmesh_from_msh_file (t8_cmesh_t *pcmesh, const char *fileprefix, const int pa
         }
         *pcmesh = nullptr;
         return;
+      }
+      if (use_cad_geometry) {
+        /* Gmsh only stores the parameters of the nodes on cad curves and surfaces if the file was saved with
+         * Mesh.SaveParametric = 1. Without them, tree faces and edges with such nodes cannot be linked to the cad
+         * geometry. Nodes on cad vertices and in volumes never have parameters, so we only warn if no node is
+         * parametric at all, but some lie on curves or surfaces. */
+        const bool has_parametric_nodes = std::any_of (vertices_opt->begin (), vertices_opt->end (),
+                                                       [] (const t8_msh_file_node &node) { return node.parametric; });
+        const bool has_nodes_on_curves_or_surfaces
+          = std::any_of (vertices_opt->begin (), vertices_opt->end (),
+                         [] (const t8_msh_file_node &node) { return node.entity_dim == 1 || node.entity_dim == 2; });
+        if (!has_parametric_nodes && has_nodes_on_curves_or_surfaces) {
+          t8_global_errorf ("WARNING: Cad geometry requested, but %s contains no parametric node coordinates. "
+                            "Tree faces and edges with nodes on CAD curves or surfaces are not linked to the CAD "
+                            "geometry. Save the msh file with Mesh.SaveParametric = 1 to use the CAD geometry.\n",
+                            current_file);
+        }
       }
       indices = t8_cmesh_msh_file_4_read_eles (cmesh, file, *vertices_opt, dim, linear_geometry, use_cad_geometry,
                                                cad_geometry, true);
