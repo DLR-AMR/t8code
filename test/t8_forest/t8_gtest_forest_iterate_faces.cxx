@@ -173,9 +173,6 @@ struct t8_gtest_forest_iterate_faces: public ::testing::TestWithParam<std::tuple
    * specified by the test parameters. A uniformly refined forest
    * is then constructed at the requested refinement level.
    *
-   * The communicator sc_MPI_COMM_SELF ensures that the entire tree
-   * is owned locally, allowing the test to validate tree-local
-   * leaf indices without accounting for distributed ownership.
    *
    * Finally, the root element is allocated and initialized through
    * the forest's refinement scheme. The requested face index is
@@ -189,6 +186,11 @@ struct t8_gtest_forest_iterate_faces: public ::testing::TestWithParam<std::tuple
     const int face = std::get<2> (GetParam ());
 
     eclass = test_eclass;
+
+    // Skip configurations with a face index outside the element class range.
+    if (face >= t8_eclass_num_faces[eclass]) {
+      GTEST_SKIP () << "Face " << face << " is invalid for element class " << t8_eclass_to_string[eclass];
+    }
 
     // Construct a coarse mesh containing a single tree of the requested class.
     t8_cmesh_t cmesh;
@@ -349,47 +351,18 @@ TEST_P (t8_gtest_forest_iterate_faces, iterate_faces)
 }
 
 /**
- * Generate parameter combinations for testing face iteration.
+ * Instantiate the face iteration tests for different element classes,
+ * refinement levels, root faces and callback termination behaviors.
+ * 
+ * Test configurations for:
+ * - Element classes: LINE, QUAD and HEX.
+ * - Refinement levels: 0 through 3.
+ * - Root faces: 0 through 5.
+ * - Callback behavior: Complete traversal or immediate termination.
  *
- * The test configurations cover line, quadrilateral and hexahedral
- * elements. For each element class, all root faces are tested at
- * uniform refinement levels zero through three.
- *
- * Each combination is generated twice:
- * - Once with complete recursion enabled.
- * - Once with immediate recursion termination.
- *
- * This verifies both the normal traversal behavior and the
- * termination mechanism of t8_forest_iterate_faces for different
- * element dimensions and refinement levels.
- *
- * \return  A vector of tuples containing the element class,
- *          refinement level, root face and callback termination flag.
+ * Since the number of valid faces depends on the element class,
+ * configurations with invalid face indices are skipped in SetUp.
  */
-static std::vector<std::tuple<t8_eclass_t, int, int, bool>>
-t8_generate_face_test_cases ()
-{
-  std::vector<std::tuple<t8_eclass_t, int, int, bool>> cases;
-
-  // Associate each supported element class with its number of faces.
-  const std::vector<std::pair<t8_eclass_t, int>> eclasses
-    = { { T8_ECLASS_LINE, 2 }, { T8_ECLASS_QUAD, 4 }, { T8_ECLASS_HEX, 6 } };
-
-  // Generate all combinations of element class, refinement level and face.
-  for (const auto &[eclass, num_faces] : eclasses) {
-    for (int level = 0; level <= 3; ++level) {
-      for (int iface = 0; iface < num_faces; ++iface) {
-        // Test both complete traversal and immediate termination.
-        for (const bool stop_recursion : { false, true }) {
-          cases.emplace_back (eclass, level, iface, stop_recursion);
-        }
-      }
-    }
-  }
-
-  return cases;
-}
-
-// Instantiate the parameterized tests for all generated configurations.
 INSTANTIATE_TEST_SUITE_P (AllFaceConfigurations, t8_gtest_forest_iterate_faces,
-                          ::testing::ValuesIn (t8_generate_face_test_cases ()));
+                          ::testing::Combine (::testing::Values (T8_ECLASS_LINE, T8_ECLASS_QUAD, T8_ECLASS_HEX),
+                                              ::testing::Range (0, 4), ::testing::Range (0, 6), ::testing::Bool ()));
