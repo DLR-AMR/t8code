@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/DLR-AMR/t8code/wiki/Tutorial:-Search
+/** \file t8_tutorial_search.cxx
+ * See also: https://github.com/DLR-AMR/t8code/wiki/Tutorial:-Search
  * In this tutorial we discuss t8code's search algorithm.
  * search is a powerful tool to identify leaf elements that match a given condition
  * and execute a function on them.
@@ -117,23 +118,23 @@
 #include <t8_forest/t8_forest_iterate.h>        /* For the search algorithm. */
 #include <tutorials/general/t8_step3.h>         /* Example forest adaptation from step 3 */
 
-/* Our search query, a particle together with a flag. */
+/** Our search query, a particle together with a flag. */
 struct t8_tutorial_search_particle_t
 {
-  double coordinates[3];   /* The coordinates of our particle. */
-  int is_inside_partition; /* Will be set to true if the particles lies inside this process' parallel partition. */
+  double coordinates[3];   /**< The coordinates of our particle. */
+  int is_inside_partition; /**< Will be set to true if the particles lies inside this process' parallel partition. */
 };
 
-/* Additional user data that we process during search.
+/** Additional user data that we process during search.
  * For each element we count the number of particles that it contains
  * and we count the total number of elements that we constructed during search. */
 struct t8_tutorial_search_user_data_t
 {
-  sc_array *particles_per_element;   /* For each element the number of particles inside it. */
-  t8_locidx_t num_elements_searched; /* The total number of elements created. */
+  sc_array *particles_per_element;   /**< For each element the number of particles inside it. */
+  t8_locidx_t num_elements_searched; /**< The total number of elements created. */
 };
 
-/*
+/**
  * The search callback.
  * It will be called once per element and generally decides whether or not
  * to continue the search with the children of the element.
@@ -361,6 +362,7 @@ t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed, sc_
   return particles;
 }
 
+/** Entry point of the program. */
 int
 main (int argc, char **argv)
 {

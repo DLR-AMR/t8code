@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-4---Partition,-Balance,-Ghost
+/** \file t8_step4_partition_balance_ghost.cxx
+ * See also: https://github.com/DLR-AMR/t8code/wiki/Step-4---Partition,-Balance,-Ghost
  *
  * This is step4 of the t8code tutorials.
  * After generating a coarse mesh (step1), building a uniform forest
