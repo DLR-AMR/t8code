@@ -27,13 +27,24 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_cmesh/t8_cmesh_healpix/t8_geometry_healpix.hxx>
 
+/**
+ * @brief Helper struct for joining healpix elements for t8_cmesh_set_join.
+ */
 struct t8_healpix_join
 {
-  /*helper struct for joining healpix elements*/
+  /** ID of tree 1 */
   t8_gloidx_t tree1;
+
+  /** Index of face 1 */
   int face1;
+
+  /** ID of tree 2 */
   t8_gloidx_t tree2;
+
+  /** Index of face 2 */
   int face2;
+
+  /** Orientation for face 1 and face 2 */
   int orient;
 };
 

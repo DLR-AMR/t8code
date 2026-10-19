@@ -24,7 +24,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_cmesh/t8_cmesh.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh_healpix/t8_geometry_healpix.hxx>
 #include <t8_cmesh/t8_cmesh_healpix/t8_cmesh_healpix.h>
 #include <test/t8_gtest_macros.hxx>
