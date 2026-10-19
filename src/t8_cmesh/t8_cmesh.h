@@ -134,7 +134,7 @@ t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh);
 
 /**
  * Enable localitly based indexing of trees during \ref t8_cmesh_commit.
- * \param [in, out] cmesh 
+ * \param [in, out] cmesh
  */
 void
 t8_cmesh_enable_tree_reordering (t8_cmesh_t cmesh);

@@ -32,7 +32,7 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 
 #include <array>
 #include <limits>
