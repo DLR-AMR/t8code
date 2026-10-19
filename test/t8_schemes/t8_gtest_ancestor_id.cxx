@@ -86,3 +86,5 @@ TEST_P (class_ancestor_id, t8_recursive_dfs_ancestor_id)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_ancestor_id, class_ancestor_id, AllSchemes, print_all_schemes);
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ancestor_id_multilevel, class_ancestor_id, AllMultilevelSchemes, print_all_schemes);
