@@ -107,7 +107,12 @@ std::vector<t8_eclass_t> all_eclasses
       T8_ECLASS_TET,  T8_ECLASS_PRISM,  T8_ECLASS_PYRAMID, T8_ECLASS_COUNT, T8_ECLASS_INVALID };
 
 /** Vector with parameters for broadcast. */
+#if T8_TEST_LEVEL_INT >= 2
+/* Bcast and no bcast yield the same cmesh. Bcast covers more code, since it also builds the cmesh on rank 0. */
+std::vector<int> do_bcast = { 1 };
+#else
 std::vector<int> do_bcast = { 0, 1 };
+#endif
 /** Vector with parameters for partition. */
 std::vector<int> partition = { 0, 1 };
 /** Vector with parameters for periodic. */
