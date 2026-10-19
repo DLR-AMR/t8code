@@ -31,6 +31,7 @@
 
 #include <t8.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <type_traits>
@@ -410,7 +411,9 @@ class t8_static_vector {
   delete_range ([[maybe_unused]] const size_t first, [[maybe_unused]] const size_t last)
   {
     if constexpr (!std::is_trivially_destructible_v<TType>) {
-      for (size_t i = first; i < last; ++i) {
+      T8_ASSERT (last <= TCapacity);
+      const size_t end = std::min (last, TCapacity);
+      for (size_t i = first; i < end; ++i) {
         m_data[i] = TType {};
       }
     }
