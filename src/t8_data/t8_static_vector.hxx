@@ -412,6 +412,7 @@ class t8_static_vector {
   {
     if constexpr (!std::is_trivially_destructible_v<TType>) {
       T8_ASSERT (last <= TCapacity);
+      // Note: Even though it seems unnecessary, this line is very important and prevents a false positive warning of some GCC compilers.
       const size_t end = std::min (last, TCapacity);
       for (size_t i = first; i < end; ++i) {
         m_data[i] = TType {};
