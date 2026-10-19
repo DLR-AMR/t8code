@@ -114,6 +114,7 @@ configure_file(
 
 add_t8_cpp_test( NAME t8_gtest_cmesh_bcast_parallel     SOURCES t8_cmesh/t8_gtest_bcast.cxx )
 add_t8_cpp_test( NAME t8_gtest_eclass_serial            SOURCES t8_gtest_eclass.cxx )
+add_t8_cpp_test( NAME t8_gtest_element_shape_serial     SOURCES t8_schemes/t8_gtest_element_shape.cxx )
 add_t8_cpp_test( NAME t8_gtest_mat_serial               SOURCES t8_gtest_mat.cxx )
 add_t8_cpp_test( NAME t8_gtest_refcount_serial          SOURCES t8_gtest_refcount.cxx )
 add_t8_cpp_test( NAME t8_gtest_occ_linkage_serial       SOURCES t8_gtest_occ_linkage.cxx )
@@ -139,6 +140,7 @@ add_t8_cpp_test( NAME t8_gtest_cmesh_tree_reindex_serial                    SOUR
 add_t8_cpp_test( NAME t8_gtest_multiple_attributes_parallel                 SOURCES t8_cmesh/t8_gtest_multiple_attributes.cxx )
 add_t8_cpp_test( NAME t8_gtest_attribute_gloidx_array_serial                SOURCES t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_bounding_box_serial                    SOURCES t8_cmesh/t8_gtest_cmesh_bounding_box.cxx )
+add_t8_cpp_test( NAME t8_gtest_cmesh_boundary_conditions_serial             SOURCES t8_cmesh/t8_gtest_cmesh_boundary_conditions.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_shmem_parallel  SOURCES t8_data/t8_gtest_shmem.cxx )
 add_t8_cpp_test( NAME t8_gtest_data_pack_parallel       SOURCES t8_data/t8_gtest_data_handler.cxx t8_data/t8_data_handler_specs.cxx)
@@ -162,6 +164,7 @@ add_t8_cpp_test( NAME t8_gtest_set_partition_offset_parallel      SOURCES t8_for
 add_t8_cpp_test( NAME t8_gtest_partition_for_coarsening_parallel  SOURCES t8_forest/t8_gtest_partition_for_coarsening.cxx )
 add_t8_cpp_test( NAME t8_gtest_weighted_partitioning_parallel     SOURCES t8_forest/t8_gtest_weighted_partitioning.cxx )
 add_t8_cpp_test( NAME t8_gtest_subelement_parallel                SOURCES t8_forest/t8_gtest_subelement.cxx t8_gtest_adapt_callbacks.cxx )
+add_t8_cpp_test( NAME t8_gtest_neighbors_of_ghosts_parallel       SOURCES t8_forest/t8_gtest_neighbors_of_ghosts.cxx t8_gtest_adapt_callbacks.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_element_is_leaf_parallel     SOURCES t8_forest/t8_gtest_element_is_leaf.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_cpp_test( NAME t8_gtest_permute_hole_serial          SOURCES t8_forest_incomplete/t8_gtest_permute_hole.cxx )
@@ -198,7 +201,7 @@ add_t8_cpp_test( NAME t8_gtest_pyra_connectivity_serial     SOURCES t8_schemes/t
 add_t8_cpp_test( NAME t8_gtest_face_neigh_serial            SOURCES t8_schemes/t8_gtest_face_neigh.cxx )
 add_t8_cpp_test( NAME t8_gtest_get_linear_id_serial         SOURCES t8_schemes/t8_gtest_get_linear_id.cxx )
 add_t8_cpp_test( NAME t8_gtest_ancestor_serial              SOURCES t8_schemes/t8_gtest_ancestor.cxx )
-add_t8_cpp_test( NAME t8_gtest_is_ancestor_serial              SOURCES t8_schemes/t8_gtest_is_ancestor.cxx )
+add_t8_cpp_test( NAME t8_gtest_is_ancestor_serial           SOURCES t8_schemes/t8_gtest_is_ancestor.cxx )
 add_t8_cpp_test( NAME t8_gtest_ancestor_id_serial           SOURCES t8_schemes/t8_gtest_ancestor_id.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_count_leaves_serial  SOURCES t8_schemes/t8_gtest_element_count_leaves.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_ref_coords_serial    SOURCES t8_schemes/t8_gtest_element_ref_coords.cxx )
@@ -217,6 +220,8 @@ add_t8_cpp_test( NAME t8_gtest_input_equal_output_serial    SOURCES t8_schemes/t
 add_t8_cpp_test( NAME t8_gtest_face_corner_serial           SOURCES t8_schemes/t8_gtest_face_corner.cxx )
 add_t8_cpp_test( NAME t8_gtest_set_linear_id_serial         SOURCES t8_schemes/t8_gtest_set_linear_id.cxx )
 add_t8_cpp_test( NAME t8_gtest_elements_are_family_serial   SOURCES t8_schemes/t8_gtest_elements_are_family.cxx )
+add_t8_cpp_test( NAME t8_gtest_subelements_geometrical_serial   SOURCES t8_schemes/t8_subelement/t8_gtest_geometrical.cxx )
+
 if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )
   add_t8_test( NAME t8_test_fortran_mpi_interface_init_serial      SOURCES api/t8_fortran_interface/t8_test_init_no_mpi.f90 )
   add_t8_test( NAME t8_test_fortran_mpi_interface_init_parallel    SOURCES api/t8_fortran_interface/t8_test_mpi_init.f90 )

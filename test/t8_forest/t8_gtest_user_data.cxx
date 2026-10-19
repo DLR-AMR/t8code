@@ -99,7 +99,7 @@ TEST_P (forest_user_data, test_user_data)
   ASSERT_EQ (*get_data2, 42) << "User data value has changed.";
 }
 
-/* A test function that we can set for the 
+/* A test function that we can set for the
  * user function pointer of a forest. */
 static double
 t8_test_function_42 (int i)
@@ -107,7 +107,7 @@ t8_test_function_42 (int i)
   return 42.42 + i;
 }
 
-/* A second test function that we can set for the 
+/* A second test function that we can set for the
  * user function pointer of a forest. */
 static void
 t8_test_function_second (void)

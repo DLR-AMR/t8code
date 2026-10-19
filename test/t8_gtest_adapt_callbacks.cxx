@@ -29,7 +29,7 @@
 /* Adapt a forest such that always the first child of a
  * family is refined and no other elements. This results in a highly
  * imbalanced forest.
- * 
+ *
  * This adapt callbacks requires an integer as forest user data.
  * This integer is the maximum refinement level.
  */

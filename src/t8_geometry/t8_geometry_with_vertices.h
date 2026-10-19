@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_with_vertices.h
- * This header file provides a C interface for functions for the 
+ * This header file provides a C interface for functions for the
  * t8_geometry_with_vertices class.
  */
 

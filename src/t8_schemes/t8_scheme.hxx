@@ -381,7 +381,7 @@ struct t8_scheme
   /** Return the number of children of an element when it is refined.
    * \param [in] tree_class         The eclass of the current tree.
    * \param [in] element            The element whose number of children is returned.
-   * \param [in] additional_arguments   Additional arguments you want to provide. 
+   * \param [in] additional_arguments   Additional arguments you want to provide.
    *                                    For subelements, this can be the subelement type.
    *                                    Have a look at the scheme specific functions for more details.
    * \tparam TArgs                  Type of extra arguments you want to provide. Normally, this is auto deduced.
@@ -494,7 +494,7 @@ struct t8_scheme
    *                      the number of children.
    * \param [in,out] c    The storage for these \a length elements must exist.
    *                      On output, all children are valid.
-   * \param [in] additional_arguments   Additional arguments you want to provide. 
+   * \param [in] additional_arguments   Additional arguments you want to provide.
    *                                    For subelements, this can be the subelement type.
    *                                    Have a look at the scheme specific functions for more details.
    * \tparam TArgs                  Type of extra arguments you want to provide. Normally, this is auto deduced.
@@ -548,7 +548,7 @@ struct t8_scheme
   };
 
   /** Query whether element A is an ancestor of the element B.
-   * An element A is ancestor of an element B if A == B or if B can 
+   * An element A is ancestor of an element B if A == B or if B can
    * be obtained from A via successive refinement.
    * \param [in] tree_class The eclass of the current tree.
    * \param [in] element_A An element of class \a eclass in scheme \a scheme.

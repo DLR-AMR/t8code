@@ -32,7 +32,7 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * A class that holds multiple ways to create a cmesh.
- * 
+ *
  */
 struct cmesh_sum_of_sets
 {
@@ -40,8 +40,8 @@ struct cmesh_sum_of_sets
   cmesh_sum_of_sets () {};
   /**
    * Construct a new cmesh sum of sets object, that will generate cmeshes given by \a cmesh_set.
-   * 
-   * \param[in] cmesh_set A vector of \ref example_set. 
+   *
+   * \param[in] cmesh_set A vector of \ref example_set.
    */
   cmesh_sum_of_sets (std::vector<example_set *> cmesh_set)
   {

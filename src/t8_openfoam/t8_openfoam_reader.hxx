@@ -28,7 +28,7 @@
 
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_eclass/t8_eclass.h>
 
