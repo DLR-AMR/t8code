@@ -136,6 +136,12 @@ rule (const t8_eclass_t eclass, [[maybe_unused]] sc_MPI_Comm comm, [[maybe_unuse
   if (dim == 2 && periodic_z)
     return false;
 
+#if T8_TEST_LEVEL_INT >= 2
+  /* Only test fully periodic or fully non-periodic cubes, no mixed periodicity. */
+  if ((dim >= 2 && periodic_x != periodic_y) || (dim == 3 && periodic_x != periodic_z))
+    return false;
+#endif
+
   if ((eclass != T8_ECLASS_HEX && use_axis_aligned) || (eclass != T8_ECLASS_QUAD && use_axis_aligned))
     return false;
 
