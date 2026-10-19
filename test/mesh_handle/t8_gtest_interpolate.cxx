@@ -39,7 +39,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 /** Dummy user data for the interpolation. */
 struct interpolate_user_data
 {
-  int level_step; /**< Levels added when refining and subtracted when coarsening (1 in the standard case). 
+  int level_step; /**< Levels added when refining and subtracted when coarsening (1 in the standard case).
                        This is to be applied to the level entry of the dummy user data. */
 };
 

@@ -37,7 +37,7 @@
 
 /**
  * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current cmesh_example_base
- * 
+ *
  */
 inline auto print_eclass
   = [] (const testing::TestParamInfo<t8_eclass> &info) { return t8_eclass_to_string[info.param]; };
@@ -56,7 +56,7 @@ auto pretty_print_eclass_scheme_and_level
  * Initializes everything needed for the t8code testsuite.
  * MPI is initialized with MPI_COMM_WORLD and SC with loglevel SC_LP_PRODUCTION.
  * \param [in] argc Number of command-line arguments.
- * \param [in] argv Array of command-line argument strings. 
+ * \param [in] argv Array of command-line argument strings.
  * \param [in] log_threshold    The log threshold used to initialize t8code.
  */
 void
@@ -77,7 +77,7 @@ t8_testsuite_get_package_id ();
 
 /**
  * Number of points to use in tests
- * 
+ *
  */
 #if T8_TEST_LEVEL_INT >= 2
 #define T8_NUM_SAMPLE_POINTS 500

@@ -43,14 +43,14 @@ struct t8_forest_child_type_query_t
   int num_children;        /**< The number of children. */
 };
 
-/** 
+/**
  * This is the function that we call in sc_split_array to determine for an
- * element E that is a descendant of an element e, of which of e's children, E is a descendant. 
- * 
+ * element E that is a descendant of an element e, of which of e's children, E is a descendant.
+ *
  * \param[in]   leaf_elements   The larray of eaf elements.
  * \param[in]   index           The local id of the element within the leaf_elements array.
  * \param[in]   data            The query data.
- * 
+ *
  * \return The element's ancestor id at the stored level is returned as the element's type.
  */
 static size_t
@@ -206,7 +206,7 @@ t8_forest_iterate_faces (const t8_forest_t forest, const t8_locidx_t ltreeid, co
  * for the parent element.
  * If the callback function (search_fn) returns false for an element,
  * the query function is not called for this element.
- * 
+ *
  * \param[in] forest                    A committed forest.
  * \param[in] ltreeid                   The local index of the tree.
  * \param[in] element                   The considered element.
@@ -335,9 +335,9 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
   }
 }
 
-/** 
- *  Perform a top-down search in one tree of the forest 
- *  
+/**
+ *  Perform a top-down search in one tree of the forest
+ *
  * \param[in] forest          The forest.
  * \param[in] ltreeid         The local index of the tree to search in.
  * \param[in] search_fn       The callback function describing the search criterion.

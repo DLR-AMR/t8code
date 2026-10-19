@@ -338,7 +338,7 @@ struct t8_element_array_iterator
     return lhs.current_index - rhs.current_index;
   }
 
-  /** Return the index within the array the iterator currently points to [0,...,size]. 
+  /** Return the index within the array the iterator currently points to [0,...,size].
    * \return The index within the array the iterator currently points to.
   */
   t8_locidx_t
@@ -347,7 +347,7 @@ struct t8_element_array_iterator
     return current_index;
   };
 
-  /** Compute the linear id at a given level for the element the iterator points to. 
+  /** Compute the linear id at a given level for the element the iterator points to.
    * \param[in] level The level at which the linear id should be computed.
    * \return The linear id at the given level.
   */
@@ -361,7 +361,7 @@ struct t8_element_array_iterator
 
 /**
  * \brief Get an Random-Access-Iterator to the first element pointer within an element array.
- * 
+ *
  * \param[in] element_array The element array from which the begin()-Random-Access-Iterator should be taken.
  * \return t8_element_array_iterator The iterator to the start of the element array.
  */
@@ -373,7 +373,7 @@ t8_element_array_begin (const t8_element_array_t* element_array)
 
 /**
  * \brief Get an Random-Access-Iterator to the one after the last element pointer within an element array.
- * 
+ *
  * \param[in] element_array The element array from which the end()-Random-Access-Iterator should be taken.
  * \return t8_element_array_iterator The iterator to the end of the element array.
  */

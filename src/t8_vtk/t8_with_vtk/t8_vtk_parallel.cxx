@@ -30,13 +30,13 @@
 
 /**
  * Setup the reader on each process
- * 
+ *
  * \param[in] filename          The filename of the parallel file to read
  * \param[in, out] reader       On input a reader, on output a reader linked to \a filename
  * \param[in, out] first_piece  Arbitrary on input, the index of the first piece to read on output
  * \param[in, out] last_piece   Arbitrary on input, the (non-included) index of the last piece to read on output
- * \param[in] comm              The Communicator to use. 
- * \return vtk_read_success_t 
+ * \param[in] comm              The Communicator to use.
+ * \return vtk_read_success_t
  */
 static vtk_read_success_t
 setup_reader (const char *filename, vtkSmartPointer<vtkXMLPDataReader> reader, int *first_piece, int *last_piece,
@@ -107,7 +107,7 @@ t8_read_parallel_polyData (const char *filename, vtkSmartPointer<vtkDataSet> gri
   if (read_status == read_failure) {
     return read_status;
   }
-  /* Read the pieces if there are any pieces to read on this proc. 
+  /* Read the pieces if there are any pieces to read on this proc.
    * Merge the output of multiple pieces into one grid */
   if (first_piece < last_piece) {
     vtkNew<vtkAppendPolyData> append;
@@ -120,7 +120,7 @@ t8_read_parallel_polyData (const char *filename, vtkSmartPointer<vtkDataSet> gri
     grid->ShallowCopy (append->GetOutput ());
   }
   else {
-    /* Initialize the grid, but don't construct any cells. 
+    /* Initialize the grid, but don't construct any cells.
      * simplifies further processing of the grid on multiple procs. */
     grid->Initialize ();
   }
@@ -141,7 +141,7 @@ t8_read_parallel_unstructured (const char *filename, vtkSmartPointer<vtkDataSet>
   if (read_status == read_failure) {
     return read_status;
   }
-  /* Read the pieces if there are any pieces to read on this proc. 
+  /* Read the pieces if there are any pieces to read on this proc.
    * Merge the output of multiple pieces into one grid */
   if (first_piece < last_piece) {
     vtkNew<vtkAppendFilter> append;
@@ -156,7 +156,7 @@ t8_read_parallel_unstructured (const char *filename, vtkSmartPointer<vtkDataSet>
     grid->ShallowCopy (append->GetOutput ());
   }
   else {
-    /* Initialize the grid, but don't construct any cells. 
+    /* Initialize the grid, but don't construct any cells.
      * simplifies further processing of the grid on multiple procs. */
     grid->Initialize ();
   }

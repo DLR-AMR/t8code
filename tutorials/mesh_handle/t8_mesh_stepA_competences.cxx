@@ -22,21 +22,21 @@
 
 /** \file t8_mesh_stepA_competences.cxx
  * This is step A of the t8code mesh handle tutorials.
- * After finishing the core t8code features, we will now move on to an important feature 
+ * After finishing the core t8code features, we will now move on to an important feature
  * which is native to the mesh handle.
  * These so-called competences are a way to extend the functionality of the mesh handle and its elements.
- * 
- * The competences are organized in different types, depending on the functionality. 
+ *
+ * The competences are organized in different types, depending on the functionality.
  * Element data competences let you attach your own user-defined data to each element and work with it, e.g. exchange it between processes for ghost elements.
  * You may have already seen this in action, because the element data competences were already used in step 5 of the mesh handle tutorials.
  * Cache competences store the results of per-element computations, such as the volume, centroid,
  * vertex coordinates or face neighbors, when they are first requested, so they don't have to be
- * recomputed on later calls. 
- * The key point about competences though is, that you can create your own competence packs with all the competences 
+ * recomputed on later calls.
+ * The key point about competences though is, that you can create your own competence packs with all the competences
  * you want to use and then use this pack to create a mesh handle with all the functionality you need.
- * This can be further expanded by creating your own competences and adding them to your competence pack, 
- * making the mesh handle really flexible and individual for each use case. 
- * 
+ * This can be further expanded by creating your own competences and adding them to your competence pack,
+ * making the mesh handle really flexible and individual for each use case.
+ *
  * In this tutorial, we will go through the most important competences and caching, as well as create custom competences.
 */
 
@@ -54,12 +54,12 @@
 using namespace t8_mesh_handle; /** Using the namespace to avoid the t8_mesh_handle:: prefix everywhere and shorten the code. */
 
 /** Creating a simple custom competence that computes the squared volume of an element.
- * 
+ *
  * All custom competences have to follow the same CRTP inheritance pattern:
- * They are templated on the underlying element type TUnderlying and inherit from 
+ * They are templated on the underlying element type TUnderlying and inherit from
  * t8_crtp_operator<TUnderlying, Competence>. This gives the competence access to the functionality
  * of the underlying element with using this->underlying(), allowing it to extend the element with additional methods.
- * 
+ *
  * \tparam TUnderlying The underlying element type that we want to extend with this competence.
 */
 template <typename TUnderlying>
@@ -67,7 +67,7 @@ struct volume_squared_custom_competence: public t8_crtp_operator<TUnderlying, vo
 {
  public:
   /**
-  * Returns the squared volume of the underlying element. 
+  * Returns the squared volume of the underlying element.
   */
   double
   get_squared_volume () const
@@ -79,8 +79,8 @@ struct volume_squared_custom_competence: public t8_crtp_operator<TUnderlying, vo
 
 /**
  * Demonstrates the use of the cache competences by comparing the freshly computed values to the ones saved in the cache.
- * 
- * \tparam TElementType The mesh element type. 
+ *
+ * \tparam TElementType The mesh element type.
  * \param [in] elem The element to demonstrate the cache competences on.
 */
 template <typename TElementType>
@@ -107,12 +107,12 @@ demonstrate_cache_competences (const TElementType& elem)
 }
 
 /**
- * Demonstrates the use of the custom competence 'volume_squared' that was defined at the top 
+ * Demonstrates the use of the custom competence 'volume_squared' that was defined at the top
  * so that we can compute the squared volume of each element in the mesh.
- * Only the first and last local elements of the root process are printed 
- * to avoid excessive output when running with multiple MPI processes. 
- * 
- * \tparam TMeshClass The mesh class. 
+ * Only the first and last local elements of the root process are printed
+ * to avoid excessive output when running with multiple MPI processes.
+ *
+ * \tparam TMeshClass The mesh class.
  * \param [in] mesh The mesh to demonstrate the custom competence.
 */
 template <T8MeshType TMeshClass>
@@ -186,15 +186,15 @@ main (int argc, char** argv)
       demonstrate_cache_competences (
         (*basic_mesh)[0]); /** Only demonstrating the cache competences for the first element of the mesh*/
     }
-    /** 
+    /**
       * We will now create a second mesh with a competence pack that includes the volume cache competence and our custom defined competence 'volume_squared_custom_competence'.
     */
     /* Define the individual competence packs. */
     using cache_pack = element_competence_pack<cache_volume>;
     using custom_pack = element_competence_pack<volume_squared_custom_competence>;
 
-    /** Combine the competence packs for our custom competence and volume cache (see competence_pack.hxx or cache_element_competences.hxx) 
-      *into one with union_competence_packs_type. 
+    /** Combine the competence packs for our custom competence and volume cache (see competence_pack.hxx or cache_element_competences.hxx)
+      *into one with union_competence_packs_type.
     */
     using custom_element_competences = union_competence_packs_type<cache_pack, custom_pack>;
 
