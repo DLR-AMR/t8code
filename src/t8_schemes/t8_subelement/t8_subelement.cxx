@@ -24,6 +24,7 @@
  *  Implements functions declared in \ref t8_subelement.hxx.
  */
 
+#include "t8_subelement.hxx"
 #include <t8_schemes/t8_scheme_builder.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_eclass/t8_eclass.h>
@@ -47,7 +48,7 @@ t8_scheme_new_subelement ()
   return builder.build_scheme ();
 }
 
-int
+bool
 t8_eclass_scheme_is_subelement (const t8_scheme *scheme, const t8_eclass_t eclass)
 {
   switch (eclass) {
@@ -56,7 +57,7 @@ t8_eclass_scheme_is_subelement (const t8_scheme *scheme, const t8_eclass_t eclas
   case T8_ECLASS_TRIANGLE:
     return scheme->check_eclass_scheme_type<t8_subelem_scheme_hanging_nodes_tri> (T8_ECLASS_TRIANGLE);
   default:
-    return 0; /* Default return value false. */
+    return false;
   }
 }
 

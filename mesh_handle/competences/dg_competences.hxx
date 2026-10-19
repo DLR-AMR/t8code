@@ -121,8 +121,7 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
   int
   get_local_rank () const
   {
-    const t8_forest_t forest = this->underlying ().get_forest ();
-    return forest->mpirank;
+    return t8_forest_get_mpirank (this->underlying ().get_forest ());
   }
 
  protected:
@@ -217,7 +216,8 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
     }
 
     const t8_forest_t forest = mesh.get_forest ();
-    SC_CHECK_ABORT (forest->incomplete_trees == 0, "This functionality is not specified for incomplete trees.\n");
+    SC_CHECK_ABORT (!t8_forest_has_incomplete_trees (forest),
+                    "This functionality is not specified for incomplete trees.\n");
 
     // Vector should store one entry per face of each element, so reserve space accordingly.
     m_element_face_vector.assign (mesh.get_num_local_elements () + mesh.get_num_ghosts (), {});

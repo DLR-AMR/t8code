@@ -79,6 +79,14 @@ t8_element_shape_t8_to_vtk_corner_number (int element_shape, int index);
  * \return                    The corresponding t8code index.
  */
 int
+t8_element_shape_vtk_to_t8_corner_number (int element_shape, int index);
+
+/** Maps the vtk corner number of the element to the t8code corner number
+ * \param [in] element_shape  The shape of the element.
+ * \param [in] index          The index of the corner in vtk ordering.
+ * \return                    The corresponding t8code index.
+ */
+int
 t8_element_shape_t8_corner_number (int element_shape, int index);
 
 /** For each element_shape, the name of this class as a string */

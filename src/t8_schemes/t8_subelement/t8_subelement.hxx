@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include "t8_subelement.hxx"
 #include <t8_schemes/t8_scheme.hxx>
 
 /** Return the subelement scheme implementation of t8code. */

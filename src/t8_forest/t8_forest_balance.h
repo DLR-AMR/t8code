@@ -50,8 +50,8 @@ t8_forest_balance (t8_forest_t forest, int repartition);
 /**
  * Check whether the local elements of a forest are balanced.
  *
- * \param[in,out] forest The forest to be checked.
- * \return               1 if the local elements are balanced, 0 otherwise.
+ * \param [in,out] forest   The forest to be checked.
+ * \return                  1 if the local elements are balanced, 0 otherwise.
  */
 int
 t8_forest_is_balanced (t8_forest_t forest);
