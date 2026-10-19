@@ -45,8 +45,8 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
   t8_cmesh_t cmesh;
 
   /* clang-format off */
-  double vertices[9] = { 0., 0., 0., 
-                         1., 0., 0., 
+  double vertices[9] = { 0., 0., 0.,
+                         1., 0., 0.,
                          1., 1., 0. };
   /* clang-format on */
   double test_point[3] = { 0.3, 0.3, 1 };
@@ -85,9 +85,9 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
   t8_cmesh_t cmesh;
 
   /* clang-format off */
-  double vertices[12] = { 0., 0., 0., 
-                          1., 0., 0., 
-                          0., 1., 0., 
+  double vertices[12] = { 0., 0., 0.,
+                          1., 0., 0.,
+                          0., 1., 0.,
                           1., 1., 0. };
   /* clang-format on */
   double test_point[3] = { 0.3, 0.3, 1 };
@@ -130,15 +130,15 @@ struct geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass
     /* Construct a cube coarse mesh */
     if (use_axis_aligned_geom && (eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX)) {
       /* clang-format off */
-      const double boundaries[24] = { 
-        0, 0, 0, 
-        1, 0, 0, 
-        0, 1, 0, 
-        1, 1, 0, 
-        0, 0, 1, 
-        1, 0, 1, 
+      const double boundaries[24] = {
+        0, 0, 0,
+        1, 0, 0,
+        0, 1, 0,
+        1, 1, 0,
+        0, 0, 1,
+        1, 0, 1,
         0, 1, 1,
-        1, 1, 1 
+        1, 1, 1
       };
       /* clang-format on */
       t8_cmesh_init (&cmesh);
@@ -166,7 +166,7 @@ TEST_P (geometry_point_inside, test_point_inside)
   const double barycentric_range_upper_bound = 1.1; /* Should be > 1 */
   /* Numerical tolerance that we allow in the point inside check */
   const double tolerance = 1e-12;
-  const int num_points_to_generate = 64; /* Desired number of test points per element. 
+  const int num_points_to_generate = 64; /* Desired number of test points per element.
                                                          * The actual number is computed to be close to this and
                                                          * will always be >= 2^num_corners (thus >= 128 for hex). */
 
@@ -303,7 +303,7 @@ TEST_P (geometry_point_inside, test_point_inside)
 
         num_in += point_is_inside ? 1 : 0;
       }
-      /* Create a set of points that are outside of the cube. 
+      /* Create a set of points that are outside of the cube.
        * The coordinates are given by the corner points except for one coordinate. For each side of the cube
        * we place one point outside of it. */
       for (int side = 0; side < min_points_outside; ++side) {

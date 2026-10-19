@@ -30,9 +30,9 @@
 
 /**
  * Create a hybrid forest or a cmesh
- * 
- * \tparam grid_t 
- * \return grid_t 
+ *
+ * \tparam grid_t
+ * \return grid_t
  */
 template <typename grid_t>
 grid_t
@@ -60,9 +60,9 @@ make_grid<t8_forest_t> ()
 
 /**
  * Destroy a forest or a cmesh
- * 
- * \tparam grid_t 
- * \param[in] grid A pointer to a forest/cmesh that will get unrefed. 
+ *
+ * \tparam grid_t
+ * \param[in] grid A pointer to a forest/cmesh that will get unrefed.
  */
 template <typename grid_t>
 void
@@ -83,9 +83,9 @@ destroy_grid<t8_forest_t> (t8_forest_t *forest)
 }
 
 /**
- * Call the C interface of the vtk writer for a forest or a cmesh. 
- * 
- * \tparam grid_t 
+ * Call the C interface of the vtk writer for a forest or a cmesh.
+ *
+ * \tparam grid_t
  * \param[in] grid The forest/cmesh to write.
  * \param[in] fileprefix The prefix of the output file name.
  * \param[in] write_treeid Whether to write the tree id as a data field.
@@ -97,7 +97,7 @@ destroy_grid<t8_forest_t> (t8_forest_t *forest)
  * \param[in] num_data The number of additional data fields to write.
  * \param[in] data An array of descriptors for the additional data fields to write.
  * \param[in] comm The MPI communicator to use for writing the file in parallel.
- * \param[in] use_api Whether to call the API function or the direct C interface function. 
+ * \param[in] use_api Whether to call the API function or the direct C interface function.
  * \return 0 on success, non-zero on failure.
  */
 template <typename grid_t>
@@ -155,9 +155,9 @@ vtk_writer_test_fill_data (const t8_locidx_t cells_to_write_count, std::vector<d
 }
 
 /**
- * Templated class to test the vtk writer for forests and cmeshes. 
- * 
- * @tparam grid_t 
+ * Templated class to test the vtk writer for forests and cmeshes.
+ *
+ * @tparam grid_t
  */
 template <typename T>
 struct vtk_writer_test: public testing::Test
@@ -214,8 +214,8 @@ struct vtk_writer_test: public testing::Test
 TYPED_TEST_SUITE_P (vtk_writer_test);
 
 /**
- * Test the API-writer and check if the output was created successfully. 
- * 
+ * Test the API-writer and check if the output was created successfully.
+ *
  */
 TYPED_TEST_P (vtk_writer_test, write_vtk)
 {

@@ -181,9 +181,9 @@ struct interpolate_registry
 
 /** Wrapper around the mesh handle interpolation functionality to be able to pass the callback to the classic replace
  * routine \ref t8_forest_iterate_replace of a forest. The function header fits the definition of
- * \ref t8_forest_replace_t. 
+ * \ref t8_forest_replace_t.
  * \param [in] forest_old      The forest that is adapted fitting the old element data.
- * \param [in, out] forest_new The forest that is newly constructed from \a forest_old. 
+ * \param [in, out] forest_new The forest that is newly constructed from \a forest_old.
  *                             Data will be interpolated to match this forest.
  * \param [in] which_tree      The local tree containing \a first_outgoing and \a first_incoming.
  * \param [in] tree_class      Unused; The eclass of the local tree containing \a first_outgoing and \a first_incoming.

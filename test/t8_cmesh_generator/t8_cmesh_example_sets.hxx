@@ -54,7 +54,7 @@ auto pretty_print_base_example = [] (const testing::TestParamInfo<cmesh_example_
 
 /**
  * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current \ref cmesh_example_base and the scheme.
- * 
+ *
  */
 auto pretty_print_base_example_scheme = [] (const testing::TestParamInfo<std::tuple<int, cmesh_example_base *>> &info) {
   std::string name;

@@ -462,7 +462,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * - If the mesh is adapted or balanced without this competence, the data does not match the elements anymore and is
    *   discarded. Use \ref element_data_mesh_competence_impl::set_element_data to provide new data.
    * - If the mesh is partitioned, the data is repartitioned accordingly.
-   * - If a ghost layer exists, the data of the ghost elements is exchanged. This is also done if only 
+   * - If a ghost layer exists, the data of the ghost elements is exchanged. This is also done if only
    *   \ref set_ghost was called.
    */
   void
@@ -729,7 +729,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   std::vector<element_class> m_elements; /**< Vector storing the (local) mesh elements. */
   std::vector<element_class> m_ghosts;   /**< Vector storing the (local) ghost elements. */
   t8_forest_t m_uncommitted_forest
-    = nullptr; /**< Forest in which the set flags are set for a new forest before committing. nullptr if nothing was 
+    = nullptr; /**< Forest in which the set flags are set for a new forest before committing. nullptr if nothing was
                     set since the last \ref commit. */
 };
 

@@ -22,14 +22,14 @@
 
 /** \file t8_mesh_step4_partition_balance_ghost.cxx
  * This is step4 of the t8code mesh handle tutorials.
- * Therefore, this is the same as general/t8_step4_partition_balance_ghost.cxx but using the mesh handle interface instead of the forest 
+ * Therefore, this is the same as general/t8_step4_partition_balance_ghost.cxx but using the mesh handle interface instead of the forest
  * interface.
  * After generating a coarse mesh (step1), building a uniform mesh
  * on it (step2) and adapting this mesh (step3)
- * we will now learn how to partition and balance a mesh and how to generate a layer of ghost elements. 
- * Note: Normally, you would call set_adapt(), set_partition(), set_balance() and set_ghost() and then commit() only once, 
- * as shown in step 5. commit() applies the operations in the correct order automatically, regardless of the order of the set_*() calls. 
- * In this tutorial, we commit after each operation instead, so that we can see what each of them does and 
+ * we will now learn how to partition and balance a mesh and how to generate a layer of ghost elements.
+ * Note: Normally, you would call set_adapt(), set_partition(), set_balance() and set_ghost() and then commit() only once,
+ * as shown in step 5. commit() applies the operations in the correct order automatically, regardless of the order of the set_*() calls.
+ * In this tutorial, we commit after each operation instead, so that we can see what each of them does and
  * compare the resulting vtk files one after another.
  */
 
@@ -45,7 +45,7 @@ using mesh_type = t8_mesh_handle::mesh<>;
 
 /** Helper function to print the total and local number of elements in the mesh, as well as all ghost elements, after each step.
  *  \param [in] mesh  The mesh handle to get the number of elements from.
- *  \param [in] prefix The prefix for the filename of the exported vtk files. 
+ *  \param [in] prefix The prefix for the filename of the exported vtk files.
 */
 void
 print_stats_and_export (mesh_type& mesh, const char* prefix)
@@ -165,7 +165,7 @@ main (int argc, char** argv)
     /* Printing the mesh information. */
     print_stats_and_export (*mesh, prefix_initial);
 
-    /** 
+    /**
      * ADAPT MESH
      */
 
