@@ -160,7 +160,7 @@ struct t8_scheme
   /** Call \a func on the eclass scheme of \a tree_class.
    * We use this instead of std::visit, since std::visit is considerably slower on this hot path:
    * Its visitor captures the arguments by reference, so they have to be stored on the stack, it checks for
-   * a valueless variant and, for more than 11 alternatives (libstdc++), it calls an extra thunk for each alternative.
+   * a valueless variant and, for more than 11 alternatives (libstdc++), it calls an extra subroutine for each alternative.
    * Here, the arguments are passed by value and there is exactly one indirect call per dispatch,
    * comparable to a virtual function call.
    * \note The arguments are copied. Do not use this for scheme functions with non-const reference parameters.
