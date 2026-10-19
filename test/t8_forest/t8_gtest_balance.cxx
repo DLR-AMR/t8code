@@ -62,7 +62,7 @@ struct gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t
 /** Test fixture for the balance tests on a custom quad forest (\see t8_gtest_obtain_forest_for_balance_tests).
  * Since the forest does not depend on the eclass, level or periodicity, only the scheme is parameterized.
  */
-struct gtest_balance_custom_forest: public testing::TestWithParam<int>
+struct gtest_balance_quad_forest: public testing::TestWithParam<int>
 {
  public:
   static const int kNumTrees = 4;
@@ -171,15 +171,15 @@ t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_
 /**
  * \brief This function checks whether each tree only holds elements that are on the refinement level given by \a expected_elem_level_per_tree
  *
- * \param [in] balanced_forest A forest consisting of gtest_balance_custom_forest::kNumTrees trees
+ * \param [in] balanced_forest A forest consisting of gtest_balance_quad_forest::kNumTrees trees
  * \param [in] expected_elem_level_per_tree An array holding a refinement level for each tree id
  * \return true If each element with a tree corresponds to the given refinement level supplied by the array \var expected_elem_level_per_tree
  * \return false If not every element complies to the given refinement level per tree
  */
 static bool
-t8_gtest_check_custom_balanced_forest (
+t8_gtest_check_balanced_quad_forest (
   t8_forest_t balanced_forest,
-  const std::array<int, gtest_balance_custom_forest::kNumTrees> &expected_elem_level_per_tree)
+  const std::array<int, gtest_balance_quad_forest::kNumTrees> &expected_elem_level_per_tree)
 {
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (balanced_forest);
 
@@ -221,7 +221,7 @@ t8_gtest_check_custom_balanced_forest (
  *    |__|__|__|__|__ __ __ __|         |__|__|__|__|__ __|__ __|
  *
  */
-TEST_P (gtest_balance_custom_forest, balance_adapted_forest_no_repartition)
+TEST_P (gtest_balance_quad_forest, balance_adapted_forest_no_repartition)
 {
   std::vector<t8_gloidx_t> trees_to_refine { 0 };
   t8_forest_t forest = t8_gtest_obtain_forest_for_balance_tests (trees_to_refine, scheme, 0);
@@ -233,9 +233,9 @@ TEST_P (gtest_balance_custom_forest, balance_adapted_forest_no_repartition)
   t8_forest_set_balance (balanced_forest, forest, flag_no_repartition);
   t8_forest_commit (balanced_forest);
 
-  std::array<int, gtest_balance_custom_forest::kNumTrees> expected_elem_level_per_tree { 2, 1, 1, 0 };
+  std::array<int, gtest_balance_quad_forest::kNumTrees> expected_elem_level_per_tree { 2, 1, 1, 0 };
 
-  EXPECT_TRUE (t8_gtest_check_custom_balanced_forest (balanced_forest, expected_elem_level_per_tree));
+  EXPECT_TRUE (t8_gtest_check_balanced_quad_forest (balanced_forest, expected_elem_level_per_tree));
 
   t8_forest_unref (&balanced_forest);
 }
@@ -243,7 +243,7 @@ TEST_P (gtest_balance_custom_forest, balance_adapted_forest_no_repartition)
 /**
  * \brief Tests whether an already balanced forest remains unchanged after another balance iteration.
  */
-TEST_P (gtest_balance_custom_forest, balance_consistency_test)
+TEST_P (gtest_balance_quad_forest, balance_consistency_test)
 {
   const int additional_refinement = 2;
   std::vector<t8_gloidx_t> trees_to_refine { 1, 2 };
@@ -280,4 +280,4 @@ const int maxlvl = 5;
 INSTANTIATE_TEST_SUITE_P (t8_gtest_balance, gtest_balance,
                           testing::Combine (AllSchemes, testing::Range (0, maxlvl), testing::Range (0, 2)));
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_balance, gtest_balance_custom_forest, AllSchemeCollections, print_scheme);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_balance, gtest_balance_quad_forest, AllSchemeCollections, print_scheme);
