@@ -26,18 +26,18 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * is called are provided.
  *
  * \note for developers or users that want to provide their own competence:
- * All competences have the same inheritance pattern: 
- * We use the CRTP pattern as we may need to access members of the derived classes like 
- * \ref t8_mesh_handle::element. 
- * The \ref t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
+ * All competences have the same inheritance pattern:
+ * We use the CRTP pattern as we may need to access members of the derived classes like
+ * \ref t8_mesh_handle::element.
+ * The \ref t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time
  * we need functionality of TUnderlying).
- * Especially for the competences to cache functionality, the access of members is not necessary, 
- * such that it is not obvious why we use the crtp. For competences that extend the functionality of the element, 
- * this is required. 
+ * Especially for the competences to cache functionality, the access of members is not necessary,
+ * such that it is not obvious why we use the crtp. For competences that extend the functionality of the element,
+ * this is required.
  * We use it for all competences for consistency and compatibility with \ref t8_mesh_handle::element.
  *
- * We use \ref t8_crtp_operator instead of \ref t8_crtp_basic to circumvent diamond shaped inheritance pattern in 
- * the case that multiple competences are used together. 
+ * We use \ref t8_crtp_operator instead of \ref t8_crtp_basic to circumvent diamond shaped inheritance pattern in
+ * the case that multiple competences are used together.
  * The distinction of the classes is made by the second template parameter of \ref t8_crtp_operator.
  */
 
@@ -45,7 +45,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 #include <t8_types/t8_operators.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <vector>
 #include <optional>
 
@@ -252,7 +252,7 @@ struct cache_neighbors: t8_crtp_operator<TUnderlying, cache_neighbors>
   mutable std::vector<std::vector<const TUnderlying *>>
     m_neighbors; /**< Neighboring elements at each face. The length of the vectors is stored in \ref m_num_neighbors. */
   mutable std::vector<std::optional<int>>
-    m_num_neighbors; /**< Vector with the numbers of neighbor elements at each face. 
+    m_num_neighbors; /**< Vector with the numbers of neighbor elements at each face.
                         num_neighbors is stored to indicate that the cache is filled if a face does not have any neighbor. */
   mutable std::vector<std::vector<int>>
     m_dual_faces; /**< Face id's of the neighboring elements' faces for each face. */

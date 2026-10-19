@@ -34,6 +34,7 @@
 #include <t8_element/t8_element.h>
 #include <t8_forest/t8_forest_partition_for_coarsening.h>
 #include <t8_eclass/t8_eclass.h>
+#include <t8_schemes/t8_subelement/t8_subelement.hxx>
 #include <vector>
 #include <algorithm>
 
@@ -300,14 +301,15 @@ t8_forest_pfc_family_range_around_border (const t8_forest_t forest_from, const t
     }
   }
 
-  // Determine the parent's number of children.
-  const int num_children = scheme->element_get_num_children (eclass, parent);
+  // Determine the number of siblings of the border element. For ordinary elements this is the
+  // number of children of the parent; for subelements it is the number of subelements.
+  const int num_siblings = scheme->element_get_num_siblings (eclass, element);
 
   // Deallocate parent element
   t8_element_destroy (scheme, eclass, 1, &parent);
 
   // Return true if the considered family contains all children of the parent.
-  return (family_end - family_begin == num_children);
+  return (family_end - family_begin == num_siblings);
 }
 
 /** Compute the process-local corrections of the given partition.

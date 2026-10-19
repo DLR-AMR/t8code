@@ -105,7 +105,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
   SC_CHECK_MPI (mpiret);
   /* Since we want to repartition the cmesh_partition in each step,
    * we need to ref it. This ensure that we can still work with it after
-   * another cmesh is derived from it. 
+   * another cmesh is derived from it.
    */
   t8_cmesh_ref (cmesh_partition);
 
@@ -125,7 +125,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
     t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
     test_cmesh_committed (cmesh_partition_new2);
     /* We partition the resulting cmesh according to a uniform level refinement.
-    * This cmesh should now be equal to the initial cmesh. 
+    * This cmesh should now be equal to the initial cmesh.
     */
     cmesh_partition_new1 = cmesh_partition_new2;
     cmesh_partition_new2 = NULL;

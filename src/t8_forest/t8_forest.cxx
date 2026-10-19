@@ -26,17 +26,16 @@
 
 #include <sc_statistics.h>
 #include <t8_helper_functions/t8_refcount.h>
-#include <t8_types/t8_vec.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.h>
+#include <t8_vector/t8_vec.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_iterate.h>
-#include <t8_forest/t8_forest_ghost.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
@@ -45,9 +44,12 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
 #if T8_ENABLE_DEBUG
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
+#include <t8_schemes/t8_subelement/t8_subelement.hxx>
 #endif
 #include <t8_data/t8_element_array_iterator.hxx>
 
@@ -1812,8 +1814,6 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
     }
   }
 
-  struct t8_lfn_user_data user_data;
-
   // Now we iterate over the leaf arrays of the neighbor tree
   // or neighbor ghost tree and find all leaf face neighbors of the element.
   *num_neighbors = 0;
@@ -1830,6 +1830,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
   *pelement_indices = NULL;
   *dual_faces = NULL;
   for (auto &leaf_array : leaf_arrays) {
+    struct t8_lfn_user_data user_data;
     auto &tree_leaves = leaf_array->first;
     const bool leaf_array_is_ghost = leaf_array->second;
     T8_ASSERT (tree_leaves != NULL);
@@ -2953,6 +2954,14 @@ t8_forest_is_committed (const t8_forest_t forest)
   return forest != nullptr && t8_refcount_is_active (&forest->rc) && forest->committed;
 }
 
+int
+t8_forest_has_incomplete_trees (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->incomplete_trees == 0 || forest->incomplete_trees == 1);
+  return forest->incomplete_trees;
+}
+
 static void
 t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 {
@@ -3042,6 +3051,13 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
   forest->set_for_coarsening = -1;
 }
 
+t8_forest_t
+t8_forest_get_set_from (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  return forest->set_from;
+}
+
 void
 t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening)
 {
@@ -3066,6 +3082,30 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
   else {
     forest->from_method |= T8_FOREST_FROM_PARTITION;
   }
+}
+
+int
+t8_forest_partition_is_set (const t8_forest_t forest, int *set_for_coarsening)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  const int partition_is_set = (forest->from_method & T8_FOREST_FROM_PARTITION) != 0;
+  if (set_for_coarsening != NULL) {
+    *set_for_coarsening = partition_is_set ? forest->set_for_coarsening : 0;
+  }
+  return partition_is_set;
+}
+
+void
+t8_forest_unset_partition (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  if (!t8_forest_partition_is_set (forest, NULL)) {
+    return;
+  }
+  /* Remove PARTITION from the from_method.
+   * Since T8_FOREST_FROM_COPY is zero, a forest that was only set to be partitioned is copied instead. */
+  forest->from_method &= ~T8_FOREST_FROM_PARTITION;
+  forest->set_for_coarsening = 0;
 }
 
 void
@@ -3097,15 +3137,61 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
   }
 }
 
-void
-t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version)
+int
+t8_forest_balance_is_set (const t8_forest_t forest, int *no_repartition)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  /* We currently only support face ghosts */
+  const int balance_is_set = (forest->from_method & T8_FOREST_FROM_BALANCE) != 0;
+  if (no_repartition != NULL) {
+    *no_repartition = balance_is_set ? forest->set_balance == T8_FOREST_BALANCE_NO_REPART : 0;
+  }
+  return balance_is_set;
+}
+
+void
+t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition *ghost_definition)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+
+  if (do_ghost != 0) {
+    if (ghost_definition == nullptr) {
+      /* If forest has a ghost_definition, activate ghost, otherwise abort. */
+      if (forest->ghost_definition != nullptr) {
+        forest->do_ghost = 1;
+      }
+      else {
+        SC_ABORT ("Tried to enable ghost, but no ghost definition was provided\n");
+      }
+    }
+    else {
+      /* Unref the old ghost_definition (if it exists) and set the new one. */
+      if (forest->ghost_definition != nullptr) {
+        forest->ghost_definition->unref ();
+      }
+      forest->do_ghost = 1;
+      forest->ghost_definition = ghost_definition;
+    }
+  }
+  else {
+    /* Deactivate ghost for the forest. */
+    forest->do_ghost = 0;
+    /* The documentation states that the forest takes ownership of the definition. This also has to happen
+     * if do_ghost is 0. */
+    if (ghost_definition != nullptr) {
+      /* Unref the old ghost_definition (if it exists) and set the new one. */
+      if (forest->ghost_definition != nullptr) {
+        forest->ghost_definition->unref ();
+      }
+      forest->ghost_definition = ghost_definition;
+    }
+  }
+}
+
+void
+t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type)
+{
   SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES,
                   "Ghost neighbors other than face-neighbors are not supported.\n");
-  SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3, "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
-
   if (ghost_type == T8_GHOST_NONE) {
     /* none type disables ghost */
     forest->do_ghost = 0;
@@ -3114,16 +3200,22 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
     forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
   }
   if (forest->do_ghost) {
-    forest->ghost_type = ghost_type;
-    forest->ghost_algorithm = ghost_version;
+    t8_forest_set_ghost_ext (forest, do_ghost, new t8_forest_ghost_definition_face ());
   }
 }
 
-void
-t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type)
+int
+t8_forest_ghost_is_set (const t8_forest_t forest)
 {
-  /* Use ghost version 3, top-down search and for unbalanced forests. */
-  t8_forest_set_ghost_ext (forest, do_ghost, ghost_type, 3);
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  return forest->do_ghost;
+}
+
+t8_forest_ghost_definition *
+t8_forest_get_ghost_definition (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest) || t8_forest_is_committed (forest));
+  return forest->ghost_definition;
 }
 
 void
@@ -3337,6 +3429,11 @@ t8_forest_commit (t8_forest_t forest)
     forest->scheme = forest->set_from->scheme;
     forest->global_num_trees = forest->set_from->global_num_trees;
 
+    if (forest->ghost_definition == nullptr && forest->set_from->ghost_definition != nullptr) {
+      forest->ghost_definition = forest->set_from->ghost_definition;
+      forest->ghost_definition->ref ();
+    }
+
     /* Compute the maximum allowed refinement level */
     t8_forest_compute_maxlevel (forest);
     if (forest->from_method == T8_FOREST_FROM_COPY) {
@@ -3490,20 +3587,7 @@ t8_forest_commit (t8_forest_t forest)
     sc_MPI_Barrier (forest->mpicomm);
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
-      /* TODO: ghost type */
-      switch (forest->ghost_algorithm) {
-      case 1:
-        t8_forest_ghost_create_balanced_only (forest);
-        break;
-      case 2:
-        t8_forest_ghost_create (forest);
-        break;
-      case 3:
-        t8_forest_ghost_create_topdown (forest);
-        break;
-      default:
-        SC_ABORT ("Invalid choice of ghost algorithm");
-      }
+      t8_forest_ghost_create (forest);
     }
     forest->do_ghost = 0;
   }
@@ -3594,6 +3678,22 @@ t8_forest_get_mpicomm (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   return forest->mpicomm;
+}
+
+int
+t8_forest_get_mpirank (const t8_forest_t forest)
+{
+  T8_ASSERT (forest != nullptr);
+  T8_ASSERT (forest->mpirank >= 0);
+  return forest->mpirank;
+}
+
+int
+t8_forest_get_mpisize (const t8_forest_t forest)
+{
+  T8_ASSERT (forest != nullptr);
+  T8_ASSERT (forest->mpisize > 0);
+  return forest->mpisize;
 }
 
 t8_gloidx_t
@@ -4374,6 +4474,11 @@ t8_forest_reset (t8_forest_t *pforest)
   /* Destroy the ghost layer if it exists */
   if (forest->ghosts != nullptr) {
     t8_forest_ghost_unref (&forest->ghosts);
+  }
+  /* Unref the ghost_definition class if it exist */
+  if (forest->ghost_definition != nullptr) {
+    forest->ghost_definition->unref ();
+    forest->ghost_definition = nullptr;
   }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme != nullptr) {

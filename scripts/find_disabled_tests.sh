@@ -21,5 +21,10 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
+# Ensure the script is run from the root of the build folder
+if [ ! -d "Testing/Temporary" ]; then
+    echo "Please execute from the build-folder"
+    exit 1
+fi
 
-find test -type f -name "*.log" -exec grep -E "YOU HAVE [0-9]+ DISABLED TEST" -m 1 -H {} \;
+find Testing/Temporary -type f -name "*.log" -exec grep -E "YOU HAVE [0-9]+ DISABLED TEST" -m 1 -H {} \;

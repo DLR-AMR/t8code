@@ -56,8 +56,7 @@ T8_EXTERN_C_BEGIN ();
  * \param[in]       comm       mpi communicator to be used with the new cmesh.
  * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
  * \note This function requires that p4est is initialized. Make sure to call
- * p4est_init before using this routine. If this is not the case, a
- * warning is issued and  p4est_init is called from within this function.
+ * p4est_init before using this routine.
  */
 void
 t8_cmesh_new_from_p4est (t8_cmesh_t cmesh, p4est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition);
@@ -204,7 +203,7 @@ t8_cmesh_new_hypercube_pad_ext (t8_cmesh_t cmesh, const t8_eclass_t eclass, sc_M
                                 const int periodic_x, const int periodic_y, const int periodic_z,
                                 const int use_axis_aligned, const int set_partition, t8_gloidx_t offset);
 
-/** Hybercube with 6 Tets, 6 Prism, 4 Hex.
+/** Hypercube with 6 Tets, 6 Prism, 4 Hex.
  * \param [in,out] cmesh        An initialized, but not committed cmesh, as created by \ref t8_cmesh_init.
  *                              Filled and committed in place with 6 Tets, 6 prism and 4 hex, together
  *                              forming a cube.
@@ -213,6 +212,27 @@ t8_cmesh_new_hypercube_pad_ext (t8_cmesh_t cmesh, const t8_eclass_t eclass, sc_M
 */
 void
 t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic);
+
+/** Hypercube with 6 Tets, 6 Prism, 4 Hex with optional boundary conditions.
+ *  Sets boundary conditions on internal tree faces to "internal" and on boundary faces to "boundary".
+ *  For periodic meshes all tree faces are "internal".
+ * \param [in,out] cmesh                An initialized, but not committed cmesh, as created by \ref t8_cmesh_init.
+ *                                      Filled and committed in place with 6 Tets, 6 prism and 4 hex, together
+ *                                      forming a cube.
+ * \param [in]  comm                    The mpi communicator to be used.
+ * \param [in]  periodic                If non-zero create a periodic cmesh in each direction.
+ * \param [in]  use_boundary_conditions If true, set boundary conditions on tree faces.
+*/
+void
+t8_cmesh_new_hypercube_hybrid_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic, int use_boundary_conditions);
+
+/** Construct a unit square of two quads and four triangles.
+ * \param [in,out] cmesh    An initialized, but not committed cmesh, as created by \ref t8_cmesh_init.
+ *                          Filled and committed in place.
+ * \param [in] comm         The mpi communicator to use.
+ */
+void
+t8_cmesh_new_hypercube_hybrid_2D (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /** Construct a unit interval/square/cube coarse mesh that is periodic in each direction.
  * Element class?
