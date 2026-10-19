@@ -24,8 +24,18 @@ project(MyLibHeaderCheck LANGUAGES C CXX)
 # ---------------------------------------------------------------------------
 set(HEADER_CHECK_PACKAGE       "T8CODE"        CACHE STRING "Package name passed to find_package()")
 set(HEADER_CHECK_TARGET        "T8CODE::T8" CACHE STRING "Imported target whose headers are checked")
-set(HEADER_CHECK_SUBDIR        ""        CACHE STRING "Header subdirectory below the include dir")
-set(HEADER_CHECK_EXCLUDE_REGEX "/detail/"     CACHE STRING "Regex of headers to skip (empty = check all)")
+# Matched against the header path relative to the include dir, e.g.
+# "t8_foo.h", "t8_cmesh/t8_cmesh.h", "t8_schemes/sub/bar.hxx".
+# "^t8(_|\\.h$)" = everything starting with "t8_" (files and folders) plus t8.h
+set(HEADER_CHECK_INCLUDE_REGEX "^t8(_|\\.h$)" CACHE STRING "Regex selecting this library's headers")
+set(HEADER_CHECK_EXCLUDE_REGEX "/detail/"             CACHE STRING "Regex of headers to skip (empty = check all)")
+
+# Optional allowlist for an incremental rollout: if this file exists, ONLY the
+# headers listed in it are checked (one path per line, relative to the include
+# dir, '#' starts a comment line). Delete the file to check all headers.
+# It is a normal variable, not a cache entry, so editing it takes effect on
+# the next configure without clearing the cache.
+set(HEADER_CHECK_LIST_FILE "${CMAKE_CURRENT_SOURCE_DIR}/headers_to_check.txt")
 set(HEADER_CHECK_CXX_STANDARD  "20"           CACHE STRING "Minimum C++ standard the headers must support")
 
 # ---------------------------------------------------------------------------
@@ -47,14 +57,17 @@ endif()
 # ---------------------------------------------------------------------------
 set(all_headers)
 foreach(dir IN LISTS inc_dirs)
-  if(NOT IS_DIRECTORY "${dir}/${HEADER_CHECK_SUBDIR}")
+  if(NOT IS_DIRECTORY "${dir}")
     continue()
   endif()
+  # Glob all headers, then keep only this library's (the include dir may also
+  # contain headers of other libraries installed into the same prefix)
   file(GLOB_RECURSE headers RELATIVE "${dir}" CONFIGURE_DEPENDS
-       "${dir}/${HEADER_CHECK_SUBDIR}/*.h"
-       "${dir}/${HEADER_CHECK_SUBDIR}/*.hh"
-       "${dir}/${HEADER_CHECK_SUBDIR}/*.hpp"
-       "${dir}/${HEADER_CHECK_SUBDIR}/*.hxx")
+       "${dir}/*.h"
+       "${dir}/*.hh"
+       "${dir}/*.hpp"
+       "${dir}/*.hxx")
+  list(FILTER headers INCLUDE REGEX "${HEADER_CHECK_INCLUDE_REGEX}")
   if(HEADER_CHECK_EXCLUDE_REGEX)
     list(FILTER headers EXCLUDE REGEX "${HEADER_CHECK_EXCLUDE_REGEX}")
   endif()
@@ -64,11 +77,49 @@ endforeach()
 list(REMOVE_DUPLICATES all_headers)
 list(SORT all_headers)
 
+# TODO: Remove this later again once the workflow works.
+# Restrict to the allowlist, if present
+if(EXISTS "${HEADER_CHECK_LIST_FILE}")
+  # Re-run configure automatically when the list changes
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${HEADER_CHECK_LIST_FILE}")
+
+  file(STRINGS "${HEADER_CHECK_LIST_FILE}" lines)
+  set(selected)
+  set(missing)
+  foreach(line IN LISTS lines)
+    string(STRIP "${line}" line)
+    if(line STREQUAL "" OR line MATCHES "^#")
+      continue()
+    endif()
+    list(APPEND selected "${line}")
+    if(NOT line IN_LIST all_headers)
+      list(APPEND missing "${line}")
+    endif()
+  endforeach()
+
+  if(missing)
+    list(JOIN missing "\n  " missing_str)
+    message(FATAL_ERROR
+      "Headers listed in ${HEADER_CHECK_LIST_FILE} are not installed "
+      "(or do not match HEADER_CHECK_INCLUDE_REGEX):\n  ${missing_str}")
+  endif()
+  if(NOT selected)
+    message(FATAL_ERROR "${HEADER_CHECK_LIST_FILE} lists no headers. "
+                        "Add some, or delete the file to check all headers.")
+  endif()
+
+  list(LENGTH all_headers num_installed)
+  list(REMOVE_DUPLICATES selected)
+  set(all_headers ${selected})
+  list(LENGTH all_headers num_selected)
+  message(STATUS "Header check: allowlist active, checking ${num_selected} of ${num_installed} headers")
+endif()
+
 list(LENGTH all_headers num_headers)
 if(num_headers EQUAL 0)
   message(FATAL_ERROR
-    "No headers found below '${HEADER_CHECK_SUBDIR}' in: ${inc_dirs}\n"
-    "Either the install is broken or HEADER_CHECK_SUBDIR is wrong.")
+    "No headers matching '${HEADER_CHECK_INCLUDE_REGEX}' found in: ${inc_dirs}\n"
+    "Either the install is broken or HEADER_CHECK_INCLUDE_REGEX is wrong.")
 endif()
 message(STATUS "Header check: ${num_headers} public headers")
 
@@ -77,7 +128,8 @@ message(STATUS "Header check: ${num_headers} public headers")
 # file(CONFIGURE) only rewrites files whose content changed, so
 # re-configuring does not trigger needless rebuilds.
 # ---------------------------------------------------------------------------
-set(gen_dir "${CMAKE_CURRENT_BINARY_DIR}/header_check")
+# Must not be named like the executable, which is written to the same dir
+set(gen_dir "${CMAKE_CURRENT_BINARY_DIR}/generated_header_tests")
 set(sources)
 set(all_in_one_content "// All public headers in one translation unit\n")
 
