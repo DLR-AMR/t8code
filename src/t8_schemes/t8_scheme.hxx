@@ -133,6 +133,8 @@ struct t8_scheme
   static inline decltype (auto)
   dispatch_to (const scheme_var &scheme, TArgs... args)
   {
+    static_assert (std::is_invocable_v<TFunc, const std::variant_alternative_t<TIndex, scheme_var> &, const TArgs &...>,
+                   "Scheme dispatch: TFunc must be callable with the eclass scheme and the const arguments.");
     /* The dispatch table guarantees that the index matches. */
     T8_ASSERT (scheme.index () == TIndex);
     return TFunc {}(*std::get_if<TIndex> (&scheme), args...);
