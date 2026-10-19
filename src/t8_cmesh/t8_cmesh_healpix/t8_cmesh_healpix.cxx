@@ -29,6 +29,7 @@
 
 struct t8_healpix_join
 {
+  /*helper struct for joining healpix elements*/
   t8_gloidx_t tree1;
   int face1;
   t8_gloidx_t tree2;

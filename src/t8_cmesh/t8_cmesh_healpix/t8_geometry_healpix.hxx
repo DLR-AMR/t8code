@@ -54,7 +54,7 @@ struct t8_geometry_healpix: public t8_geometry
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const;
+                    double *out_coords) const override;
 
   /**
    * Jacobian, not implemented.
@@ -67,7 +67,7 @@ struct t8_geometry_healpix: public t8_geometry
   void
   t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
                              [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
-                             [[maybe_unused]] double *jacobian) const
+                             [[maybe_unused]] double *jacobian) const override
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -78,7 +78,7 @@ struct t8_geometry_healpix: public t8_geometry
    * \return                True if the geometry is compatible with the tree.
    */
   bool
-  t8_geom_check_tree_compatibility () const
+  t8_geom_check_tree_compatibility () const override
   {
     if (active_tree_class != T8_ECLASS_QUAD) {
       t8_productionf ("t8_geometry_healpix is not compatible with tree type %s\n"
