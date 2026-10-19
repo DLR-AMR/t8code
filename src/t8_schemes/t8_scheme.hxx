@@ -137,7 +137,7 @@ struct t8_scheme
                    "Scheme dispatch: TFunc must be callable with the eclass scheme and the const arguments.");
     /* The dispatch table guarantees that the index matches. */
     T8_ASSERT (scheme.index () == TIndex);
-    return TFunc {}(*std::get_if<TIndex> (&scheme), args...);
+    return TFunc {}(*std::get_if<TIndex> (&scheme), std::as_const (args)...);
   }
 
   /** Build a table with one dispatch_to function pointer per variant alternative.
@@ -163,8 +163,11 @@ struct t8_scheme
    * a valueless variant and, for more than 11 alternatives (libstdc++), it calls an extra subroutine for each alternative.
    * Here, the arguments are passed by value and there is exactly one indirect call per dispatch,
    * comparable to a virtual function call.
-   * \note The arguments are copied. Do not use this for scheme functions with non-const reference parameters.
-   * \tparam TFunc    A captureless callable that takes the eclass scheme and \a args.
+   * \note The arguments are copied, so scheme functions with non-const reference parameters are not supported.
+   *       To enforce this at compile time, the arguments are passed to \a func as const and \a func must take
+   *       them as const, e.g. `[] (const auto &scheme, const auto... args) { ... }`. Binding them to a non-const
+   *       reference parameter then fails to compile.
+   * \tparam TFunc    A captureless callable that takes the eclass scheme and \a args as const.
    * \tparam TArgs    The types of the arguments. Must be trivially copyable.
    * \param [in] tree_class The eclass of the current tree.
    * \param [in] func       The callable. Only its type is used.
@@ -295,7 +298,7 @@ struct t8_scheme
   element_get_level (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_level (args...); }, element);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_level (args...); }, element);
   };
 
   /** Copy all entries of \a source to \a dest. \a dest must be an existing
@@ -310,7 +313,7 @@ struct t8_scheme
   element_copy (const t8_eclass_t tree_class, const t8_element_t *source, t8_element_t *dest) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_copy (args...); }, source, dest);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_copy (args...); }, source, dest);
   };
 
   /** Compare two elements.
@@ -325,7 +328,8 @@ struct t8_scheme
   element_compare (const t8_eclass_t tree_class, const t8_element_t *elem1, const t8_element_t *elem2) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_compare (args...); }, elem1, elem2);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_compare (args...); }, elem1,
+      elem2);
   };
 
   /** Check if two elements are equal.
@@ -338,7 +342,8 @@ struct t8_scheme
   element_is_equal (const t8_eclass_t tree_class, const t8_element_t *elem1, const t8_element_t *elem2) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_is_equal (args...); }, elem1, elem2);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_is_equal (args...); }, elem1,
+      elem2);
   };
 
   /**
@@ -352,7 +357,8 @@ struct t8_scheme
   element_is_refinable (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_is_refinable (args...); }, element);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_is_refinable (args...); },
+      element);
   };
 
   /** Compute the parent of a given element \a element and store it in \a parent.
@@ -372,7 +378,7 @@ struct t8_scheme
   element_get_parent (const t8_eclass_t tree_class, const t8_element_t *element, t8_element_t *parent) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_parent (args...); }, element,
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_parent (args...); }, element,
       parent);
   };
 
@@ -387,7 +393,8 @@ struct t8_scheme
   element_get_num_siblings (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_num_siblings (args...); }, element);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_num_siblings (args...); },
+      element);
   };
 
   /** Compute a specific sibling of a given element \a element and store it in \a sibling.
@@ -407,7 +414,7 @@ struct t8_scheme
                        t8_element_t *sibling) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_sibling (args...); }, element,
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_sibling (args...); }, element,
       sibid, sibling);
   };
 
@@ -420,7 +427,8 @@ struct t8_scheme
   element_get_num_corners (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_num_corners (args...); }, element);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_num_corners (args...); },
+      element);
   };
 
   /** Compute the number of faces of a given element.
@@ -432,7 +440,8 @@ struct t8_scheme
   element_get_num_faces (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_num_faces (args...); }, element);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_num_faces (args...); },
+      element);
   };
 
   /** Compute the maximum number of faces of a given element and all of its
@@ -445,14 +454,14 @@ struct t8_scheme
   element_get_max_num_faces (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_max_num_faces (args...); },
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_max_num_faces (args...); },
       element);
   };
 
   /** Return the number of children of an element when it is refined.
    * \param [in] tree_class         The eclass of the current tree.
    * \param [in] element            The element whose number of children is returned.
-   * \param [in] additional_arguments   Additional arguments you want to provide. 
+   * \param [in] additional_arguments   Additional arguments you want to provide.
    *                                    For subelements, this can be the subelement type.
    *                                    Have a look at the scheme specific functions for more details.
    * \tparam TArgs                  Type of extra arguments you want to provide. Normally, this is auto deduced.
@@ -465,7 +474,7 @@ struct t8_scheme
   {
     return dispatch (
       tree_class,
-      [] (const auto &scheme, const t8_element_t *elem, auto... args) -> int {
+      [] (const auto &scheme, const t8_element_t *const elem, const auto... args) -> int {
         if constexpr (requires { scheme.element_get_num_children (elem, args...); }) {
           return scheme.element_get_num_children (elem, args...);
         }
@@ -496,8 +505,9 @@ struct t8_scheme
   element_get_num_face_children (const t8_eclass_t tree_class, const t8_element_t *element, const int face) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_num_face_children (args...); },
-      element, face);
+      tree_class,
+      [] (const auto &scheme, const auto... args) { return scheme.element_get_num_face_children (args...); }, element,
+      face);
   };
 
   /** Return the corner number of an element's face corner.
@@ -518,8 +528,8 @@ struct t8_scheme
                            const int corner) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_face_corner (args...); }, element,
-      face, corner);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_face_corner (args...); },
+      element, face, corner);
   };
 
   /** Return the face numbers of the faces sharing an element's corner.
@@ -540,8 +550,8 @@ struct t8_scheme
                            const int face) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_corner_face (args...); }, element,
-      corner, face);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_corner_face (args...); },
+      element, corner, face);
   };
 
   /** Construct the child element of a given number.
@@ -557,7 +567,7 @@ struct t8_scheme
                      t8_element_t *child) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_child (args...); }, element,
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_child (args...); }, element,
       childid, child);
   };
 
@@ -568,7 +578,7 @@ struct t8_scheme
    *                      the number of children.
    * \param [in,out] c    The storage for these \a length elements must exist.
    *                      On output, all children are valid.
-   * \param [in] additional_arguments   Additional arguments you want to provide. 
+   * \param [in] additional_arguments   Additional arguments you want to provide.
    *                                    For subelements, this can be the subelement type.
    *                                    Have a look at the scheme specific functions for more details.
    * \tparam TArgs                  Type of extra arguments you want to provide. Normally, this is auto deduced.
@@ -582,7 +592,8 @@ struct t8_scheme
   {
     dispatch (
       tree_class,
-      [] (const auto &scheme, const t8_element_t *elem, const int len, t8_element_t **children, auto... args) -> void {
+      [] (const auto &scheme, const t8_element_t *const elem, const int len, t8_element_t **const children,
+          const auto... args) -> void {
         if constexpr (requires { scheme.element_get_children (elem, len, children, args...); }) {
           scheme.element_get_children (elem, len, children, args...);
         }
@@ -602,7 +613,8 @@ struct t8_scheme
   element_get_child_id (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_child_id (args...); }, element);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_child_id (args...); },
+      element);
   };
 
   /** Compute the ancestor id of an element, that is the child id
@@ -617,12 +629,12 @@ struct t8_scheme
   element_get_ancestor_id (const t8_eclass_t tree_class, const t8_element_t *element, const int level) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_ancestor_id (args...); }, element,
-      level);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_ancestor_id (args...); },
+      element, level);
   };
 
   /** Query whether element A is an ancestor of the element B.
-   * An element A is ancestor of an element B if A == B or if B can 
+   * An element A is ancestor of an element B if A == B or if B can
    * be obtained from A via successive refinement.
    * \param [in] tree_class The eclass of the current tree.
    * \param [in] element_A An element of class \a eclass in scheme \a scheme.
@@ -633,8 +645,8 @@ struct t8_scheme
   element_is_ancestor (const t8_eclass_t tree_class, const t8_element_t *element_A, const t8_element_t *element_B) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_is_ancestor (args...); }, element_A,
-      element_B);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_is_ancestor (args...); },
+      element_A, element_B);
   }
 
   /** Query whether a given set of elements is a family or not.
@@ -648,7 +660,7 @@ struct t8_scheme
   elements_are_family (const t8_eclass_t tree_class, const t8_element_t *const *fam) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.elements_are_family (args...); }, fam);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.elements_are_family (args...); }, fam);
   };
 
   /** Compute the nearest common ancestor of two elements. That is,
@@ -667,8 +679,8 @@ struct t8_scheme
                    t8_element_t *const nca) const
   {
     dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_nca (args...); }, elem1, elem2,
-      nca);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_nca (args...); }, elem1,
+      elem2, nca);
     T8_ASSERT (element_is_ancestor (tree_class, nca, elem1));
     T8_ASSERT (element_is_ancestor (tree_class, nca, elem2));
   };
@@ -686,8 +698,8 @@ struct t8_scheme
   element_get_face_shape (const t8_eclass_t tree_class, const t8_element_t *element, const int face) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_face_shape (args...); }, element,
-      face);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_face_shape (args...); },
+      element, face);
   };
 
   /** Given an element and a face of the element, compute all children of
@@ -710,7 +722,7 @@ struct t8_scheme
                                 t8_element_t *children[], int num_children, int *child_indices) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_children_at_face (args...); },
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_children_at_face (args...); },
       element, face, children, num_children, child_indices);
   };
 
@@ -740,7 +752,7 @@ struct t8_scheme
                                const int face_child) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_face_get_child_face (args...); },
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_face_get_child_face (args...); },
       element, face, face_child);
   };
 
@@ -758,7 +770,7 @@ struct t8_scheme
   element_face_get_parent_face (const t8_eclass_t tree_class, const t8_element_t *element, const int face) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_face_get_parent_face (args...); },
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_face_get_parent_face (args...); },
       element, face);
   };
 
@@ -779,8 +791,9 @@ struct t8_scheme
                                   const int face) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_face_get_ancestor_face (args...); },
-      element, ancestor_level, face);
+      tree_class,
+      [] (const auto &scheme, const auto... args) { return scheme.element_face_get_ancestor_face (args...); }, element,
+      ancestor_level, face);
   }
 
   /** Given an element and a face of this element. If the face lies on the
@@ -801,8 +814,8 @@ struct t8_scheme
   element_get_tree_face (const t8_eclass_t tree_class, const t8_element_t *element, const int face) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_tree_face (args...); }, element,
-      face);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_tree_face (args...); },
+      element, face);
   };
 
   /** Suppose we have two trees that share a common face f.
@@ -832,8 +845,8 @@ struct t8_scheme
                           const int orientation, const int sign, const int is_smaller_face) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_transform_face (args...); }, elem1,
-      elem2, orientation, sign, is_smaller_face);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_transform_face (args...); },
+      elem1, elem2, orientation, sign, is_smaller_face);
   };
 
   /** Given a boundary face inside a root tree's face construct
@@ -854,7 +867,7 @@ struct t8_scheme
                         const int root_face) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_extrude_face (args...); }, face,
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_extrude_face (args...); }, face,
       element, root_face, this);
   };
 
@@ -874,8 +887,8 @@ struct t8_scheme
                              t8_element_t *boundary) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_boundary_face (args...); }, element,
-      face, boundary, this);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_boundary_face (args...); },
+      element, face, boundary, this);
   };
 
   /** Construct the first descendant of an element at a given level that touches a given face.
@@ -892,7 +905,8 @@ struct t8_scheme
                                      t8_element_t *first_desc, const int level) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_first_descendant_face (args...); },
+      tree_class,
+      [] (const auto &scheme, const auto... args) { return scheme.element_get_first_descendant_face (args...); },
       element, face, first_desc, level);
   };
 
@@ -910,7 +924,8 @@ struct t8_scheme
                                     t8_element_t *last_desc, const int level) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_last_descendant_face (args...); },
+      tree_class,
+      [] (const auto &scheme, const auto... args) { return scheme.element_get_last_descendant_face (args...); },
       element, face, last_desc, level);
   };
 
@@ -925,8 +940,8 @@ struct t8_scheme
   element_is_root_boundary (const t8_eclass_t tree_class, const t8_element_t *element, const int face) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_is_root_boundary (args...); }, element,
-      face);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_is_root_boundary (args...); },
+      element, face);
   };
 
   /** Construct the face neighbor of a given element if this face neighbor
@@ -950,7 +965,8 @@ struct t8_scheme
                                     const int face, int *neigh_face) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_face_neighbor_inside (args...); },
+      tree_class,
+      [] (const auto &scheme, const auto... args) { return scheme.element_get_face_neighbor_inside (args...); },
       element, neigh, face, neigh_face);
   };
 
@@ -965,7 +981,7 @@ struct t8_scheme
   element_get_shape (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_shape (args...); }, element);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_shape (args...); }, element);
   };
 
   /** Initialize the entries of an allocated element according to a
@@ -981,8 +997,8 @@ struct t8_scheme
                          const t8_linearidx_t id) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_set_linear_id (args...); }, element,
-      level, id);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_set_linear_id (args...); },
+      element, level, id);
   };
 
   /** Compute the linear id of a given element in a hypothetical uniform
@@ -996,8 +1012,8 @@ struct t8_scheme
   element_get_linear_id (const t8_eclass_t tree_class, const t8_element_t *element, const int level) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_linear_id (args...); }, element,
-      level);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_linear_id (args...); },
+      element, level);
   };
 
   /** Compute the first descendant of a given element.
@@ -1012,7 +1028,7 @@ struct t8_scheme
                                 const int level) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_first_descendant (args...); },
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_first_descendant (args...); },
       element, desc, level);
   };
 
@@ -1028,7 +1044,7 @@ struct t8_scheme
                                const int level) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_last_descendant (args...); },
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_last_descendant (args...); },
       element, desc, level);
   };
 
@@ -1041,7 +1057,7 @@ struct t8_scheme
   element_construct_successor (const t8_eclass_t tree_class, const t8_element_t *element, t8_element_t *successor) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_construct_successor (args...); },
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_construct_successor (args...); },
       element, successor);
   };
 
@@ -1061,8 +1077,8 @@ struct t8_scheme
   {
     return dispatch (
       tree_class,
-      [] (const auto &scheme, auto... args) { return scheme.element_get_vertex_reference_coords (args...); }, element,
-      vertex, coords);
+      [] (const auto &scheme, const auto... args) { return scheme.element_get_vertex_reference_coords (args...); },
+      element, vertex, coords);
   };
 
   /** Convert points in the reference space of an element to points in the
@@ -1080,7 +1096,7 @@ struct t8_scheme
                                 const size_t num_coords, double *out_coords) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_get_reference_coords (args...); },
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_get_reference_coords (args...); },
       element, ref_coords, num_coords, out_coords);
   };
 
@@ -1100,7 +1116,8 @@ struct t8_scheme
   element_count_leaves (const t8_eclass_t tree_class, const t8_element_t *t, const int level) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_count_leaves (args...); }, t, level);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_count_leaves (args...); }, t,
+      level);
   };
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
@@ -1116,7 +1133,8 @@ struct t8_scheme
   count_leaves_from_root (const t8_eclass_t tree_class, const int level) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.count_leaves_from_root (args...); }, level);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.count_leaves_from_root (args...); },
+      level);
   };
 
 #if T8_ENABLE_DEBUG
@@ -1141,7 +1159,7 @@ struct t8_scheme
   element_is_valid (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_is_valid (args...); }, element);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_is_valid (args...); }, element);
   };
 
   /**
@@ -1155,7 +1173,8 @@ struct t8_scheme
   element_debug_print (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_debug_print (args...); }, element);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_debug_print (args...); },
+      element);
   };
 
 #endif
@@ -1171,7 +1190,7 @@ struct t8_scheme
                      const int string_size) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_to_string (args...); }, element,
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_to_string (args...); }, element,
       debug_string, string_size);
   };
 
@@ -1201,7 +1220,8 @@ struct t8_scheme
   element_new (const t8_eclass_t tree_class, const int length, t8_element_t **elements) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_new (args...); }, length, elements);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_new (args...); }, length,
+      elements);
   };
 
   /** Initialize an array of allocated elements.
@@ -1223,7 +1243,8 @@ struct t8_scheme
   element_init (const t8_eclass_t tree_class, const int length, t8_element_t *elements) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_init (args...); }, length, elements);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_init (args...); }, length,
+      elements);
   };
 
   /** Deinitialize an array of allocated elements.
@@ -1239,7 +1260,8 @@ struct t8_scheme
   element_deinit (const t8_eclass_t tree_class, const int length, t8_element_t *elements) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_deinit (args...); }, length, elements);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_deinit (args...); }, length,
+      elements);
   };
 
   /** Deallocate an array of elements.
@@ -1255,7 +1277,8 @@ struct t8_scheme
   element_destroy (const t8_eclass_t tree_class, const int length, t8_element_t **elements) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_destroy (args...); }, length, elements);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_destroy (args...); }, length,
+      elements);
   };
 
   /** create the root element
@@ -1266,7 +1289,7 @@ struct t8_scheme
   set_to_root (const t8_eclass_t tree_class, t8_element_t *element) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.set_to_root (args...); }, element);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.set_to_root (args...); }, element);
   };
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
@@ -1283,8 +1306,8 @@ struct t8_scheme
                     void *send_buffer, int buffer_size, int *position, sc_MPI_Comm comm) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_MPI_Pack (args...); }, elements, count,
-      send_buffer, buffer_size, position, comm);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_MPI_Pack (args...); }, elements,
+      count, send_buffer, buffer_size, position, comm);
   };
 
   /** Determine an upper bound for the size of the packed message of \a count elements
@@ -1297,8 +1320,8 @@ struct t8_scheme
   element_MPI_Pack_size (const t8_eclass_t tree_class, const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_MPI_Pack_size (args...); }, count, comm,
-      pack_size);
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_MPI_Pack_size (args...); }, count,
+      comm, pack_size);
   };
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
@@ -1315,7 +1338,7 @@ struct t8_scheme
                       t8_element_t **elements, const unsigned int count, sc_MPI_Comm comm) const
   {
     return dispatch (
-      tree_class, [] (const auto &scheme, auto... args) { return scheme.element_MPI_Unpack (args...); }, recvbuf,
+      tree_class, [] (const auto &scheme, const auto... args) { return scheme.element_MPI_Unpack (args...); }, recvbuf,
       buffer_size, position, elements, count, comm);
   };
 };
