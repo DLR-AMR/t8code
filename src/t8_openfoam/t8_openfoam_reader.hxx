@@ -277,6 +277,18 @@ struct t8_openfoam_reader
                         std::vector<char> face_normals);
 
   /**
+   * Use the gathered cell information to build a tet cell and add it to the underlying cmesh.
+   * \param [in] cell_id           The id of the cell.
+   * \param [in] face_ids          The ids of the cell faces.
+   * \param [in] face_point_ids    The ids of the points of the cell faces.
+   * \param [in] face_normals      The normals of the cell faces. Using std::vector<char> instead of bools
+   *                               because a vector of bools does not fulfill the std library requirements.
+   */
+  void
+  reconstruct_tet_cell (size_t cell_id, std::vector<size_t> face_ids, std::vector<std::span<size_t>> face_point_ids,
+                        std::vector<char> face_normals);
+
+  /**
    * Computes the orientation of two faces according to \ref t8_cmesh_set_join.
    * \param [in] eclass1        Cell 1 eclass
    * \param [in] face_id1       Cell 1 face id
