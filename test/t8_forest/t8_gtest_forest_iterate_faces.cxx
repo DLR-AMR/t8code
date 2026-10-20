@@ -108,7 +108,7 @@ t8_test_face_callback (const t8_forest_t forest, const t8_locidx_t ltreeid, cons
   EXPECT_NE (leaf_elements, nullptr);
 
   // Count every visited element, including intermediate elements.
-  ++data->callback_count;
+  ++(data->callback_count);
 
   // Verify that the current element face lies on the requested root face.
   EXPECT_TRUE (scheme->element_is_root_boundary (data->eclass, element, face));
