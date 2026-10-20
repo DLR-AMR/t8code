@@ -192,7 +192,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const t8_gloidx_t ntrees, const
             smaller_bigger_face_condition = 0;
           }
           else {
-            /* This tree class is the same as the neigh. tree class. 
+            /* This tree class is the same as the neigh. tree class.
                Then the face with the smaller face id is the smaller one. */
             smaller_bigger_face_condition = iface < neigh_iface;
           }

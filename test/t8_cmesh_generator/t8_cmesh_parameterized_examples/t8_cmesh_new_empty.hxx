@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_empty.hxx 
+/** \file t8_cmesh_new_empty.hxx
  * Parameterized empty example cmeshes.
  */
 #ifndef T8_CMESH_NEW_EMPTY_HXX

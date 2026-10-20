@@ -35,7 +35,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * Represents a pseudo tree structure containing topological and tree data.
- * 
+ *
  * \note This class is used for testing purposes only.
  */
 struct pseudo_tree
@@ -53,8 +53,8 @@ struct t8_data_handler<pseudo_tree>
  public:
   /**
    * Returns the size of a pseudo_tree.
-   * 
-   * \param[in] item The data to compute the size of. 
+   *
+   * \param[in] item The data to compute the size of.
    * \param[in] comm The MPI communicator used for communication.
    * \return An integer representing the size of the data.
    */
@@ -80,7 +80,7 @@ struct t8_data_handler<pseudo_tree>
 
   /**
    * Packs a pseudo_tree into a buffer for communication.
-   * 
+   *
    * \param[in] data The data to be packed.
    * \param[in] pos The current position in the buffer where the data should be packed.
    * \param[in, out] buffer The buffer where the data will be packed.
@@ -114,7 +114,7 @@ struct t8_data_handler<pseudo_tree>
 
   /**
    * Unpacks a pseudo_tree from a buffer.
-   * 
+   *
    * \param[in] buffer A pointer to the buffer containing the packed data.
    * \param[in] num_bytes The number of bytes in the buffer.
    * \param[in] pos A reference to an integer representing the current position in the buffer.
@@ -169,9 +169,9 @@ struct t8_data_handler<pseudo_tree>
 
   /**
    * Returns the type of the data handler.
-   * 
+   *
    * This function returns the type of the data handler.
-   * 
+   *
    * \return An integer representing the type.
    */
   constexpr t8_data_handler_type
