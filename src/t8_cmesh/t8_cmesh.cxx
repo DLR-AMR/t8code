@@ -25,12 +25,13 @@
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_helper_functions/t8_refcount.h>
 #include <t8_data/t8_shmem.h>
-#include <t8_types/t8_vec.h>
+#include <t8_vector/t8_vec.h>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_helper_functions/t8_vector_algorithms.hxx>
@@ -92,9 +93,14 @@ t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
 #endif
 
 int
-t8_cmesh_is_committed (const t8_cmesh_t cmesh)
+t8_cmesh_is_committed (const t8_cmesh_t cmesh, const int validate_cmesh)
 {
-  static int is_checking = 0;
+  if (!validate_cmesh) {
+    /* Skip the full consistency validation below and only check the
+     * committed flag itself. Used where a cheap, recursion-free check
+     * suffices, e.g. at the start of a cmesh generator. */
+    return cmesh != nullptr && cmesh->committed;
+  }
 
   /* We run into a stackoverflow if routines that we call here,
    * also call t8_cmesh_is_committed.
@@ -104,6 +110,8 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
    */
   /* TODO: This is_checking is not thread safe. If two threads call cmesh routines
    *       that call t8_cmesh_is_committed, only one of them will correctly check the cmesh. */
+  static int is_checking = 0;
+
   if (!is_checking) {
     is_checking = 1;
 
@@ -126,6 +134,15 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
     is_checking = 0;
   }
   return 1;
+}
+
+int
+t8_cmesh_stash_is_empty (const t8_cmesh_t cmesh)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  return t8_stash_is_empty (cmesh->stash);
 }
 
 void
@@ -350,7 +367,7 @@ t8_cmesh_get_first_treeid (const t8_cmesh_t cmesh)
 int
 t8_cmesh_treeid_is_local_tree (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
   return 0 <= ltreeid && ltreeid < t8_cmesh_get_num_local_trees (cmesh);
 }
@@ -358,7 +375,7 @@ t8_cmesh_treeid_is_local_tree (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid
 int
 t8_cmesh_treeid_is_ghost (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   const t8_locidx_t num_trees = t8_cmesh_get_num_local_trees (cmesh);
   const t8_locidx_t num_ghosts = t8_cmesh_get_num_ghosts (cmesh);
 
@@ -368,7 +385,7 @@ t8_cmesh_treeid_is_ghost (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
 t8_locidx_t
 t8_cmesh_ltreeid_to_ghostid (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
 
   return ltreeid - t8_cmesh_get_num_local_trees (cmesh);
@@ -379,7 +396,7 @@ t8_cmesh_ltreeid_to_ghostid (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
 t8_ctree_t
 t8_cmesh_get_tree (const t8_cmesh_t cmesh, const t8_locidx_t ltree_id)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id));
 
   return t8_cmesh_trees_get_tree (cmesh->trees, ltree_id);
@@ -391,7 +408,7 @@ t8_cmesh_get_tree (const t8_cmesh_t cmesh, const t8_locidx_t ltree_id)
 t8_ctree_t
 t8_cmesh_get_first_tree (const t8_cmesh_t cmesh)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
   return cmesh->num_local_trees > 0 ? t8_cmesh_get_tree (cmesh, 0) : nullptr;
 }
@@ -407,7 +424,7 @@ t8_cmesh_get_next_tree (const t8_cmesh_t cmesh, const t8_ctree_t tree)
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (tree != NULL);
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, tree->treeid));
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   return tree->treeid < cmesh->num_local_trees - 1 ? t8_cmesh_get_tree (cmesh, tree->treeid + 1) : nullptr;
 }
 
@@ -454,7 +471,7 @@ t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int
 double *
 t8_cmesh_get_tree_vertices (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
   return (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, ltreeid);
 }
@@ -462,7 +479,7 @@ t8_cmesh_get_tree_vertices (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
 void *
 t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int key, const t8_locidx_t ltree_id)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id) || t8_cmesh_treeid_is_ghost (cmesh, ltree_id));
   const int is_ghost = t8_cmesh_treeid_is_ghost (cmesh, ltree_id);
 
@@ -482,7 +499,7 @@ t8_cmesh_get_attribute_gloidx_array (const t8_cmesh_t cmesh, const int package_i
 t8_shmem_array_t
 t8_cmesh_get_partition_table (const t8_cmesh_t cmesh)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   if (!cmesh->set_partition) {
     /* The mesh is not partitioned. We return NULL. */
     return nullptr;
@@ -504,7 +521,7 @@ t8_cmesh_set_dimension (t8_cmesh_t cmesh, const int dim)
 int
 t8_cmesh_get_dimension (const t8_cmesh_t cmesh)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (0 <= cmesh->dimension && cmesh->dimension <= T8_ECLASS_MAX_DIM);
 
   return cmesh->dimension;
@@ -543,7 +560,7 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const 
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (vertices != NULL);
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
 
   const size_t data_size = 3 * num_vertices * sizeof (double);
 
@@ -611,11 +628,11 @@ t8_cmesh_is_equal (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b)
     return 1;
   }
   /* check entries that are numbers */
-  is_equal = cmesh_a->committed != cmesh_b->committed || cmesh_a->dimension != cmesh_b->dimension
-             || cmesh_a->set_partition != cmesh_b->set_partition || cmesh_a->mpirank != cmesh_b->mpirank
-             || cmesh_a->mpisize != cmesh_b->mpisize || cmesh_a->num_trees != cmesh_b->num_trees
-             || cmesh_a->num_local_trees != cmesh_b->num_local_trees || cmesh_a->num_ghosts != cmesh_b->num_ghosts
-             || cmesh_a->first_tree != cmesh_b->first_tree;
+  is_equal = t8_cmesh_is_committed (cmesh_a, 0) != t8_cmesh_is_committed (cmesh_b, 0)
+             || cmesh_a->dimension != cmesh_b->dimension || cmesh_a->set_partition != cmesh_b->set_partition
+             || cmesh_a->mpirank != cmesh_b->mpirank || cmesh_a->mpisize != cmesh_b->mpisize
+             || cmesh_a->num_trees != cmesh_b->num_trees || cmesh_a->num_local_trees != cmesh_b->num_local_trees
+             || cmesh_a->num_ghosts != cmesh_b->num_ghosts || cmesh_a->first_tree != cmesh_b->first_tree;
   if (is_equal != 0) {
     return 0;
   }
@@ -639,12 +656,12 @@ t8_cmesh_is_equal (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b)
     return 0;
   }
   /* check trees */
-  if (cmesh_a->committed && !t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees)) {
+  if (t8_cmesh_is_committed (cmesh_a, 0) && !t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees)) {
     /* if we have committed check tree arrays */
     return 0;
   }
   else {
-    if (!cmesh_a->committed && !t8_stash_is_equal (cmesh_a->stash, cmesh_b->stash)) {
+    if (!t8_cmesh_is_committed (cmesh_a, 0) && !t8_stash_is_equal (cmesh_a->stash, cmesh_b->stash)) {
       /* if we have not committed check stash arrays */
       return 0;
     }
@@ -670,7 +687,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
     t8_cmesh_struct_t cmesh;
     t8_gloidx_t num_trees_per_eclass[T8_ECLASS_COUNT];
     size_t stash_elem_counts[3];
-    int pre_commit; /* True, if cmesh on root is not committed yet. */
+    int pre_commit; /** True if cmesh on root is not committed yet. */
 #if T8_ENABLE_DEBUG
     sc_MPI_Comm comm;
 #endif
@@ -752,6 +769,9 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
     if (meta_info.cmesh.profile != nullptr) {
       t8_cmesh_set_profiling (cmesh_in, 1);
     }
+    if (meta_info.cmesh.boundary_condition_handler != nullptr) {
+      detail::t8_cmesh_add_boundary_condition_handler (cmesh_out);
+    }
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       cmesh_out->num_trees_per_eclass[iclass] = meta_info.num_trees_per_eclass[iclass];
       cmesh_out->num_local_trees_per_eclass[iclass] = meta_info.num_trees_per_eclass[iclass];
@@ -776,6 +796,10 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
       t8_stash_destroy (&cmesh_out->stash);
       cmesh_out->committed = 1;
     }
+  }
+  /* Broadcast boundary conditions if set */
+  if (cmesh_out->boundary_condition_handler != nullptr) {
+    cmesh_out->boundary_condition_handler->bcast (root, comm);
   }
 
   cmesh_out->mpirank = mpirank;
@@ -809,7 +833,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_ctree_t tree;
 
   /* cmesh must be committed and not partitioned */
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (!cmesh->set_partition);
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
@@ -900,7 +924,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 int
 t8_cmesh_is_partitioned (const t8_cmesh_t cmesh)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
   return cmesh->set_partition != 0;
 }
@@ -909,7 +933,7 @@ t8_gloidx_t
 t8_cmesh_get_num_trees (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
   return cmesh->num_trees;
 }
@@ -918,7 +942,7 @@ t8_locidx_t
 t8_cmesh_get_num_local_trees (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
   return cmesh->num_local_trees;
 }
@@ -927,7 +951,7 @@ t8_locidx_t
 t8_cmesh_get_num_ghosts (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
   return cmesh->num_ghosts;
 }
@@ -937,7 +961,7 @@ t8_cmesh_tree_face_is_boundary (const t8_cmesh_t cmesh, const t8_locidx_t ltreei
 {
   int8_t *ttf;
 
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
   if (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid)) {
     /* The local tree id belongs to a tree */
@@ -973,7 +997,7 @@ t8_cmesh_get_tree_class (const t8_cmesh_t cmesh, const t8_locidx_t ltree_id)
 {
   t8_ctree_t tree;
 
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id));
 
   tree = t8_cmesh_get_tree (cmesh, ltree_id);
@@ -986,7 +1010,7 @@ t8_cmesh_get_ghost_class (const t8_cmesh_t cmesh, const t8_locidx_t lghost_id)
   t8_cghost_t ghost;
 
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (0 <= lghost_id && lghost_id < cmesh->num_ghosts);
 
   ghost = t8_cmesh_trees_get_ghost (cmesh->trees, lghost_id);
@@ -1009,7 +1033,7 @@ t8_locidx_t
 t8_cmesh_get_local_id (const t8_cmesh_t cmesh, const t8_gloidx_t global_id)
 {
   t8_gloidx_t temp_local_id;
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (0 <= global_id && global_id < cmesh->num_trees);
 
   if (!cmesh->set_partition) {
@@ -1047,7 +1071,7 @@ t8_locidx_t
 t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face, int *dual_face,
                             int *orientation)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
   const int is_ghost = t8_cmesh_treeid_is_ghost (cmesh, ltreeid);
   int8_t ttf;
@@ -1116,7 +1140,7 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, c
 t8_eclass_t
 t8_cmesh_get_tree_face_neighbor_eclass (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
   T8_ASSERT (0 <= face);
 
@@ -1197,7 +1221,7 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
     t8_shmem_array_destroy (&cmesh->tree_offsets);
   }
   /*TODO: write this */
-  if (!cmesh->committed) {
+  if (!t8_cmesh_is_committed (cmesh, 0)) {
     t8_stash_destroy (&cmesh->stash);
     if (cmesh->set_from != nullptr) {
       /* We unref our reference of set_from */
@@ -1224,9 +1248,8 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
     cmesh->set_partition_scheme->unref ();
   }
 
-  if (cmesh->vertex_connectivity != nullptr) {
-    delete cmesh->vertex_connectivity;
-  }
+  delete cmesh->vertex_connectivity;
+  delete cmesh->boundary_condition_handler;
 
   T8_FREE (cmesh);
   *pcmesh = nullptr;
@@ -1461,7 +1484,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
   int is_empty;
 
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (level >= 0);
   T8_ASSERT (tree_scheme != NULL);
 
@@ -2395,7 +2418,7 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
   T8_ASSERT (num_local_trees > 0);
   double tree_bounds[6] = { 0.0 };
-  t8_geometry_handler *geom_handler = cmesh->geometry_handler;
+  detail::t8_geometry_handler *geom_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
   if (geom_handler == nullptr) {
     t8_errorf ("Error: Trying to compute bounding box for cmesh with no geometry.\n");
     return false;

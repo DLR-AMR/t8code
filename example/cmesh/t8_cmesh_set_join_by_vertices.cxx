@@ -169,7 +169,7 @@ main (int argc, char **argv)
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }
@@ -199,8 +199,9 @@ main (int argc, char **argv)
     const int partition = 0;
     const int use_cad_geometry = 0;
 
-    t8_cmesh_t cmesh
-      = t8_cmesh_from_msh_file (meshfile, partition, sc_MPI_COMM_WORLD, dim, main_proc, use_cad_geometry);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_from_msh_file (&cmesh, meshfile, partition, sc_MPI_COMM_WORLD, dim, main_proc, use_cad_geometry);
 
     test_with_cmesh (cmesh);
 

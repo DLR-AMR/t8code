@@ -24,6 +24,9 @@
  * This is the administrative header file for t8code.
  * It includes standard C headers via subpackages.
  * It also provides application-level convenience code such as logging functions.
+ * \hideincludedbygraph Nearly every file in t8code includes this header, so the
+ * "included by" graph is too large to be useful and is hidden here. It also is larger
+ * than the threshold and therefore throws a doxygen error.
  */
 
 #ifndef T8_H
@@ -161,6 +164,7 @@ typedef enum {
   T8_MPI_CMESH_UNIFORM_BOUNDS_END,      /**< Used for cmesh uniform bounds computation. */
   T8_MPI_TEST_ELEMENT_PACK_TAG,         /**< Used for testing mpi pack and unpack functionality */
   T8_MPI_PFC_TAG,                       /**< Used for data exchange during partition for coarsening. */
+  T8_MPI_BOUNDARY_CONDITION_SYNC_TAG,   /**< Used for the global synchronization of boundary conditions. */
   T8_MPI_TAG_LAST                       /**< Dummy last MPI tag. */
 } t8_MPI_tag_t;
 

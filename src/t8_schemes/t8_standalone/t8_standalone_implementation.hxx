@@ -577,7 +577,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
    * \note level 0 elements do not form a family.
    */
   static constexpr int
-  elements_are_family (t8_element_t *const *fam) noexcept
+  elements_are_family (const t8_element_t *const *fam) noexcept
   {
 #if T8_ENABLE_DEBUG
     const int num_siblings = element_get_num_siblings (fam[0]);
@@ -611,7 +611,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   // Note to devs: element_is_ancestor currently cannot be static
   //               since it uses the non-static function element_new
   /** Query whether element A is an ancestor of the element B.
-   * An element A is ancestor of an element B if A == B or if B can 
+   * An element A is ancestor of an element B if A == B or if B can
    * be obtained from A via successive refinement.
    * \param [in] element_A An element of class \a eclass in scheme \a scheme.
    * \param [in] element_B An element of class \a eclass in scheme \a scheme.
@@ -621,7 +621,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   element_is_ancestor (const t8_element_t *element_A, const t8_element_t *element_B) const noexcept
   {
     /* We compute whether A is an ancestor of B by
-    
+
      - If level(A) > level(B) then A cannot be an ancestor.
      - Otherwise compute the ancestor of B at level(A)
      - Compare the computed ancestor with A.

@@ -45,7 +45,7 @@ on:
 jobs:
   sc_p4est_cmake_tests:
     runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-dependencies
+    container: dlramr/t8code-dependencies:t8-dependencies-ubuntu-gcc
     timeout-minutes: 10
     steps:
 #
@@ -57,8 +57,6 @@ jobs:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: untar artifact
       run: tar -xf artifact.tar && rm artifact.tar
-    - name: Update packages
-      run: sudo apt-get update && sudo apt-get upgrade -y
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'

@@ -154,7 +154,7 @@ void
 t8_element_get_parent (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element,
                        t8_element_t *parent);
 
-/** Compute the number of siblings of an element. That is the number of 
+/** Compute the number of siblings of an element. That is the number of
  * Children of its parent.
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of tree the elements are part of.
@@ -639,8 +639,8 @@ t8_element_get_last_descendant (const t8_scheme_c *scheme, const t8_eclass_t tre
  * \param [in,out] elem2  The element whose entries will be set.
  */
 void
-t8_element_get_successor (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem1,
-                          t8_element_t *elem2);
+t8_element_construct_successor (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem1,
+                                t8_element_t *elem2);
 
 /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
@@ -651,7 +651,7 @@ t8_element_get_successor (const t8_scheme_c *scheme, const t8_eclass_t tree_clas
    * \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    * \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used. 
+   *                      all coords might be used.
    */
 void
 t8_element_get_vertex_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class,
@@ -727,8 +727,8 @@ t8_element_is_valid (const t8_scheme_c *scheme, const t8_eclass_t tree_class, co
 /**
  * Print a given element. For a example for a triangle print the coordinates
  * and the level of the triangle. This function is only available in the
- * debugging configuration. 
- * 
+ * debugging configuration.
+ *
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] element   The element to print
@@ -739,11 +739,11 @@ t8_element_debug_print (const t8_scheme_c *scheme, const t8_eclass_t tree_class,
 #endif
 /**
  * \brief Fill a string with readable information about the element
- * 
+ *
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of the current tree.
  * \param[in] element The element to translate into human-readable information.
- * \param[in, out] debug_string The string to fill. 
+ * \param[in, out] debug_string The string to fill.
  * \param[in] string_size The length of \a debug_string.
  */
 void

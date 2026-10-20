@@ -45,6 +45,8 @@ T8_EXTERN_C_BEGIN ();
 /* put declarations here */
 
 /** Read a .msh file and create a cmesh from it.
+ * \param [in,out] pcmesh           Pointer to an initialized, but not committed cmesh handle, as created by
+ *                                  \ref t8_cmesh_init. Check `*pcmesh != NULL` after the call to detect failure.
  * \param [in]    fileprefix        The prefix of the mesh file.
  *                                  The file fileprefix.msh is read.
  * \param [in]    partition         If true the file is only opened on one process
@@ -58,13 +60,14 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]    master            If partition is true, a valid MPI rank that will
  *                                  read the file and store all the trees alone.
  * \param [in]    use_cad_geometry  Read the parameters of a parametric msh file and use the
- *                                  cad geometry.
- * \return        A committed cmesh holding the mesh of dimension \a dim in the
- *                specified .msh file.
+ *                                  cad geometry. The file has to be saved with parametric coordinates for this feature.
+ *                                  Either use `Mesh.SaveParametric = 1` in your geo script or activate the
+ *                                  checkbox during saving the mesh in the Gmsh GUI.
+ *                                  Will throw a warning if no parametric cells were found.
  */
-t8_cmesh_t
-t8_cmesh_from_msh_file (const char *fileprefix, int partition, sc_MPI_Comm comm, int dim, int master,
-                        int use_cad_geometry);
+void
+t8_cmesh_from_msh_file (t8_cmesh_t *pcmesh, const char *fileprefix, int partition, sc_MPI_Comm comm, int dim,
+                        int master, int use_cad_geometry);
 
 T8_EXTERN_C_END ();
 

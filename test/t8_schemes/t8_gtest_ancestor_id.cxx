@@ -23,7 +23,7 @@
 /** \file t8_gtest_ancestor_id.cxx
  * This test checks that the ancestor id of an element at level elem.level is the same
  * as the child id of the element. This traverses up the tree and checks if the ancestor id
- * at elem.level - 1, -2, ... is the same as the child id of the parent, grandparent and so on. 
+ * at elem.level - 1, -2, ... is the same as the child id of the parent, grandparent and so on.
  */
 
 #include <gtest/gtest.h>

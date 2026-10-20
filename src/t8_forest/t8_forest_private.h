@@ -33,21 +33,21 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Check whether or not \a elements contains a (in)complete family and 
+/** Check whether or not \a elements contains a (in)complete family and
  *  return the size of it or zero if no family is considered.
  * \param [in]      forest          The forest.
  * \param [in]      ltree_id        The index of considered local tree.
- * \param [in]      el_considered   The local id of the first element in 
+ * \param [in]      el_considered   The local id of the first element in
  *                                  \a elements in the local tree of the forest.
  * \param [in]      elements        Array of elements to consider.
  * \param [in]      elements_size   Number of elements in \a elements.
  * \return          Size of family or zero, if \a elements does not contain a
- *                  family. 
+ *                  family.
  * \note            The check works for complete and incomplete forests.
- *                  In the case of complete forests, the scheme based element 
+ *                  In the case of complete forests, the scheme based element
  *                  function \see t8_elements_are_family is recommended.
  * \note            If the element with id \a el_considered is not the first
- *                  family member, return 0. Therefore, if return is x > 0, 
+ *                  family member, return 0. Therefore, if return is x > 0,
  *                  the first x elements in \a elements form a family.
  */
 int
@@ -56,8 +56,8 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
 
 /**
  * For each tree in a forest compute its first and last descendant.
- * \param[in] forest The forest that should be used.  
- 
+ * \param[in] forest The forest that should be used.
+
  */
 void
 t8_forest_compute_desc (t8_forest_t forest);
@@ -65,7 +65,7 @@ t8_forest_compute_desc (t8_forest_t forest);
 /**
  * Create the elements on this process given a uniform partition
  * of the coarse mesh.
- * 
+ *
  * \param[in, out] forest The forest to be populated.
  * \param[in] irregular   Flag indicating if a tree in the forest does not refine in a 1:2^dim manner.
  */
@@ -362,7 +362,7 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const 
  *                         on output a (better) bound.
  *
  * \note If on input \a lower >= \a upper, then the bounds are not changed by this
- *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
+ *        algorithm. We interpret \a lower = \a upper such that the owner is unique and equals \a lower.
  * \note \a forest must be committed before calling this function.
  */
 void

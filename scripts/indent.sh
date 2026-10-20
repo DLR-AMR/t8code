@@ -29,7 +29,8 @@
 #
 # If you call this script with "NO_CHANGE" as first argument it will run
 # in dry-mode, not changing the file contents.
-FORMAT_OPTIONS="--Werror -i --style=file"
+
+FORMAT_OPTIONS="--Werror --style=file"
 
 # Required version of the clang format program.
 REQUIRED_VERSION_MAJOR="17"
@@ -91,6 +92,9 @@ then
   shift # Removes first argument from $@ list
   NO_CHANGE=TRUE
   FORMAT_OPTIONS="${FORMAT_OPTIONS} --dry-run"
+else
+  # -i does not work with input deom stdin, therefore it has to be set if the ci is not checking
+  FORMAT_OPTIONS="${FORMAT_OPTIONS} -i"
 fi
 
 
@@ -109,8 +113,7 @@ do
   ignore_arg=0
   # Iterate over each ignore filename
   for ignore_file in "${files_to_ignore[@]}"
-    do
-      echo Checking "$arg" against "${GIT_REPO_PATH}/$ignore_file"
+  do
     if [[ "$arg" -ef "${GIT_REPO_PATH}/$ignore_file" ]]
     then
       # arg matches and will be ignored
@@ -137,6 +140,34 @@ else
   $FORMAT $FORMAT_OPTIONS ${newargs[@]}
   status=$?
 fi
+
+#
+# Check for trailing white-space
+#
+for arg in ${newargs[@]}
+do
+  TRAILING_LINES=$(grep -n '[[:blank:]]$' "$arg")
+  if [ -n "$TRAILING_LINES" ]; then
+      status=1
+      if [[ $NO_CHANGE == "TRUE" ]]; then
+        echo "ERROR Trailing whitespace found on the following line(s) in $arg:"
+        echo "$TRAILING_LINES" | sed 's/^/    /'
+      else
+        sed -i 's/[[:blank:]]*$//' "$arg"
+      fi
+  fi
+
+  CRLF_LINES=$(grep -n $'\r$' "$arg")
+  if [ -n "$CRLF_LINES" ]; then
+    status=1
+    if [[ $NO_CHANGE == "TRUE" ]]; then
+      echo "ERROR: Windows/CRLF line-endings found on the following line(s) in $arg:"
+      echo "$CRLF_LINES" | sed 's/^/    /'
+    else
+      sed -i 's/\r$//' "$arg"
+    fi
+  fi
+done
 
 # If the file content was not changed, the return
 # value determines whether or not the file was

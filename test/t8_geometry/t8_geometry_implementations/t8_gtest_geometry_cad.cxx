@@ -31,7 +31,7 @@
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_element/t8_element.h>
 #include <t8_vtk/t8_vtk_writer.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
 #include <array>

@@ -25,24 +25,18 @@
 #
 
 #
-# This script must be executed from the scripts/ folder.
+# This script must be executed from within the repository.
 #
-if [ `basename $PWD` != scripts ]
-then
-  if [ -d scripts ]
-  then
-    # The directory stack is automatically reset on script exit.
-    pushd scripts/ > /dev/null
-  else
-    echo ERROR: scripts/ directory not found.
-    exit 1
-  fi
+repo_main_dir=$(git rev-parse --show-toplevel 2>/dev/null)
+
+if [ $? -ne 0 ]; then
+  echo "ERROR: find_all_source_files.sh was not called from inside the git repository."
+  exit 1
 fi
 
 # All valid file suffixes.
 # Separated by '|' in order to be directly used
 # as a regex in the find command.
-
 suffixes="c|cxx|h|hxx"
 
 # Find a suitable find program. Either 'find' or 'gfind'.
@@ -58,8 +52,18 @@ else
     fi
 fi
 
+
 # Find all files with the appropriate suffix in the
 # src/, example/, test/, tutorials/, benchmark/, /api and /mesh_handle subfolders.
-files=`$FIND ../src ../example ../test ../tutorials ../benchmarks ../api ../mesh_handle -regextype egrep -iregex ".*\.($suffixes)"`
+folders="\
+$repo_main_dir/src \
+$repo_main_dir/example \
+$repo_main_dir/test \
+$repo_main_dir/tutorials \
+$repo_main_dir/benchmarks \
+$repo_main_dir/api \
+$repo_main_dir/mesh_handle"
+
+files=`$FIND $folders -regextype egrep -iregex ".*\.($suffixes)"`
 
 echo $files

@@ -22,7 +22,7 @@
 
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
-#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
+#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline.h>
 #include <t8_schemes/t8_scheme.hxx>
 
@@ -381,7 +381,7 @@ t8_default_scheme_line::element_get_ancestor_id (const t8_element_t *elem, int l
 }
 
 int
-t8_default_scheme_line::elements_are_family (t8_element_t *const *fam) const
+t8_default_scheme_line::elements_are_family (const t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   int i;

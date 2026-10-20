@@ -86,7 +86,8 @@ struct t8_geometry_linear: public t8_geometry_with_vertices
   t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                              double *jacobian) const;
 
-  /**
+  /** Checks if points are inside the element. Input a list of points \a points
+   * and it returns a list of flags \a is_inside if the points are contained.
    * \param[in] forest            The forest of the element.
    * \param[in] ltreeid           The local tree id of the element's tree
    * \param[in] element           The element

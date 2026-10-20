@@ -23,8 +23,8 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.hxx>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 #include <t8_schemes/t8_scheme.hxx>
 
@@ -256,7 +256,7 @@ t8_default_scheme_pyramid::element_set_linear_id (t8_element_t *elem, int level,
 }
 
 int
-t8_default_scheme_pyramid::elements_are_family (t8_element_t *const *fam) const
+t8_default_scheme_pyramid::elements_are_family (const t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   const int num_siblings = element_get_num_siblings (fam[0]);

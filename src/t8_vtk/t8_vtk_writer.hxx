@@ -31,15 +31,14 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8.h>
-#include "t8_forest/t8_forest_types.h"
 #include "t8_vtk/t8_vtk_writer_helper.hxx"
 #include "t8_vtk/t8_vtk_write_ASCII.hxx"
 
 #include <string>
 #include <t8_vtk/t8_vtk.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 
 #if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
@@ -255,26 +254,23 @@ struct vtk_writer
     vtkIdType *vecCellIds = new vtkIdType[num_node];
 
     /* Compute the coordinates of the element/tree. */
-    double *coordinates = T8_ALLOC (double, 3 * num_node);
+    std::vector<t8_3D_vec> coordinates (num_node);
 
-    T8_ASSERT (coordinates != NULL);
+    // Static assert to make sure no padding is used and the entries are actually continguously.
+    static_assert (sizeof (t8_3D_vec) == 3 * sizeof (double));
 
-    grid_element_to_coords (grid, itree, element, curved_flag, coordinates, element_shape);
+    grid_element_to_coords (grid, itree, element, curved_flag, coordinates.front ().data (), element_shape);
     vtkIdType ptId = -1;
     for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
-      const size_t offset_3d = 3 * ivertex;
-      /* Insert the point in the points array. */
-      double vtkCoords[3] = { coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2] };
       if (merge_points) {
-        points->InsertUniquePoint (vtkCoords, ptId);
+        points->InsertUniquePoint (coordinates[ivertex].data (), ptId);
       }
       else {
-        ptId = points->InsertNextPoint (vtkCoords);
+        ptId = points->InsertNextPoint (coordinates[ivertex].data ());
       }
       /* Add the returned point id to the cell ids*/
       vecCellIds[ivertex] = ptId;
     }
-    T8_FREE (coordinates);
 
     /* Fill the cell array. */
     cellArray->InsertNextCell (num_node, vecCellIds);
@@ -585,5 +581,31 @@ struct vtk_writer
   sc_MPI_Comm comm;
   bool merge_points = true;
 };
+
+#if T8_ENABLE_VTK
+/**
+ * Translate a forest into a vtkUnstructuredGrid with respect to the given flags.
+ * This function uses the vtk library. t8code must be configured with
+ * "-DT8CODE_ENABLE_VTK=ON" in order to use it.
+ * \param [in]  forest    The forest.
+ * \param [in,out] unstructuredGrid
+ * \param [in]  write_treeid If true, the global tree id is written for each element.
+ * \param [in]  write_mpirank If true, the mpirank is written for each element.
+ * \param [in]  write_level If true, the refinement level is written for each element.
+ * \param [in]  write_element_id If true, the global element id is written for each element.
+ * \param [in]  curved_flag If true, write the elements as curved element types from vtk.
+ * \param [in]  write_ghosts If true, write out ghost elements as well.
+ * \param [in]  num_data  Number of user defined double valued data fields to write.
+ * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
+ *                        providing the user defined per element data.
+ *                        If scalar and vector fields are used, all scalar fields
+ *                        must come first in the array.
+ */
+void
+t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
+                                  const int write_treeid, const int write_mpirank, const int write_level,
+                                  const int write_element_id, const int write_ghosts, const int curved_flag,
+                                  const int num_data, t8_vtk_data_field_t *data);
+#endif
 
 #endif /* T8_VTK_WRITER_HXX */
