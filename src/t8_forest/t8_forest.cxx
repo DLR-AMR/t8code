@@ -2253,7 +2253,7 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, const t8_locidx_t local_tr
   }
 
   /*
-   * The remaining code handles the case that the forest has holes and the element may thus 
+   * The remaining code handles the case that the forest has holes and the element may thus
    * be an inner boundary.
    * This case is not yet support due to issue #825. Hence, we currently abort.
    * Once the issue is resolved, the abort message can be removed and the code should work.
