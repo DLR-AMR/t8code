@@ -440,6 +440,9 @@ t8_openfoam_reader::build_cmesh ()
     case T8_ECLASS_PRISM:
       reconstruct_prism_cell (cell_id, current_cell_face_ids, current_cell_faces, current_cell_face_normals);
       break;
+    case T8_ECLASS_PYRAMID:
+      reconstruct_pyramid_cell (cell_id, current_cell_face_ids, current_cell_faces, current_cell_face_normals);
+      break;
     default:
       SC_ABORTF ("ERROR: Other cell types as hex are not implemented yet in the OpenFOAM reader.\n");
     }
@@ -862,6 +865,123 @@ t8_openfoam_reader::reconstruct_prism_cell (size_t cell_id, std::vector<size_t> 
 
   /* ------------------------- 6. Set neighbors and boundary conditions ------------------------- */
   compute_cell_neighbors (cell_id, T8_ECLASS_PRISM, faces, face_orientations);
+  // TODO: Boundary conditions
+}
+
+void
+t8_openfoam_reader::reconstruct_pyramid_cell (size_t cell_id, std::vector<size_t> face_ids,
+                                              std::vector<std::span<size_t>> face_point_ids,
+                                              std::vector<char> face_normals)
+{
+  /* To reconstruct the pyramid we will follow these stages:
+   * 0. Initialize some needed variables.
+   * 1. Assign the quadrilateral OpenFOAM face to face 4 of the t8 pyramid.
+   * 2. Search for the tip of the pyramid. It is the only vertex not contained by face 4.
+   * 3. We now have all 5 vertices and can use them to find and orient the four triangular faces.
+   * 4. Use the vertices and eclass to set the cmesh cell.
+   * 5. Use the face information to link the cell to its neighbors and apply the boundary conditions. */
+
+  /* ------------------------- 0. Initialization ------------------------- */
+
+  std::array<std::optional<size_t>, t8_eclass_num_faces[T8_ECLASS_PYRAMID]> faces {};
+  std::array<std::optional<size_t>, t8_eclass_num_vertices[T8_ECLASS_PYRAMID]> points {};
+  std::array<t8_foam_face_orientation, t8_eclass_num_faces[T8_ECLASS_PYRAMID]> face_orientations {};
+  constexpr t8_eclass_t eclass = T8_ECLASS_PYRAMID;
+  /* The t8 faces of the pyramid are the triangles 0, 1, 2, 3 and the quad 4. */
+  constexpr u_int8_t quad_face = 4;
+  /* The tip of the pyramid is the only vertex not contained in the quad face. */
+  constexpr u_int8_t tip_vertex = 4;
+
+  /** Orientation of the OpenFOAM face with regard to the t8code face.
+   * t8 corner 0 -> foam corner <orientation.first_node>
+   * same normal direction -> <orientation.same_normal_dir> = true, different normal direction -> false
+   */
+  t8_foam_face_orientation orientation;
+  /** Normal of the t8 face. 1 points outward, 0 inward. */
+  bool t8_face_normal;
+
+  /* ------------------------- 1. Assign face 4 ------------------------- */
+
+  /* The OpenFOAM faces are not sorted, so we first have to find the quadrilateral face. */
+  const auto quad_it
+    = std::find_if (face_point_ids.begin (), face_point_ids.end (), [] (const std::span<size_t> current_face_points) {
+        return current_face_points.size () == static_cast<size_t> (t8_eclass_num_vertices[T8_ECLASS_QUAD]);
+      });
+  T8_ASSERTF (quad_it != face_point_ids.end (),
+              "ERROR: Could not find the quadrilateral face for pyramid reconstruction. Maybe this cell was falsely "
+              "classified as a pyramid.\n");
+  const size_t quad = std::distance (face_point_ids.begin (), quad_it);
+
+  t8_face_normal = t8_eclass_face_orientation[eclass][quad_face];
+  /* orientation.same_normal_dir is true, if both face normals point in the same direction */
+  orientation.same_normal_dir = (t8_face_normal == face_normals[quad]);
+  orientation.first_node = 0;
+  face_orientations[quad_face] = orientation;
+
+  /* Now, we assign the quadrilateral face to be face 4. */
+  faces[quad_face].emplace (face_ids[quad]);
+  const std::span<size_t> face_4_points = face_point_ids[quad];
+  for (u_int8_t i_face_point = 0; i_face_point < t8_eclass_num_vertices[T8_ECLASS_QUAD]; ++i_face_point) {
+    const u_int8_t foam_point_id = t8_face_vertex_to_foam_point (T8_ECLASS_QUAD, orientation, i_face_point);
+    points[t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][quad_face][i_face_point]].emplace (
+      face_4_points[foam_point_id]);
+  }
+
+  /* We do not need face 4 anymore, so we drop it.
+   * We do this directly on the lists, since they are just copies of the original lists. */
+  face_ids.erase (face_ids.begin () + quad);
+  face_point_ids.erase (face_point_ids.begin () + quad);
+  face_normals.erase (face_normals.begin () + quad);
+
+  /* ------------------------- 2. Find the tip ------------------------- */
+
+  /* Every remaining face contains the tip, so we can just search the first one for the vertex not contained in face 4. */
+  const auto tip
+    = std::find_if (face_point_ids[0].begin (), face_point_ids[0].end (), [&face_4_points] (const size_t point) {
+        return std::find (face_4_points.begin (), face_4_points.end (), point) == face_4_points.end ();
+      });
+  T8_ASSERTF (tip != face_point_ids[0].end (),
+              "ERROR: Could not find the tip for pyramid reconstruction. Maybe this cell was falsely "
+              "classified as a pyramid.\n");
+  points[tip_vertex].emplace (*tip);
+
+  /* ------------------------- 3. Add remaining four faces ------------------------- */
+
+  /* Now that we know all vertices, we have to match the rest of the faces so we can add the boundaries to the
+   * cmesh and to get the orientations and faces for neighbor linkage. */
+  for (size_t i_t8_face = 0; i_t8_face < quad_face; ++i_t8_face) {
+    std::array<size_t, t8_eclass_num_vertices[T8_ECLASS_TRIANGLE]> face_vertices;
+    for (size_t i_face_vertex = 0; i_face_vertex < t8_eclass_num_vertices[T8_ECLASS_TRIANGLE]; ++i_face_vertex) {
+      face_vertices[i_face_vertex]
+        = points[t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][i_t8_face][i_face_vertex]].value ();
+    }
+    const auto face_id = find_list_containing (face_point_ids, face_vertices);
+    T8_ASSERTF (face_id.has_value (),
+                "ERROR: Could not find a specific face for pyramid reconstruction. Maybe this cell was falsely "
+                "classified as a pyramid.\n");
+    faces[i_t8_face].emplace (face_ids[*face_id]);
+    t8_face_normal = t8_eclass_face_orientation[eclass][i_t8_face];
+    orientation.same_normal_dir = (face_normals[*face_id] == t8_face_normal);
+    const size_t vertex_0 = face_vertices[0];
+    orientation.first_node
+      = std::distance (face_point_ids[*face_id].begin (),
+                       std::find (face_point_ids[*face_id].begin (), face_point_ids[*face_id].end (), vertex_0));
+    face_orientations[i_t8_face] = orientation;
+  }
+
+  /* ------------------------- 4. Set cmesh cell ------------------------- */
+
+  std::array<double, t8_eclass_num_vertices[T8_ECLASS_PYRAMID] * 3> vertices {};
+  for (size_t i_vertex = 0; i_vertex < t8_eclass_num_vertices[T8_ECLASS_PYRAMID]; ++i_vertex) {
+    for (size_t i_coord = 0; i_coord < 3; ++i_coord) {
+      vertices[i_vertex * 3 + i_coord] = m_points[points[i_vertex].value ()][i_coord];
+    }
+  }
+  t8_cmesh_set_tree_class (m_cmesh, cell_id, T8_ECLASS_PYRAMID);
+  t8_cmesh_set_tree_vertices (m_cmesh, cell_id, vertices.data (), t8_eclass_num_vertices[T8_ECLASS_PYRAMID]);
+
+  /* ------------------------- 5. Set neighbors and boundary conditions ------------------------- */
+  compute_cell_neighbors (cell_id, T8_ECLASS_PYRAMID, faces, face_orientations);
   // TODO: Boundary conditions
 }
 
