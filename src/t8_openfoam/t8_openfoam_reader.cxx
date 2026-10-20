@@ -447,7 +447,7 @@ void
 t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> face_ids,
                                           std::vector<std::span<size_t>> face_point_ids, std::vector<char> face_normals)
 {
-  /* To reconstruct the Hexahedron we will follow these stages:
+  /* To reconstruct the hexahedron we will follow these stages:
    * 0. Initialize some needed variables.
    * 1. Assign the first OpenFOAM face to face 0 of the t8 hexahedron.
    * 2. Search for the opposite OpenFOAM face (does not share any vertices with face 0) and make it face 1.
@@ -565,7 +565,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
     const auto face_id = find_list_containing (face_point_ids, face_vertices);
     T8_ASSERTF (face_id.has_value (),
                 "ERROR: Could not find a specific face for hex reconstruction. Maybe this cell was falsely classified "
-                "as a hex\n");
+                "as a hex.\n");
     t8_face_normal = t8_eclass_face_orientation[eclass][i_t8_face];
     orientation.same_normal_dir = (face_normals[*face_id] == t8_face_normal);
     const size_t vertex_0 = *points[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i_t8_face][0]];
