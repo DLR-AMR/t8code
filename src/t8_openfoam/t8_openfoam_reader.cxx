@@ -566,7 +566,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
     T8_ASSERTF (face_id.has_value (),
                 "ERROR: Could not find a specific face for hex reconstruction. Maybe this cell was falsely classified "
                 "as a hex\n");
-    t8_face_normal = t8_eclass_face_orientation[eclass][1];
+    t8_face_normal = t8_eclass_face_orientation[eclass][i_t8_face];
     orientation.same_normal_dir = (face_normals[*face_id] == t8_face_normal);
     const size_t vertex_0 = *points[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i_t8_face][0]];
     orientation.first_node
