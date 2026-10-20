@@ -6,7 +6,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DLR-SC/googletest_mpi.git",
-                "ref": "0d8b936a509c7b64bf0aef292bcc337a292b2d5e",
+                "ref": "e6a1445b7833cb183a3dea3bd6e1d5d6e73b763c",
                 "shallow": "TRUE"
             }
         },
