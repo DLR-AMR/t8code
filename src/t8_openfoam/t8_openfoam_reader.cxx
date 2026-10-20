@@ -444,7 +444,7 @@ t8_openfoam_reader::build_cmesh ()
       reconstruct_pyramid_cell (cell_id, current_cell_face_ids, current_cell_faces, current_cell_face_normals);
       break;
     default:
-      SC_ABORTF ("ERROR: Other cell types as hex are not implemented yet in the OpenFOAM reader.\n");
+      SC_ABORTF ("ERROR: Unsupported cell type.\n");
     }
     ++cell_id;
   }
