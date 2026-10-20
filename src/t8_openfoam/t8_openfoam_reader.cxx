@@ -311,9 +311,9 @@ t8_openfoam_reader::read_owner (const t8_path& owner_file)
     return false;
   }
 
-  /* The number of cells in the mesh is the highest owner_id + 1 (since it starts at 0). */
+  /* The number of cells is at least the highest owner_id + 1 (since it starts at 0).
+   * Cells which only appear as neighbors are added in read_neighbor. */
   const size_t num_cells = *std::max_element (owner_list.begin (), owner_list.end ()) + 1;
-  t8_debugf ("Reading OpenFOAM mesh with %li cells.\n", num_cells);
   m_cell_faces.resize (num_cells);
 
   /* Assign faces to their cells and fill neighborhoods. */
@@ -348,6 +348,14 @@ t8_openfoam_reader::read_neighbor (const t8_path& neighbor_file)
   if (!read_openfoam_label_list (file, neighbor_list)) {
     t8_errorf ("ERROR: Unable to parse file: %s\n", neighbor_file.c_str ());
     return false;
+  }
+
+  /* Since OpenFOAM orders owner < neighbor, the cells with the highest ids might only appear as neighbors. */
+  if (!neighbor_list.empty ()) {
+    const size_t num_cells = *std::max_element (neighbor_list.begin (), neighbor_list.end ()) + 1;
+    if (num_cells > m_cell_faces.size ()) {
+      m_cell_faces.resize (num_cells);
+    }
   }
 
   /* Assign faces to their cells and fill neighborhoods. */
