@@ -437,6 +437,9 @@ t8_openfoam_reader::build_cmesh ()
     case T8_ECLASS_TET:
       reconstruct_tet_cell (cell_id, current_cell_face_ids, current_cell_faces, current_cell_face_normals);
       break;
+    case T8_ECLASS_PRISM:
+      reconstruct_prism_cell (cell_id, current_cell_face_ids, current_cell_faces, current_cell_face_normals);
+      break;
     default:
       SC_ABORTF ("ERROR: Other cell types as hex are not implemented yet in the OpenFOAM reader.\n");
     }
@@ -692,6 +695,172 @@ t8_openfoam_reader::reconstruct_tet_cell (size_t cell_id, std::vector<size_t> fa
 
   /* ------------------------- 5. Set neighbors and boundary conditions ------------------------- */
   compute_cell_neighbors (cell_id, T8_ECLASS_TET, faces, face_orientations);
+  // TODO: Boundary conditions
+}
+
+void
+t8_openfoam_reader::reconstruct_prism_cell (size_t cell_id, std::vector<size_t> face_ids,
+                                            std::vector<std::span<size_t>> face_point_ids,
+                                            std::vector<char> face_normals)
+{
+  /* To reconstruct the prism we will follow these stages:
+   * 0. Initialize some needed variables.
+   * 1. Assign the first triangular OpenFOAM face to face 3 of the t8 prism.
+   * 2. Search for the other triangular OpenFOAM face (does not share any vertices with face 3) and make it face 4.
+   * 3. Search for a third face to find out the orientation of face 4.
+   * 4. We now have all 6 vertices and can use them to find and orient the three quad faces.
+   * 5. Use the vertices and eclass to set the cmesh cell.
+   * 6. Use the face information to link the cell to its neighbors and apply the boundary conditions. */
+
+  /* ------------------------- 0. Initialization ------------------------- */
+
+  std::array<std::optional<size_t>, t8_eclass_num_faces[T8_ECLASS_PRISM]> faces {};
+  std::array<std::optional<size_t>, t8_eclass_num_vertices[T8_ECLASS_PRISM]> points {};
+  std::array<t8_foam_face_orientation, t8_eclass_num_faces[T8_ECLASS_PRISM]> face_orientations {};
+  constexpr t8_eclass_t eclass = T8_ECLASS_PRISM;
+  /* The t8 faces of the prism are the quads 0, 1, 2 and the triangles 3 and 4. */
+  constexpr u_int8_t first_tri_face = 3;
+  constexpr u_int8_t second_tri_face = 4;
+
+  /** Orientation of the OpenFOAM face with regard to the t8code face.
+   * t8 corner 0 -> foam corner <orientation.first_node>
+   * same normal direction -> <orientation.same_normal_dir> = true, different normal direction -> false
+   */
+  t8_foam_face_orientation orientation;
+  /** Normal of the t8 face. 1 points outward, 0 inward. */
+  bool t8_face_normal;
+
+  /* ------------------------- 1. Assign face 3 ------------------------- */
+
+  /* The OpenFOAM faces are not sorted, so we first have to find a triangular face. */
+  const auto first_tri_it
+    = std::find_if (face_point_ids.begin (), face_point_ids.end (), [] (const std::span<size_t> current_face_points) {
+        return current_face_points.size () == static_cast<size_t> (t8_eclass_num_vertices[T8_ECLASS_TRIANGLE]);
+      });
+  T8_ASSERTF (first_tri_it != face_point_ids.end (),
+              "ERROR: Could not find a triangular face for prism reconstruction. Maybe this cell was falsely "
+              "classified as a prism.\n");
+  const size_t first_tri = std::distance (face_point_ids.begin (), first_tri_it);
+
+  t8_face_normal = t8_eclass_face_orientation[eclass][first_tri_face];
+  /* orientation.same_normal_dir is true, if both face normals point in the same direction */
+  orientation.same_normal_dir = (t8_face_normal == face_normals[first_tri]);
+  orientation.first_node = 0;
+  face_orientations[first_tri_face] = orientation;
+
+  /* Now, we assign the first triangular face to be face 3. */
+  faces[first_tri_face].emplace (face_ids[first_tri]);
+  const std::span<size_t> face_3_points = face_point_ids[first_tri];
+  for (u_int8_t i_face_point = 0; i_face_point < t8_eclass_num_vertices[T8_ECLASS_TRIANGLE]; ++i_face_point) {
+    const u_int8_t foam_point_id = t8_face_vertex_to_foam_point (T8_ECLASS_TRIANGLE, orientation, i_face_point);
+    points[t8_face_vertex_to_tree_vertex[T8_ECLASS_PRISM][first_tri_face][i_face_point]].emplace (
+      face_3_points[foam_point_id]);
+  }
+
+  /* ------------------------- 2. Find face 4 ------------------------- */
+
+  /* After assigning face 3, we have to find the opposite face, face 4.
+   * It should not share any points with face 3. Every quad face shares two points with face 3,
+   * so this can only be the other triangular face. */
+  const auto opposite_face = find_list_not_containing (face_point_ids, face_3_points);
+  T8_ASSERTF (opposite_face.has_value (),
+              "ERROR: Could not find the opposite face for prism reconstruction. Maybe this cell was falsely "
+              "classified as a prism.\n");
+  t8_face_normal = t8_eclass_face_orientation[eclass][second_tri_face];
+  orientation.same_normal_dir = (t8_face_normal == face_normals[*opposite_face]);
+  faces[second_tri_face].emplace (face_ids[*opposite_face]);
+  const auto face_4_points = face_point_ids[*opposite_face];
+
+  /* Now we can drop both triangular faces, since we do not need them anymore.
+   * We delete the face with the higher index first, since deleting the other one would shift the ids.
+   * We do this directly on the lists, since they are just copies of the original lists. */
+  for (const size_t erase_id : { std::max (first_tri, *opposite_face), std::min (first_tri, *opposite_face) }) {
+    face_ids.erase (face_ids.begin () + erase_id);
+    face_point_ids.erase (face_point_ids.begin () + erase_id);
+    face_normals.erase (face_normals.begin () + erase_id);
+  }
+
+  /* ------------------------- 3. Compute orientation of face 4 ------------------------- */
+
+  /* We now have to find the orientation of the face. For this we can take any OpenFOAM face which contains the 0th vertex.
+   * The 3rd vertex will be saved right next to it. */
+  const size_t face_3_vertex_0 = points[0].value ();
+  std::span<size_t>::iterator found_face_3_vertex_0;
+  const auto check_face = std::find_if (
+    face_point_ids.begin (), face_point_ids.end (),
+    [&face_3_vertex_0, &found_face_3_vertex_0] (std::span<size_t> current_face_points) {
+      found_face_3_vertex_0 = std::find (current_face_points.begin (), current_face_points.end (), face_3_vertex_0);
+      return found_face_3_vertex_0 != current_face_points.end ();
+    });
+  T8_ASSERT (check_face != face_point_ids.end ());
+
+  /* We found a face containing the 0th vertex. Now we can check if the next vertex is not part of face 3. If true,
+   * the next vertex is vertex 3 and therefore vertex 0 of face 4. Otherwise, the previous point is vertex 0 of face 4.
+   * We iterate cyclically over the face vertices. So if we arrive at the end, we begin at the start. */
+  auto next_vertex
+    = ((found_face_3_vertex_0 + 1) == check_face->end () ? check_face->begin () : found_face_3_vertex_0 + 1);
+  /* Check if face 4 contains this vertex */
+  size_t face_4_vertex_0;
+  if (std::find (face_4_points.begin (), face_4_points.end (), *next_vertex) != face_4_points.end ()) {
+    face_4_vertex_0 = *next_vertex;
+  }
+  else {
+    const auto previous_vertex
+      = (found_face_3_vertex_0 == check_face->begin () ? check_face->end () - 1 : found_face_3_vertex_0 - 1);
+    face_4_vertex_0 = *previous_vertex;
+    T8_ASSERT (std::find (face_4_points.begin (), face_4_points.end (), face_4_vertex_0) != face_4_points.end ());
+  }
+
+  /* Now we can compute the complete orientation of face 4. */
+  const auto face_4_vertex_0_iterator = std::find (face_4_points.begin (), face_4_points.end (), face_4_vertex_0);
+  T8_ASSERT (face_4_vertex_0_iterator != face_4_points.end ());
+  orientation.first_node = face_4_vertex_0_iterator - face_4_points.begin ();
+
+  /* After that we add the remaining three points, completing the vertices of the cell */
+  face_orientations[second_tri_face] = orientation;
+  for (u_int8_t i_face_point = 0; i_face_point < t8_eclass_num_vertices[T8_ECLASS_TRIANGLE]; ++i_face_point) {
+    const u_int8_t foam_point_id = t8_face_vertex_to_foam_point (T8_ECLASS_TRIANGLE, orientation, i_face_point);
+    points[t8_face_vertex_to_tree_vertex[T8_ECLASS_PRISM][second_tri_face][i_face_point]].emplace (
+      face_4_points[foam_point_id]);
+  }
+
+  /* ------------------------- 4. Add remaining three faces ------------------------- */
+
+  /* Lastly, we have to match the quad faces so we can add the boundaries to the cmesh and
+   * to get the orientations and faces for neighbor linkage. */
+  for (size_t i_t8_face = 0; i_t8_face < first_tri_face; ++i_t8_face) {
+    std::array<size_t, t8_eclass_num_vertices[T8_ECLASS_QUAD]> face_vertices;
+    for (size_t i_face_vertex = 0; i_face_vertex < t8_eclass_num_vertices[T8_ECLASS_QUAD]; ++i_face_vertex) {
+      face_vertices[i_face_vertex]
+        = points[t8_face_vertex_to_tree_vertex[T8_ECLASS_PRISM][i_t8_face][i_face_vertex]].value ();
+    }
+    const auto face_id = find_list_containing (face_point_ids, face_vertices);
+    T8_ASSERTF (face_id.has_value (),
+                "ERROR: Could not find a specific face for prism reconstruction. Maybe this cell was falsely "
+                "classified as a prism.\n");
+    faces[i_t8_face].emplace (face_ids[*face_id]);
+    t8_face_normal = t8_eclass_face_orientation[eclass][i_t8_face];
+    orientation.same_normal_dir = (face_normals[*face_id] == t8_face_normal);
+    const size_t vertex_0 = face_vertices[0];
+    orientation.first_node
+      = std::distance (face_point_ids[*face_id].begin (),
+                       std::find (face_point_ids[*face_id].begin (), face_point_ids[*face_id].end (), vertex_0));
+    face_orientations[i_t8_face] = orientation;
+  }
+
+  /* ------------------------- 5. Set cmesh cell ------------------------- */
+
+  std::array<double, t8_eclass_num_vertices[T8_ECLASS_PRISM] * 3> vertices {};
+  for (size_t i_vertex = 0; i_vertex < t8_eclass_num_vertices[T8_ECLASS_PRISM]; ++i_vertex) {
+    for (size_t i_coord = 0; i_coord < 3; ++i_coord) {
+      vertices[i_vertex * 3 + i_coord] = m_points[points[i_vertex].value ()][i_coord];
+    }
+  }
+  t8_cmesh_set_tree_class (m_cmesh, cell_id, T8_ECLASS_PRISM);
+  t8_cmesh_set_tree_vertices (m_cmesh, cell_id, vertices.data (), t8_eclass_num_vertices[T8_ECLASS_PRISM]);
+
+  /* ------------------------- 6. Set neighbors and boundary conditions ------------------------- */
+  compute_cell_neighbors (cell_id, T8_ECLASS_PRISM, faces, face_orientations);
   // TODO: Boundary conditions
 }
 
