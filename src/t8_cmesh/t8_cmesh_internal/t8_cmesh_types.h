@@ -101,7 +101,9 @@ typedef struct t8_cmesh
   int face_knowledge; /**< If partitioned the level of face knowledge that is expected.
 */
 
-  int reindex_trees; /**< If nonzero the trees will be indexed according to their geometric locality */
+  int reindex_trees;             /**< If nonzero the trees will be indexed according to their geometric locality */
+  int keep_reindex_map;          /**< Retain the old-to-new tree-ID mapping after commit if nonzero. */
+  t8_gloidx_t *tree_reindex_map; /**< Retained mapping indexed by original global tree ID, or nullptr. */
 
   const t8_scheme_c *set_partition_scheme; /**< If the cmesh is to be partitioned according to a uniform level,
                                                 the scheme that describes the refinement pattern. */

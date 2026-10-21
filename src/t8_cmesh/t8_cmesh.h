@@ -132,13 +132,21 @@ t8_cmesh_stash_is_empty (const t8_cmesh_t cmesh);
 void
 t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh);
 
-/**
- * Enable localitly based indexing of trees during \ref t8_cmesh_commit.
- * \param [in, out] cmesh
+/** Enable locality-based coarse-tree reordering during \ref t8_cmesh_commit.
+ * \param [in,out] cmesh             An initialized, uncommitted coarse mesh.
+ * \param [in]     keep_reindex_map  Nonzero to retain an old-to-new tree-ID mapping after commit.
+ * \note Reordering currently requires a complete replicated tree stash.
  */
 void
-t8_cmesh_enable_tree_reordering (t8_cmesh_t cmesh);
+t8_cmesh_enable_tree_reordering (t8_cmesh_t cmesh, int keep_reindex_map);
 
+/** Return the stored old-to-new tree-ID mapping.
+ * \param [in] cmesh  A committed coarse mesh.
+ * \return            Read-only array indexed by the old global tree ID, or nullptr if none was retained.
+ *                    The array has t8_cmesh_get_num_trees(cmesh) entries and remains owned by \a cmesh.
+ */
+const t8_gloidx_t *
+t8_cmesh_get_tree_reindex_map (const t8_cmesh_t cmesh);
 #if T8_ENABLE_DEBUG
 /** Check the geometry of the mesh for validity, this means checking if trees and their geometries
  *  are compatible and if they have negative volume.

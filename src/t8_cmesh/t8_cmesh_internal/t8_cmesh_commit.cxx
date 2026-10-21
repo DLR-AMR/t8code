@@ -151,7 +151,7 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
     t8_locidx_t num_trees = class_entries->elem_count, ltree;
 
     if (cmesh->reindex_trees) {
-      t8_cmesh_tree_perform_reindex_inplace (stash, t8_cmesh_reindex_tree (cmesh));
+      t8_cmesh_reindex_trees (cmesh);
     }
 
     t8_cmesh_trees_init (&cmesh->trees, 1, num_trees, 0);
