@@ -66,7 +66,7 @@ t8_cmesh_tree_perform_reindex_inplace (t8_stash_t &stash, const std::map<t8_gloi
  * retained in the coarse mesh for retrieval after commit.
  *
  * \param [in,out] cmesh  Uncommitted coarse mesh with a complete replicated stash.
- * \note Currently not supported for partitioned coarse meshes.
+ * \note For partitioned coarse meshes, partition ranges and offsets refer to the reordered tree IDs.
  */
 void
 t8_cmesh_reindex_trees (t8_cmesh_t cmesh);

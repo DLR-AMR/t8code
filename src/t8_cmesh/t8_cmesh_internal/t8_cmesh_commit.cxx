@@ -273,6 +273,10 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_ASSERT (cmesh->first_tree >= 0);
   T8_ASSERT (cmesh->first_tree_shared >= 0);
 
+  if (cmesh->reindex_trees && cmesh->stash->classes.elem_count > 0) {
+    t8_cmesh_reindex_trees (cmesh);
+  }
+
   /* Compute the global id of the cmeshes last_tree.
    * This must happen after cmesh->first_tree is computed. */
   const t8_gloidx_t last_tree = cmesh->num_local_trees + cmesh->first_tree - 1;
