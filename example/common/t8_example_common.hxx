@@ -227,7 +227,7 @@ void
 t8_flow_incomp_cube_flow (const t8_3D_vec &x, const double t, t8_3D_vec &x_out);
 
 /** 2d flow around a circle with radius R = 1 and
- * constant inflow with x-speed U = 1. 
+ * constant inflow with x-speed U = 1.
  * See https://doi.org/10.13140/RG.2.2.34714.11203 */
 void
 t8_flow_around_circle (const t8_3D_vec &x, const double t, t8_3D_vec &x_out);

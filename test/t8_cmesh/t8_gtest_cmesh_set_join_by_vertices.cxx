@@ -213,7 +213,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
    */
 
   /* Make sure that p4est is properly initialized. If not, do it here. */
-  if (!sc_package_is_registered (p4est_package_id)) {
+  if (!p4est_is_initialized ()) {
     p4est_init (NULL, SC_LP_ESSENTIAL);
   }
 

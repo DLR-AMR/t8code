@@ -163,7 +163,7 @@ TEST (test_geometry, cmesh_geometry_unique)
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
   /* Check that we can get the geometry back over the tree id.
-   * This must now work even though we did not register the geometry for 
+   * This must now work even though we did not register the geometry for
    * this tree. Since we only have one geometry. */
   auto found_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
   ASSERT_TRUE (found_geom != nullptr) << "Could not find any geometry.";

@@ -64,8 +64,8 @@ struct class_descendant: public TestDFS
   void
   check_element () override
   {
-    /* Check the linear first and last descendants of an element along all faces. 
-     * For the test the descendants are computed manually by t8_test_manual_first_last_face_descendant and 
+    /* Check the linear first and last descendants of an element along all faces.
+     * For the test the descendants are computed manually by t8_test_manual_first_last_face_descendant and
      * by the scheme implementation t8_element_first_descendant for the first descendants over the levels.
      */
 

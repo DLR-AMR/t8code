@@ -28,6 +28,7 @@
 #define T8_FOREST_GHOST_DEFINITION_HELPERS_HXX
 
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 
 /** The information stored for the ghost trees */
 typedef struct
