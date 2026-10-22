@@ -194,7 +194,6 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \param [in] geometries List of integers that identify the geometries.
    *                        For edges, 2 * num_edges entries: curve tags, then surface tags.
    *                        For faces, num_faces entries on 3D trees and 1 entry on 2D trees.
-   
    * \param [in] num_geometries Number of geometries to register for this tree.
    * \note This function is usually only used explicitly by t8code examples and cmesh readers.
    */
