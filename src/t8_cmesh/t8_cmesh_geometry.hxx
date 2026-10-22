@@ -57,7 +57,7 @@ template <typename geometry_type, typename... _args>
 inline geometry_type *
 t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
 {
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh)); HEAD
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
 
   if (geometry_handler == nullptr) {
