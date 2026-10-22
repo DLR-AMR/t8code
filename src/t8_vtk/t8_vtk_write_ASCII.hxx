@@ -28,8 +28,8 @@
 #ifndef T8_VTK_WRITE_ASCII_HXX
 #define T8_VTK_WRITE_ASCII_HXX
 
-#include "t8_forest/t8_forest_types.h"
 #include "t8_vtk.h"
+#include <t8_forest/t8_forest_general.h>
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
