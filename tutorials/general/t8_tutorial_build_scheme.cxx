@@ -22,18 +22,18 @@
 
 /*
  * In this tutorial we discuss how to use schemes in t8code.
- * Schemes are used to define the refinement and coarsening behavior of the forest. Upon building the forest from a cmesh, 
+ * Schemes are used to define the refinement and coarsening behavior of the forest. Upon building the forest from a cmesh,
  * the user can define a scheme that will be used for all tree-specific operations in the forest. That way the scheme
  * influences how the forest is manipulated in your pipeline.
  *
- * In this example we will use the default scheme that is provided by t8code. This scheme uses the morton-type 
+ * In this example we will use the default scheme that is provided by t8code. This scheme uses the morton-type
  * space-filling curves to order the elements in the forest.
  *
- * Furthermore we will also show how to mix the default scheme with a custom scheme. For that we will use the 
+ * Furthermore we will also show how to mix the default scheme with a custom scheme. For that we will use the
  * default scheme and the standalone scheme that is provided by t8code. If you have a custom scheme, you can follow
  * the steps in this example to use it with your code.
  *
- * The currently provided schemes are equivalent. Therefore we expect the output to be equivalent. 
+ * The currently provided schemes are equivalent. Therefore we expect the output to be equivalent.
  * In the future, when the standalone scheme is extended, the output will differ for some element classes.
  */
 
@@ -46,7 +46,7 @@
 
 #include <t8_schemes/t8_scheme_builder.hxx> /* Scheme builder for custom schemes. */
 
-/** 
+/**
  * A function to manually build the default scheme.
 */
 const t8_scheme *
@@ -68,7 +68,7 @@ t8_scheme_default_build_manually (void)
 }
 
 /**
- * A function to mix the standalone scheme with the default scheme. 
+ * A function to mix the standalone scheme with the default scheme.
 */
 const t8_scheme *
 t8_scheme_default_build_mixed (void)
@@ -137,7 +137,7 @@ main (int argc, char **argv)
   bool vtk_written = false;
   /* Update the output-name */
   vtk_writer.set_fileprefix (std::string ("forest_with_default_scheme"));
-  /* write the forest into a vtk file. If t8code has been configured with VTK we can use the vtk-library. 
+  /* write the forest into a vtk file. If t8code has been configured with VTK we can use the vtk-library.
      * Otherwise vtk-compatible ASCII-output is created.  */
 #if T8_ENABLE_VTK
   vtk_written = vtk_writer.write_with_API (forest_default) && vtk_written;

@@ -30,24 +30,24 @@
 
 namespace t8_mesh_handle
 {
-/** 
+/**
  * Write the mesh in a parallel vtu format. Extended version.
  * See \see write_mesh_to_vtk for the standard version of this function.
  * Writes one master .pvtu file and each process writes in its own .vtu file.
  * If linked and not otherwise specified, the VTK API is used.
  * If the VTK library is not linked, an ASCII file is written.
- * This may change in accordance with \a write_ghosts, \a write_curved and 
- * \a do_not_use_API, because the export of ghosts is not yet available with 
+ * This may change in accordance with \a write_ghosts, \a write_curved and
+ * \a do_not_use_API, because the export of ghosts is not yet available with
  * the VTK API and the export of curved elements is not available with the
  * built-in function to write ASCII files. The function will for example
- * still use the VTK API to satisfy \a write_curved, even if \a do_not_use_API 
+ * still use the VTK API to satisfy \a write_curved, even if \a do_not_use_API
  * is set to true.
  * This function is collective and must be called on each process.
  * \param [in] mesh             The mesh to write.
  * \param [in] fileprefix       The prefix of the files where the vtk will be stored.
  *             The master file is then fileprefix.pvtu and the process with rank r writes in the file fileprefix_r.vtu.
  * \param [in] num_data         Number of user-defined double valued data fields to write.
- * \param [in] data             Array of t8_vtk_data_field_t of length \a num_data providing the user-defined 
+ * \param [in] data             Array of t8_vtk_data_field_t of length \a num_data providing the user-defined
  *              per element data. If scalar and vector fields are used, all scalar fields must come first in the array.
  * \param [in] write_treeid     If true, the global tree id of the underlying forest is written for each element.
  * \param [in] write_mpirank    If true, the mpirank is written for each element.
@@ -70,7 +70,7 @@ write_mesh_to_vtk_ext (TMeshClass &mesh, const char *fileprefix, const int num_d
                                   write_element_id, write_ghosts, write_curved, do_not_use_API, num_data, data);
 }
 
-/** 
+/**
  * Write the mesh in a parallel vtu format. Writes one master
  * .pvtu file and each process writes in its own .vtu file.
  * If linked, the VTK API is used.

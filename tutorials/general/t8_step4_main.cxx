@@ -21,7 +21,7 @@
 */
 
 /* This file is part of the step4 example of t8code.
- * Here, we only wrap the main function. See t8_step4_partition_balance_ghost.cxx for the documentation of 
+ * Here, we only wrap the main function. See t8_step4_partition_balance_ghost.cxx for the documentation of
  * the step4 example.
  */
 

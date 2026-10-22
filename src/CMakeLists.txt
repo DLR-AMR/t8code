@@ -22,6 +22,13 @@ if ( T8CODE_BUILD_AS_SHARED_LIBRARY )
     add_library( T8 SHARED )
     set_target_properties( T8 PROPERTIES VERSION ${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH} SOVERSION ${T8CODE_VERSION_RAW})
     set_target_properties( T8 PROPERTIES POSITION_INDEPENDENT_CODE ON )
+    # Bind calls to functions defined inside libt8 directly instead of through the PLT.
+    # This avoids a second indirect jump on every scheme function call (see t8_scheme::dispatch).
+    include( CheckLinkerFlag )
+    check_linker_flag( CXX "-Wl,-Bsymbolic-functions" T8CODE_LINKER_SUPPORTS_BSYMBOLIC_FUNCTIONS )
+    if ( T8CODE_LINKER_SUPPORTS_BSYMBOLIC_FUNCTIONS )
+        target_link_options( T8 PRIVATE "-Wl,-Bsymbolic-functions" )
+    endif()
 else()
     add_library( T8 STATIC )
 endif()
@@ -91,6 +98,12 @@ if( T8CODE_ENABLE_VTK )
 endif()
 
 if( T8CODE_ENABLE_OCC )
+    string (REGEX MATCH "^[0-9]+\\.[0-9]+"
+  T8CODE_OCC_VERSION_USED "${OCC_VERSION_STRING}")
+    # Define T8_OCC_VERSION_USED for internal and external use in source files.
+    # Note, external libraries linking against t8code (i.e. using find_package ( T8CODE REQUIRED )) can
+    # use T8_OCC_VERSION_USED in source code and T8CODE_OCC_VERSION_USED (defined in config.cmake.in) in their CMake scripts.
+    target_compile_definitions( T8 PUBLIC T8_OCC_VERSION_USED="${T8CODE_OCC_VERSION_USED}" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_OCC=1 )
     target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
@@ -169,6 +182,7 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_partition.cxx
     t8_forest/t8_forest_partition_for_coarsening.cxx
     t8_forest/t8_forest_pfc_helper.cxx
+    t8_forest/t8_forest_pfc_message.cxx
     t8_forest/t8_forest.cxx
     t8_forest/t8_forest_private.cxx
     t8_forest/t8_forest_ghost/t8_forest_ghost.cxx
@@ -197,21 +211,19 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_scheme.cxx
     t8_schemes/t8_default/t8_default.cxx
     t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
-    t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.c
     t8_schemes/t8_default/t8_default_line/t8_default_line.cxx
-    t8_schemes/t8_default/t8_default_line/t8_dline_bits.c
+    t8_schemes/t8_default/t8_default_line/t8_dline_bits.cxx
     t8_schemes/t8_default/t8_default_prism/t8_default_prism.cxx
-    t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.c
+    t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.cxx
-    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c
+    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c
     t8_schemes/t8_default/t8_default_quad/t8_default_quad.cxx
-    t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.cxx
     t8_schemes/t8_default/t8_default_tet/t8_default_tet.cxx
-    t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.c
+    t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.cxx
     t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.c
     t8_schemes/t8_default/t8_default_tri/t8_default_tri.cxx
-    t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c
+    t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.cxx
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_vector/t8_vec.cxx
@@ -307,8 +319,8 @@ install( DIRECTORY t8_forest
   FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
-    PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
     PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
+    PATTERN "t8_forest/t8_forest_types.h" EXCLUDE
 )
 install( DIRECTORY t8_geometry
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
