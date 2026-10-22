@@ -71,6 +71,9 @@ if ( T8CODE_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI=1 )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO=1 )
     target_link_libraries( T8 PUBLIC MPI::MPI_C )
+    # t8code only uses the MPI C API. Without an MPI compiler wrapper, mpi.h would pull in the deprecated
+    # MPI C++ bindings, which are not part of MPI::MPI_C. PUBLIC, since t8code's headers include mpi.h via sc.h.
+    target_compile_definitions( T8 PUBLIC OMPI_SKIP_MPICXX=1 MPICH_SKIP_MPICXX=1 )
 endif()
 
 if( T8CODE_ENABLE_VTK )
