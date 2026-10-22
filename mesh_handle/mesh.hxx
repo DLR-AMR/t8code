@@ -178,6 +178,18 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     t8_forest_unref (&m_forest);
   }
 
+  /** Delete copy constructor because the elements in copy.m_elements would still contain pointers to the original mesh
+   * and its quite expensive to update the elements. Therefore, the mesh needs a fixed address.
+   * Also m_forest is copied but not reffed. 
+   * I think we do not need it for now.
+   */
+  mesh&
+  operator= (const mesh&)
+    = delete;
+
+  /** Delete move constructor for the same reasons as for the copy constructor.  */
+  mesh (const mesh&) = delete;
+
   // --- Getter for mesh related information. ---
   /**
    * Getter for the number of local elements in the mesh.
