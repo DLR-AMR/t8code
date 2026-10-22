@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_schemes.hxx>
+#include <t8_data/t8_element_array_iterator.hxx>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
@@ -30,6 +31,10 @@
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_adapt_callbacks.hxx>
 #include <test/t8_gtest_macros.hxx>
+
+// std library headers:
+#include <algorithm>
+#include <functional>
 
 /* In these tests we check the t8_forest_bin_search_lower, t8_forest_bin_search_upper
  * and t8_forest_bin_search_first_descendant_ancestor functions.
@@ -147,6 +152,17 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
       // are as expected.
       for (int lower_level = element_level - 1; lower_level >= 0; lower_level--) {
 
+        // Verify once that the linear IDs of all leaves are non-descending for this level.
+        // NOTE: We use < in the comparison rather than <= because std::is_sorted requires a strict weak ordering comparator, in particular is expects comp(a,a)==false.
+        //       Since std::is_sorted uses the comparator to detect whether an element comes BEFORE the preceding one, it still treats subsequent equal values as ordered.
+        bool lin_id_sorted
+          = std::is_sorted (t8_element_array_begin (leaves), t8_element_array_end (leaves),
+                            [&] (const t8_element_t *cur_leaf, const t8_element_t *next_leaf) {
+                              return ((scheme->element_get_linear_id (tree_class, cur_leaf, lower_level))
+                                      < (scheme->element_get_linear_id (tree_class, next_leaf, lower_level)));
+                            });
+        ASSERT_TRUE (lin_id_sorted);
+
         // Determine the linear ID the element had on lower_level.
         const t8_linearidx_t element_id_at_lower_level
           = scheme->element_get_linear_id (tree_class, leaf_element, lower_level);
@@ -156,26 +172,22 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
 
         // Check result
         // ------------
-        // (i) The returned index has to be the smallest one with the same linear ID on lower_level,
-        //     so it cannot be greater than ielement.
+        // (i) The returned index has to be the smallest one with the same linear ID on lower_level, so search_index cannot
+        //     be greater than ielement and the linear ID (on lower_level) of the previous leaf has to be lower.
         EXPECT_LE (search_index, ielement);
-
-#if T8_TEST_LEVEL_INT == 2
-        // For T8_TEST_LEVEL_BASIC, only check ielement and search_index produce the same linear ID
-        // to save runtime.
-        const int last_check_elem = search_index;
-#else
-        // For other test levels, check all elements from ielement to search_index produce the same linear ID.
-        const int last_check_elem = ielement;
-#endif
-
-        // (ii) All leaves from search_index to ielement must have the same linear ID on lower_level.
-        for (int ileaf = search_index; ileaf <= last_check_elem; ileaf++) {
-          const t8_element_t *leaf_i = t8_forest_get_leaf_element_in_tree (forest, itree, ileaf);
-          const t8_linearidx_t leaf_lin_id_at_lower_level
-            = scheme->element_get_linear_id (tree_class, leaf_i, lower_level);
-          EXPECT_EQ (element_id_at_lower_level, leaf_lin_id_at_lower_level);
+        if (search_index > 0 and search_index < num_elements_in_tree) {
+          const t8_linearidx_t lin_id_previous_element = scheme->element_get_linear_id (
+            tree_class, t8_forest_get_leaf_element_in_tree (forest, itree, search_index - 1), lower_level);
+          EXPECT_LT (lin_id_previous_element, element_id_at_lower_level);
         }
+
+        // (ii) All leaves from search_index to ielement must have the same linear ID on lower_level;
+        //      but since above we already asserted that the leaves array is sorted according to non-descendant
+        //      linear IDs on lower_level, it suffices to just compare the (lower_level) linear IDs of search_index
+        //      and ielement.
+        const t8_element_t *leaf_at_search_index = t8_forest_get_leaf_element_in_tree (forest, itree, search_index);
+        EXPECT_EQ (element_id_at_lower_level,
+                   scheme->element_get_linear_id (tree_class, leaf_at_search_index, lower_level));
       }
 
       // Construct an element that is definitely not in the array and
@@ -252,6 +264,17 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
       // are as expected.
       for (int lower_level = element_level - 1; lower_level >= 0; lower_level--) {
 
+        // Verify once that the linear IDs of all leaves are non-descending for this level.
+        // NOTE: We use < in the comparison rather than <= because std::is_sorted requires a strict weak ordering comparator, in particular is expects comp(a,a)==false.
+        //       Since std::is_sorted uses the comparator to detect whether an element comes BEFORE the preceding one, it still treats subsequent equal values as ordered.
+        bool lin_id_sorted
+          = std::is_sorted (t8_element_array_begin (leaves), t8_element_array_end (leaves),
+                            [&] (const t8_element_t *cur_leaf, const t8_element_t *next_leaf) {
+                              return ((scheme->element_get_linear_id (tree_class, cur_leaf, lower_level))
+                                      < (scheme->element_get_linear_id (tree_class, next_leaf, lower_level)));
+                            });
+        ASSERT_TRUE (lin_id_sorted);
+
         // Determine the linear ID the element had on lower_level.
         const t8_linearidx_t element_id_at_lower_level
           = scheme->element_get_linear_id (tree_class, leaf_element, lower_level);
@@ -261,26 +284,22 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
 
         // Check result
         // ------------
-        // (i) The returned index has to be the largest one with the same linear ID on lower_level,
-        //     so it cannot be lower than ielement.
+        // (i) The returned index has to be the largest one with the same linear ID on lower_level, so search_index cannot
+        //     be smaller than ielement and the linear ID (on lower_level) of the next leaf must be higher.
         EXPECT_GE (search_index, ielement);
-
-#if T8_TEST_LEVEL_INT == 2
-        // For T8_TEST_LEVEL_BASIC, only check ielement and search_index produce the same linear ID
-        // to save runtime.
-        const int first_check_elem = search_index;
-#else
-        // For other test levels, check all elements from ielement to search_index produce the same linear ID.
-        const int first_check_elem = ielement;
-#endif
-
-        // (ii) All leaves from ielement to search_index must have the same linear ID on lower_level.
-        for (int ileaf = first_check_elem; ileaf <= search_index; ileaf++) {
-          const t8_element_t *leaf_i = t8_forest_get_leaf_element_in_tree (forest, itree, ileaf);
-          const t8_linearidx_t leaf_lin_id_at_lower_level
-            = scheme->element_get_linear_id (tree_class, leaf_i, lower_level);
-          EXPECT_EQ (element_id_at_lower_level, leaf_lin_id_at_lower_level);
+        if (search_index > 0 and search_index < num_elements_in_tree - 1) {
+          const t8_linearidx_t lin_id_next_element = scheme->element_get_linear_id (
+            tree_class, t8_forest_get_leaf_element_in_tree (forest, itree, search_index + 1), lower_level);
+          EXPECT_LT (element_id_at_lower_level, lin_id_next_element);
         }
+
+        // (ii) All leaves from ielement to search_index must have the same linear ID on lower_level;
+        //      but since above we already asserted that the leaves array is sorted according to non-descendant
+        //      linear IDs on lower_level, it suffices to just compare the (lower_level) linear IDs of search_index
+        //      and ielement.
+        const t8_element_t *leaf_at_search_index = t8_forest_get_leaf_element_in_tree (forest, itree, search_index);
+        EXPECT_EQ (element_id_at_lower_level,
+                   scheme->element_get_linear_id (tree_class, leaf_at_search_index, lower_level));
       }
 
       // Construct an element that is definitely not in the array and
