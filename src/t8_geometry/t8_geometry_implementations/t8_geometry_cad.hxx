@@ -203,6 +203,9 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \param [in] cmesh_gtreeid A global tree id of \a cmesh of a tree with CAD geometry.
    * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
    * \param [in] geometries List of integers that identify the geometries.
+   *                        For edges, 2 * num_edges entries: curve tags, then surface tags.
+   *                        For faces, num_faces entries on 3D trees and 1 entry on 2D trees.
+   
    * \param [in] num_geometries Number of geometries to register for this tree.
    * \note This function is usually only used explicitly by t8code examples and cmesh readers.
    */
@@ -217,8 +220,11 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
    * \param [in] attribute_index The attribute index for which to register I.e. 0 for the first edge or first face.
    * \param [in] parameters List of double parameters for the attribute.
+   *                        2 for an edge linked to a curve
+   *                        4 for an edge linked to a surface
+   *                        2 * face_vertices for a face
    * \param [in] num_parameters Number of parameters to register for this tree.
-   * \note This function is usually only used explicitly by t8code examples.
+   * \note This function is usually only used explicitly by t8code examples and mesh readers.
    */
   static void
   set_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_gloidx_t cmesh_gtreeid, const int attribute_dimension,
