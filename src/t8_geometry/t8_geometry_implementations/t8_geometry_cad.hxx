@@ -161,7 +161,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \param [in] cmesh  A committed cmesh with CAD geometry.
    * \param [in] cmesh_ltreeid A local tree id of \a cmesh of a tree with CAD geometry.
    * \return A list of all geometries that are linked to this tree. Might be NULL if no geometries exist.
-   * 
+   *
    * \note If there are no CAD geometries at this tree, the return value is NULL.
    */
   const int *
