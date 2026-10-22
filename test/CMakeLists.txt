@@ -127,6 +127,7 @@ add_t8_cpp_test( NAME t8_gtest_vec_serial                   SOURCES t8_types/t8_
 
 add_t8_cpp_test( NAME t8_gtest_hypercube_parallel                           SOURCES t8_cmesh/t8_gtest_hypercube.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_readmshfile_serial                     SOURCES t8_IO/t8_gtest_cmesh_readmshfile.cxx )
+add_t8_cpp_test( NAME t8_gtest_openfoam_reader_parallel                     SOURCES t8_IO/t8_gtest_openfoam_reader.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_copy_serial                            SOURCES t8_cmesh/t8_gtest_cmesh_copy.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_face_is_boundary_parallel              SOURCES t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_partition_parallel                     SOURCES t8_cmesh/t8_gtest_cmesh_partition.cxx )

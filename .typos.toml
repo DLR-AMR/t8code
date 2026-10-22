@@ -4,4 +4,4 @@ packageid = "packageid"
 Suche = "Suche"
 
 [files]
-extend-exclude = ["scripts/indent.sh", "thirdparty/", "t8code_logo.png", "cmake/FindOpenCASCADE.cmake", "src/t8_misc/t8_with_macro_error.h", "doc/Doxyfile.in"]
+extend-exclude = ["scripts/indent.sh", "thirdparty/", "t8code_logo.png", "cmake/FindOpenCASCADE.cmake", "src/t8_misc/t8_with_macro_error.h", "doc/Doxyfile.in", "test/testfiles/openfoam/"]
