@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_comm.hxx 
+/** \file t8_cmesh_new_comm.hxx
  * Parameterized example cmeshes by MPI communicators.
  */
 

@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_disjoint_bricks_param.hxx 
+/** \file t8_cmesh_new_disjoint_bricks_param.hxx
  * Parameterized example cmeshes that consists only of one tree of a given element class.
  */
 #ifndef T8_CMESH_NEW_FROM_CLASS_PARAM

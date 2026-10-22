@@ -21,7 +21,7 @@
 */
 
 /** \file t8_gtest_default.cxx
-* Provide tests to check the functionality of the default-scheme. 
+* Provide tests to check the functionality of the default-scheme.
 */
 
 #include <gtest/gtest.h>

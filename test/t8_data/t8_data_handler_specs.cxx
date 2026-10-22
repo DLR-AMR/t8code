@@ -22,17 +22,17 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_data_handler_specs.cxx
- * 
+ *
  * This file implements specializations of the data_creator.
- * 
+ *
  */
 
 #include <test/t8_data/t8_data_handler_specs.hxx>
 #include <t8.h>
 
 /**
- * Specialization of the create function for enlarged ints. 
- * 
+ * Specialization of the create function for enlarged ints.
+ *
  * \param[in] num_data  Number of data items to create.
  */
 template <>
@@ -46,8 +46,8 @@ data_creator<enlarged_data<int>>::create (const int num_data)
 }
 
 /**
- * Specialization of the create function for enlarged doubles. 
- * 
+ * Specialization of the create function for enlarged doubles.
+ *
  * \param[in] num_data  Number of data items to create.
  */
 template <>

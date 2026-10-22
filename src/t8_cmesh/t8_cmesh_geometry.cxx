@@ -36,7 +36,7 @@
 void
 t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c *geometry)
 {
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh)); HEAD
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
 
   if (geometry_handler == nullptr) {
@@ -64,7 +64,7 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, const t8_gloidx_t gtreeid, const t
 detail::t8_geometry_handler *
 detail::t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh)
 {
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh) || t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh) || t8_cmesh_is_committed (cmesh, 0));
 
   return cmesh->geometry_handler;
 }
@@ -105,17 +105,17 @@ t8_cmesh_set_geometry_handler (t8_cmesh_t cmesh, detail::t8_geometry_handler *ne
 const t8_geometry_c *
 t8_cmesh_get_tree_geometry (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   detail::t8_geometry_handler *geom_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
 
   if (geom_handler == nullptr) {
-    /* If no geometry handler is present, no geometries have been registered and 
+    /* If no geometry handler is present, no geometries have been registered and
     * the tree does not have a geometry. */
     return nullptr;
   }
 
   if (geom_handler->get_num_geometries () == 1) {
-    /* The geometry handler only has one geometry and the trees 
+    /* The geometry handler only has one geometry and the trees
      * thus do not need to store their geometry's hash
      * (we assume all trees have this geometry).
      */
@@ -130,11 +130,11 @@ t8_cmesh_get_tree_geometry (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 t8_geometry_hash
 t8_cmesh_get_tree_geom_hash (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   detail::t8_geometry_handler *geom_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
 
   if (geom_handler == nullptr) {
-    /* If no geometry handler is present, no geometries have been registered and 
+    /* If no geometry handler is present, no geometries have been registered and
     * the tree does not have a geometry. */
     return t8_geometry_empty_hash;
   }
