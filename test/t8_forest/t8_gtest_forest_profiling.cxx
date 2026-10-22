@@ -103,6 +103,12 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   const double time_forest_offsets = t8_forest_profile_get_forest_offsets_runtime (profiling_forest);
   const double time_first_descendant = t8_forest_profile_get_first_descendant_runtime (profiling_forest);
 
+  t8_debugf ("time cmesh offsets: %.3e\n", time_cmesh_offsets);
+  t8_debugf ("time_forest_offsets: %.3e\n", time_cmesh_offsets);
+  t8_debugf ("time_first_descendant: %.3e\n", time_first_descendant);
+  t8_debugf ("time_ghost: %.3e\n", time_ghost);
+  t8_debugf ("time_ghost_wait: %.3e\n", time_ghost_wait);
+
   // (5) Simple sanity checks.
   // -------------------------
   // Preparation: get mpisize
@@ -114,6 +120,9 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   EXPECT_GT (time_adapt, 0.0);
   EXPECT_GT (time_partition, 0.0);
   EXPECT_GT (time_balance, 0.0);
+  EXPECT_GT (time_cmesh_offsets, 0.0);
+  EXPECT_GT (time_first_descendant, 0.0);
+  EXPECT_GT (time_forest_offsets, 0.0);
 
   // Integers
   EXPECT_GT (balance_rounds, 0);
@@ -128,9 +137,6 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
     EXPECT_GT (ghosts_sent, 0);
     EXPECT_GT (time_ghost, 0.0);
     EXPECT_GT (time_ghost_wait, 0.0);
-    EXPECT_GT (time_cmesh_offsets, 0.0);
-    EXPECT_GT (time_first_descendant, 0.0);
-    EXPECT_GT (time_forest_offsets, 0.0);
   }
 
   // (6) Sanity checks comparing stats and times.
