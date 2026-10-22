@@ -236,7 +236,7 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   // In some cases, we will adapt the uniform base forest.
   t8_forest_t adapted_base_forest;
 
-  /* Ensure that in case of the root level test there is no adaptation, such that the partition bound will 
+  /* Ensure that in case of the root level test there is no adaptation, such that the partition bound will
   * definitely fall upon a root level element and the corresponding code section is covered. */
   if (level != 0) {
     // In any other case, we perform some adaptation.

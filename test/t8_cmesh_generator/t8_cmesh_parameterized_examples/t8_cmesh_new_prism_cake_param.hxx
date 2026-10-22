@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_prism_cake_param.hxx 
+/** \file t8_cmesh_new_prism_cake_param.hxx
  * Parameterized prism cake example cmeshes.
  */
 #ifndef T8_CMESH_NEW_PRISM_CAKE_PARAM_HXX

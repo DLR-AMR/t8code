@@ -108,7 +108,7 @@ t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm, t8_gloidx_t num_trees);
  * \return                   A valid partition table for a cmesh with \a num_trees trees
  *                           and communicator \a comm, where each processor gets a random number
  *                           of trees. The number of trees per processor is roughly uniformly distributed.
- * \note This function is MPI collective. 
+ * \note This function is MPI collective.
  */
 t8_shmem_array_t
 t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared, unsigned seed);
