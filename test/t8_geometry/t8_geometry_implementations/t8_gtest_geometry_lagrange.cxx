@@ -251,7 +251,7 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry_lagrange, LagrangeCmesh,
 
 #if T8_ENABLE_DEBUG
 
-/* NOTE: THE FOLLOWING TEST IS DISABLED 
+/* NOTE: THE FOLLOWING TEST IS DISABLED
  *
  * The test uses a now fixed security risk that allowed t8_cmesh_register_geometry of a cmesh
  * to be called after commit.
@@ -259,7 +259,7 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry_lagrange, LagrangeCmesh,
  * the t8_cmesh_validate_geometry test.
  * However, this test is also executed and asserted in cmesh_commit. If the geometry is set before
  * commit, then the code aborts during commit.
- * 
+ *
  * We leave the code in here for later generations of developers who might have a
  * solution to test if t8_cmesh_validate_geometry returns false while setting
  * the geometry before commit.
