@@ -82,8 +82,8 @@ struct t8_test_set_partition_offset_test: public testing::TestWithParam<std::tup
     // Construct cmesh.
     cmesh = std::get<1> (GetParam ())->cmesh_create ();
 
-    // Skip empty meshes.
-    if (t8_cmesh_is_empty (cmesh)) {
+    // Skip empty meshes and meshes that the scheme does not support.
+    if (t8_cmesh_is_empty (cmesh) || !t8_test_scheme_supports_cmesh (scheme_id, cmesh, sc_MPI_COMM_WORLD)) {
       GTEST_SKIP ();
     }
   }

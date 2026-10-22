@@ -29,10 +29,11 @@
 
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
+#include <t8_schemes/t8_extruded/t8_extruded.hxx>
 #include <gtest/gtest.h>
 
 /** Create a scheme according to a scheme id.
- * \param [in] scheme_id 0: Use default scheme; 1: Use standalone scheme.
+ * \param [in] scheme_id 0: Use default scheme; 1: Use standalone scheme; 2: Use extruded scheme.
  * \return The created scheme.
  */
 const t8_scheme *
@@ -43,14 +44,38 @@ create_from_scheme_id (const int scheme_id)
     return t8_scheme_new_default ();
   case 1:
     return t8_scheme_new_standalone ();
+  case 2:
+    return t8_scheme_new_extruded ();
   default:
     SC_ABORT_NOT_REACHED ();
     return nullptr;
   }
 }
 
-/** Strings for the two scheme types. */
-static const char *t8_scheme_to_string[] = { "default", "standalone" };
+/** Check whether a cmesh is supported by the scheme of a given scheme id.
+ * The extruded scheme only supports cmeshes whose hex trees have parallel extrusion directions,
+ * see \ref t8_cmesh_is_extrusion_compatible. All other schemes support all cmeshes.
+ * \param [in] scheme_id The scheme id, see \ref create_from_scheme_id.
+ * \param [in] cmesh     A committed cmesh.
+ * \param [in] comm      The communicator of \a cmesh.
+ * \return               True if the scheme supports \a cmesh on all processes.
+ * \note This function is MPI collective.
+ */
+inline bool
+t8_test_scheme_supports_cmesh (const int scheme_id, t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  if (scheme_id != 2) {
+    return true;
+  }
+  int is_compatible = t8_cmesh_is_extrusion_compatible (cmesh);
+  int is_compatible_all = 0;
+  const int mpiret = sc_MPI_Allreduce (&is_compatible, &is_compatible_all, 1, sc_MPI_INT, sc_MPI_LAND, comm);
+  SC_CHECK_MPI (mpiret);
+  return is_compatible_all;
+}
+
+/** Strings for the scheme types. */
+static const char *t8_scheme_to_string[] = { "default", "standalone", "extruded" };
 
 /** Lambda to print the scheme and the eclass of an TestParamInfo object. */
 auto print_all_schemes = [] (const testing::TestParamInfo<std::tuple<int, t8_eclass_t>> &info) {
@@ -63,7 +88,7 @@ auto print_scheme
   = [] (const testing::TestParamInfo<int> &info) { return std::string (t8_scheme_to_string[info.param]); };
 
 /** Macro for all schemes. */
-#define AllSchemeCollections ::testing::Range (0, 2)
+#define AllSchemeCollections ::testing::Range (0, 3)
 /** Macro for all schemes and all possible eclasses.*/
 #define AllSchemes ::testing::Combine (AllSchemeCollections, ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 

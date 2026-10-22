@@ -46,8 +46,8 @@ struct forest_ghost_owner: public testing::TestWithParam<std::tuple<int, cmesh_e
     scheme = create_from_scheme_id (scheme_id);
     /* Construct a cmesh */
     cmesh = std::get<1> (GetParam ())->cmesh_create ();
-    if (t8_cmesh_is_empty (cmesh)) {
-      /* empty cmeshes are currently not supported */
+    if (t8_cmesh_is_empty (cmesh) || !t8_test_scheme_supports_cmesh (scheme_id, cmesh, sc_MPI_COMM_WORLD)) {
+      /* empty cmeshes and cmeshes that the scheme does not support are skipped */
       GTEST_SKIP ();
     }
   }
