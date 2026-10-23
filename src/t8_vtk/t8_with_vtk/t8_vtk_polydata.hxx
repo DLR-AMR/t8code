@@ -22,7 +22,7 @@
 
 /**
  * \file t8_vtk_polydata.hxx
- * This file contains all helper functions to translate vtk-polydata. 
+ * This file contains all helper functions to translate vtk-polydata.
  */
 
 #ifndef T8_CMESH_VTK_POLYDATA
@@ -38,13 +38,13 @@
 
 /**
  * Given a filename to a file containing Polydata, read
- * the file using the vtk-library. 
- * 
+ * the file using the vtk-library.
+ *
  * \param[in] filename  The name of the file
  * \param[in, out] grid On input a vtkSmartPointer, that will hold the grid described in
  *                      \a filename.
- * \returns             non-zero on success, zero if the reading failed.              
- * 
+ * \returns             non-zero on success, zero if the reading failed.
+ *
  */
 vtk_read_success_t
 t8_read_polyData (const char *filename, vtkDataSet *grid);

@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_bigmesh_param.hxx 
+/** \file t8_cmesh_new_bigmesh_param.hxx
  * Parameterized example cmeshes providing a big mesh for test purpose.
  */
 #ifndef T8_CMESH_NEW_BIGMESH_PARAM_HXX

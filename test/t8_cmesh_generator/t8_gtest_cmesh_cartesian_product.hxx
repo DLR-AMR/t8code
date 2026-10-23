@@ -35,22 +35,22 @@
 
 /**
  * A base class for cmesh examples.
- * For pretty debug output a function to translate the parameters of the example to a string should be provided. 
+ * For pretty debug output a function to translate the parameters of the example to a string should be provided.
  */
 struct cmesh_example_base
 {
  public:
   /**
-   * Construct a new base example. An example must have at least have a name. 
-   * 
-   * \param name 
+   * Construct a new base example. An example must have at least have a name.
+   *
+   * \param name
    */
   cmesh_example_base (std::string name): name (name) {};
 
   /**
    * A function to create a cmesh. The class should not own the cmesh.
-   * 
-   * \return t8_cmesh_t 
+   *
+   * \return t8_cmesh_t
    */
   virtual t8_cmesh_t
   cmesh_create () const
@@ -58,8 +58,8 @@ struct cmesh_example_base
 
   /**
    * Copy the name and the parameters of this example into a string
-   * 
-   * \param out 
+   *
+   * \param out
    */
   virtual void
   param_to_string (std::string& out) const
@@ -70,8 +70,8 @@ struct cmesh_example_base
 
 /**
  * Class to hold cmesh example created by function with parameters as input
- * 
- * @tparam Args 
+ *
+ * @tparam Args
  */
 template <class... Args>
 struct cmesh_example_with_parameter: cmesh_example_base
@@ -112,26 +112,26 @@ struct cmesh_example_with_parameter: cmesh_example_base
 };
 
 /**
- * A base class to hold sets of examples that can be created in various ways. 
- * 
+ * A base class to hold sets of examples that can be created in various ways.
+ *
  */
 struct example_set
 {
  public:
   /**
    * Generate a cmesh according to a function
-   * 
-   * \return t8_cmesh_t 
+   *
+   * \return t8_cmesh_t
    */
   std::vector<cmesh_example_base*> example_all_combination;
 };
 
 /**
- * A helper functions that creates a pair of begin and end iterators from a vector.  
- * 
+ * A helper functions that creates a pair of begin and end iterators from a vector.
+ *
  * \tparam Args The type of elements in the vector
  * \param [in] vec A vector
- * \return A pair of begin and end of the vector. 
+ * \return A pair of begin and end of the vector.
  */
 template <typename Args>
 auto
@@ -142,13 +142,13 @@ vector_to_iter_pair (const std::vector<Args>& vec)
 
 /**
  * A helper function to recursively create the next tuple of parameters in a cartesian product way
- * 
- * @tparam Args 
- * @tparam B 
+ *
+ * @tparam Args
+ * @tparam B
  * \param begins A tuple of begin-iterators
- * \param r A pair of iterators, used to create the next parameter in a tuple. 
- * \return true 
- * \return false 
+ * \param r A pair of iterators, used to create the next parameter in a tuple.
+ * \return true
+ * \return false
  */
 template <typename Args, typename B>
 bool
@@ -163,15 +163,15 @@ increment ([[maybe_unused]] const B& begins, std::pair<Args, Args>& r)
 
 /**
  * A helper function to recursively create the next tuple of parameters in a cartesian product way
- * 
- * @tparam T 
- * @tparam TT 
- * @tparam B 
+ *
+ * @tparam T
+ * @tparam TT
+ * @tparam B
  * \param begins A tuple of begin-iterators
  * \param r A pair of iterators, where first will be increased
- * \param rr Remaining iterators to create the tuple. 
- * \return true 
- * \return false 
+ * \param rr Remaining iterators to create the tuple.
+ * \return true
+ * \return false
  */
 template <typename T, typename... TT, typename B>
 bool
@@ -191,7 +191,7 @@ increment (const B& begins, std::pair<T, T>& r, std::pair<TT, TT>&... rr)
  * Can be passed to \ref cartesian_product to indicate that all parameter combinations are allowed.
  * \tparam Args Type of parameters.
  * \param params Parameters.
- * \return true 
+ * \return true
  */
 template <typename... Args>
 inline bool
@@ -202,13 +202,13 @@ no_rule ([[maybe_unused]] Args... params)
 
 /**
  * Fill a vector with tuples, based on pairs of iterators. The iterators are used
- * to create the tuples according to the cartesian product. 
- * 
- * @tparam OutputIterator 
- * @tparam Iter 
+ * to create the tuples according to the cartesian product.
+ *
+ * @tparam OutputIterator
+ * @tparam Iter
  * \param[in, out] out An OutputIterator that will be filled
  * \param [in] rule  A function that returns true if a parameter combination is permissible, false otherwise
- * \param [in] ranges Pairs of ranges 
+ * \param [in] ranges Pairs of ranges
  */
 template <typename OutputIterator, typename... Iter>
 void
@@ -228,8 +228,8 @@ cartesian_product (OutputIterator out, std::function<bool (typename Iter::value_
 
 /**
  * Variadic template class that creates an \ref example_set based on the cartesian product
- * of the input parameters. 
- * 
+ * of the input parameters.
+ *
  * @tparam Iter Iterator types for the input parameter ranges.
  */
 template <class... Iter>
@@ -239,7 +239,7 @@ struct cmesh_cartesian_product_params: example_set
   /** Default constructor without parameters. */
   cmesh_cartesian_product_params () {};
 
-  /** Constructor with parameters. 
+  /** Constructor with parameters.
    * \param [in] ranges Pairs of parameter ranges for each \a Iter type.
    * \param [in] cmesh_function Function to create a cmesh from parameter values.
    * \param [in] param_to_string Function to convert parameter values to a string.
@@ -291,9 +291,9 @@ struct cmesh_cartesian_product_params: example_set
 
 /**
  * Variadic template class that creates an \ref example_set based on the cartesian product
- * of the input parameters. 
- * 
- * @tparam Iter 
+ * of the input parameters.
+ *
+ * @tparam Iter
  */
 template <class... Iter>
 struct cmesh_cartesian_product_with_rules: example_set
@@ -302,7 +302,7 @@ struct cmesh_cartesian_product_with_rules: example_set
   /** Default constructor without parameters. */
   cmesh_cartesian_product_with_rules () {};
 
-  /** Constructor with parameters. 
+  /** Constructor with parameters.
    * \param [in] ranges Pairs of parameter ranges for each \a Iter type.
    * \param [in] cmesh_function Function to create a cmesh from parameter values.
    * \param [in] param_to_string Function to convert parameter values to a string.
