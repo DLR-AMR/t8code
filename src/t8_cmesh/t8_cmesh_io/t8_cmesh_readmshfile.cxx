@@ -34,11 +34,17 @@
 #endif
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions.hxx>
 #include <unordered_set>
+#include <unordered_map>
+#include <map>
 #include <optional>
 #include <vector>
 #include <array>
 #include <algorithm>
+#include <string>
+#include <string_view>
+#include <sstream>
 
 #ifdef _WIN32
 #include <t8_misc/t8_windows.h>
@@ -319,6 +325,12 @@ using t8_msh_node_table = std::unordered_set<t8_msh_file_node, t8_msh_node_hashe
 /** Vector which stores the vertex indices of each tree in the t8code order. */
 using t8_msh_tree_vertex_indices = std::vector<std::vector<t8_gloidx_t>>;
 
+/** Map from the tag of a gmsh entity to the boundary condition label of the physical group it belongs to. */
+using t8_msh_entity_labels = std::unordered_map<long, std::string>;
+
+/** Map from the sorted node indices of a face element to the boundary condition label of its entity. */
+using t8_msh_face_labels = std::map<std::vector<t8_gloidx_t>, std::string>;
+
 /* Reads an open msh-file and checks whether the MeshFormat-Version is supported by t8code or not. */
 static int
 t8_cmesh_check_version_of_msh_file (FILE *fp)
@@ -545,6 +557,241 @@ t8_msh_file_4_read_nodes (FILE *fp)
   free (line);
   t8_debugf ("Successfully read all Nodes.\n");
   return std::make_optional<t8_msh_node_table> (node_table);
+}
+
+/** Search an optional section of an open .msh file of version 4 that is stored in front of the $Nodes section,
+ * such as $PhysicalNames or $Entities. The search starts at the beginning of the file and stops at
+ * the $Nodes section, so that the possibly large rest of the file is not read for a missing section.
+ *
+ * \param [in]  fp            The file stream. If the section is found, it is set right after the section's first line.
+ * \param [in]  section_name  The first line of the section, for example "$Entities".
+ * \return                    True if the section was found, false otherwise.
+ */
+static bool
+t8_msh_file_4_find_section_before_nodes (FILE *fp, const char *section_name)
+{
+  char *line = (char *) malloc (1024);
+  char first_word[2048] = "\0";
+  size_t linen = 1024;
+
+  T8_ASSERT (fp != NULL);
+  /* Go to the beginning of the file */
+  fseek (fp, 0, SEEK_SET);
+  /* Compare the first word of each line with the section name until we reach the end of the file
+   * or the $Nodes section. Lines inside of other sections are compared as well, but they never
+   * start with a '$'. */
+  while (t8_cmesh_msh_read_next_line (&line, &linen, fp) >= 0 && sscanf (line, "%2047s", first_word) == 1
+         && strcmp (first_word, "$Nodes")) {
+    if (!strcmp (first_word, section_name)) {
+      /* Found the section. fp now points to the first line of its content. */
+      free (line);
+      return true;
+    }
+  }
+  /* The file does not contain the section in front of the $Nodes section. */
+  free (line);
+  return false;
+}
+
+/** Read the $PhysicalNames section of an open .msh file of version 4.
+ * The section is optional and stored in the format
+ *
+ * $PhysicalNames
+ * num_physical_names
+ * dim physical_tag "name"
+ * ...
+ * $EndPhysicalNames
+ *
+ * \param [in]  fp    The file stream.
+ * \param [in]  dim   Only the names of the physical groups of this dimension are read.
+ * \return            The names of the physical groups of dimension \a dim, indexed by their tags.
+ *                    Empty if the file has no $PhysicalNames section. std::nullopt on a read error.
+ */
+static std::optional<std::unordered_map<int, std::string>>
+t8_msh_file_4_read_physical_names (FILE *fp, const int dim)
+{
+  std::unordered_map<int, std::string> physical_names;
+  if (!t8_msh_file_4_find_section_before_nodes (fp, "$PhysicalNames")) {
+    /* The section is optional. Without it, no physical group has a name. */
+    return physical_names;
+  }
+  char *line = (char *) malloc (1024);
+  size_t linen = 1024;
+
+  /* Read the line containing the number of physical names */
+  size_t num_physical_names;
+  if (t8_cmesh_msh_read_next_line (&line, &linen, fp) < 0 || sscanf (line, "%zu", &num_physical_names) != 1) {
+    t8_global_errorf ("Error reading the number of physical names.\n");
+    free (line);
+    return std::nullopt;
+  }
+  /* Each line describes one physical group by its dimension, its tag and its name. */
+  for (size_t i_name = 0; i_name < num_physical_names; ++i_name) {
+    int physical_dim;
+    int physical_tag;
+    /** The position in the line at which the name begins. */
+    int name_offset;
+    /* Read dimension and tag. %n stores how many characters were read so far, so that we
+     * can continue reading the name from this position. */
+    if (t8_cmesh_msh_read_next_line (&line, &linen, fp) < 0
+        || sscanf (line, "%i %i %n", &physical_dim, &physical_tag, &name_offset) != 2) {
+      t8_global_errorf ("Error reading physical name %zu.\n", i_name);
+      free (line);
+      return std::nullopt;
+    }
+    /* The name is enclosed in double quotes and may contain spaces, so we cannot read it with %s.
+     * Instead, we take everything between the first and the last double quote of the line. */
+    const char *name_begin = strchr (line + name_offset, '"');
+    const char *name_end = name_begin != nullptr ? strrchr (name_begin + 1, '"') : nullptr;
+    if (name_end == nullptr) {
+      t8_global_errorf ("Error reading physical name %zu. The name is not enclosed in double quotes.\n", i_name);
+      t8_debugf ("The line is %s", line);
+      free (line);
+      return std::nullopt;
+    }
+    /* Tags are only unique per dimension, so we only store the names of the requested dimension. */
+    if (physical_dim == dim) {
+      physical_names.emplace (physical_tag, std::string (name_begin + 1, name_end));
+    }
+  }
+  free (line);
+  return physical_names;
+}
+
+/** Read the physical tags of the entities of one dimension from the $Entities section of an open .msh file of
+ * version 4. The section is optional and stored in the format
+ *
+ * $Entities
+ * num_points num_curves num_surfaces num_volumes
+ * point_tag x y z num_physical_tags physical_tag ...
+ * ...
+ * curve_tag min_x min_y min_z max_x max_y max_z num_physical_tags physical_tag ... num_bounding_points point_tag ...
+ * ...
+ * $EndEntities
+ *
+ * Surfaces and volumes are stored like curves.
+ *
+ * \param [in]  fp    The file stream.
+ * \param [in]  dim   Only the entities of this dimension are read.
+ * \return            For each entity of dimension \a dim that belongs to a physical group, the tag of this
+ *                    physical group, indexed by the entity tag. Empty if the file has no $Entities section.
+ *                    std::nullopt on a read error.
+ */
+static std::optional<std::unordered_map<long, int>>
+t8_msh_file_4_read_entity_physical_tags (FILE *fp, const int dim)
+{
+  T8_ASSERT (0 <= dim && dim <= 3);
+  std::unordered_map<long, int> entity_physical_tags;
+  if (!t8_msh_file_4_find_section_before_nodes (fp, "$Entities")) {
+    /* The section is optional. Without it, no entity belongs to a physical group. */
+    return entity_physical_tags;
+  }
+  char *line = (char *) malloc (1024);
+  size_t linen = 1024;
+
+  /* Read the line containing the number of points, curves, surfaces and volumes.
+   * The array is indexed by the dimension of the entities. */
+  std::array<size_t, 4> num_entities;
+  if (t8_cmesh_msh_read_next_line (&line, &linen, fp) < 0
+      || sscanf (line, "%zu %zu %zu %zu", &num_entities[0], &num_entities[1], &num_entities[2], &num_entities[3])
+           != 4) {
+    t8_global_errorf ("Error reading the number of entities.\n");
+    free (line);
+    return std::nullopt;
+  }
+  /* The entities are sorted by dimension and each one is stored in one line. We skip the lower dimensions. */
+  for (int entity_dim = 0; entity_dim < dim; ++entity_dim) {
+    for (size_t i_entity = 0; i_entity < num_entities[entity_dim]; ++i_entity) {
+      if (t8_cmesh_msh_read_next_line (&line, &linen, fp) < 0) {
+        t8_global_errorf ("Premature end of file while reading entities.\n");
+        free (line);
+        return std::nullopt;
+      }
+    }
+  }
+  /** Points store their coordinates, all other entities their bounding box. */
+  const int num_coordinates = dim == 0 ? 3 : 6;
+  for (size_t i_entity = 0; i_entity < num_entities[dim]; ++i_entity) {
+    if (t8_cmesh_msh_read_next_line (&line, &linen, fp) < 0) {
+      t8_global_errorf ("Premature end of file while reading entities.\n");
+      free (line);
+      return std::nullopt;
+    }
+    /* The number of values in front of the physical tags is known, but the number of values after them
+     * depends on the entity. A stream lets us read the values one after another and ignore the rest. */
+    std::istringstream entity_stream (line);
+    long entity_tag;
+    /** Only used to skip the coordinates, we do not need them. */
+    double coordinate;
+    size_t num_physical_tags;
+    /** The first physical group of the entity, 0 if it does not belong to one. */
+    int physical_tag = 0;
+    entity_stream >> entity_tag;
+    for (int i_coordinate = 0; i_coordinate < num_coordinates; ++i_coordinate) {
+      entity_stream >> coordinate;
+    }
+    entity_stream >> num_physical_tags;
+    if (num_physical_tags > 0) {
+      entity_stream >> physical_tag;
+    }
+    /* The stream fails if any of the values above could not be read. */
+    if (entity_stream.fail ()) {
+      t8_global_errorf ("Error reading entity of dimension %i.\n", dim);
+      t8_debugf ("The line is %s", line);
+      free (line);
+      return std::nullopt;
+    }
+    /* Entities that are not part of a physical group carry no boundary condition. */
+    if (num_physical_tags == 0) {
+      continue;
+    }
+    /* A tree face can only have one boundary condition, so we cannot use more than one physical group. */
+    if (num_physical_tags > 1) {
+      t8_global_errorf ("WARNING: Entity %li of dimension %i belongs to %zu physical groups. Only the first one, %i, "
+                        "is used as boundary condition.\n",
+                        entity_tag, dim, num_physical_tags, physical_tag);
+    }
+    entity_physical_tags.emplace (entity_tag, physical_tag);
+  }
+  free (line);
+  return entity_physical_tags;
+}
+
+/** Read the boundary condition labels of the entities of one dimension from an open .msh file of version 4.
+ * The label of an entity is the name of its physical group. If the physical group has no name,
+ * the label is "physical_group_<tag>". Entities that do not belong to a physical group get no label.
+ *
+ * \param [in]  fp        The file stream.
+ * \param [in]  dim       The dimension of the entities. Negative dimensions get no labels.
+ * \return                The labels indexed by the entity tags. std::nullopt on a read error.
+ */
+static std::optional<t8_msh_entity_labels>
+t8_msh_file_4_read_entity_labels (FILE *fp, const int dim)
+{
+  /* A 0D mesh has no tree faces and thus no entities of dimension -1. */
+  if (dim < 0) {
+    return t8_msh_entity_labels {};
+  }
+  /* The names of the physical groups and the membership of the entities in physical groups
+   * are stored in two different sections, which we read separately. */
+  const auto physical_names = t8_msh_file_4_read_physical_names (fp, dim);
+  if (!physical_names) {
+    return std::nullopt;
+  }
+  const auto entity_physical_tags = t8_msh_file_4_read_entity_physical_tags (fp, dim);
+  if (!entity_physical_tags) {
+    return std::nullopt;
+  }
+
+  /* Combine both sections: entity tag -> physical tag -> name. */
+  t8_msh_entity_labels entity_labels;
+  for (const auto &[entity_tag, physical_tag] : *entity_physical_tags) {
+    const auto physical_name = physical_names->find (physical_tag);
+    entity_labels.emplace (entity_tag, physical_name != physical_names->end ()
+                                         ? physical_name->second
+                                         : "physical_group_" + std::to_string (physical_tag));
+  }
+  return entity_labels;
 }
 
 /**
@@ -1223,11 +1470,14 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
  * If cad geometry is used, the geometry is passed as a pointer here.
  * We cannot access this geometry over the cmesh interface since the cmesh
  * is not committed yet.
+ * The elements of dimension dim - 1 that lie on an entity in face_entity_labels
+ * are stored in face_labels together with the label of their entity.
  * On failure, std::nullopt is returned and the caller has to destroy the cmesh. */
 static std::optional<t8_msh_tree_vertex_indices>
 t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table &vertices, const int dim,
                                const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
-                               [[maybe_unused]] const t8_geometry_c *cad_geometry_base, const bool store_node_data)
+                               [[maybe_unused]] const t8_geometry_c *cad_geometry_base, const bool store_node_data,
+                               const t8_msh_entity_labels &face_entity_labels, t8_msh_face_labels &face_labels)
 {
   char *line = (char *) malloc (1024), *line_modify;
   char first_word[2048] = "\0";
@@ -1316,7 +1566,12 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
     /* Check if the tree is of the correct dimension */
     if (t8_eclass_to_dimension[eclass] != dim) {
       /* The trees in this block are not of the correct dimension.
-       * Thus, we skip them. */
+       * Thus, we skip them. Only if they are faces of trees and their entity
+       * has a label, we store their nodes to set the boundary conditions later.
+       * All elements of a block belong to the same entity, so we look up the label once per block.
+       * If the elements are no faces or the entity has no label, entity_label is end (). */
+      const auto entity_label
+        = t8_eclass_to_dimension[eclass] == dim - 1 ? face_entity_labels.find (entity_tag) : face_entity_labels.end ();
       for (tree_loop = 0; tree_loop < num_ele_in_block; tree_loop++) {
         retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
         if (retval < 0) {
@@ -1324,6 +1579,39 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
           free (line);
           return std::nullopt;
         }
+        /* The element carries no boundary condition, so we skip it. */
+        if (entity_label == face_entity_labels.end ()) {
+          continue;
+        }
+        /* The line describing the face looks like
+         * element_number Node_1 ... Node_m
+         * We ignore the element number and read the nodes. */
+        std::vector<t8_gloidx_t> face_node_indices (t8_eclass_num_vertices[eclass]);
+        long element_number;
+        /** The number of characters read by the last sscanf call. */
+        int num_read_chars;
+        /** The position in the line from which the next number is read. */
+        const char *line_position = line;
+        /* We read one number after another. After each number, %n tells us how far to move line_position.
+         * If a number could not be read, retval is not 1 and we abort in the loop below. */
+        retval = sscanf (line_position, "%li%n", &element_number, &num_read_chars);
+        for (auto &node_index : face_node_indices) {
+          if (retval == 1) {
+            line_position += num_read_chars;
+            retval = sscanf (line_position, "%" T8_GLOIDX_FORMAT "%n", &node_index, &num_read_chars);
+          }
+          if (retval != 1) {
+            t8_global_errorf ("Premature end of line while reading face element.\n");
+            t8_debugf ("The line is %s", line);
+            free (line);
+            return std::nullopt;
+          }
+        }
+        /* The node order differs between a face element and the face of a tree.
+         * Sorting the nodes gives both the same key, so that we can find the face element
+         * of a tree face in t8_cmesh_msh_file_set_boundary_conditions. */
+        std::sort (face_node_indices.begin (), face_node_indices.end ());
+        face_labels.emplace (std::move (face_node_indices), entity_label->second);
       }
     }
     else {
@@ -1651,6 +1939,47 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_ind
   t8_debugf ("Done finding tree neighbors.\n");
 }
 
+/** Set the boundary conditions of all trees. The boundary condition of a tree face is the label
+ * of the face element with the same nodes. Tree faces without such a face element get an empty label.
+ * \param [in,out] cmesh            The cmesh. Its trees have to be in the stash in the order of their ids.
+ * \param [in]     vertex_indices   For each tree the indices of its nodes in t8code order.
+ * \param [in]     face_labels      The labels of the face elements, indexed by their sorted node indices.
+ */
+static void
+t8_cmesh_msh_file_set_boundary_conditions (t8_cmesh_t cmesh, const t8_msh_tree_vertex_indices &vertex_indices,
+                                           const t8_msh_face_labels &face_labels)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  const t8_gloidx_t num_trees = cmesh->stash->classes.elem_count;
+  for (t8_gloidx_t gtree_id = 0; gtree_id < num_trees; ++gtree_id) {
+    /* As in t8_cmesh_msh_file_find_neighbors, we use that the trees were put into the stash in order of their ids. */
+    const t8_stash_class_struct_t *class_entry
+      = (t8_stash_class_struct_t *) t8_sc_array_index_locidx (&cmesh->stash->classes, gtree_id);
+    T8_ASSERT (class_entry->id == gtree_id);
+    const t8_eclass_t eclass = class_entry->eclass;
+    /** The boundary conditions of all faces of this tree, in the order of the face numbers.
+     * The views point into face_labels, which outlives the call of t8_cmesh_set_boundary_conditions
+     * that copies the labels into the cmesh. */
+    t8_boundary_conditions<std::string_view> boundary_conditions;
+    for (int face = 0; face < t8_eclass_num_faces[eclass]; ++face) {
+      /* Collect the nodes of the tree face and sort them, in the same way as the nodes of
+       * the face elements were sorted in t8_cmesh_msh_file_4_read_eles. */
+      const int num_face_vertices = t8_eclass_num_vertices[t8_eclass_face_types[eclass][face]];
+      std::vector<t8_gloidx_t> face_node_indices (num_face_vertices);
+      for (int i_vertex = 0; i_vertex < num_face_vertices; ++i_vertex) {
+        face_node_indices[i_vertex] = vertex_indices[gtree_id][t8_face_vertex_to_tree_vertex[eclass][face][i_vertex]];
+      }
+      std::sort (face_node_indices.begin (), face_node_indices.end ());
+      /* If a face element with the same nodes exists, the tree face gets its label.
+       * Otherwise, the face is not part of a physical group and gets an empty label. */
+      const auto face_label = face_labels.find (face_node_indices);
+      boundary_conditions.emplace_back (face_label != face_labels.end () ? std::string_view (face_label->second)
+                                                                         : std::string_view ());
+    }
+    t8_cmesh_set_boundary_conditions (cmesh, gtree_id, boundary_conditions);
+  }
+}
+
 /* This part should be callable from C */
 T8_EXTERN_C_BEGIN ();
 
@@ -1762,8 +2091,16 @@ t8_cmesh_from_msh_file (t8_cmesh_t *pcmesh, const char *fileprefix, const int pa
     }
     /* read nodes from the file */
     std::optional<t8_msh_tree_vertex_indices> indices;
+    /** The labels of the face elements that are used as boundary conditions of the trees. */
+    t8_msh_face_labels face_labels;
     switch (msh_version) {
     case 4: {
+      /* The physical groups of the entities of dimension dim - 1 are the boundary conditions of the tree faces. */
+      const auto face_entity_labels = t8_msh_file_4_read_entity_labels (file, dim - 1);
+      if (!face_entity_labels) {
+        /* indices stays empty and the reading fails below. */
+        break;
+      }
       auto vertices_opt = t8_msh_file_4_read_nodes (file);
       if (!vertices_opt) {
         fclose (file);
@@ -1794,7 +2131,7 @@ t8_cmesh_from_msh_file (t8_cmesh_t *pcmesh, const char *fileprefix, const int pa
         }
       }
       indices = t8_cmesh_msh_file_4_read_eles (cmesh, file, *vertices_opt, dim, linear_geometry, use_cad_geometry,
-                                               cad_geometry, true);
+                                               cad_geometry, true, *face_entity_labels, face_labels);
       break;
     }
 
@@ -1813,8 +2150,14 @@ t8_cmesh_from_msh_file (t8_cmesh_t *pcmesh, const char *fileprefix, const int pa
       *pcmesh = nullptr;
       return;
     }
-    else
+    else {
       t8_cmesh_msh_file_find_neighbors (cmesh, *indices);
+      /* Only set boundary conditions if the file assigns physical groups to tree faces.
+       * Otherwise, the cmesh would carry an empty boundary condition for every tree face. */
+      if (!face_labels.empty ()) {
+        t8_cmesh_msh_file_set_boundary_conditions (cmesh, *indices, face_labels);
+      }
+    }
 
     main_proc_read_successful = 1;
   }
