@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -29,7 +29,9 @@
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -86,34 +88,39 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
     for (iface = 0; iface < num_faces; iface++) {
       /* Get the element class and scheme of the face neighbor */
       neigh_class = t8_forest_element_neighbor_eclass (forest_from, ltree_id, element, iface);
-      /* Allocate memory for the number of half face neighbors */
-      num_half_neighbors = scheme->element_get_num_face_children (tree_class, element, iface);
-      half_neighbors = T8_ALLOC (t8_element_t *, num_half_neighbors);
-      scheme->element_new (neigh_class, num_half_neighbors, half_neighbors);
-      /* Compute the half face neighbors of element at this face */
-      neighbor_tree = t8_forest_element_half_face_neighbors (forest_from, ltree_id, element, half_neighbors,
-                                                             neigh_class, iface, num_half_neighbors, NULL);
-      if (neighbor_tree >= 0) {
-        /* The face neighbors do exist, check for each one, whether it has
-         * local or ghost leaf descendants in the forest.
-         * If so, the element will be refined. */
-        for (ineigh = 0; ineigh < num_half_neighbors; ineigh++) {
-          if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree, half_neighbors[ineigh], neigh_class)) {
-            /* This element should be refined */
-            *pdone = 0;
-            /* clean-up */
-            scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
-            T8_FREE (half_neighbors);
-            return 1;
+      if (neigh_class != T8_ECLASS_INVALID) {
+        /* Check for each face neighbor, whether it has
+        * local or ghost leaf descendants in the forest.
+        * If so, the element will be refined. */
+
+        /* Allocate memory for the number of half face neighbors */
+        num_half_neighbors = scheme->element_get_num_face_children (tree_class, element, iface);
+        half_neighbors = T8_ALLOC (t8_element_t *, num_half_neighbors);
+        scheme->element_new (neigh_class, num_half_neighbors, half_neighbors);
+        /* Compute the half face neighbors of element at this face */
+        neighbor_tree = t8_forest_element_half_face_neighbors (forest_from, ltree_id, element, half_neighbors,
+                                                               neigh_class, iface, num_half_neighbors, NULL);
+        if (neighbor_tree >= 0) {
+          /* The face neighbors do exist, check for each one, whether it has
+           * local or ghost leaf descendants in the forest.
+           * If so, the element will be refined. */
+          for (ineigh = 0; ineigh < num_half_neighbors; ineigh++) {
+            if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree, half_neighbors[ineigh], neigh_class)) {
+              /* This element should be refined */
+              *pdone = 0;
+              /* clean-up */
+              scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
+              T8_FREE (half_neighbors);
+              return 1;
+            }
           }
         }
+        /* clean-up */
+        scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
+        T8_FREE (half_neighbors);
       }
-      /* clean-up */
-      scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
-      T8_FREE (half_neighbors);
     }
   }
-
   return 0;
 }
 
@@ -166,9 +173,9 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   t8_log_indent_push ();
 
   /* Set default value to prevent compiler warning */
-  adap_stats = ghost_stats = partition_stats = NULL;
+  adap_stats = ghost_stats = partition_stats = nullptr;
 
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* Profiling is enable, so we measure the runtime of balance */
     forest->profile->balance_runtime = -sc_MPI_Wtime ();
     /* We store the individual adapt, ghost, and partition runtimes */
@@ -192,9 +199,31 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   /* This function is reference neutral regarding forest_from */
   t8_forest_ref (forest_from);
 
-  if (forest->set_from->ghosts == NULL) {
-    forest->set_from->ghost_type = T8_GHOST_FACES;
-    t8_forest_ghost_create_topdown (forest->set_from);
+  /* The first balance round needs a ghost layer of set_from that contains all face neighbors,
+   * also if set_from is not balanced. If set_from has no such ghost layer, we set its ghost layer
+   * aside and compute a temporary one. After the first round the original ghost layer is restored,
+   * so that set_from is left unchanged.
+   * This decision is the same on all processes, since the ghost layer exists either on all processes or on none. */
+  const t8_forest_t set_from = forest->set_from;
+  const bool definition_suitable
+    = set_from->ghost_definition != nullptr && set_from->ghost_definition->has_all_face_neighbors ();
+  t8_forest_ghost_t original_ghosts = nullptr;
+  bool temporary_ghosts = false;
+  if (set_from->ghosts == nullptr || !definition_suitable) {
+    original_ghosts = set_from->ghosts;
+    set_from->ghosts = nullptr;
+    t8_forest_ghost_definition *const original_definition = set_from->ghost_definition;
+    if (!definition_suitable) {
+      t8_debugf ("Create a temporary face ghost definition for balance.\n");
+      set_from->ghost_definition = new t8_forest_ghost_definition_face ();
+    }
+    T8_ASSERT (set_from->ghost_definition->has_all_face_neighbors ());
+    t8_forest_ghost_create (set_from);
+    temporary_ghosts = true;
+    if (!definition_suitable) {
+      set_from->ghost_definition->unref ();
+      set_from->ghost_definition = original_definition;
+    }
   }
 
   while (!done_global) {
@@ -212,14 +241,20 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     }
     forest_temp->t8code_data = &done;
     /* If profiling is enabled, measure ghost/adapt runtimes */
-    if (forest->profile != NULL) {
+    if (forest->profile != nullptr) {
       t8_forest_set_profiling (forest_temp, 1);
     }
-    t8_global_productionf ("Profiling: %i\n", forest->profile != NULL);
+    t8_global_productionf ("Profiling: %i\n", forest->profile != nullptr);
     /* Adapt the forest */
     t8_forest_commit (forest_temp);
+    if (temporary_ghosts) {
+      /* The temporary ghost layer of set_from is only needed in the first round. */
+      t8_forest_ghost_destroy (&set_from->ghosts);
+      set_from->ghosts = original_ghosts;
+      temporary_ghosts = false;
+    }
     /* Store the runtimes of adapt and ghost */
-    if (forest->profile != NULL) {
+    if (forest->profile != nullptr) {
       if (count_rounds > num_stats_allocated - 2) {
         T8_ASSERT (count_adapt_stats <= count_rounds);
         T8_ASSERT (count_ghost_stats <= count_rounds);
@@ -253,13 +288,13 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       t8_forest_set_partition (forest_partition, forest_temp, 0);
       t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
       /* If profiling is enabled, measure partition runtimes */
-      if (forest->profile != NULL) {
+      if (forest->profile != nullptr) {
         t8_forest_set_profiling (forest_partition, 1);
       }
       t8_forest_commit (forest_partition);
 
       /* Store the runtimes of partition */
-      if (forest->profile != NULL) {
+      if (forest->profile != nullptr) {
         sc_stats_set1 (&partition_stats[count_partition_stats], forest_partition->profile->partition_runtime,
                        "forest balance: Partition time");
         count_partition_stats++;
@@ -269,7 +304,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       }
 
       forest_temp = forest_partition;
-      forest_partition = NULL;
+      forest_partition = nullptr;
     }
     /* Adapt forest_temp in the next round */
     forest_from = forest_temp;
@@ -288,7 +323,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   /* clean-up */
   t8_forest_unref (&forest_temp);
 
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* Profiling is enabled, so we measure the runtime of balance. */
     forest->profile->balance_runtime += sc_MPI_Wtime ();
     forest->profile->balance_rounds = count_rounds;

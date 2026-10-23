@@ -33,9 +33,10 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_geometry_internal.hxx>
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
-#include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
 
 /**
  * A struct to hold the information about a ghost facejoin.
@@ -43,12 +44,12 @@
  * It contains the global id of the ghost, the local id of the ghost,
  * and the current number of inserted ghost attributes.
  */
-typedef struct ghost_facejoins_struct
+using t8_ghost_facejoin_t = struct ghost_facejoins_struct
 {
   t8_gloidx_t ghost_id; /**< The id of the ghost */
   t8_locidx_t local_id; /**< The local id of the ghost */
   t8_gloidx_t attr_id;  /**< The current number of inserted ghost attributes */
-} t8_ghost_facejoin_t;
+};
 
 static int
 t8_ghost_facejoins_compare (const void *fj1, const void *fj2)
@@ -75,8 +76,8 @@ t8_ghost_facejoin_equal (const void *v1, const void *v2, [[maybe_unused]] const 
 static unsigned
 t8_ghost_hash (const void *v, const void *u)
 {
-  t8_gloidx_t ghost_id = ((t8_ghost_facejoin_t *) v)->ghost_id;
-  t8_locidx_t num_hashes = *((t8_locidx_t *) u);
+  t8_gloidx_t const ghost_id = ((t8_ghost_facejoin_t *) v)->ghost_id;
+  t8_locidx_t const num_hashes = *((t8_locidx_t *) u);
 
   return ghost_id % num_hashes;
 }
@@ -142,7 +143,7 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
   t8_ctree_t tree1;
   size_t si;
 
-  if (cmesh->stash != NULL && cmesh->stash->classes.elem_count > 0) {
+  if (cmesh->stash != nullptr && cmesh->stash->classes.elem_count > 0) {
     t8_stash_t stash = cmesh->stash;
     sc_array_t *class_entries = &stash->classes;
     t8_stash_class_struct_t *entry;
@@ -177,7 +178,7 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
     t8_stash_attribute_sort (cmesh->stash);
     cmesh->num_trees = cmesh->num_local_trees = num_trees;
     cmesh->first_tree = 0;
-    t8_cmesh_add_attributes (cmesh, NULL);
+    t8_cmesh_add_attributes (cmesh, nullptr);
 
     /* Set all face connections */
     t8_cmesh_trees_set_all_boundary (cmesh, cmesh->trees);
@@ -216,7 +217,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   sc_hash_t *ghost_ids;
   sc_mempool_t *ghost_facejoin_mempool;
-  t8_ghost_facejoin_t *ghost_facejoin = NULL, *temp_facejoin, **facejoin_pp;
+  t8_ghost_facejoin_t *ghost_facejoin = nullptr, *temp_facejoin, **facejoin_pp;
   size_t joinfaces_it;
   t8_gloidx_t id1, id2;
   t8_locidx_t temp_local_id = 0;
@@ -250,7 +251,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_flops_snap (&fi, &snapshot);
 #endif
 
-  if (cmesh->tree_offsets != NULL) {
+  if (cmesh->tree_offsets != nullptr) {
     const t8_gloidx_t *tree_offsets = (t8_gloidx_t *) t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
     /* We partition using tree offsets */
     /* Get the first tree and whether it is shared */
@@ -273,7 +274,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   num_hashes = cmesh->num_local_trees > 0 ? cmesh->num_local_trees : 10;
   ghost_facejoin_mempool = sc_mempool_new (sizeof (t8_ghost_facejoin_t));
-  ghost_ids = sc_hash_new (t8_ghost_hash, t8_ghost_facejoin_equal, &num_hashes, NULL);
+  ghost_ids = sc_hash_new (t8_ghost_hash, t8_ghost_facejoin_equal, &num_hashes, nullptr);
 
   temp_facejoin = (t8_ghost_facejoin_t *) sc_mempool_alloc (ghost_facejoin_mempool);
   temp_facejoin->attr_id = 0;
@@ -292,7 +293,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       if (!id2_istree) {
         /* id2 is a ghost */
         temp_facejoin->ghost_id = id2;
-        if (sc_hash_insert_unique (ghost_ids, temp_facejoin, NULL)) {
+        if (sc_hash_insert_unique (ghost_ids, temp_facejoin, nullptr)) {
           /* If we did not already stored id2 in the hash we do so and assign the next local ghost id */
           temp_facejoin->local_id = cmesh->num_ghosts++;
           temp_facejoin = (t8_ghost_facejoin_t *) sc_mempool_alloc (ghost_facejoin_mempool);
@@ -303,7 +304,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
         /* id1 is a ghost */
         T8_ASSERT (id2_istree);
         temp_facejoin->ghost_id = id1;
-        if (sc_hash_insert_unique (ghost_ids, temp_facejoin, NULL)) {
+        if (sc_hash_insert_unique (ghost_ids, temp_facejoin, nullptr)) {
           /* If we did not already stored id1 in the hash we do so and assign the next local ghost id */
           temp_facejoin->local_id = cmesh->num_ghosts++;
           temp_facejoin = (t8_ghost_facejoin_t *) sc_mempool_alloc (ghost_facejoin_mempool);
@@ -396,7 +397,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       id1_istree = cmesh->first_tree <= id1 && last_tree >= id1;
       id2_istree = cmesh->first_tree <= id2 && last_tree >= id2;
       temp_facejoin->ghost_id = id1;
-      tree1 = NULL;
+      tree1 = nullptr;
 #if T8_ENABLE_DEBUG
       ghost1 = NULL;
 #endif
@@ -409,8 +410,8 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
        */
       /* TODO: This if else if else spaghetti code is quite ugly, think it over
        *       and find a better way */
-      face_neigh = face_neigh2 = NULL;
-      ttf = ttf2 = NULL;
+      face_neigh = face_neigh2 = nullptr;
+      ttf = ttf2 = nullptr;
       if (id1_istree) {
         /* First tree in the connection is a local tree */
         tree1 = t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id1 - cmesh->first_tree, &face_neigh, &ttf);
@@ -428,7 +429,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #if T8_ENABLE_DEBUG
       ghost2 = NULL;
 #endif
-      tree2 = NULL;
+      tree2 = nullptr;
       temp_facejoin->ghost_id = joinface->id2;
       if (id2_istree) {
         /* Second tree in the connection is a local tree */
@@ -444,10 +445,10 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #endif
       }
       F = t8_eclass_max_num_faces[cmesh->dimension];
-      if (ttf != NULL) {
+      if (ttf != nullptr) {
         /* The first entry is either a tree or ghost */
         ttf[joinface->face1] = F * joinface->orientation + joinface->face2;
-        if (tree1 != NULL) {
+        if (tree1 != nullptr) {
           /* First entry is a tree */
           T8_ASSERT (ghost2 != NULL || tree2 != NULL);
           face_neigh[joinface->face1]
@@ -459,10 +460,10 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
           face_neigh_g[joinface->face1] = id2;
         }
       }
-      if (ttf2 != NULL) {
+      if (ttf2 != nullptr) {
         /* The second entry is either a tree or a ghost */
         ttf2[joinface->face2] = F * joinface->orientation + joinface->face1;
-        if (tree2 != NULL) {
+        if (tree2 != nullptr) {
           /* The second entry is a tree */
           T8_ASSERT (tree1 != NULL || ghost1 != NULL);
           face_neigh2[joinface->face2] = tree1 ? id1 - cmesh->first_tree : temp_local_id + cmesh->num_local_trees;
@@ -503,6 +504,21 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
   sc_MPI_Allreduce (&id1, &cmesh->num_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
 
+  /* Communicate the boundary conditions.
+   * Since some processes can have no trees,
+   * we have to communicate if boundary conditions were applied first. */
+  int boundary_conditions_applied_locally = cmesh->boundary_condition_handler != nullptr;
+  int boundary_conditions_applied_globally = 0;
+  sc_MPI_Allreduce (&boundary_conditions_applied_locally, &boundary_conditions_applied_globally, 1, sc_MPI_INT,
+                    sc_MPI_MAX, comm);
+  if (boundary_conditions_applied_globally && cmesh->boundary_condition_handler == nullptr) {
+    SC_CHECK_ABORT (detail::t8_cmesh_add_boundary_condition_handler (cmesh) != nullptr,
+                    "ERROR: Could not create boundary condition handler.\n");
+  }
+  if (cmesh->boundary_condition_handler != nullptr) {
+    cmesh->boundary_condition_handler->synchronize (comm);
+  }
+
 #if T8_ENABLE_DEBUG
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[2], snapshot.iwtime, "cmesh_commit_end");
@@ -521,6 +537,13 @@ void
 t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   T8_ASSERT (cmesh != NULL);
+
+#if T8_ENABLE_DEBUG
+  /* Verify the boundary condition handler if there is one. */
+  if (cmesh->boundary_condition_handler != nullptr) {
+    T8_ASSERT (cmesh->boundary_condition_handler->verify ());
+  }
+#endif
 
   if (cmesh->set_partition) {
     /* partitioned commit */
@@ -546,7 +569,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (comm != sc_MPI_COMM_NULL);
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
   SC_CHECK_ABORT (0 <= cmesh->dimension && cmesh->dimension <= T8_ECLASS_MAX_DIM,
                   "Dimension of the cmesh is not set properly. This error may be "
                   "caused by empty cmesh partitions whose dimension can't be "
@@ -554,7 +577,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                   "explicitly using t8_cmesh_set_dimension\n");
 
   /* If profiling is enabled, we measure the runtime of  commit. */
-  if (cmesh->profile != NULL) {
+  if (cmesh->profile != nullptr) {
     cmesh->profile->commit_runtime = sc_MPI_Wtime ();
   }
   /* Get mpisize and rank */
@@ -562,7 +585,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (comm, &cmesh->mpirank);
   SC_CHECK_MPI (mpiret);
-  if (cmesh->set_from != NULL) {
+  if (cmesh->set_from != nullptr) {
     cmesh->dimension = cmesh->set_from->dimension;
     if (cmesh->face_knowledge == -1) {
       /* Keep the face knowledge of the from cmesh, if -1 was specified */
@@ -571,9 +594,22 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     /* If present use the set geometry handler, otherwise take
      * over the handler from set_from. */
-    if (cmesh->geometry_handler == NULL && cmesh->set_from->geometry_handler != NULL) {
-      cmesh->geometry_handler = cmesh->set_from->geometry_handler;
-      cmesh->geometry_handler->ref ();
+    detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
+    detail::t8_geometry_handler *geometry_handler_from = detail::t8_cmesh_get_geometry_handler (cmesh->set_from);
+    if (geometry_handler == nullptr && geometry_handler_from != nullptr) {
+      // Since geometry_handler_from needs to be used by cmesh_from as well, we
+      // need to ref it once before passing to cmesh (which would take ownership).
+      geometry_handler_from->ref ();
+      t8_cmesh_set_geometry_handler (cmesh, geometry_handler_from);
+    }
+
+    /* Copy the boundary condition handler if available. */
+    T8_ASSERT (cmesh->boundary_condition_handler == nullptr);
+    if (cmesh->set_from->boundary_condition_handler != nullptr) {
+      cmesh->boundary_condition_handler
+        = new detail::t8_cmesh_boundary_condition_handler (*cmesh->set_from->boundary_condition_handler);
+      /* Assign handler to new cmesh. */
+      cmesh->boundary_condition_handler->set_cmesh (cmesh);
     }
 
 #if T8_ENABLE_DEBUG
@@ -618,12 +654,12 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   //t8_cmesh_trees_print (cmesh, cmesh->trees);
 #endif
 
-  if (cmesh->set_from != NULL) {
+  if (cmesh->set_from != nullptr) {
     /* Unref set_from and set it to NULL */
     t8_cmesh_unref (&cmesh->set_from);
-    cmesh->set_from = NULL;
+    cmesh->set_from = nullptr;
   }
-  if (cmesh->stash != NULL) {
+  if (cmesh->stash != nullptr) {
     t8_stash_destroy (&cmesh->stash);
   }
 
@@ -639,7 +675,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     "creating an issue.");
 #endif /* T8_ENABLE_DEBUG */
   /* If profiling is enabled, we measure the runtime of  commit. */
-  if (cmesh->profile != NULL) {
+  if (cmesh->profile != nullptr) {
     cmesh->profile->commit_runtime = sc_MPI_Wtime () - cmesh->profile->commit_runtime;
     /* We also measure the number of shared trees,
      * it is the average over all first_tree_shared*mpisize values. */

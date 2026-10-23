@@ -76,7 +76,7 @@ struct class_test_pack: public TestDFS
     SC_CHECK_MPI (mpiret);
 #else
     /* just copy the data, if we did not compile with MPI*/
-    mempcpy (recvbuf, sendbuf, pack_size);
+    memcpy (recvbuf, sendbuf, pack_size);
 #endif
     /* Unpack data */
     position = 0;

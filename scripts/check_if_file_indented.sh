@@ -21,14 +21,14 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #
-# This script checks if a given file is correctly indented according to the t8indent.sh script.
-# 
+# This script checks if a given file is correctly indented according to the indent.sh script.
+#
 
 GIT_REPO_PATH=$(git rev-parse --show-toplevel)
 
-INDENT_SCRIPT=${GIT_REPO_PATH}/scripts/t8indent.sh
+INDENT_SCRIPT=${GIT_REPO_PATH}/scripts/indent.sh
 
-usage="USAGE:$0 [FILE_TO_CHECK]\n\nWill check if [FILE_TO_CHECK] is correctly indentend according to the script t8indent.sh."
+usage="USAGE:$0 [FILE_TO_CHECK]\n\nWill check if [FILE_TO_CHECK] is correctly indentend according to the script indent.sh."
 
 # Check if first argument given
 if [ ${1-x} = x ]

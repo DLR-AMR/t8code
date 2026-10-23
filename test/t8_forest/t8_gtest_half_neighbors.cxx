@@ -46,7 +46,8 @@ struct forest_half_neighbors: public testing::TestWithParam<std::tuple<std::tupl
     eclass = std::get<1> (std::get<0> (GetParam ()));
     cmesh_type = std::get<1> (GetParam ());
     /* Construct a coarse mesh of one tree */
-    cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, eclass, sc_MPI_COMM_WORLD);
   }
 
   t8_eclass_t eclass;
@@ -74,19 +75,18 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
       for (int face = 0; face < scheme->element_get_num_faces (eclass, element); face++) {
         /* Get the eclass of the face neighbor and get the scheme */
         const t8_eclass_t neigh_class = t8_forest_element_neighbor_eclass (forest, itree, element, face);
-        /* allocate memory for element's neighbor and construct it */
-        scheme->element_new (neigh_class, 1, &neighbor);
-        const t8_locidx_t neigh_tree
-          = t8_forest_element_face_neighbor (forest, itree, element, neighbor, neigh_class, face, &dual_face);
-        if (neigh_tree >= 0) {
+        if (neigh_class != T8_ECLASS_INVALID) {
+          /* allocate memory for element's neighbor and construct it */
+          scheme->element_new (neigh_class, 1, &neighbor);
+          (void) t8_forest_element_face_neighbor (forest, itree, element, neighbor, neigh_class, face, &dual_face);
           const int num_face_neighs = scheme->element_get_num_face_children (neigh_class, neighbor, dual_face);
           t8_element_t **half_neighbors = T8_TESTSUITE_ALLOC (t8_element_t *, num_face_neighs);
           scheme->element_new (neigh_class, num_face_neighs, half_neighbors);
           t8_forest_element_half_face_neighbors (forest, itree, element, half_neighbors, neigh_class, face,
                                                  num_face_neighs, NULL);
-
           /* We now check whether the face children of neighbor are the half neighbors. */
           T8_ASSERT (num_face_neighs == scheme->element_get_num_face_children (neigh_class, neighbor, dual_face));
+          EXPECT_NE (neigh_class, T8_ECLASS_INVALID);
           t8_element_t **neighbor_face_children = T8_TESTSUITE_ALLOC (t8_element_t *, num_face_neighs);
           scheme->element_new (neigh_class, num_face_neighs, neighbor_face_children);
           int *child_ids = T8_TESTSUITE_ALLOC (int, num_face_neighs);
@@ -98,12 +98,12 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
               << "ineigh = " << ineigh << " face = " << face;
           }
           scheme->element_destroy (neigh_class, num_face_neighs, neighbor_face_children);
-          scheme->element_destroy (neigh_class, num_face_neighs, half_neighbors);
-          T8_TESTSUITE_FREE (child_ids);
           T8_TESTSUITE_FREE (neighbor_face_children);
+          T8_TESTSUITE_FREE (child_ids);
+          scheme->element_destroy (neigh_class, 1, &neighbor);
+          scheme->element_destroy (neigh_class, num_face_neighs, half_neighbors);
           T8_TESTSUITE_FREE (half_neighbors);
         }
-        scheme->element_destroy (neigh_class, 1, &neighbor);
       }
     }
   }

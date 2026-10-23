@@ -33,21 +33,21 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Check whether or not \a elements contains a (in)complete family and 
+/** Check whether or not \a elements contains a (in)complete family and
  *  return the size of it or zero if no family is considered.
  * \param [in]      forest          The forest.
  * \param [in]      ltree_id        The index of considered local tree.
- * \param [in]      el_considered   The local id of the first element in 
+ * \param [in]      el_considered   The local id of the first element in
  *                                  \a elements in the local tree of the forest.
  * \param [in]      elements        Array of elements to consider.
  * \param [in]      elements_size   Number of elements in \a elements.
  * \return          Size of family or zero, if \a elements does not contain a
- *                  family. 
+ *                  family.
  * \note            The check works for complete and incomplete forests.
- *                  In the case of complete forests, the scheme based element 
+ *                  In the case of complete forests, the scheme based element
  *                  function \see t8_elements_are_family is recommended.
  * \note            If the element with id \a el_considered is not the first
- *                  family member, return 0. Therefore, if return is x > 0, 
+ *                  family member, return 0. Therefore, if return is x > 0,
  *                  the first x elements in \a elements form a family.
  */
 int
@@ -56,8 +56,8 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
 
 /**
  * For each tree in a forest compute its first and last descendant.
- * \param[in] forest The forest that should be used.  
- 
+ * \param[in] forest The forest that should be used.
+
  */
 void
 t8_forest_compute_desc (t8_forest_t forest);
@@ -65,7 +65,7 @@ t8_forest_compute_desc (t8_forest_t forest);
 /**
  * Create the elements on this process given a uniform partition
  * of the coarse mesh.
- * 
+ *
  * \param[in, out] forest The forest to be populated.
  * \param[in] irregular   Flag indicating if a tree in the forest does not refine in a 1:2^dim manner.
  */
@@ -200,7 +200,7 @@ t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_loci
 
 /** Search for a linear element id in a sorted array of
  * elements. If the element does not exist, return the largest index i
- * such that the element at position i has a smaller id than the given one.
+ * such that the element at position i has a smaller or equal id than the given one.
  * If no such i exists, return -1.
  * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
  *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
@@ -212,6 +212,35 @@ t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_loci
 t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id,
                             const int element_level);
+
+/** \brief Search for a linear element id (at level element_level) in a sorted array of
+ * elements. If the element does not exist, return the smallest index i
+ * such that the element at position i has a larger or equal id than the given one.
+ * If no such i exists, return -1.
+ * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
+ *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
+ * \param [in]     element_id  The linear id of the element to search for.
+ * \param [in]     element_level The level of the element to search for. Thus, the level at which \a element_id was computed.
+ * \return                     The smallest index \a i of an element with linear_id larger than or equal to \a element_id in \a elements if it exists.
+ *                             -1 if no such element was found in \a elements.
+ */
+t8_locidx_t
+t8_forest_bin_search_upper (const t8_element_array_t *elements, const t8_linearidx_t element_id,
+                            const int element_level);
+
+/** \brief Search for the first descendant or ancestor of an element in a sorted array of elements.
+ * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
+ *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
+ * \param [in]     element     The element to search for.
+ * \param [in]     element_found On return either a descendant or ancestor of \a element in \a elements if it exists. NULL if no
+ *                             such element exists in \a elements.
+ * \return                     The smallest index \a i such that elements[i] (= \a element_found) is an ancestor or a descendant of \a element.
+ *                             -1 if no such element was found in \a elements.
+ * \note \a element is ancestor and descendant of itself, so if \a element is contained in \a elements then it will be found by this function.
+ */
+t8_locidx_t
+t8_forest_bin_search_first_descendant_ancestor (const t8_element_array_t *elements, const t8_element_t *element,
+                                                const t8_element_t **element_found);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
@@ -333,7 +362,7 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const 
  *                         on output a (better) bound.
  *
  * \note If on input \a lower >= \a upper, then the bounds are not changed by this
- *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
+ *        algorithm. We interpret \a lower = \a upper such that the owner is unique and equals \a lower.
  * \note \a forest must be committed before calling this function.
  */
 void

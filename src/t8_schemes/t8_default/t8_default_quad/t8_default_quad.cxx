@@ -21,10 +21,9 @@
 */
 
 #include <p4est_bits.h>
-#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
+#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
-#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -235,7 +234,7 @@ t8_default_scheme_quad::element_get_ancestor_id (const t8_element_t *elem, int l
 }
 
 int
-t8_default_scheme_quad::elements_are_family (t8_element_t *const *fam) const
+t8_default_scheme_quad::elements_are_family (const t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   for (int i = 0; i < P4EST_CHILDREN; i++) {
@@ -377,7 +376,7 @@ t8_default_scheme_quad::element_get_children_at_face (const t8_element_t *elem, 
    */
   this->element_get_child (elem, second_child, children[1]);
   this->element_get_child (elem, first_child, children[0]);
-  if (child_indices != NULL) {
+  if (child_indices != nullptr) {
     child_indices[0] = first_child;
     child_indices[1] = second_child;
   }
@@ -417,7 +416,7 @@ t8_default_scheme_quad::element_transform_face (const t8_element_t *elem1, t8_el
   const p4est_quadrant_t *qin = (const p4est_quadrant_t *) elem1;
   const p4est_quadrant_t *q;
   p4est_quadrant_t *p = (p4est_quadrant_t *) elem2;
-  p4est_qcoord_t h = P4EST_QUADRANT_LEN (qin->level);
+  p4est_qcoord_t const h = P4EST_QUADRANT_LEN (qin->level);
   p4est_qcoord_t x = qin->x; /* temp storage for x coordinate in case elem1 = elem 2 */
 
   T8_ASSERT (element_is_valid (elem1));
@@ -701,7 +700,18 @@ t8_default_scheme_quad::element_get_reference_coords (const t8_element_t *elem, 
                                                       const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (element_is_valid (elem));
-  t8_dquad_compute_reference_coords ((const p4est_quadrant_t *) elem, ref_coords, num_coords, out_coords);
+  const p4est_quadrant_t *quad = (const p4est_quadrant_t *) elem;
+  const p4est_qcoord_t h = P4EST_QUADRANT_LEN (quad->level);
+
+  for (size_t icoord = 0; icoord < num_coords; ++icoord) {
+    const size_t offset_2d = icoord * 2;
+    const size_t offset_3d = icoord * 3;
+    out_coords[offset_2d + 0] = quad->x + ref_coords[offset_3d + 0] * h;
+    out_coords[offset_2d + 1] = quad->y + ref_coords[offset_3d + 1] * h;
+
+    out_coords[offset_2d + 0] /= (double) P4EST_ROOT_LEN;
+    out_coords[offset_2d + 1] /= (double) P4EST_ROOT_LEN;
+  }
 }
 
 void

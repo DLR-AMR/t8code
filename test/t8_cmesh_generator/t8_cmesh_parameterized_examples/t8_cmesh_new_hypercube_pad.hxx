@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_hypercube_pad.hxx 
+/** \file t8_cmesh_new_hypercube_pad.hxx
  * Parameterized example cmeshes a hypercube forest from one primitive tree class.
  */
 #ifndef T8_CMESH_NEW_HYPERCUBE_PAD
@@ -56,8 +56,11 @@ t8_cmesh_new_hypercube_pad_ext_wrapper (const t8_eclass_t eclass, sc_MPI_Comm co
   const int set_partition = 0;
   const t8_gloidx_t offset = 0;
 
-  return t8_cmesh_new_hypercube_pad_ext (eclass, comm, boundary, polygons_x, polygons_y, polygons_z, periodic_x,
-                                         periodic_y, periodic_z, use_axis_aligned, set_partition, offset);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_pad_ext (cmesh, eclass, comm, boundary, polygons_x, polygons_y, polygons_z, periodic_x,
+                                  periodic_y, periodic_z, use_axis_aligned, set_partition, offset);
+  return cmesh;
 }
 
 /** Wrapper function for \ref t8_cmesh_new_hypercube_pad_ext_wrapper. */
@@ -111,7 +114,7 @@ std::function<std::string (const t8_eclass_t, sc_MPI_Comm, const double *, t8_lo
  * \param [in] periodic_y   Connect opposite sides of the hypercube in y-direction.
  * \param [in] periodic_z   Connect opposite sides of the hypercube in z-direction.
  * \param [in] use_axis_aligned Use the axis-aligned geometry. If used, only two points per tree are stored.
- * \return true if the parameter combination is permissible, false otherwise. 
+ * \return true if the parameter combination is permissible, false otherwise.
  */
 inline bool
 rule (const t8_eclass_t eclass, [[maybe_unused]] sc_MPI_Comm comm, [[maybe_unused]] const double *boundary,
@@ -133,6 +136,12 @@ rule (const t8_eclass_t eclass, [[maybe_unused]] sc_MPI_Comm comm, [[maybe_unuse
   if (dim == 2 && periodic_z)
     return false;
 
+#if T8_TEST_LEVEL_INT >= 2
+  /* Only test fully periodic or fully non-periodic cubes, no mixed periodicity. */
+  if ((dim >= 2 && periodic_x != periodic_y) || (dim == 3 && periodic_x != periodic_z))
+    return false;
+#endif
+
   if ((eclass != T8_ECLASS_HEX && use_axis_aligned) || (eclass != T8_ECLASS_QUAD && use_axis_aligned))
     return false;
 
@@ -146,7 +155,7 @@ std::function<bool (const t8_eclass_t, sc_MPI_Comm, const double *, t8_locidx_t,
                     const int, const int, const int)>
   rule_wrapper = rule;
 
-/** We split the hypercube tests into two parts, one testing on non-periodic boundaries, the other one testing 
+/** We split the hypercube tests into two parts, one testing on non-periodic boundaries, the other one testing
  * with periodic boundaries but with fixed number of elements. That way we don't variate over all combinations
  * of parameters, which would result in a very long runtime in our testsuite.  */
 example_set *cmesh_example_non_periodic_boundaries = (example_set *) new cmesh_cartesian_product_with_rules<

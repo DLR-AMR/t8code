@@ -27,6 +27,7 @@
 #include <sc_containers.h>
 #include <t8_data/t8_containers.h>
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_forest/t8_forest_private.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -298,7 +299,7 @@ t8_element_array_get_data (const t8_element_array_t *element_array)
     return (t8_element_t *) t8_element_array_index_locidx (element_array, 0);
   }
   else {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -324,6 +325,48 @@ t8_element_array_get_array_mutable (t8_element_array_t *element_array)
   T8_ASSERT (t8_element_array_is_valid (element_array));
 
   return &element_array->array;
+}
+
+t8_locidx_t
+t8_element_array_find (const t8_element_array_t *element_array, const t8_element_t *element)
+{
+  /* In order to find the element, we need to compute its linear id.
+   * To do so, we need the scheme and the level of the element. */
+  const t8_scheme *scheme = t8_element_array_get_scheme (element_array);
+  const t8_eclass_t tree_class = t8_element_array_get_tree_class (element_array);
+  const int element_level = scheme->element_get_level (tree_class, element);
+  /* Compute the linear id. */
+  const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, element, element_level);
+
+  /* Search for the element. The search returns the last index with the element's linear id element_id or,
+   * if its not found, the largest index i, such that the element at position i has a smaller id than the given one.
+   * If no candidate exists, it may return -1. */
+  t8_locidx_t search_result = t8_forest_bin_search_lower (element_array, element_id, element_level);
+  if (search_result < 0) {
+    // The element was not found, we return -1. */
+    return -1;
+  }
+
+  /* Several elements may share the same linear id (e.g. all subelements of one transition cell).
+   * They are stored contiguously and we found the last one in the block (if the element_id exists in the array).
+   * Therefore, we walk backwards over all elements with the same id and level and compare each of them.
+   * For schemes without subelements this loop runs at most once. */
+  while (search_result >= 0) {
+    const t8_element_t *check_element = t8_element_array_index_locidx (element_array, search_result);
+    T8_ASSERT (check_element != NULL);
+    if (scheme->element_is_equal (tree_class, element, check_element)) {
+      // The element was found at position search_result. We return it.
+      return search_result;
+    }
+    if (scheme->element_get_level (tree_class, check_element) != element_level
+        || scheme->element_get_linear_id (tree_class, check_element, element_level) != element_id) {
+      // We left the block of candidates with the same id and level.
+      break;
+    }
+    --search_result;
+  }
+  /* The element was not found, we return -1. */
+  return -1;
 }
 
 void

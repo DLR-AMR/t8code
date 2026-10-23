@@ -96,7 +96,8 @@ if( T8CODE_ENABLE_OCC )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
     target_sources(T8 PRIVATE
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
-      t8_cad/t8_cad.cxx
+      t8_cad/t8_cad_handle.cxx
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.cxx
     )
     install( FILES
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
@@ -104,8 +105,12 @@ if( T8CODE_ENABLE_OCC )
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_geometry/t8_geometry_implementations
     )
     install( FILES
-      t8_cad/t8_cad.hxx
+      t8_cad/t8_cad_handle.hxx
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cad
+    )
+    install( FILES
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_mesh_deformation/
     )
 endif()
 
@@ -137,22 +142,24 @@ endif()
 target_sources( T8 PRIVATE
     t8.c
     t8_cmesh/t8_cmesh.cxx
-    t8_cmesh/t8_cmesh_cad.cxx
     t8_cmesh/t8_cmesh_geometry.cxx
     t8_cmesh/t8_cmesh_examples.cxx
     t8_cmesh/t8_cmesh_helpers.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_commit.cxx
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.c
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.c
     t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.cxx
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.c
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.cxx
+    t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions.cxx
+    t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.cxx
+    t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_c_helper.cxx
     t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.cxx
-    t8_cmesh/t8_cmesh_io/t8_cmesh_save.cxx
-    t8_cmesh/t8_cmesh_io/t8_cmesh_triangle.cxx
+    t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_save.cxx
+    t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_triangle.cxx
     t8_data/t8_shmem.c
     t8_data/t8_containers.cxx
     t8_eclass/t8_eclass.c
@@ -162,12 +169,19 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_partition.cxx
     t8_forest/t8_forest_partition_for_coarsening.cxx
     t8_forest/t8_forest_pfc_helper.cxx
+    t8_forest/t8_forest_pfc_message.cxx
     t8_forest/t8_forest.cxx
     t8_forest/t8_forest_private.cxx
-    t8_forest/t8_forest_ghost.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_w_search.cxx
     t8_forest/t8_forest_iterate.cxx
     t8_forest/t8_forest_balance.cxx
+    t8_forest/t8_forest_subelement.cxx
     t8_forest/t8_forest_search/t8_forest_search.cxx
+    t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions.cxx
     t8_geometry/t8_geometry.cxx
     t8_geometry/t8_geometry_helpers.c
     t8_geometry/t8_geometry_base.cxx
@@ -184,29 +198,29 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_scheme.cxx
     t8_schemes/t8_default/t8_default.cxx
     t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
-    t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.c
     t8_schemes/t8_default/t8_default_line/t8_default_line.cxx
-    t8_schemes/t8_default/t8_default_line/t8_dline_bits.c
+    t8_schemes/t8_default/t8_default_line/t8_dline_bits.cxx
     t8_schemes/t8_default/t8_default_prism/t8_default_prism.cxx
-    t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.c
+    t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.cxx
-    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c
+    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c
     t8_schemes/t8_default/t8_default_quad/t8_default_quad.cxx
-    t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.cxx
     t8_schemes/t8_default/t8_default_tet/t8_default_tet.cxx
-    t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.c
+    t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.cxx
     t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.c
     t8_schemes/t8_default/t8_default_tri/t8_default_tri.cxx
-    t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c
+    t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.cxx
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
-    t8_types/t8_vec.cxx
+    t8_vector/t8_vec.cxx
     t8_schemes/t8_standalone/t8_standalone.cxx
+    t8_schemes/t8_subelement/t8_subelement.cxx
     t8_vtk/t8_vtk.c
     t8_vtk/t8_vtk_writer.cxx
     t8_vtk/t8_vtk_write_ASCII.cxx
     t8_vtk/t8_vtk_writer_helper.cxx
+    t8_openfoam/t8_openfoam_reader.cxx
 )
 
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
@@ -229,7 +243,7 @@ target_compile_definitions( T8 PUBLIC T8_LIBS="${T8_LIBS}" )
 
 install( FILES
     t8.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 # Note: Some of the created install directories will be empty, for example t8_cmesh/t8_cmesh_internal
@@ -238,47 +252,62 @@ install( FILES
 # It seems like we cannot force CMake to not create the folder.
 # See https://gitlab.kitware.com/cmake/cmake/-/issues/19189
 
-install( DIRECTORY t8_helper_functions 
-  DESTINATION PRIVATE_HEADER 
-  FILES_MATCHING 
-    PATTERN "*.h" 
-    PATTERN "*.hxx" 
+install( DIRECTORY t8_helper_functions
+  DESTINATION PRIVATE_HEADER
+  FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hxx"
+    PATTERN "t8_helper_functions/t8_refcount.h" EXCLUDE
 )
+
+install( FILES
+    t8_helper_functions/t8_refcount.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_helper_functions
+)
+
 install( DIRECTORY t8_cmesh
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
-    PATTERN "*.h" 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.h"
     PATTERN "*.hxx"
     PATTERN "t8_cmesh/t8_cmesh_internal*"      EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
-install( DIRECTORY t8_data 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
+
+# t8_cmesh_geometry_handler_internal.hxx is included by the public t8_cmesh_geometry.hxx
+# (functions in detail namespace, not meant for users), so it must be installed despite
+# the t8_cmesh_internal exclusion above.
+install( FILES
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_geometry_handler_internal.hxx
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_internal
+)
+
+install( DIRECTORY t8_data
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
 )
-install( DIRECTORY t8_eclass 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
+install( DIRECTORY t8_eclass
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
 )
-install( DIRECTORY t8_element 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
+install( DIRECTORY t8_element
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
 )
 install( DIRECTORY t8_forest
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
-    PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
-    PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
     PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
+    PATTERN "t8_forest/t8_forest_types.h" EXCLUDE
 )
 install( DIRECTORY t8_geometry
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -289,33 +318,40 @@ install( DIRECTORY t8_geometry
     PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx" EXCLUDE
 )
 install( DIRECTORY t8_misc
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
 )
-install( DIRECTORY t8_schemes 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
-    PATTERN "*.h"
-    PATTERN "*.hxx" 
-)
-install( DIRECTORY t8_types 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
-    PATTERN "*.hxx" 
-    PATTERN "*.h"
-)
-install( DIRECTORY t8_vtk 
+install( DIRECTORY t8_schemes
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  FILES_MATCHING 
-    PATTERN "*.h" 
+  FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hxx"
+)
+install( DIRECTORY t8_types
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.hxx"
+    PATTERN "*.h"
+)
+install( DIRECTORY t8_vtk
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.h"
     PATTERN "*.hxx"
     PATTERN "t8_vtk/t8_with_vtk/t8_vtk_parallel.hxx"      EXCLUDE
     PATTERN "t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx"      EXCLUDE
     PATTERN "t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx"  EXCLUDE
     PATTERN "t8_vtk/t8_vtk_write_ASCII.hxx"   EXCLUDE
     PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
+)
+
+install( DIRECTORY t8_openfoam
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.hxx"
+    PATTERN "*.h"
 )
 
 install( TARGETS T8

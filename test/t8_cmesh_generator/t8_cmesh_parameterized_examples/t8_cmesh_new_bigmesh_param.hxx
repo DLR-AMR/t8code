@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_bigmesh_param.hxx 
+/** \file t8_cmesh_new_bigmesh_param.hxx
  * Parameterized example cmeshes providing a big mesh for test purpose.
  */
 #ifndef T8_CMESH_NEW_BIGMESH_PARAM_HXX
@@ -34,7 +34,13 @@
 namespace new_bigmesh
 {
 /** Wrapper function for t8_cmesh_new_bigmesh. */
-std::function<t8_cmesh_t (t8_eclass_t, int, sc_MPI_Comm)> bigmesh = t8_cmesh_new_bigmesh;
+std::function<t8_cmesh_t (t8_eclass_t, int, sc_MPI_Comm)> bigmesh
+  = [] (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm) {
+      t8_cmesh_t cmesh;
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_bigmesh (cmesh, eclass, num_trees, comm);
+      return cmesh;
+    };
 
 /** Function to convert parameter values to a string.
  * \param [in] eclass The eclass of the mesh.

@@ -79,7 +79,7 @@ struct t8_scheme_helpers: public t8_crtp_basic<TUnderlyingEclassScheme>
   inline int
   element_face_get_ancestor_face (const t8_element_t *element, const int ancestor_level, const int face) const
   {
-    auto underlying_impl = this->underlying ();  // Reference to the underlying scheme implementation
+    const auto &underlying_impl = this->underlying ();  // Reference to the underlying scheme implementation
 
     const int element_level = underlying_impl.element_get_level (element);
     T8_ASSERT (element_level >= ancestor_level);
@@ -90,7 +90,7 @@ struct t8_scheme_helpers: public t8_crtp_basic<TUnderlyingEclassScheme>
     // Allocate memory for a temporary element.
     t8_element_t *parent;
     underlying_impl.element_new (1, &parent);
-    // Pointer to a temoporary element, that will move up the refinement hierarchy
+    // Pointer to a temporary element, that will move up the refinement hierarchy
     const t8_element_t *temp_element = element;
     int temp_face = face;
     for (int ilevel = element_level; ilevel > ancestor_level; --ilevel) {

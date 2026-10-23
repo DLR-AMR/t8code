@@ -30,10 +30,10 @@
 
 #define MAX_NUM_ELEMENTS 32 /* number of digits for binary representation */
 
-/* In this test, a uniform forest with x many elements is given. 
+/* In this test, a uniform forest with x many elements is given.
  * There are 2^x many ways to remove these x elements. After removing the elements,
  * the forest is coarsened and checked for overlapping elements.
- * 
+ *
  * Example:
  * num of elements = 4
  * instances - binary representation
@@ -53,9 +53,9 @@
  *      13   -  ...0 0 0 1 1 0 1
  *      14   -  ...0 0 0 1 1 1 0
  *      15   -  ...0 0 0 1 1 1 1
- * We remove every element with id i if the i`th bit (right to left) 
+ * We remove every element with id i if the i`th bit (right to left)
  * in the current instances is 0.
- * 
+ *
  * Note, this test runs only on one rank.
  */
 
@@ -71,8 +71,10 @@ struct forest_permute: public testing::TestWithParam<t8_eclass_t>
 #else
     level = eclass < 4 ? 2 : 1;
 #endif
-    forest = t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), t8_scheme_new_default (),
-                                    level, 0, sc_MPI_COMM_WORLD);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, eclass, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, sc_MPI_COMM_WORLD);
 
     sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
     if (MPI_size > 1) {
@@ -91,7 +93,7 @@ struct forest_permute: public testing::TestWithParam<t8_eclass_t>
   t8_cmesh_t cmesh;
 };
 
-/** This structure contains a bitset with all 
+/** This structure contains a bitset with all
  *  elements to be removed.
  */
 struct t8_elements
@@ -99,7 +101,7 @@ struct t8_elements
   std::bitset<MAX_NUM_ELEMENTS> remove;
 };
 
-/** Remove every element with local_id i if the i`th bit in 
+/** Remove every element with local_id i if the i`th bit in
  * the current permutation \a remove is 0. */
 static int
 t8_adapt_remove (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,

@@ -23,7 +23,7 @@
 /** \file t8_default_tri.hxx
  * The default implementation for triangles. Interface between the
  * \file t8_default_common.hxx definitions and the element type specific
- * implementations in \file t8_dtri_bits.h
+ * implementations in \file t8_dtri_bits.hxx
  */
 
 #ifndef T8_DEFAULT_TRI_HXX
@@ -32,7 +32,7 @@
 #include <t8_element/t8_element.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.hxx>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 struct t8_scheme;
@@ -243,7 +243,7 @@ struct t8_default_scheme_tri: public t8_default_scheme_common<T8_ECLASS_TRIANGLE
    * \note level 0 elements do not form a family.
    */
   int
-  elements_are_family (t8_element_t *const *fam) const;
+  elements_are_family (const t8_element_t *const *fam) const;
 
   /** Compute the nearest common ancestor of two elements. That is, the element with highest level that still has both
    * given elements as descendants.

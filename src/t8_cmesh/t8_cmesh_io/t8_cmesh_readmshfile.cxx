@@ -38,6 +38,7 @@
 #include <optional>
 #include <vector>
 #include <array>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <t8_misc/t8_windows.h>
@@ -313,10 +314,10 @@ struct t8_msh_node_equal
 };
 
 /** Hashtable to store msh file nodes. */
-typedef std::unordered_set<t8_msh_file_node, t8_msh_node_hasher, t8_msh_node_equal> t8_msh_node_table;
+using t8_msh_node_table = std::unordered_set<t8_msh_file_node, t8_msh_node_hasher, t8_msh_node_equal>;
 
 /** Vector which stores the vertex indices of each tree in the t8code order. */
-typedef std::vector<std::vector<t8_gloidx_t>> t8_msh_tree_vertex_indices;
+using t8_msh_tree_vertex_indices = std::vector<std::vector<t8_gloidx_t>>;
 
 /* Reads an open msh-file and checks whether the MeshFormat-Version is supported by t8code or not. */
 static int
@@ -440,7 +441,7 @@ t8_msh_file_4_read_nodes (FILE *fp)
   }
 
   /* Create the hash table */
-  t8_msh_node_hasher hasher (lnum_nodes);
+  t8_msh_node_hasher const hasher (lnum_nodes);
   t8_msh_node_table node_table (lnum_nodes, hasher);
 
   /* read each node and add it to the hash table */
@@ -717,8 +718,8 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
 
           /* If both nodes are on a vertex we look if both vertices share an edge */
           if (node1.entity_dim == 0 && node2.entity_dim == 0) {
-            int common_edge = cad_geometry->get_cad_manager ()->t8_geom_get_common_edge_of_vertices (node1.entity_tag,
-                                                                                                     node2.entity_tag);
+            int common_edge
+              = cad_geometry->get_cad_handle ()->get_common_edge_of_vertices (node1.entity_tag, node2.entity_tag);
             if (common_edge > 0) {
               if (edge1_index == 0) {
                 edge1_index = common_edge;
@@ -733,7 +734,8 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       }
       /* If the face is linked to a surface we should now have two curves and we can check if both share a surface. */
       if (edge2_index > 0) {
-        surface_index = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_edges (edge1_index, edge2_index);
+
+        surface_index = cad_geometry->get_cad_handle ()->get_common_face_of_edges (edge1_index, edge2_index);
       }
       else {
         continue;
@@ -763,11 +765,11 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
           break;
         case 1:
           /* If the edge is on the face we can check if it is a seam and if not we can use its parameters as reference. */
-          if (cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (face_node->entity_tag, surface_index)) {
+          if (cad_geometry->get_cad_handle ()->is_edge_on_face (face_node->entity_tag, surface_index)) {
             if (!reference_parameters_on_surface
-                && !cad_geometry->get_cad_manager ()->t8_geom_edge_is_seam (face_node->entity_tag, surface_index)) {
+                && !cad_geometry->get_cad_handle ()->edge_is_seam (face_node->entity_tag, surface_index)) {
               reference_parameters_on_surface.emplace ();
-              cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
+              cad_geometry->get_cad_handle ()->edge_parameter_to_face_parameters (
                 face_node->entity_tag, surface_index, face_node->parameters[0],
                 reference_parameters_on_surface.value ().data ());
             }
@@ -780,7 +782,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
         case 0:
           /* If the vertex is not on the face, we can stop the face linkage.
              We do not have to check for reference parameters since a closed face linked to four vertices makes no sense. */
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (face_node->entity_tag, surface_index))
+          if (!cad_geometry->get_cad_handle ()->is_vertex_on_face (face_node->entity_tag, surface_index))
             all_nodes_on_surface = 0;
           break;
         default:
@@ -788,7 +790,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
         }
       }
       /* Abort if not all nodes are on the surface or if the surface is a plane */
-      if (!all_nodes_on_surface || cad_geometry->get_cad_manager ()->t8_geom_is_plane (surface_index)) {
+      if (!all_nodes_on_surface || cad_geometry->get_cad_handle ()->is_plane (surface_index)) {
         continue;
       }
 
@@ -804,14 +806,14 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
           /* Nothing to do. */
           break;
         case 1:
-          cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
+          cad_geometry->get_cad_handle ()->edge_parameter_to_face_parameters (
             face_node.entity_tag, surface_index, face_node.parameters[0], face_node.parameters.data (),
             reference_parameters_on_surface);
           face_node.entity_dim = 2;
           face_node.entity_tag = surface_index;
           break;
         case 0:
-          cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
+          cad_geometry->get_cad_handle ()->get_parameters_of_vertex_on_face (
             face_node.entity_tag, surface_index, face_node.parameters.data (), reference_parameters_on_surface);
           face_node.entity_dim = 2;
           face_node.entity_tag = surface_index;
@@ -898,22 +900,19 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       int is_on_geom = 1;
       for (int i_edge = 0; i_edge < 2; ++i_edge) {
         if (edge_geometry_dim == 2 && edge_nodes[i_edge].entity_dim == 1) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (edge_nodes[i_edge].entity_tag,
-                                                                          edge_geometry_tag)) {
+          if (!cad_geometry->get_cad_handle ()->is_edge_on_face (edge_nodes[i_edge].entity_tag, edge_geometry_tag)) {
             is_on_geom = 0;
             break;
           }
         }
         else if (edge_geometry_dim == 2 && edge_nodes[i_edge].entity_dim == 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (edge_nodes[i_edge].entity_tag,
-                                                                            edge_geometry_tag)) {
+          if (!cad_geometry->get_cad_handle ()->is_vertex_on_face (edge_nodes[i_edge].entity_tag, edge_geometry_tag)) {
             is_on_geom = 0;
             break;
           }
         }
         else if (edge_geometry_dim == 1 && edge_nodes[i_edge].entity_dim == 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_edge (edge_nodes[i_edge].entity_tag,
-                                                                            edge_geometry_tag)) {
+          if (!cad_geometry->get_cad_handle ()->is_vertex_on_edge (edge_nodes[i_edge].entity_tag, edge_geometry_tag)) {
             is_on_geom = 0;
             break;
           }
@@ -935,11 +934,11 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       if (!is_on_geom) {
         int common_face = 0;
         if (edge_nodes[0].entity_dim == 1 && edge_nodes[1].entity_dim == 0)
-          common_face = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_vertex_and_edge (
-            edge_nodes[1].entity_tag, edge_nodes[0].entity_tag);
+          common_face = cad_geometry->get_cad_handle ()->get_common_face_of_vertex_and_edge (edge_nodes[1].entity_tag,
+                                                                                             edge_nodes[0].entity_tag);
         if (edge_nodes[1].entity_dim == 1 && edge_nodes[0].entity_dim == 0)
-          common_face = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_vertex_and_edge (
-            edge_nodes[0].entity_tag, edge_nodes[1].entity_tag);
+          common_face = cad_geometry->get_cad_handle ()->get_common_face_of_vertex_and_edge (edge_nodes[0].entity_tag,
+                                                                                             edge_nodes[1].entity_tag);
         /* If a common face exists we can save it. */
         if (common_face > 0) {
           edge_geometry_dim = 2;
@@ -955,15 +954,15 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
      * But we can look if both vertices share an edge/face and use this edge/face.
      * If not we can skip this edge. */
     if (edge_geometry_dim == 0 && edge_geometry_tag == 0) {
-      int common_edge = cad_geometry->get_cad_manager ()->t8_geom_get_common_edge_of_vertices (
-        edge_nodes[0].entity_tag, edge_nodes[1].entity_tag);
+      int common_edge = cad_geometry->get_cad_handle ()->get_common_edge_of_vertices (edge_nodes[0].entity_tag,
+                                                                                      edge_nodes[1].entity_tag);
       if (common_edge > 0) {
         edge_geometry_tag = common_edge;
         edge_geometry_dim = 1;
       }
       else {
-        int common_face = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_vertices (
-          edge_nodes[0].entity_tag, edge_nodes[1].entity_tag);
+        int common_face = cad_geometry->get_cad_handle ()->get_common_face_of_vertices (edge_nodes[0].entity_tag,
+                                                                                        edge_nodes[1].entity_tag);
         if (common_face > 0) {
           edge_geometry_tag = common_face;
           edge_geometry_dim = 2;
@@ -977,8 +976,8 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
      * If not we can skip this edge */
     if (edge_nodes[0].entity_dim == 1 && edge_nodes[1].entity_dim == 1
         && edge_nodes[0].entity_tag != edge_nodes[1].entity_tag) {
-      int common_face = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_edges (edge_nodes[0].entity_tag,
-                                                                                            edge_nodes[1].entity_tag);
+      int common_face = cad_geometry->get_cad_handle ()->get_common_face_of_edges (edge_nodes[0].entity_tag,
+                                                                                   edge_nodes[1].entity_tag);
       if (common_face > 0) {
         edge_geometry_tag = common_face;
         edge_geometry_dim = 2;
@@ -994,14 +993,14 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
 
       /* Abort if the edge is a line. If the edge is a line, the curved computation would
        * only result in more computational overhead. */
-      if (cad_geometry->get_cad_manager ()->t8_geom_is_line (edge_geometry_tag)) {
+      if (cad_geometry->get_cad_handle ()->is_line (edge_geometry_tag)) {
         continue;
       }
 
       /* Check if adjacent faces carry a surface and if this edge lies on the surface */
       for (int i_adjacent_face = 0; i_adjacent_face < 2; ++i_adjacent_face) {
         if (face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]] > 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (
+          if (!cad_geometry->get_cad_handle ()->is_edge_on_face (
                 edge_geometry_tag, face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]])) {
             t8_global_errorf ("Error during mesh-cad recombination: Adjacent edge and face of a tree carry "
                               "incompatible geometries.\n");
@@ -1032,7 +1031,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
           return 0;
         }
         if (edge_node.entity_dim == 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_edge (edge_node.entity_tag, edge_geometry_tag)) {
+          if (!cad_geometry->get_cad_handle ()->is_vertex_on_edge (edge_node.entity_tag, edge_geometry_tag)) {
             t8_global_errorf (
               "Error during mesh-cad recombination: Node %li should lie on a vertex which lies on an edge, "
               "but the vertex does not lie on that edge.\n",
@@ -1049,10 +1048,10 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
             break;
           case 0:
             /* If the node is on a vertex we can convert the parameters safely if the vertex os not the seam of the edge. */
-            if (!cad_geometry->get_cad_manager ()->t8_geom_vertex_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
+            if (!cad_geometry->get_cad_handle ()->vertex_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
               reference_param.emplace ();
-              cad_geometry->get_cad_manager ()->t8_geom_get_parameter_of_vertex_on_edge (
-                edge_node.entity_tag, edge_geometry_tag, &reference_param.value ());
+              cad_geometry->get_cad_handle ()->get_parameter_of_vertex_on_edge (edge_node.entity_tag, edge_geometry_tag,
+                                                                                &reference_param.value ());
             }
             break;
           default:
@@ -1069,7 +1068,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       for (auto &edge_node : edge_nodes) {
         /* If the node lies on a vertex we retrieve its parameter on the curve */
         if (edge_node.entity_dim == 0) {
-          cad_geometry->get_cad_manager ()->t8_geom_get_parameter_of_vertex_on_edge (
+          cad_geometry->get_cad_handle ()->get_parameter_of_vertex_on_edge (
             edge_node.entity_tag, edge_geometry_tag, edge_node.parameters.data (), reference_param);
           edge_node.entity_dim = 1;
         }
@@ -1093,7 +1092,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
 
       /* We also skip this edge if the edge is on a plane. Planes have no curvature and
        * therefore only result in computational overhead. */
-      if (cad_geometry->get_cad_manager ()->t8_geom_is_plane (edge_geometry_tag)) {
+      if (cad_geometry->get_cad_handle ()->is_plane (edge_geometry_tag)) {
         continue;
       }
 
@@ -1113,7 +1112,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
           return 0;
         }
         if (edge_node.entity_dim == 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (edge_node.entity_tag, edge_geometry_tag)) {
+          if (!cad_geometry->get_cad_handle ()->is_vertex_on_face (edge_node.entity_tag, edge_geometry_tag)) {
             t8_global_errorf (
               "Error during mesh-cad recombination: Node %li should lie on a vertex which lies on a face, "
               "but the vertex does not lie on that face.\n",
@@ -1122,7 +1121,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
           }
         }
         if (edge_node.entity_dim == 1) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (edge_node.entity_tag, edge_geometry_tag)) {
+          if (!cad_geometry->get_cad_handle ()->is_edge_on_face (edge_node.entity_tag, edge_geometry_tag)) {
             t8_global_errorf (
               "Error during mesh-cad recombination: Node %li should lie on an edge which lies on a face, "
               "but the edge does not lie on that face.\n",
@@ -1138,18 +1137,17 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
             break;
           case 1:
             /* If the node is on a curve, we can use the parameters if the curve is not the seam of the surface. */
-            if (!cad_geometry->get_cad_manager ()->t8_geom_edge_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
+            if (!cad_geometry->get_cad_handle ()->edge_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
               reference_params.emplace ();
-              cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
+              cad_geometry->get_cad_handle ()->edge_parameter_to_face_parameters (
                 edge_node.entity_tag, edge_geometry_tag, edge_node.parameters[0], reference_params.value ().data ());
             }
             break;
           case 0:
             /* If the node is on a vertex we can convert the parameters safely if the vertex is not the seam of the edge. */
-            if (!cad_geometry->get_cad_manager ()->t8_geom_vertex_is_on_seam_edge (edge_node.entity_tag,
-                                                                                   edge_geometry_tag)) {
+            if (!cad_geometry->get_cad_handle ()->vertex_is_on_seam_edge (edge_node.entity_tag, edge_geometry_tag)) {
               reference_params.emplace ();
-              cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
+              cad_geometry->get_cad_handle ()->get_parameters_of_vertex_on_face (
                 edge_node.entity_tag, edge_geometry_tag, reference_params.value ().data ());
             }
             break;
@@ -1167,13 +1165,13 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       for (auto &edge_node : edge_nodes) {
         /* If the node lies on a vertex we retrieve its parameters on the surface */
         if (edge_node.entity_dim == 0) {
-          cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
+          cad_geometry->get_cad_handle ()->get_parameters_of_vertex_on_face (
             edge_node.entity_tag, edge_geometry_tag, edge_node.parameters.data (), reference_params);
           edge_node.entity_dim = 2;
         }
         /* If the node lies on an edge we have to do the same */
         if (edge_node.entity_dim == 1) {
-          cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
+          cad_geometry->get_cad_handle ()->edge_parameter_to_face_parameters (
             edge_node.entity_tag, edge_geometry_tag, edge_node.parameters[0], edge_node.parameters.data (),
             reference_params);
           edge_node.entity_dim = 2;
@@ -1224,9 +1222,10 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
  * They are stored as arrays of long ints.
  * If cad geometry is used, the geometry is passed as a pointer here.
  * We cannot access this geometry over the cmesh interface since the cmesh
- * is not committed yet. */
+ * is not committed yet.
+ * On failure, std::nullopt is returned and the caller has to destroy the cmesh. */
 static std::optional<t8_msh_tree_vertex_indices>
-t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table vertices, const int dim,
+t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table &vertices, const int dim,
                                const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
                                [[maybe_unused]] const t8_geometry_c *cad_geometry_base, const bool store_node_data)
 {
@@ -1258,7 +1257,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
       t8_global_errorf ("Premature end of line while reading num trees.\n");
       t8_debugf ("The line is %s", line);
       free (line);
-      t8_cmesh_destroy (&cmesh);
       return std::nullopt;
     }
   }
@@ -1273,7 +1271,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
     t8_global_errorf ("Premature end of line while reading num trees and num blocks.\n");
     t8_debugf ("The line is %s", line);
     free (line);
-    t8_cmesh_destroy (&cmesh);
     return std::nullopt;
   }
   num_trees = lnum_trees;
@@ -1291,7 +1288,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
     if (retval < 0) {
       t8_global_errorf ("Premature end of line while reading trees.\n");
       free (line);
-      t8_cmesh_destroy (&cmesh);
       return std::nullopt;
     }
     retval = sscanf (line, "%i %li %i %li", &entity_dim, &entity_tag, &ele_type, &num_ele_in_block);
@@ -1300,7 +1296,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
       t8_global_errorf ("Error while reading element block information.\n");
       t8_debugf ("The line is %s", line);
       free (line);
-      t8_cmesh_destroy (&cmesh);
       return std::nullopt;
     }
     /* Check if the tree type is supported */
@@ -1308,7 +1303,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         || t8_msh_tree_type_to_eclass[ele_type] == T8_ECLASS_COUNT) {
       t8_global_errorf ("tree type %i is not supported by t8code.\n", ele_type);
       free (line);
-      t8_cmesh_destroy (&cmesh);
       return std::nullopt;
     }
     eclass = t8_msh_tree_type_to_eclass[ele_type];
@@ -1328,7 +1322,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         if (retval < 0) {
           t8_global_errorf ("Premature end of line while reading trees.\n");
           free (line);
-          t8_cmesh_destroy (&cmesh);
           return std::nullopt;
         }
       }
@@ -1340,7 +1333,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         if (retval < 0) {
           t8_global_errorf ("Premature end of line while reading trees.\n");
           free (line);
-          t8_cmesh_destroy (&cmesh);
           return std::nullopt;
         }
         t8_cmesh_set_tree_class (cmesh, tree_count, eclass);
@@ -1366,7 +1358,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
             t8_global_errorf ("Premature end of line while reading tree.\n");
             t8_debugf ("The line is %s", line);
             free (line);
-            t8_cmesh_destroy (&cmesh);
             return std::nullopt;
           }
           /* Get node from the hashtable */
@@ -1406,7 +1397,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
           if (!t8_cmesh_process_tree_geometry (cmesh, eclass, dim, tree_count, cad_geometry_base, linear_geometry_base,
                                                tree_nodes)) {
             free (line);
-            t8_cmesh_destroy (&cmesh);
             return std::nullopt;
           }
 
@@ -1420,7 +1410,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
   free (line);
   if (tree_count == 0) {
     t8_global_errorf ("Warning: No %iD elements found in msh file.\n", dim);
-    t8_cmesh_destroy (&cmesh);
     return std::nullopt;
   }
   return std::make_optional<t8_msh_tree_vertex_indices> (vertex_indices);
@@ -1429,13 +1418,13 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
 /** This struct stores all information associated to a tree's face.
  * We need it to find neighbor trees.
  */
-typedef struct
+struct t8_msh_file_face_t
 {
   t8_locidx_t ltree_id; /**< The local id of the tree this face belongs to */
   int8_t face_number;   /**< The number of that face within the tree */
   int num_vertices;     /**< The number of vertices of this face. */
   long *vertices;       /**< The indices of these vertices. */
-} t8_msh_file_face_t;
+};
 
 /* Hash a face. The hash value is the sum of its vertex indices */
 static unsigned
@@ -1575,7 +1564,7 @@ t8_msh_file_face_orientation (const t8_msh_file_face_t *Face_a, const t8_msh_fil
 /* This routine does only find neighbors between local trees.
  * Use with care if cmesh is partitioned. */
 static void
-t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_indices vertex_indices)
+t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_indices &vertex_indices)
 {
   sc_hash_t *faces;
   t8_msh_file_face_t *Face, **pNeighbor, *Neighbor;
@@ -1588,7 +1577,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_ind
   t8_stash_class_struct_t *class_entry;
 
   face_mempool = sc_mempool_new (sizeof (t8_msh_file_face_t));
-  faces = sc_hash_new (t8_msh_file_face_hash, t8_msh_file_face_equal, cmesh, NULL);
+  faces = sc_hash_new (t8_msh_file_face_hash, t8_msh_file_face_equal, cmesh, nullptr);
 
   /* TODO: Does currently not work with partitioned cmesh */
   T8_ASSERT (!cmesh->set_partition);
@@ -1647,7 +1636,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_ind
         T8_FREE (Face->vertices);
         sc_mempool_free (face_mempool, Face);
         /* We can free the neighbor here as well */
-        sc_hash_remove (faces, Neighbor, NULL);
+        sc_hash_remove (faces, Neighbor, nullptr);
         T8_FREE (Neighbor->vertices);
         sc_mempool_free (face_mempool, Neighbor);
       }
@@ -1684,26 +1673,33 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
 #if T8_ENABLE_OCC
     *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, std::string (fileprefix));
 #else /* !T8_ENABLE_OCC */
-    *cad_geometry = NULL;
+    *cad_geometry = nullptr;
     return 0;
 #endif
   }
   return 1;
 }
 
-t8_cmesh_t
-t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm comm, const int dim,
-                        const int main_proc, const int use_cad_geometry)
+void
+t8_cmesh_from_msh_file (t8_cmesh_t *pcmesh, const char *fileprefix, const int partition, sc_MPI_Comm comm,
+                        const int dim, const int main_proc, const int use_cad_geometry)
 {
+  /* Unlike most generators, this function may need to signal failure by destroying
+   * the cmesh and clearing the caller's handle, so it operates on a local copy of
+   * *pcmesh and writes the final handle (cmesh, or NULL on failure) back at the end. */
+  t8_cmesh_t cmesh = *pcmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
   int mpirank, mpisize, mpiret;
-  t8_cmesh_t cmesh;
   char current_file[BUFSIZ];
   FILE *file;
   t8_gloidx_t num_trees, first_tree, last_tree = -1;
   int main_proc_read_successful = 0;
   int msh_version;
-  const t8_geometry_c *cad_geometry = NULL;
-  const t8_geometry_c *linear_geometry = NULL;
+  const t8_geometry_c *cad_geometry = nullptr;
+  const t8_geometry_c *linear_geometry = nullptr;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -1715,8 +1711,6 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
    * Or using a single file and computing the partition on the run. */
   T8_ASSERT (partition == 0 || (main_proc >= 0 && main_proc < mpisize));
 
-  /* initialize cmesh structure */
-  t8_cmesh_init (&cmesh);
   /* Setting the dimension by hand is necessary for partitioned
    * commit, since there are process without any trees. So the cmesh would
    * not know its dimension on these processes. */
@@ -1729,7 +1723,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
     /* Registering failed */
     t8_errorf ("OCC is not linked. Cannot use cad geometry.\n");
     t8_cmesh_destroy (&cmesh);
-    return NULL;
+    *pcmesh = nullptr;
+    return;
   }
 
   if (!partition || mpirank == main_proc) {
@@ -1737,7 +1732,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
     /* Open the file */
     t8_debugf ("Opening file %s\n", current_file);
     file = fopen (current_file, "r");
-    if (file == NULL) {
+    if (file == nullptr) {
       t8_global_errorf ("Could not open file %s\n", current_file);
       t8_cmesh_destroy (&cmesh);
 
@@ -1746,7 +1741,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
       }
-      return NULL;
+      *pcmesh = nullptr;
+      return;
     }
     /* Check if msh-file version is compatible. */
     msh_version = t8_cmesh_check_version_of_msh_file (file);
@@ -1761,7 +1757,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
       }
-      return NULL;
+      *pcmesh = nullptr;
+      return;
     }
     /* read nodes from the file */
     std::optional<t8_msh_tree_vertex_indices> indices;
@@ -1776,7 +1773,25 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
           main_proc_read_successful = 0;
           sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
         }
-        return NULL;
+        *pcmesh = nullptr;
+        return;
+      }
+      if (use_cad_geometry) {
+        /* Gmsh only stores the parameters of the nodes on cad curves and surfaces if the file was saved with
+         * Mesh.SaveParametric = 1. Without them, tree faces and edges with such nodes cannot be linked to the cad
+         * geometry. Nodes on cad vertices and in volumes never have parameters, so we only warn if no node is
+         * parametric at all, but some lie on curves or surfaces. */
+        const bool has_parametric_nodes = std::any_of (vertices_opt->begin (), vertices_opt->end (),
+                                                       [] (const t8_msh_file_node &node) { return node.parametric; });
+        const bool has_nodes_on_curves_or_surfaces
+          = std::any_of (vertices_opt->begin (), vertices_opt->end (),
+                         [] (const t8_msh_file_node &node) { return node.entity_dim == 1 || node.entity_dim == 2; });
+        if (!has_parametric_nodes && has_nodes_on_curves_or_surfaces) {
+          t8_global_errorf ("WARNING: Cad geometry requested, but %s contains no parametric node coordinates. "
+                            "Tree faces and edges with nodes on CAD curves or surfaces are not linked to the CAD "
+                            "geometry. Save the msh file with Mesh.SaveParametric = 1 to use the CAD geometry.\n",
+                            current_file);
+        }
       }
       indices = t8_cmesh_msh_file_4_read_eles (cmesh, file, *vertices_opt, dim, linear_geometry, use_cad_geometry,
                                                cad_geometry, true);
@@ -1795,7 +1810,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
       }
-      return NULL;
+      *pcmesh = nullptr;
+      return;
     }
     else
       t8_cmesh_msh_file_find_neighbors (cmesh, *indices);
@@ -1811,7 +1827,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
     if (!main_proc_read_successful) {
       t8_debugf ("Main process could not read cmesh successfully.\n");
       t8_cmesh_destroy (&cmesh);
-      return NULL;
+      *pcmesh = nullptr;
+      return;
     }
     /* The cmesh is not yet committed, since we set the partitioning before */
     if (mpirank == main_proc) {
@@ -1840,10 +1857,10 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
 
   /* Commit the cmesh */
   T8_ASSERT (cmesh != NULL);
-  if (cmesh != NULL) {
+  if (cmesh != nullptr) {
     t8_cmesh_commit (cmesh, comm);
   }
-  return cmesh;
+  *pcmesh = cmesh;
 }
 
 T8_EXTERN_C_END ();

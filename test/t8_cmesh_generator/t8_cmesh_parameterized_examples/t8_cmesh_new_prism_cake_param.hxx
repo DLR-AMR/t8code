@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_prism_cake_param.hxx 
+/** \file t8_cmesh_new_prism_cake_param.hxx
  * Parameterized prism cake example cmeshes.
  */
 #ifndef T8_CMESH_NEW_PRISM_CAKE_PARAM_HXX
@@ -33,7 +33,12 @@
 namespace new_prism_cake
 {
 /** Wrapper function for t8_cmesh_new_prism_cake. */
-std::function<t8_cmesh_t (sc_MPI_Comm, int)> prism_cake = t8_cmesh_new_prism_cake;
+std::function<t8_cmesh_t (sc_MPI_Comm, int)> prism_cake = [] (sc_MPI_Comm comm, int num_of_prisms) {
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_prism_cake (cmesh, comm, num_of_prisms);
+  return cmesh;
+};
 
 /** Function to convert parameter values to a string.
  * \param [in] comm The mpi communicator to use.

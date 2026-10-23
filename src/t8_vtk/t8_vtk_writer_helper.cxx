@@ -25,7 +25,7 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 
 int
 t8_get_number_of_vtk_nodes (const t8_element_shape_t eclass, const int curved_flag)

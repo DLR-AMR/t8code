@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_empty.hxx 
+/** \file t8_cmesh_new_empty.hxx
  * Parameterized hypercube example cmeshes from one primitive tree class.
  */
 #ifndef T8_CMESH_NEW_HYPERCUBE_PARAM_HXX
@@ -36,7 +36,7 @@ namespace new_hypercube_cmesh
 /** Function to convert parameter values to a string.
  * \param [in] eclass eclass determines the dimension and the number of trees needed to construct a cube.
  * \param [in] comm  The mpi communicator to be used.
- * \param [in] do_bcast If this flag is nonzero the cmesh is only constructed on processor 0 and then 
+ * \param [in] do_bcast If this flag is nonzero the cmesh is only constructed on processor 0 and then
  *                      broadcasted to the other processors in \a comm.
  * \param [in] do_partition Create a partitioned cmesh.
  * \param [in] periodic If true, the coarse mesh will be periodic in each direction.
@@ -62,7 +62,13 @@ std::function<std::string (const t8_eclass_t, const sc_MPI_Comm, const int, cons
 std::vector<t8_eclass_t> periodic_eclasses = { T8_ECLASS_VERTEX, T8_ECLASS_LINE, T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE,
                                                T8_ECLASS_HEX,    T8_ECLASS_TET,  T8_ECLASS_PRISM };
 /** Wrapper function for t8_cmesh_new_hypercube. */
-std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm, int, int, int)> cmesh_wrapper = t8_cmesh_new_hypercube;
+std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm, int, int, int)> cmesh_wrapper
+  = [] (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int do_partition, int periodic) {
+      t8_cmesh_t cmesh;
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_hypercube (&cmesh, eclass, comm, do_bcast, do_partition, periodic);
+      return cmesh;
+    };
 /** Vector containing the only non-periodic eclass. */
 std::vector<t8_eclass_t> nonperiodic_eclasses = { T8_ECLASS_PYRAMID };
 

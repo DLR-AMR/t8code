@@ -197,7 +197,7 @@ t8_default_scheme_hex::element_get_ancestor_id (const t8_element_t *elem, const 
 }
 
 int
-t8_default_scheme_hex::elements_are_family (t8_element_t *const *fam) const
+t8_default_scheme_hex::elements_are_family (const t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   {
@@ -243,7 +243,7 @@ t8_default_scheme_hex::element_get_children_at_face (const t8_element_t *elem, c
   T8_ASSERT (0 <= face && face < P8EST_FACES);
   T8_ASSERT (num_children == element_get_num_face_children (elem, face));
 
-  if (child_indices != NULL) {
+  if (child_indices != nullptr) {
     child_ids = child_indices;
   }
   else {
@@ -589,7 +589,25 @@ t8_default_scheme_hex::element_get_reference_coords (const t8_element_t *elem, c
                                                      const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (element_is_valid (elem));
-  t8_dhex_compute_reference_coords ((const t8_dhex_t *) elem, ref_coords, num_coords, out_coords);
+  const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
+
+  /* Get the length of the quadrant */
+  const p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
+
+  for (size_t coord = 0; coord < num_coords; ++coord) {
+    const size_t offset = 3 * coord;
+    /* Compute the x, y and z coordinates of the point depending on the
+     * reference coordinates */
+    out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * len;
+    out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * len;
+    out_coords[offset + 2] = q1->z + ref_coords[offset + 2] * len;
+
+    /* We divide the integer coordinates by the root length of the hex
+     * to obtain the reference coordinates. */
+    out_coords[offset + 0] /= (double) P8EST_ROOT_LEN;
+    out_coords[offset + 1] /= (double) P8EST_ROOT_LEN;
+    out_coords[offset + 2] /= (double) P8EST_ROOT_LEN;
+  }
 }
 
 int

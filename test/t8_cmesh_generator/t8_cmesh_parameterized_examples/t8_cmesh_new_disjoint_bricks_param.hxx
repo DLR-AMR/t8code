@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_disjoint_bricks_param.hxx 
+/** \file t8_cmesh_new_disjoint_bricks_param.hxx
  * Parameterized example cmeshes with disjoint bricks.
  */
 #ifndef T8_CMESH_NEW_DISJOINT_BRICKS_PARAM_HXX
@@ -34,7 +34,13 @@ namespace new_disjoint_bricks
 {
 /** Wrapper function for t8_cmesh_new_disjoint_bricks. */
 std::function<t8_cmesh_t (t8_gloidx_t, t8_gloidx_t, t8_gloidx_t, int, int, int, sc_MPI_Comm)> disjoint_bricks
-  = t8_cmesh_new_disjoint_bricks;
+  = [] (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic, int y_periodic, int z_periodic,
+        sc_MPI_Comm comm) {
+      t8_cmesh_t cmesh;
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_disjoint_bricks (cmesh, num_x, num_y, num_z, x_periodic, y_periodic, z_periodic, comm);
+      return cmesh;
+    };
 
 /** Function to convert parameter values to a string.
  * \param [in] num_x       The number of trees in x direction for this rank.
