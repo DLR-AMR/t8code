@@ -132,7 +132,7 @@ to_vtk_data_field (const TMeshClass &mesh, const vtk_data_field<TValueType> &fie
 
 /**
  * Write the mesh in a parallel vtu format together with user-defined per element data fields.
- * Convenience wrapper around \ref write_mesh_to_vtk_ext() that takes the data as named std::vectors,
+ * Convenience wrapper around \see write_mesh_to_vtk_ext that takes the data as named std::vectors,
  * so there is no need to allocate arrays or to fill t8_vtk_data_field_t structures manually.
  * \param [in] mesh       The mesh to write.
  * \param [in] fileprefix The prefix of the files where the vtk will be stored.
