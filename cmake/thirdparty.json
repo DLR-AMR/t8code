@@ -6,13 +6,14 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DLR-SC/googletest_mpi.git",
-                "ref": "98bfff426b057400268a00f97677d749a9e25096",
+                "ref": "e6a1445b7833cb183a3dea3bd6e1d5d6e73b763c",
                 "shallow": "TRUE"
             }
         },
         {
             "name": "SC",
             "depends_on_cmake_option": "T8CODE_USE_SYSTEM_SC",
+            "cmake_option_install_value": "OFF",
             "source": {
                 "type": "git",
                 "url": "https://github.com/cburstedde/libsc.git",
@@ -23,10 +24,22 @@
         {
             "name": "P4EST",
             "depends_on_cmake_option": "T8CODE_USE_SYSTEM_P4EST",
+            "cmake_option_install_value": "OFF",
             "source": {
                 "type": "git",
                 "url": "https://github.com/cburstedde/p4est.git",
                 "ref": "2296a990d8b6b54731a63be0ba5bc17b08cd1f3d",
+                "shallow": "TRUE"
+            }
+        },
+        {
+            "name": "EIGEN",
+            "depends_on_cmake_option": "T8CODE_FETCH_EIGEN",
+            "cmake_option_install_value": "ON",
+            "source": {
+                "type": "git",
+                "url": "https://gitlab.com/libeigen/eigen.git",
+                "ref": "5.0.1",
                 "shallow": "TRUE"
             }
         }
