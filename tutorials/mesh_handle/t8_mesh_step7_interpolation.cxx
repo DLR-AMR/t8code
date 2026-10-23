@@ -127,19 +127,14 @@ template <t8_mesh_handle::T8MeshType TMeshClass>
 static void
 write_vtu (TMeshClass &mesh, const char *prefix)
 {
-  const t8_locidx_t num_local_elements = mesh.get_num_local_elements ();
-  const t8_locidx_t num_ghosts = mesh.get_num_ghosts ();
+  const t8_locidx_t num_elements = mesh.get_num_local_elements () + mesh.get_num_ghosts ();
 
   /* Store the distances for all local and ghost elements. */
-  std::vector<double> element_values (num_local_elements + num_ghosts);
+  std::vector<double> element_values (num_elements);
 
-  /* Copy the local elements' distances from the mesh to the output vector. */
-  for (t8_locidx_t ielem = 0; ielem < num_local_elements; ++ielem) {
+  /* Copy the elements' distances from the mesh to the output vector. */
+  for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
     element_values[ielem] = mesh[ielem].get_element_data ().value;
-  }
-  /* Copy the ghost elements' distances. */
-  for (t8_locidx_t ighost = 0; ighost < num_ghosts; ++ighost) {
-    element_values[num_local_elements + ighost] = mesh.get_ghost (ighost).get_element_data ().value;
   }
 
   /* To write user-defined data, we use write_mesh_to_vtk_ext_data.
