@@ -31,8 +31,6 @@
 #include <memory>
 #include <unordered_map>
 #include <t8_vector/t8_vec.hxx>
-#include <Eigen/Sparse>
-#include <Eigen/Dense>
 
 /** Support radius used for globally supported RBFs, which have no finite support. */
 constexpr double T8_RBF_GLOBAL_SUPPORT = std::numeric_limits<double>::infinity ();
@@ -278,25 +276,6 @@ struct t8_rbf
   }
 
  private:
-  /** Solve the RBF system for a compactly supported RBF. 
-   * The interpolation matrix is sparse, so a sparse direct solver is used.
-   * \param [in] displacements The matrix of the boundary node displacements. Each row corresponds to a 
-   *                          boundary node and the three columns correspond to the x, y, and z components of the displacement.
-   * \param [in] num_boundary_nodes The number of boundary nodes.
-   * \return The matrix of the calculated weights alpha.
-  */
-  Eigen::MatrixXd
-  solve_compactly_supported_rbf (const Eigen::MatrixXd& displacements, const size_t num_boundary_nodes) const;
-
-  /** Solve the RBF system for a globally supported RBF.
-   * The interpolation matrix is dense, so a dense solver is used.
-   * \param [in] displacements The matrix of the boundary node displacements. Each row corresponds to a 
-   *                          boundary node and the three columns correspond to the x, y, and z components of the displacement.
-   * \param [in] num_boundary_nodes The number of boundary nodes.
-   * \return The matrix of the calculated weights alpha.
-  */
-  Eigen::MatrixXd
-  solve_globally_supported_rbf (const Eigen::MatrixXd& displacements, const size_t num_boundary_nodes) const;
   /** List of all registered support nodes. */
   std::vector<t8_rbf_boundary_node> boundary_nodes;
   /** Map from global node IDs to their indices in the boundary_nodes vector. */
