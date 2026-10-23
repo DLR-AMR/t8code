@@ -22,6 +22,13 @@ if ( T8CODE_BUILD_AS_SHARED_LIBRARY )
     add_library( T8 SHARED )
     set_target_properties( T8 PROPERTIES VERSION ${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH} SOVERSION ${T8CODE_VERSION_RAW})
     set_target_properties( T8 PROPERTIES POSITION_INDEPENDENT_CODE ON )
+    # Bind calls to functions defined inside libt8 directly instead of through the PLT.
+    # This avoids a second indirect jump on every scheme function call (see t8_scheme::dispatch).
+    include( CheckLinkerFlag )
+    check_linker_flag( CXX "-Wl,-Bsymbolic-functions" T8CODE_LINKER_SUPPORTS_BSYMBOLIC_FUNCTIONS )
+    if ( T8CODE_LINKER_SUPPORTS_BSYMBOLIC_FUNCTIONS )
+        target_link_options( T8 PRIVATE "-Wl,-Bsymbolic-functions" )
+    endif()
 else()
     add_library( T8 STATIC )
 endif()
@@ -64,6 +71,9 @@ if ( T8CODE_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI=1 )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO=1 )
     target_link_libraries( T8 PUBLIC MPI::MPI_C )
+    # t8code only uses the MPI C API. Without an MPI compiler wrapper, mpi.h would pull in the deprecated
+    # MPI C++ bindings, which are not part of MPI::MPI_C. PUBLIC, since t8code's headers include mpi.h via sc.h.
+    target_compile_definitions( T8 PUBLIC OMPI_SKIP_MPICXX=1 MPICH_SKIP_MPICXX=1 )
 endif()
 
 if( T8CODE_ENABLE_VTK )
@@ -91,6 +101,12 @@ if( T8CODE_ENABLE_VTK )
 endif()
 
 if( T8CODE_ENABLE_OCC )
+    string (REGEX MATCH "^[0-9]+\\.[0-9]+"
+  T8CODE_OCC_VERSION_USED "${OCC_VERSION_STRING}")
+    # Define T8_OCC_VERSION_USED for internal and external use in source files.
+    # Note, external libraries linking against t8code (i.e. using find_package ( T8CODE REQUIRED )) can
+    # use T8_OCC_VERSION_USED in source code and T8CODE_OCC_VERSION_USED (defined in config.cmake.in) in their CMake scripts.
+    target_compile_definitions( T8 PUBLIC T8_OCC_VERSION_USED="${T8CODE_OCC_VERSION_USED}" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_OCC=1 )
     target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
