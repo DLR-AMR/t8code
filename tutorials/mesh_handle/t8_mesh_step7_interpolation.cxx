@@ -22,7 +22,7 @@
 
 /** \file t8_mesh_step7_interpolation.cxx
  * This is step 7 of the t8code mesh handle tutorials.
- * It is based on general/t8_step7_interpolation.cxx but uses the mesh_handle interface instead. 
+ * It is based on general/t8_step7_interpolation.cxx but uses the mesh_handle interface instead.
  *
  * We showcase how to interpolate/project element data during the adaptation of a mesh.
  * We store a single value on each element (the distance of its centroid to a given point). During refinement
@@ -40,7 +40,7 @@
 #include <t8.h>                        /** General t8code header. Always include this. */
 #include <mesh_handle/mesh_handle.hxx> /** Convenience header for the mesh_handle. Includes the most necessary headers.  */
 #include <t8_vector/t8_vec.hxx>
-#include <cstring>
+#include <vector>
 #include <span>                         /** Required for the interpolation callback function.  */
 #include "t8_mesh_tutorials_common.hxx" /** Adaption function definition used for this tutorial. */
 
@@ -53,12 +53,12 @@ struct step7_element_data_type
   double value; /**< Storage for our element value. */
 };
 
-/** Our interpolation callback function. This decides how element data is recomputed after adaptation. 
+/** Our interpolation callback function. This decides how element data is recomputed after adaptation.
  * The mesh calls this function during commit for each group of elements of the old mesh and the corresponding
  * elements of the new adapted mesh.
  * If an element is refined, each child gets the value of its parent.
  * If elements are coarsened, the parent gets the average value of the children.
- * If an element is untouched, it keeps the old value. 
+ * If an element is untouched, it keeps the old value.
  * For more information on interpolation callbacks, look into \ref t8_mesh_handle::mesh::interpolate_callback_type.
  * \tparam TMeshClass The mesh handle class.
  * \param [in]     mesh_old     The old mesh that is adapted from.
@@ -102,7 +102,7 @@ interpolate_callback ([[maybe_unused]] const TMeshClass &mesh_old, [[maybe_unuse
   }
 }
 
-/** Compute the initial distance from each element's centroid to a given midpoint. 
+/** Compute the initial distance from each element's centroid to a given midpoint.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in, out] mesh     The mesh.
  * \param [in]      midpoint The point to which the distance is computed.
@@ -118,47 +118,46 @@ set_initial_element_data (TMeshClass &mesh, const t8_3D_vec &midpoint)
   }
 }
 
-/** Helper function to write the mesh and element data to vtu files. 
+/** Helper function to write the mesh and element data to vtu files.
  * \tparam TMeshClass   The mesh handle class.
  * \param [in] mesh     The mesh that should be written.
  * \param [in] prefix   Prefix to define the file name.
  */
 template <t8_mesh_handle::T8MeshType TMeshClass>
 static void
-write_vtu (const TMeshClass &mesh, const char *prefix)
+write_vtu (TMeshClass &mesh, const char *prefix)
 {
-  const t8_locidx_t num_elements = mesh.get_num_local_elements ();
+  const t8_locidx_t num_local_elements = mesh.get_num_local_elements ();
+  const t8_locidx_t num_ghosts = mesh.get_num_ghosts ();
 
-  /* We need to allocate a new array to store the distances on their own.
-   * This array has one entry per local element. */
-  double *element_values = T8_ALLOC (double, num_elements);
-  /* Copy the elements' distances from the mesh to the output array. */
-  for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
+  /* Store the distances for all local and ghost elements. */
+  std::vector<double> element_values (num_local_elements + num_ghosts);
+
+  /* Copy the local elements' distances from the mesh to the output vector. */
+  for (t8_locidx_t ielem = 0; ielem < num_local_elements; ++ielem) {
     element_values[ielem] = mesh[ielem].get_element_data ().value;
   }
+  /* Copy the ghost elements' distances. */
+  for (t8_locidx_t ighost = 0; ighost < num_ghosts; ++ighost) {
+    element_values[num_local_elements + ighost] = mesh.get_ghost (ighost).get_element_data ().value;
+  }
 
-  /* The number of user-defined data fields to write. */
-  const int num_data = 1;
-  t8_vtk_data_field_t vtk_data; /* For each user data field we need one t8_vtk_data_field_t variable. */
-  vtk_data.type = T8_VTK_SCALAR;
-  strcpy (vtk_data.description, "Centroid distance");
-  vtk_data.data = element_values;
-
-  /* To write user-defined data, we need the extended output function write_mesh_to_vtk_ext.
+  /* To write user-defined data, we use write_mesh_to_vtk_ext_data.
    * Besides writing user data, it also offers more control over which properties to write. */
   const bool write_treeid = true;
-  const bool write_ghost = true;
-  t8_mesh_handle::write_mesh_to_vtk_ext (mesh, prefix, num_data, &vtk_data, write_treeid, 1, 1, 0, write_ghost);
-
-  /* Free the allocated array. */
-  T8_FREE (element_values);
+  const bool write_mpirank = true;
+  const bool write_level = true;
+  const bool write_element_id = false;
+  const bool write_ghosts = true;
+  t8_mesh_handle::write_mesh_to_vtk_ext_data (mesh, prefix, { { "Centroid distance", element_values } }, {},
+                                              write_treeid, write_mpirank, write_level, write_element_id, write_ghosts);
 }
 
-/** Helper function to perform mesh adaptation and interpolation. 
+/** Helper function to perform mesh adaptation and interpolation.
  * First, the element data is initialized and transferred onto the uniform mesh.
  * Then, the mesh is adapted and the data is interpolated accordingly.
  * We also write the uniform and the adapted mesh to vtu files.
- * \tparam TMeshClass The mesh handle class. 
+ * \tparam TMeshClass The mesh handle class.
  * \param [in,out] mesh           The mesh to be adapted and interpolated.
  * \param [in] initial_prefix     Prefix for the initial uniform mesh output file.
  * \param [in] adapted_prefix     Prefix for the adapted mesh output file.
@@ -174,8 +173,9 @@ t8_step7_mesh_interpolation (TMeshClass &mesh, const char *initial_prefix, const
     0.4              /* Coarsen if outside this radius. */
   };
 
-  /* Compute and set the initial element data. */
+  /* Compute and set the initial element data and exchange ghost data. */
   set_initial_element_data (mesh, adapt_params.midpoint);
+  mesh.exchange_ghost_data ();
 
   /* Write the uniform mesh with its data. */
   write_vtu (mesh, initial_prefix);
@@ -186,16 +186,17 @@ t8_step7_mesh_interpolation (TMeshClass &mesh, const char *initial_prefix, const
   mesh.set_adapt (
     TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (adapt_callback_sphere<TMeshClass>, adapt_params));
   t8_global_productionf (" [mesh_step7] \n");
-  t8_global_productionf (" [mesh_step7] Setting interpolation flag. \n");
+  t8_global_productionf (" [mesh_step7] Setting interpolation callback. \n");
   mesh.set_interpolate_callback (interpolate_callback<TMeshClass>);
   mesh.set_partition ();
   mesh.set_ghost ();
 
-  /** Commit the mesh to change it according to all set flags. 
-   *  This will first adapt and partition the mesh. After that, it will automatically exchange all the ghost data.  
-   *  In the end, it will interpolate the data automatically according to the repartitioned mesh. 
+  /** Commit the mesh to change it according to all set flags.
+   *  This will first adapt and partition the mesh. After that, it will automatically exchange all the ghost data.
+   *  In the end, it will interpolate the data automatically according to the repartitioned mesh.
   */
   mesh.commit ();
+  mesh.exchange_ghost_data ();
 
   /* Write the adapted mesh with the interpolated data. */
   write_vtu (mesh, adapted_prefix);
@@ -239,7 +240,7 @@ main (int argc, char **argv)
       = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences_basic,
                              t8_mesh_handle::interpolate_data_mesh_competence_pack<step7_element_data_type>>;
 
-    /* Construct a uniformly refined mesh handle on the coarse mesh using the default scheme. */
+    /* Construct a uniformly refined mesh using the default scheme. */
     t8_global_productionf (" [mesh_step7] \n");
     t8_global_productionf (" [mesh_step7] Creating a uniform hybrid mesh. \n");
 
