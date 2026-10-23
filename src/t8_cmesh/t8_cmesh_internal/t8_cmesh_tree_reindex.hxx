@@ -60,15 +60,17 @@ t8_cmesh_tree_perform_reindex_inplace (t8_stash_t &stash, const std::map<t8_gloi
 
 /** Calculate and apply SFC-based coarse-tree reindexing.
  *
- * Calls \ref t8_cmesh_calculate_tree_reindexing_map and
- * \ref t8_cmesh_tree_perform_reindex_inplace. If requested with
+ * Gathers the stash on rank zero, calls \ref t8_cmesh_calculate_tree_reindexing_map and
+ * \ref t8_cmesh_tree_perform_reindex_inplace there, then broadcasts the reordered stash.
+ * If requested with
  * \ref t8_cmesh_enable_tree_reordering, the original-to-new mapping is
  * retained in the coarse mesh for retrieval after commit.
  *
- * \param [in,out] cmesh  Uncommitted coarse mesh with a complete replicated stash.
+ * \param [in,out] cmesh  Uncommitted coarse mesh with replicated or distributed stash records.
+ * \param [in]     comm   Communicator on which all processes participate in reindexing.
  * \note For partitioned coarse meshes, partition ranges and offsets refer to the reordered tree IDs.
  */
 void
-t8_cmesh_reindex_trees (t8_cmesh_t cmesh);
+t8_cmesh_reindex_trees (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 #endif /* T8_CMESH_TREE_REINDEX_HXX */

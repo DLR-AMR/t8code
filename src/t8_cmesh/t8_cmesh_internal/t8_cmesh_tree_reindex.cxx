@@ -32,6 +32,8 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <set>
+#include <tuple>
 #include <vector>
 /** \brief Stores the coarse-tree data assigned to one element of the auxiliary forest.
  *
@@ -361,27 +363,169 @@ t8_cmesh_tree_perform_reindex_inplace (t8_stash_t &stash, const std::map<t8_gloi
   t8_stash_attribute_sort (stash);
 }
 
-void
-t8_cmesh_reindex_trees (t8_cmesh_t cmesh)
+/** Gather the stash records and attribute data on rank zero, removing replicated entries.
+ * \param [in,out] cmesh Coarse mesh whose stash is replaced by the complete stash on rank zero.
+ * \param [in]     comm  Communicator on which the stash records are gathered.
+ */
+static void
+t8_cmesh_tree_reindex_gather_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  T8_ASSERT (cmesh != nullptr);
-  T8_ASSERT (cmesh->stash != nullptr);
-
-  const std::map<t8_gloidx_t, t8_gloidx_t> reindexing_map = t8_cmesh_calculate_tree_reindexing_map (cmesh);
-
-  if (cmesh->keep_reindex_map) {
-    const size_t num_trees = cmesh->stash->classes.elem_count;
-    SC_CHECK_ABORT (reindexing_map.size () == num_trees, "Incomplete SFC reindexing map.");
-    T8_ASSERT (cmesh->tree_reindex_map == nullptr);
-    cmesh->tree_reindex_map = T8_ALLOC (t8_gloidx_t, num_trees);
-
-    /* Store a direct lookup from the original global tree ID to its new ID for the user's tree-associated data. */
-    for (const auto &[old_tree_id, new_tree_id] : reindexing_map) {
-      SC_CHECK_ABORTF (old_tree_id >= 0 && static_cast<size_t> (old_tree_id) < num_trees,
-                       "Invalid old tree ID %" T8_GLOIDX_FORMAT " in SFC reindexing map.", old_tree_id);
-      cmesh->tree_reindex_map[old_tree_id] = new_tree_id;
+  t8_stash_t gathered_stash;
+  t8_stash_init (&gathered_stash);
+  sc_array_t attribute_data;
+  sc_array_t gathered_data;
+  sc_array_init (&attribute_data, sizeof (char));
+  sc_array_init (&gathered_data, sizeof (char));
+  /* Pack attribute payloads separately because their pointers cannot be used on another process. */
+  for (size_t iattr = 0; iattr < cmesh->stash->attributes.elem_count; ++iattr) {
+    const auto *attribute
+      = static_cast<const t8_stash_attribute_struct_t *> (sc_array_index (&cmesh->stash->attributes, iattr));
+    if (attribute->attr_size > 0) {
+      memcpy (sc_array_push_count (&attribute_data, attribute->attr_size), attribute->attr_data, attribute->attr_size);
     }
   }
 
-  t8_cmesh_tree_perform_reindex_inplace (cmesh->stash, reindexing_map);
+  sc_array_t *local_arrays[]
+    = { &cmesh->stash->classes, &cmesh->stash->joinfaces, &cmesh->stash->attributes, &attribute_data };
+  sc_array_t *gathered_arrays[]
+    = { &gathered_stash->classes, &gathered_stash->joinfaces, &gathered_stash->attributes, &gathered_data };
+  std::vector<int> recvcounts (cmesh->mpisize);
+  std::vector<int> displacements (cmesh->mpisize);
+  /* Gather byte counts first to size the receive buffers for inputs of different lengths. */
+  for (int iarray = 0; iarray < 4; ++iarray) {
+    const sc_array_t *local_array = local_arrays[iarray];
+    sc_array_t *gathered_array = gathered_arrays[iarray];
+    const size_t num_bytes = local_array->elem_count * local_array->elem_size;
+    SC_CHECK_ABORT (num_bytes <= static_cast<size_t> (std::numeric_limits<int>::max ()),
+                    "Tree reindexing gather exceeds the MPI count limit.");
+    int sendcount = static_cast<int> (num_bytes);
+    SC_CHECK_MPI (sc_MPI_Gather (&sendcount, 1, sc_MPI_INT, recvcounts.data (), 1, sc_MPI_INT, 0, comm));
+    if (cmesh->mpirank == 0) {
+      int total_bytes = 0;
+      for (int iproc = 0; iproc < cmesh->mpisize; ++iproc) {
+        displacements[iproc] = total_bytes;
+        SC_CHECK_ABORT (recvcounts[iproc] <= std::numeric_limits<int>::max () - total_bytes,
+                        "Tree reindexing gather exceeds the MPI count limit.");
+        total_bytes += recvcounts[iproc];
+      }
+      sc_array_resize (gathered_array, total_bytes / gathered_array->elem_size);
+    }
+    SC_CHECK_MPI (sc_MPI_Gatherv (local_array->array, sendcount, sc_MPI_BYTE, gathered_array->array, recvcounts.data (),
+                                  displacements.data (), sc_MPI_BYTE, 0, comm));
+  }
+
+  if (cmesh->mpirank == 0) {
+    /* Replicated stashes and ghost records can contain duplicates; keep one copy of each entry. */
+    t8_stash_destroy (&cmesh->stash);
+    t8_stash_init (&cmesh->stash);
+    std::map<t8_gloidx_t, t8_eclass_t> tree_classes;
+    for (size_t iclass = 0; iclass < gathered_stash->classes.elem_count; ++iclass) {
+      const auto *tree_class
+        = static_cast<const t8_stash_class_struct_t *> (sc_array_index (&gathered_stash->classes, iclass));
+      const auto [entry, inserted] = tree_classes.emplace (tree_class->id, tree_class->eclass);
+      SC_CHECK_ABORT (entry->second == tree_class->eclass, "Conflicting tree classes in reindexing input.");
+      if (inserted) {
+        t8_stash_add_class (cmesh->stash, tree_class->id, tree_class->eclass);
+      }
+    }
+    std::set<std::tuple<t8_gloidx_t, t8_gloidx_t, int, int, int>> joins;
+    for (size_t ijoin = 0; ijoin < gathered_stash->joinfaces.elem_count; ++ijoin) {
+      const auto *join
+        = static_cast<const t8_stash_joinface_struct_t *> (sc_array_index (&gathered_stash->joinfaces, ijoin));
+      if (joins.emplace (join->id1, join->id2, join->face1, join->face2, join->orientation).second) {
+        t8_stash_add_facejoin (cmesh->stash, join->id1, join->id2, join->face1, join->face2, join->orientation);
+      }
+    }
+    std::map<std::tuple<t8_gloidx_t, int, int>, const t8_stash_attribute_struct_t *> attributes;
+    /* Attribute metadata and payloads were gathered in the same process order. */
+    size_t data_offset = 0;
+    for (size_t iattr = 0; iattr < gathered_stash->attributes.elem_count; ++iattr) {
+      auto *attribute
+        = static_cast<t8_stash_attribute_struct_t *> (sc_array_index (&gathered_stash->attributes, iattr));
+      /* The received pointer belongs to the sending process. Copy the separately gathered payload instead. */
+      attribute->is_owned = 0;
+      attribute->attr_data = gathered_data.array + data_offset;
+      const auto [entry, inserted]
+        = attributes.emplace (std::make_tuple (attribute->id, attribute->package_id, attribute->key), attribute);
+      if (inserted) {
+        t8_stash_add_attribute (cmesh->stash, attribute->id, attribute->package_id, attribute->key,
+                                attribute->attr_size, attribute->attr_data, 1);
+      }
+      else {
+        const t8_stash_attribute_struct_t *previous = entry->second;
+        SC_CHECK_ABORT (previous->attr_size == attribute->attr_size
+                          && (attribute->attr_size == 0
+                              || memcmp (previous->attr_data, attribute->attr_data, attribute->attr_size) == 0),
+                        "Conflicting tree attributes in reindexing input.");
+      }
+      data_offset += attribute->attr_size;
+    }
+    T8_ASSERT (data_offset == gathered_data.elem_count);
+  }
+  t8_stash_destroy (&gathered_stash);
+  sc_array_reset (&attribute_data);
+  sc_array_reset (&gathered_data);
+}
+
+void
+t8_cmesh_reindex_trees (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  T8_ASSERT (cmesh != nullptr);
+  T8_ASSERT (cmesh->stash != nullptr);
+  T8_ASSERT (cmesh->tree_reindex_map == nullptr);
+
+  /* All processes must join the map broadcast if any process requests retention. */
+  int local_keep_reindex_map = cmesh->keep_reindex_map != 0;
+  int keep_reindex_map = 0;
+  SC_CHECK_MPI (sc_MPI_Allreduce (&local_keep_reindex_map, &keep_reindex_map, 1, sc_MPI_INT, sc_MPI_MAX, comm));
+  /* Empty input stashes also participate so rank zero receives the complete mesh. */
+  if (cmesh->mpisize > 1) {
+    t8_cmesh_tree_reindex_gather_stash (cmesh, comm);
+  }
+  size_t elem_counts[3] = {};
+  /* Calculate and apply the global permutation only on rank zero. */
+  if (cmesh->mpirank == 0) {
+    const size_t num_trees = cmesh->stash->classes.elem_count;
+    if (num_trees > 0) {
+      const std::map<t8_gloidx_t, t8_gloidx_t> reindexing_map = t8_cmesh_calculate_tree_reindexing_map (cmesh);
+      if (keep_reindex_map) {
+        SC_CHECK_ABORT (reindexing_map.size () == num_trees, "Incomplete SFC reindexing map.");
+        cmesh->tree_reindex_map = T8_ALLOC (t8_gloidx_t, num_trees);
+        /* Store a direct lookup from the original global tree ID to its new ID for user data. */
+        for (const auto &[old_tree_id, new_tree_id] : reindexing_map) {
+          SC_CHECK_ABORTF (old_tree_id >= 0 && static_cast<size_t> (old_tree_id) < num_trees,
+                           "Invalid old tree ID %" T8_GLOIDX_FORMAT " in SFC reindexing map.", old_tree_id);
+          cmesh->tree_reindex_map[old_tree_id] = new_tree_id;
+        }
+      }
+      t8_cmesh_tree_perform_reindex_inplace (cmesh->stash, reindexing_map);
+    }
+    /* The stash broadcast expects counts in attribute, class, and join order. */
+    elem_counts[0] = cmesh->stash->attributes.elem_count;
+    elem_counts[1] = num_trees;
+    elem_counts[2] = cmesh->stash->joinfaces.elem_count;
+  }
+  if (cmesh->mpisize == 1) {
+    return;
+  }
+  SC_CHECK_MPI (sc_MPI_Bcast (elem_counts, sizeof (elem_counts), sc_MPI_BYTE, 0, comm));
+  /* Release the original attributes before receiving the reordered stash. */
+  if (cmesh->mpirank != 0) {
+    t8_stash_destroy (&cmesh->stash);
+    t8_stash_init (&cmesh->stash);
+  }
+  t8_stash_bcast (cmesh->stash, 0, comm, elem_counts);
+  if (keep_reindex_map && elem_counts[1] > 0) {
+    SC_CHECK_ABORT (elem_counts[1] <= static_cast<size_t> (std::numeric_limits<int>::max ()),
+                    "Tree reindexing map exceeds the MPI count limit.");
+    if (cmesh->mpirank != 0) {
+      cmesh->tree_reindex_map = T8_ALLOC (t8_gloidx_t, elem_counts[1]);
+    }
+    SC_CHECK_MPI (sc_MPI_Bcast (cmesh->tree_reindex_map, static_cast<int> (elem_counts[1]), T8_MPI_GLOIDX, 0, comm));
+    /* Discard the temporary map on processes that did not request retention. */
+    if (!cmesh->keep_reindex_map) {
+      T8_FREE (cmesh->tree_reindex_map);
+      cmesh->tree_reindex_map = nullptr;
+    }
+  }
 }

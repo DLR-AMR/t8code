@@ -135,7 +135,8 @@ t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh);
 /** Enable locality-based coarse-tree reordering during \ref t8_cmesh_commit.
  * \param [in,out] cmesh             An initialized, uncommitted coarse mesh.
  * \param [in]     keep_reindex_map  Nonzero to retain an old-to-new tree-ID mapping after commit.
- * \note Reordering currently requires a complete replicated tree stash.
+ * \note Enable on every process participating in commit. Stash records are gathered on rank zero,
+ *       reordered there, and broadcast. Partition ranges and offsets refer to the reordered tree IDs.
  */
 void
 t8_cmesh_enable_tree_reordering (t8_cmesh_t cmesh, int keep_reindex_map);

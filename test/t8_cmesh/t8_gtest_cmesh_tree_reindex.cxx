@@ -182,6 +182,199 @@ struct t8_test_cmesh_tree_reindex: public testing::TestWithParam<int>
     }
   }
 
+  /** Compare a partitioned hypercube against the same ordering on a replicated mesh.
+   * \param [in] eclass    Element class used for both hypercubes.
+   * \param [in] periodic Whether to connect opposite domain faces.
+   */
+  void
+  check_partitioned_hypercube (const t8_eclass_t eclass, const int periodic)
+  {
+    int mpirank;
+    int mpisize;
+    SC_CHECK_MPI (sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank));
+    SC_CHECK_MPI (sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize));
+
+    /* Exercise overlapping input records by supplying the complete stash on every rank. */
+    if (GetParam () >= 0) {
+      t8_cmesh_enable_tree_reordering (control_cmesh, 1);
+    }
+    t8_cmesh_new_hypercube (&control_cmesh, eclass, sc_MPI_COMM_SELF, 0, 0, periodic);
+    t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 1, periodic);
+    ASSERT_TRUE (t8_cmesh_is_partitioned (cmesh));
+    const t8_gloidx_t num_trees = t8_cmesh_get_num_trees (control_cmesh);
+    const t8_gloidx_t first_tree = mpirank * num_trees / mpisize;
+    const t8_locidx_t num_local = (mpirank + 1) * num_trees / mpisize - first_tree;
+    check_partitioned_mesh (first_tree, num_local);
+  }
+
+  /** Compare local trees and ghosts with a replicated reference mesh.
+   * \param [in] first_tree  Expected first local global tree ID.
+   * \param [in] num_local   Expected number of local trees.
+   */
+  void
+  check_partitioned_mesh (const t8_gloidx_t first_tree, const t8_locidx_t num_local)
+  {
+    int mpirank;
+    SC_CHECK_MPI (sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank));
+    ASSERT_TRUE (t8_cmesh_is_partitioned (cmesh));
+    const t8_gloidx_t num_trees = t8_cmesh_get_num_trees (control_cmesh);
+    ASSERT_EQ (t8_cmesh_get_num_trees (cmesh), num_trees);
+    ASSERT_EQ (t8_cmesh_get_first_treeid (cmesh), first_tree);
+    ASSERT_EQ (t8_cmesh_get_num_local_trees (cmesh), num_local);
+
+    /* Check the full map on every rank, including ranks without local trees. */
+    const t8_gloidx_t *expected_map = t8_cmesh_get_tree_reindex_map (control_cmesh);
+    const t8_gloidx_t *reindex_map = t8_cmesh_get_tree_reindex_map (cmesh);
+    if (GetParam () == 1) {
+      ASSERT_NE (expected_map, nullptr);
+      ASSERT_NE (reindex_map, nullptr);
+    }
+    else {
+      EXPECT_EQ (reindex_map, nullptr);
+    }
+
+    std::vector<bool> expected_ghosts (num_trees, false);
+    for (t8_locidx_t itree = 0; itree < num_local + t8_cmesh_get_num_ghosts (cmesh); ++itree) {
+      const t8_gloidx_t global_tree_id = t8_cmesh_get_global_id (cmesh, itree);
+      ASSERT_GE (global_tree_id, 0);
+      ASSERT_LT (global_tree_id, num_trees);
+      SCOPED_TRACE (testing::Message () << "rank " << mpirank << ", tree " << global_tree_id);
+      const t8_eclass_t eclass = t8_cmesh_get_tree_class (control_cmesh, global_tree_id);
+      if (itree >= num_local) {
+        EXPECT_EQ (t8_cmesh_get_ghost_class (cmesh, itree - num_local), eclass);
+        EXPECT_TRUE (expected_ghosts[global_tree_id]);
+        expected_ghosts[global_tree_id] = false;
+      }
+      else {
+        EXPECT_EQ (t8_cmesh_get_tree_class (cmesh, itree), eclass);
+      }
+      const double *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
+      const double *expected_vertices = t8_cmesh_get_tree_vertices (control_cmesh, global_tree_id);
+      ASSERT_NE (vertices, nullptr);
+      ASSERT_NE (expected_vertices, nullptr);
+      for (int icoordinate = 0; icoordinate < 3 * t8_eclass_num_vertices[eclass]; ++icoordinate) {
+        EXPECT_EQ (vertices[icoordinate], expected_vertices[icoordinate]);
+      }
+      for (int iface = 0; iface < t8_eclass_num_faces[eclass]; ++iface) {
+        int dual_face = -1;
+        int orientation = -1;
+        int expected_dual_face = -1;
+        int expected_orientation = -1;
+        const t8_locidx_t reference_neighbor = t8_cmesh_get_face_neighbor (control_cmesh, global_tree_id, iface,
+                                                                           &expected_dual_face, &expected_orientation);
+        const t8_locidx_t neighbor = t8_cmesh_get_face_neighbor (cmesh, itree, iface, &dual_face, &orientation);
+        EXPECT_EQ (t8_cmesh_tree_face_is_boundary (cmesh, itree, iface),
+                   t8_cmesh_tree_face_is_boundary (control_cmesh, global_tree_id, iface));
+        if (itree < num_local && reference_neighbor >= 0
+            && (reference_neighbor < first_tree || reference_neighbor >= first_tree + num_local)) {
+          expected_ghosts[reference_neighbor] = true;
+        }
+        const t8_locidx_t expected_neighbor
+          = reference_neighbor < 0 ? -1 : t8_cmesh_get_local_id (cmesh, reference_neighbor);
+        if (expected_neighbor < 0) {
+          EXPECT_LT (neighbor, 0);
+        }
+        else {
+          EXPECT_EQ (neighbor, expected_neighbor);
+          EXPECT_EQ (dual_face, expected_dual_face);
+          EXPECT_EQ (orientation, expected_orientation);
+        }
+      }
+    }
+    EXPECT_EQ (std::count (expected_ghosts.begin (), expected_ghosts.end (), true), 0);
+    ASSERT_EQ (t8_cmesh_get_tree_reindex_map (cmesh), reindex_map);
+    if (reindex_map != nullptr) {
+      ASSERT_NE (expected_map, nullptr);
+      for (t8_gloidx_t itree = 0; itree < num_trees; ++itree) {
+        EXPECT_EQ (reindex_map[itree], expected_map[itree]);
+      }
+    }
+  }
+
+  /** Check distributed line records, including copied and borrowed variable-size attributes.
+   * \param [in] concentrate  Whether only the last rank supplies and owns trees.
+   */
+  void
+  check_distributed_lines (const bool concentrate)
+  {
+    int mpirank;
+    int mpisize;
+    SC_CHECK_MPI (sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank));
+    SC_CHECK_MPI (sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize));
+    const std::vector<std::array<double, 2>> endpoints = { { 3, 4 }, { 0, 1 }, { 5, 6 }, { 1, 2 }, { 4, 5 }, { 2, 3 } };
+    std::vector<t8_gloidx_t> expected_reindex = { 3, 0, 5, 1, 4, 2 };
+    const t8_gloidx_t num_trees = endpoints.size ();
+    const t8_gloidx_t first_tree = concentrate ? 0 : mpirank * num_trees / mpisize;
+    const t8_locidx_t num_local
+      = concentrate ? (mpirank == mpisize - 1 ? num_trees : 0) : (mpirank + 1) * num_trees / mpisize - first_tree;
+    if (GetParam () >= 0) {
+      t8_cmesh_enable_tree_reordering (control_cmesh, 1);
+    }
+    else {
+      std::iota (expected_reindex.begin (), expected_reindex.end (), 0);
+    }
+    build_lines (control_cmesh, endpoints);
+
+    /* Keep only the original local trees and their face ghosts in each input stash. */
+    std::vector<bool> supplied_trees (num_trees, false);
+    for (t8_gloidx_t itree = first_tree; itree < first_tree + num_local; ++itree) {
+      supplied_trees[itree] = true;
+      for (t8_gloidx_t ineighbor = 0; ineighbor < num_trees; ++ineighbor) {
+        if (endpoints[itree][0] == endpoints[ineighbor][1] || endpoints[itree][1] == endpoints[ineighbor][0]) {
+          supplied_trees[ineighbor] = true;
+        }
+      }
+    }
+    std::vector<std::vector<unsigned char>> attributes (num_trees);
+    t8_cmesh_set_dimension (cmesh, 1);
+    for (t8_gloidx_t itree = 0; itree < num_trees; ++itree) {
+      attributes[itree].resize (3 * itree + 1);
+      for (size_t ibyte = 0; ibyte < attributes[itree].size (); ++ibyte) {
+        attributes[itree][ibyte] = static_cast<unsigned char> (17 * itree + ibyte);
+      }
+      if (supplied_trees[itree]) {
+        const double vertices[6] = { endpoints[itree][0], 0, 0, endpoints[itree][1], 0, 0 };
+        t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_LINE);
+        t8_cmesh_set_tree_vertices (cmesh, itree, vertices, 2);
+        t8_cmesh_set_attribute (cmesh, itree, t8_testsuite_get_package_id (), 0, &itree, sizeof (itree), 0);
+        t8_cmesh_set_attribute (cmesh, itree, t8_testsuite_get_package_id (), 1, attributes[itree].data (),
+                                attributes[itree].size (), itree % 2);
+      }
+      /* Include outward ghost joins whose remote endpoint may be absent from the local stash. */
+      for (t8_gloidx_t ineighbor = 0; ineighbor < num_trees; ++ineighbor) {
+        if (endpoints[itree][1] == endpoints[ineighbor][0] && (supplied_trees[itree] || supplied_trees[ineighbor])) {
+          t8_cmesh_set_join (cmesh, itree, ineighbor, 1, 0, 0);
+        }
+      }
+    }
+    t8_cmesh_set_partition_range (cmesh, 3, first_tree, first_tree + num_local - 1);
+    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
+    t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+    ASSERT_NO_FATAL_FAILURE (check_partitioned_mesh (first_tree, num_local));
+
+    const t8_gloidx_t *reindex_map = t8_cmesh_get_tree_reindex_map (cmesh);
+    if (reindex_map != nullptr) {
+      for (t8_gloidx_t itree = 0; itree < num_trees; ++itree) {
+        EXPECT_EQ (reindex_map[itree], expected_reindex[itree]);
+      }
+    }
+    for (t8_locidx_t itree = 0; itree < num_local + t8_cmesh_get_num_ghosts (cmesh); ++itree) {
+      const t8_gloidx_t *original_id
+        = static_cast<const t8_gloidx_t *> (t8_cmesh_get_attribute (cmesh, t8_testsuite_get_package_id (), 0, itree));
+      ASSERT_NE (original_id, nullptr);
+      ASSERT_GE (*original_id, 0);
+      ASSERT_LT (*original_id, num_trees);
+      EXPECT_EQ (t8_cmesh_get_global_id (cmesh, itree), expected_reindex[*original_id]);
+      const unsigned char *attribute
+        = static_cast<const unsigned char *> (t8_cmesh_get_attribute (cmesh, t8_testsuite_get_package_id (), 1, itree));
+      ASSERT_NE (attribute, nullptr);
+      for (size_t ibyte = 0; ibyte < attributes[*original_id].size (); ++ibyte) {
+        EXPECT_EQ (attribute[ibyte], attributes[*original_id][ibyte]);
+      }
+    }
+    EXPECT_EQ (t8_cmesh_get_tree_reindex_map (cmesh), reindex_map);
+  }
+
   t8_cmesh_t cmesh = nullptr;
   t8_cmesh_t control_cmesh = nullptr;
 };
@@ -239,6 +432,61 @@ TEST_P (t8_test_cmesh_tree_reindex, hypercube_preserves_geometry_and_connectivit
   }
   EXPECT_EQ (changed, GetParam () >= 0);
   check_mesh (observed_reindex);
+}
+
+TEST_P (t8_test_cmesh_tree_reindex, partitioned_hypercube)
+{
+  check_partitioned_hypercube (T8_ECLASS_TET, 1);
+}
+
+TEST_P (t8_test_cmesh_tree_reindex, partitioned_single_tree)
+{
+  check_partitioned_hypercube (T8_ECLASS_HEX, 0);
+}
+
+TEST_P (t8_test_cmesh_tree_reindex, partitioned_distributed_lines)
+{
+  check_distributed_lines (false);
+}
+
+TEST_P (t8_test_cmesh_tree_reindex, partitioned_lines_empty_root)
+{
+  check_distributed_lines (true);
+}
+
+TEST_P (t8_test_cmesh_tree_reindex, partitioned_rank_local_map_retention)
+{
+  int mpirank;
+  int mpisize;
+  SC_CHECK_MPI (sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank));
+  SC_CHECK_MPI (sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize));
+  const bool retain_map = GetParam () == 1 && mpirank == mpisize - 1;
+  if (GetParam () >= 0) {
+    t8_cmesh_enable_tree_reordering (cmesh, retain_map ? -1 : 0);
+  }
+  t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 1, 0);
+  ASSERT_TRUE (t8_cmesh_is_committed (cmesh));
+  EXPECT_EQ (t8_cmesh_get_num_trees (cmesh), 1);
+  EXPECT_EQ (t8_cmesh_get_num_local_trees (cmesh), mpirank == mpisize - 1 ? 1 : 0);
+  EXPECT_EQ (t8_cmesh_get_num_ghosts (cmesh), 0);
+  const t8_gloidx_t *reindex_map = t8_cmesh_get_tree_reindex_map (cmesh);
+  if (retain_map) {
+    ASSERT_NE (reindex_map, nullptr);
+    EXPECT_EQ (reindex_map[0], 0);
+  }
+  else {
+    EXPECT_EQ (reindex_map, nullptr);
+  }
+  if (mpirank == mpisize - 1) {
+    EXPECT_EQ (t8_cmesh_get_global_id (cmesh, 0), 0);
+    for (int iface = 0; iface < t8_eclass_num_faces[T8_ECLASS_HEX]; ++iface) {
+      EXPECT_TRUE (t8_cmesh_tree_face_is_boundary (cmesh, 0, iface));
+    }
+  }
+  ASSERT_EQ (t8_cmesh_get_tree_reindex_map (cmesh), reindex_map);
+  if (reindex_map != nullptr) {
+    EXPECT_EQ (reindex_map[0], 0);
+  }
 }
 
 INSTANTIATE_TEST_SUITE_P (reordering_modes, t8_test_cmesh_tree_reindex, testing::Values (-1, 0, 1),

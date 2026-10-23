@@ -150,10 +150,6 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
     t8_stash_class_struct_t *entry;
     t8_locidx_t num_trees = class_entries->elem_count, ltree;
 
-    if (cmesh->reindex_trees) {
-      t8_cmesh_reindex_trees (cmesh);
-    }
-
     t8_cmesh_trees_init (&cmesh->trees, 1, num_trees, 0);
     t8_cmesh_trees_start_part (cmesh->trees, 0, 0, num_trees, 0, 0, 1);
     /* set tree classes */
@@ -272,10 +268,6 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /* The first_tree and first_tree_shared entries must be set by now */
   T8_ASSERT (cmesh->first_tree >= 0);
   T8_ASSERT (cmesh->first_tree_shared >= 0);
-
-  if (cmesh->reindex_trees && cmesh->stash->classes.elem_count > 0) {
-    t8_cmesh_reindex_trees (cmesh);
-  }
 
   /* Compute the global id of the cmeshes last_tree.
    * This must happen after cmesh->first_tree is computed. */
@@ -553,6 +545,10 @@ t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     T8_ASSERT (cmesh->boundary_condition_handler->verify ());
   }
 #endif
+
+  if (cmesh->reindex_trees) {
+    t8_cmesh_reindex_trees (cmesh, comm);
+  }
 
   if (cmesh->set_partition) {
     /* partitioned commit */
