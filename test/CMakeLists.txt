@@ -253,7 +253,7 @@ endif()
 
 target_include_directories( T8 PUBLIC 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}> 
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/test>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/test>
 )
 
 # Install test header files
