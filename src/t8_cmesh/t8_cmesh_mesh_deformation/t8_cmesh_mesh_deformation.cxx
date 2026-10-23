@@ -32,6 +32,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
+#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 
@@ -285,7 +286,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
     /* Contains the displacement whether it is a boundary node or an inner node. */
     t8_3D_vec final_displacement;
 
-    /* Check if this vertex is a boundary node. 
+    /* Check if this vertex is a boundary node.
        If so, we can use the already known displacement extracted from the new CAD geometry input given. */
     if (first_tree_entity_dim < mesh_dimension && first_tree_entity_dim >= 0) {
 
@@ -341,3 +342,25 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
     }
   }
 }
+
+/* C interface, see t8_cmesh_mesh_deformation.h */
+T8_EXTERN_C_BEGIN ();
+
+void
+t8_cmesh_deform_to_brep (t8_cmesh_t cmesh, const char *brep_fileprefix, const int rbf_type,
+                         const double scale_factor_support_radius)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (brep_fileprefix != NULL);
+  SC_CHECK_ABORTF (0 <= rbf_type && rbf_type < T8_RBF_FUNCTION_COUNT, "Invalid RBF type %i.\n", rbf_type);
+
+  t8_cmesh_mesh_deformation deformation (cmesh, static_cast<t8_rbf_function_type> (rbf_type));
+
+  const auto cad = std::make_shared<t8_cad_handle> (brep_fileprefix);
+
+  auto boundary_node_data
+    = deformation.calculate_displacement_surface_vertices (cad.get (), scale_factor_support_radius);
+  deformation.apply_vertex_displacements (boundary_node_data, cad);
+}
+
+T8_EXTERN_C_END ();

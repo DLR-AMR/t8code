@@ -143,6 +143,7 @@ if( T8CODE_ENABLE_OCC AND T8CODE_ENABLE_EIGEN )
     )
     install( FILES
       t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.h
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_mesh_deformation/
     )
 endif()
