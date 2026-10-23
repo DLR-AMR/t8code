@@ -125,7 +125,7 @@ to_vtk_data_field (const TMeshClass &mesh, const vtk_data_field<TValueType> &fie
   buffer.resize (static_cast<size_t> (num_cells) * (is_scalar ? 1 : 3), 0.0);
 
   vtk_field.type = is_scalar ? T8_VTK_SCALAR : T8_VTK_VECTOR;
-  snprintf (vtk_field.description, BUFSIZ, "%s", field.name.c_str ());
+  snprintf (vtk_field.description, sizeof (vtk_field.description), "%s", field.name.c_str ());
   vtk_field.data = buffer.data ();
 }
 } /* Namespace detail */
