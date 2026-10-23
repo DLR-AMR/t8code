@@ -29,7 +29,7 @@
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 #include "t8_test_data_dir.h"
 #include <string>
 

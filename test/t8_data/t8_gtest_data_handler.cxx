@@ -28,9 +28,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 
 #include <gtest/gtest.h>
-#include <test/t8_data/t8_enlarged_stdtypes.hxx>
-#include <test/t8_data/t8_data_handler_specs.hxx>
-#include <test/t8_data/t8_pseudo_trees.hxx>
+#include <t8_data/t8_enlarged_stdtypes.hxx>
+#include <t8_data/t8_data_handler_specs.hxx>
+#include <t8_data/t8_pseudo_trees.hxx>
 #include <t8_data/t8_vector_handler.hxx>
 #include <vector>
 #include <numeric>
