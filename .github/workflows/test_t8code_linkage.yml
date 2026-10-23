@@ -85,18 +85,18 @@ jobs:
     - name: build config variables
       run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
            && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
-# cmake and test with VTK and OpenCASCADE
-    - name: check VTK and OpenCASCADE
-      run: echo "Checking VTK and OpenCASCADE"
+# cmake and test with optional libraries
+    - name: check optional libraries
+      run: echo "Checking optional libraries"
     - name: echo cmake line
-      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
+      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_VTK=ON -DT8CODE_ENABLE_EIGEN=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
     - name: cmake OpenCASCADE
-      run: mkdir build_linkage && cd build_linkage && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
+      run: mkdir build_linkage && cd build_linkage && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_VTK=ON -DT8CODE_ENABLE_EIGEN=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v7
       with:
-        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK_and_OCC.log
+        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_linkage.log
         path: build_linkage/CMakeFiles/CMakeOutput.log
     - name: make
       run: cd build_linkage && ninja $MAKEFLAGS
@@ -115,5 +115,5 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v7
       with:
-        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK_and_OCC.log
+        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_linkage.log
         path: build_linkage/Testing/Temporary/LastTest.log
