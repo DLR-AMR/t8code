@@ -45,7 +45,15 @@ T8_EXTERN_C_BEGIN ();
 /* put declarations here */
 
 /** Read a .msh file and create a cmesh from it.
- * \param [in,out] pcmesh           Pointer to an initialized, but not committed cmesh handle, as created by
+ *
+ * If elements of dimension \a dim - 1 belong to physical groups, the names of these groups are
+ * set as boundary conditions of the tree faces with the same nodes, see
+ * \ref t8_cmesh_set_boundary_conditions. Physical groups without a name are labeled "physical_group_<tag>".
+ * Tree faces without such an element, for example faces between two trees, get an empty label.
+ * If an element belongs to several physical groups, only the first one is used.
+ * If no element of dimension \a dim - 1 belongs to a physical group, the cmesh has no boundary conditions.
+ *
+ * \param [in,out] pcmesh          Pointer to an initialized, but not committed cmesh handle, as created by
  *                                  \ref t8_cmesh_init. Check `*pcmesh != NULL` after the call to detect failure.
  * \param [in]    fileprefix        The prefix of the mesh file.
  *                                  The file fileprefix.msh is read.
