@@ -153,7 +153,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     t8_cmesh_mesh_deformation deformation (cmesh, rbf_type);
 
     /* Write output. */
-    t8_forest_vtk_write_file (forest, "deformed_forest_step_0", 1, 1, 1, 1, 0, 0, NULL);
+    t8_forest_vtk_write_file (forest, "deformed_forest_step_0000", 1, 1, 1, 1, 0, 0, NULL);
 
     auto brep_files = findBrepFiles (brep_folder);
     std::sort (brep_files.begin (), brep_files.end ());
@@ -175,8 +175,9 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 
       deformation.apply_vertex_displacements (displacements, cad_deformed);
 
-      const std::string output_name = "deformed_forest_step_" + std::to_string (++ifile);
-      t8_forest_vtk_write_file (forest, output_name.c_str (), 1, 1, 1, 1, 0, 0, NULL);
+      char output_name[BUFSIZ];
+      snprintf (output_name, BUFSIZ, "deformed_forest_step_%04d", ++ifile);
+      t8_forest_vtk_write_file (forest, output_name, 1, 1, 1, 1, 0, 0, NULL);
     }
     /* Cleanup. */
     t8_forest_unref (&forest);
