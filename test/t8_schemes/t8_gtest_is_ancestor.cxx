@@ -22,11 +22,11 @@
 
 /** \file t8_gtest_is_ancestor.cxx
  * This test checks the element_is_ancestor function of the scheme interface.
- * Starting from an element we build up all its ancestor up to root level and 
+ * Starting from an element we build up all its ancestor up to root level and
  * test whether the element_is_ancestor function returns true.
  * We also test sone cases where the function returns false, namely when putting
  * in an element and an ancestor in reverse order.
- * 
+ *
  * This test is modified from the ancestor_id test.
  */
 

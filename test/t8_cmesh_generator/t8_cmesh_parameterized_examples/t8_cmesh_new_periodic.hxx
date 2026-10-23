@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_periodic.hxx 
+/** \file t8_cmesh_new_periodic.hxx
  * Parameterized example cmeshes that are periodic in each direction.
  */
 #ifndef T8_CMESH_NEW_PERIODIC_HXX

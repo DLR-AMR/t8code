@@ -33,8 +33,8 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_geometry_internal.hxx>
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
-#include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
 
@@ -504,6 +504,21 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
   sc_MPI_Allreduce (&id1, &cmesh->num_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
 
+  /* Communicate the boundary conditions.
+   * Since some processes can have no trees,
+   * we have to communicate if boundary conditions were applied first. */
+  int boundary_conditions_applied_locally = cmesh->boundary_condition_handler != nullptr;
+  int boundary_conditions_applied_globally = 0;
+  sc_MPI_Allreduce (&boundary_conditions_applied_locally, &boundary_conditions_applied_globally, 1, sc_MPI_INT,
+                    sc_MPI_MAX, comm);
+  if (boundary_conditions_applied_globally && cmesh->boundary_condition_handler == nullptr) {
+    SC_CHECK_ABORT (detail::t8_cmesh_add_boundary_condition_handler (cmesh) != nullptr,
+                    "ERROR: Could not create boundary condition handler.\n");
+  }
+  if (cmesh->boundary_condition_handler != nullptr) {
+    cmesh->boundary_condition_handler->synchronize (comm);
+  }
+
 #if T8_ENABLE_DEBUG
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[2], snapshot.iwtime, "cmesh_commit_end");
@@ -579,9 +594,22 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     /* If present use the set geometry handler, otherwise take
      * over the handler from set_from. */
-    if (cmesh->geometry_handler == nullptr && cmesh->set_from->geometry_handler != nullptr) {
-      cmesh->geometry_handler = cmesh->set_from->geometry_handler;
-      cmesh->geometry_handler->ref ();
+    detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
+    detail::t8_geometry_handler *geometry_handler_from = detail::t8_cmesh_get_geometry_handler (cmesh->set_from);
+    if (geometry_handler == nullptr && geometry_handler_from != nullptr) {
+      // Since geometry_handler_from needs to be used by cmesh_from as well, we
+      // need to ref it once before passing to cmesh (which would take ownership).
+      geometry_handler_from->ref ();
+      t8_cmesh_set_geometry_handler (cmesh, geometry_handler_from);
+    }
+
+    /* Copy the boundary condition handler if available. */
+    T8_ASSERT (cmesh->boundary_condition_handler == nullptr);
+    if (cmesh->set_from->boundary_condition_handler != nullptr) {
+      cmesh->boundary_condition_handler
+        = new detail::t8_cmesh_boundary_condition_handler (*cmesh->set_from->boundary_condition_handler);
+      /* Assign handler to new cmesh. */
+      cmesh->boundary_condition_handler->set_cmesh (cmesh);
     }
 
 #if T8_ENABLE_DEBUG
