@@ -89,11 +89,9 @@ if(T8CODE_ENABLE_VTK)
 endif()
 
 if (T8CODE_ENABLE_EIGEN)
-    add_t8_example( NAME t8_rbf_test                        SOURCES cmesh/t8_rbf.cxx )
-    target_link_libraries( t8_rbf_test                      PRIVATE Eigen3::Eigen )
     add_t8_example( NAME t8_cmesh_mesh_deformation          SOURCES cmesh/t8_cmesh_mesh_deformation.cxx )
     target_link_libraries( t8_cmesh_mesh_deformation        PRIVATE Eigen3::Eigen )
-    
+
 endif ()
 
 add_t8_example( NAME t8_gmsh_to_vtk                     SOURCES IO/forest/gmsh/t8_gmsh_to_vtk.cxx )
