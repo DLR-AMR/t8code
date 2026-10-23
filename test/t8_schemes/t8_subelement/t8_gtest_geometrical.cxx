@@ -27,7 +27,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_adapt_callbacks.hxx>
+#include <t8_gtest_adapt_callbacks.hxx>
 
 #include <t8.h>
 #include <t8_eclass/t8_eclass.h>

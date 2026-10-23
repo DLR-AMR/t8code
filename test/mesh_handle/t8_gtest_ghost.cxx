@@ -26,7 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
