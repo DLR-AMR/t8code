@@ -38,6 +38,7 @@
 #include <optional>
 #include <vector>
 #include <array>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <t8_misc/t8_windows.h>
@@ -844,9 +845,11 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
         parameters[i_face_nodes * 2 + 1] = face_nodes[i_face_nodes].parameters[1];
       }
 
-      t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (),
-                              T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + i_tree_faces, parameters,
-                              num_face_nodes * 2 * sizeof (double), 0);
+      const int param_dim = 2;
+      const int param_index = i_tree_faces;
+      const int num_params = num_face_nodes * 2;
+
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, tree_count, param_dim, param_index, parameters, num_params);
     }
   }
   /*----------------------------------------- End of face-surface linkage -----------------------------------------*/
@@ -1078,9 +1081,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       parameters[0] = edge_nodes[0].parameters[0];
       parameters[1] = edge_nodes[1].parameters[0];
 
-      t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (),
-                              T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, parameters,
-                              2 * sizeof (double), 0);
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, tree_count, 1, i_tree_edges, parameters, 2);
     }
     /*----------------------------------------- End of edge-curve linkage -----------------------------------------*/
 
@@ -1184,9 +1185,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       parameters[2] = edge_nodes[1].parameters[0];
       parameters[3] = edge_nodes[1].parameters[1];
 
-      t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (),
-                              T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, parameters,
-                              4 * sizeof (double), 0);
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, tree_count, 1, i_tree_edges, parameters, 4);
     }
   }
   /* Remove the -1 used to lock the edges */
@@ -1195,10 +1194,11 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       edge_geometries[i_edge] = 0;
     }
   }
-  t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, face_geometries,
-                          num_faces * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edge_geometries,
-                          2 * num_edges * sizeof (int), 0);
+  const int face_dim = 2;
+  t8_geometry_cad::set_tree_geometries (cmesh, tree_count, face_dim, face_geometries, num_faces);
+  const int edge_dim = 1;
+  const int num_edge_geoms = 2 * num_edges;
+  t8_geometry_cad::set_tree_geometries (cmesh, tree_count, edge_dim, edge_geometries, num_edge_geoms);
 
   /* Now we set the tree geometry according to the tree linkage status. */
   if (tree_is_linked) {
@@ -1221,7 +1221,8 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
  * They are stored as arrays of long ints.
  * If cad geometry is used, the geometry is passed as a pointer here.
  * We cannot access this geometry over the cmesh interface since the cmesh
- * is not committed yet. */
+ * is not committed yet.
+ * On failure, std::nullopt is returned and the caller has to destroy the cmesh. */
 static std::optional<t8_msh_tree_vertex_indices>
 t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table &vertices, const int dim,
                                const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
@@ -1255,7 +1256,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
       t8_global_errorf ("Premature end of line while reading num trees.\n");
       t8_debugf ("The line is %s", line);
       free (line);
-      t8_cmesh_destroy (&cmesh);
       return std::nullopt;
     }
   }
@@ -1270,7 +1270,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
     t8_global_errorf ("Premature end of line while reading num trees and num blocks.\n");
     t8_debugf ("The line is %s", line);
     free (line);
-    t8_cmesh_destroy (&cmesh);
     return std::nullopt;
   }
   num_trees = lnum_trees;
@@ -1288,7 +1287,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
     if (retval < 0) {
       t8_global_errorf ("Premature end of line while reading trees.\n");
       free (line);
-      t8_cmesh_destroy (&cmesh);
       return std::nullopt;
     }
     retval = sscanf (line, "%i %li %i %li", &entity_dim, &entity_tag, &ele_type, &num_ele_in_block);
@@ -1297,7 +1295,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
       t8_global_errorf ("Error while reading element block information.\n");
       t8_debugf ("The line is %s", line);
       free (line);
-      t8_cmesh_destroy (&cmesh);
       return std::nullopt;
     }
     /* Check if the tree type is supported */
@@ -1305,7 +1302,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         || t8_msh_tree_type_to_eclass[ele_type] == T8_ECLASS_COUNT) {
       t8_global_errorf ("tree type %i is not supported by t8code.\n", ele_type);
       free (line);
-      t8_cmesh_destroy (&cmesh);
       return std::nullopt;
     }
     eclass = t8_msh_tree_type_to_eclass[ele_type];
@@ -1325,7 +1321,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         if (retval < 0) {
           t8_global_errorf ("Premature end of line while reading trees.\n");
           free (line);
-          t8_cmesh_destroy (&cmesh);
           return std::nullopt;
         }
       }
@@ -1337,7 +1332,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         if (retval < 0) {
           t8_global_errorf ("Premature end of line while reading trees.\n");
           free (line);
-          t8_cmesh_destroy (&cmesh);
           return std::nullopt;
         }
         t8_cmesh_set_tree_class (cmesh, tree_count, eclass);
@@ -1363,7 +1357,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
             t8_global_errorf ("Premature end of line while reading tree.\n");
             t8_debugf ("The line is %s", line);
             free (line);
-            t8_cmesh_destroy (&cmesh);
             return std::nullopt;
           }
           /* Get node from the hashtable */
@@ -1403,7 +1396,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
           if (!t8_cmesh_process_tree_geometry (cmesh, eclass, dim, tree_count, cad_geometry_base, linear_geometry_base,
                                                tree_nodes)) {
             free (line);
-            t8_cmesh_destroy (&cmesh);
             return std::nullopt;
           }
 
@@ -1417,7 +1409,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
   free (line);
   if (tree_count == 0) {
     t8_global_errorf ("Warning: No %iD elements found in msh file.\n", dim);
-    t8_cmesh_destroy (&cmesh);
     return std::nullopt;
   }
   return std::make_optional<t8_msh_tree_vertex_indices> (vertex_indices);
@@ -1783,6 +1774,23 @@ t8_cmesh_from_msh_file (t8_cmesh_t *pcmesh, const char *fileprefix, const int pa
         }
         *pcmesh = nullptr;
         return;
+      }
+      if (use_cad_geometry) {
+        /* Gmsh only stores the parameters of the nodes on cad curves and surfaces if the file was saved with
+         * Mesh.SaveParametric = 1. Without them, tree faces and edges with such nodes cannot be linked to the cad
+         * geometry. Nodes on cad vertices and in volumes never have parameters, so we only warn if no node is
+         * parametric at all, but some lie on curves or surfaces. */
+        const bool has_parametric_nodes = std::any_of (vertices_opt->begin (), vertices_opt->end (),
+                                                       [] (const t8_msh_file_node &node) { return node.parametric; });
+        const bool has_nodes_on_curves_or_surfaces
+          = std::any_of (vertices_opt->begin (), vertices_opt->end (),
+                         [] (const t8_msh_file_node &node) { return node.entity_dim == 1 || node.entity_dim == 2; });
+        if (!has_parametric_nodes && has_nodes_on_curves_or_surfaces) {
+          t8_global_errorf ("WARNING: Cad geometry requested, but %s contains no parametric node coordinates. "
+                            "Tree faces and edges with nodes on CAD curves or surfaces are not linked to the CAD "
+                            "geometry. Save the msh file with Mesh.SaveParametric = 1 to use the CAD geometry.\n",
+                            current_file);
+        }
       }
       indices = t8_cmesh_msh_file_4_read_eles (cmesh, file, *vertices_opt, dim, linear_geometry, use_cad_geometry,
                                                cad_geometry, true);

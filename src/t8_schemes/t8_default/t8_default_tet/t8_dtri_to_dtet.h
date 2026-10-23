@@ -20,9 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtri_to_dtet.h 
+/** \file t8_dtri_to_dtet.h
  * In this file, we redefine macros, types,... of the code for triangles
- * to use the  default implementation also for tetrahedra in 3D to 
+ * to use the  default implementation also for tetrahedra in 3D to
  * avoid code duplication.
  */
 
@@ -33,8 +33,8 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Define macro used in the default triangle implementation to check 
- * if we are in the case where the tri implementation is used for tets. 
+/** Define macro used in the default triangle implementation to check
+ * if we are in the case where the tri implementation is used for tets.
  */
 #define T8_DTRI_TO_DTET
 

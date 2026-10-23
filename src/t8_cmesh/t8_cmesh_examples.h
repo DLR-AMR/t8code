@@ -56,8 +56,7 @@ T8_EXTERN_C_BEGIN ();
  * \param[in]       comm       mpi communicator to be used with the new cmesh.
  * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
  * \note This function requires that p4est is initialized. Make sure to call
- * p4est_init before using this routine. If this is not the case, a
- * warning is issued and  p4est_init is called from within this function.
+ * p4est_init before using this routine.
  */
 void
 t8_cmesh_new_from_p4est (t8_cmesh_t cmesh, p4est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition);

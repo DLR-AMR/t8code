@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_disjoint_bricks_param.hxx 
+/** \file t8_cmesh_new_disjoint_bricks_param.hxx
  * Parameterized example cmeshes with disjoint bricks.
  */
 #ifndef T8_CMESH_NEW_DISJOINT_BRICKS_PARAM_HXX

@@ -324,7 +324,7 @@ TEST_P (shmem, test_shmem_array)
 
   /* Write into array */
   /* In the first half we use the t8_shmem_array_set_gloidx function,
-    * we then use a standard store to write 
+    * we then use a standard store to write
     * and at the end we use t8_shmem_array_index_for_writing.
     */
   if (t8_shmem_array_start_writing (shmem_array)) {
@@ -369,7 +369,7 @@ TEST_P (shmem, test_shmem_array)
 
 /**
  * Comparison function for binary search.
- * 
+ *
  * \param[in] array The shared memory array to search in.
  * \param[in] guess The current guess index.
  * \param[in] value The value to search for.
@@ -386,7 +386,7 @@ compare (t8_shmem_array_t array, const int guess, const t8_gloidx_t value)
 }
 
 /**
- * Test the binary search function of the shared memory array. 
+ * Test the binary search function of the shared memory array.
  * Creates an array with values 0 to array_length - 1 and searches for each value.
  * Also searches for values not in the array and checks that -1 is returned.
  */

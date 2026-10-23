@@ -40,11 +40,11 @@
 #include <mesh_handle/mesh.hxx>                 /** General mesh header. Always needed for mesh_handle code. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
-#include <mesh_handle/concepts.hxx>             /** Include this to use c++ concepts related to the mesh handle. 
+#include <mesh_handle/concepts.hxx>             /** Include this to use c++ concepts related to the mesh handle.
                                           *  This can be used to constrain the template parameters to only allow mesh handle classes. */
 #include "t8_mesh_tutorials_common.hxx"         /** Adaption function definition used for this tutorial. */
 
-/** Build our adapted mesh by transferring the adaption parameters and adapting once 
+/** Build our adapted mesh by transferring the adaption parameters and adapting once
  *  with the adapt_callback_sphere function defined in \ref t8_mesh_tutorials_common.hxx.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] mesh      The mesh that should be adapted.
@@ -56,9 +56,9 @@ step3_adapt_mesh (TMeshClass &mesh)
   /* Defining the adaption parameters. */
   adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
   /* Adapting once using our adapt callback.
-   *  set_adapt() only records how the mesh should be changed, it does not modify anything yet. 
+   *  set_adapt() only records how the mesh should be changed, it does not modify anything yet.
    *  commit() is the function that actually adapts this mesh using these settings.
-   *  This "configure, then commit" split lets t8code carry out several mesh operations together in one efficient pass, rather than one at a time. 
+   *  This "configure, then commit" split lets t8code carry out several mesh operations together in one efficient pass, rather than one at a time.
    */
   mesh.set_adapt (
     TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (&adapt_callback_sphere<TMeshClass>, adapt_params));

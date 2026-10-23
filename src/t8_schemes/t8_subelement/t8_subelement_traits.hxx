@@ -23,7 +23,7 @@
 /** \file t8_subelement_traits.hxx
  * Traits for subelement schemes.
  * Each trait defines the underlying scheme and subelement type associated with the subelement scheme.
- * This allows the common subelement implementation in \ref t8_subelement_scheme.hxx to remain generic 
+ * This allows the common subelement implementation in \ref t8_subelement_scheme.hxx to remain generic
  * while using the types required by each specialization.
  */
 
