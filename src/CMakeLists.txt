@@ -371,8 +371,6 @@ install( DIRECTORY t8_openfoam
     PATTERN "*.h"
 )
 
-
-
 install( TARGETS T8
   EXPORT ${PROJECT_NAME}-targets
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
