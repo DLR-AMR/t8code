@@ -141,7 +141,6 @@ add_t8_cpp_test( NAME t8_gtest_attribute_gloidx_array_serial                SOUR
 add_t8_cpp_test( NAME t8_gtest_cmesh_bounding_box_serial                    SOURCES t8_cmesh/t8_gtest_cmesh_bounding_box.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_healpix_unit_sphere                    SOURCES t8_cmesh/t8_gtest_cmesh_healpix_unit_sphere.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_healpix_check_correctness              SOURCES t8_cmesh/t8_gtest_cmesh_healpix_check_correctness.cxx )
-add_t8_cpp_test( NAME t8_gtest_cmesh_boundary_conditions_serial             SOURCES t8_cmesh/t8_gtest_cmesh_boundary_conditions.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_boundary_conditions_parallel           SOURCES t8_cmesh/t8_gtest_cmesh_boundary_conditions.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_shmem_parallel  SOURCES t8_data/t8_gtest_shmem.cxx )

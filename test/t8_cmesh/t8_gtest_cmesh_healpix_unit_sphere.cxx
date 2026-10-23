@@ -33,8 +33,6 @@
 TEST (T8GeometryHealpixTest, AllTreesAreOnUnitSphere)
 {
   t8_geometry_healpix geom;
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
 
   std::random_device rd;
   std::mt19937 gen (rd ());
@@ -73,5 +71,4 @@ TEST (T8GeometryHealpixTest, AllTreesAreOnUnitSphere)
                                         << " (xi=" << ref_coords[i * 2] << ", eta=" << ref_coords[i * 2 + 1] << ")";
     }
   }
-  t8_cmesh_destroy (&cmesh);
 }

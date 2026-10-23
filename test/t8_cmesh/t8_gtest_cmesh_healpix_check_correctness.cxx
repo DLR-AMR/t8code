@@ -28,7 +28,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <numbers>
 
-struct LocationResult
+struct t8_location_result
 {
   double z;
   double phi;
