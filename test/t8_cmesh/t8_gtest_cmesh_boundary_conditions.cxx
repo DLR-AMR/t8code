@@ -102,6 +102,7 @@ struct t8_cmesh_single_tree_bc: public testing::TestWithParam<t8_eclass>
  */
 TEST_P (t8_cmesh_single_tree_bc, test_single_tree_boundary_conditions)
 {
+  ASSERT_TRUE (t8_cmesh_has_boundary_conditions (cmesh));
   /* Only check if the tree is local to our process. */
   if (t8_cmesh_get_num_local_trees (cmesh)) {
     /* Retrieve bcs and check that input == output. */
@@ -119,8 +120,10 @@ TEST_P (t8_cmesh_single_tree_bc, test_single_tree_boundary_conditions)
  */
 TEST_P (t8_cmesh_single_tree_bc, test_single_tree_forest_element_boundary_conditions)
 {
+  ASSERT_TRUE (t8_cmesh_has_boundary_conditions (cmesh));
   t8_cmesh_ref (cmesh);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 2, 1, sc_MPI_COMM_WORLD);
+  ASSERT_TRUE (t8_forest_has_boundary_conditions (forest));
 
   /* Only check if the tree is local to our process. */
   if (t8_forest_get_num_local_trees (forest)) {
@@ -168,6 +171,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_hybrid_hypercube_boundary_conditi
     t8_cmesh_t cmesh;
     t8_cmesh_init (&cmesh);
     t8_cmesh_new_hypercube_hybrid_ext (cmesh, sc_MPI_COMM_WORLD, periodic, true);
+    ASSERT_TRUE (t8_cmesh_has_boundary_conditions (cmesh));
 
     /* Test the boundary conditions of the trees. All faces with neighbors should have the bc "internal". All other faces are "boundary". */
     const t8_locidx_t num_local_cmesh_trees = t8_cmesh_get_num_local_trees (cmesh);
@@ -196,6 +200,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_hybrid_hypercube_boundary_conditi
      This way every element face will carry a boundary condition. Internal element faces are checked in another test (test_single_tree_forest_element_boundary_conditions). */
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 1, sc_MPI_COMM_WORLD);
     const t8_scheme *scheme = t8_forest_get_scheme (forest);
+    ASSERT_TRUE (t8_forest_has_boundary_conditions (forest));
 
     /* Some variables for t8_forest_leaf_face_neighbors */
     int *dual_faces;
@@ -257,6 +262,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
   t8_cmesh_set_boundary_conditions (cmesh, 0, single_hex_bcs_c, 6);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  ASSERT_TRUE (t8_cmesh_has_boundary_conditions (cmesh));
 
   /* The cmesh is replicated, so the tree is local to every process. */
   ASSERT_EQ (t8_cmesh_get_num_local_trees (cmesh), 1);
@@ -279,6 +285,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
   /* We now test the interface for a level 1 forest. This way we should get internal and external faces.
      We assume, that all hex elements inside the tree have the same orientation and face numeration. */
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 1, 1, sc_MPI_COMM_WORLD);
+  ASSERT_TRUE (t8_forest_has_boundary_conditions (forest));
 
   /* Only check if the forest tree is local to our process. */
   if (t8_forest_get_num_local_trees (forest)) {
@@ -460,6 +467,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_broadcasted_cm
   }
   cmesh = t8_cmesh_bcast (cmesh, 0, comm);
   t8_cmesh_commit (cmesh, comm);
+  ASSERT_TRUE (t8_cmesh_has_boundary_conditions (cmesh));
 
   ASSERT_EQ (t8_cmesh_get_num_local_trees (cmesh), 1);
   /* Retrieve and test boundary conditions on all ranks. */
@@ -517,6 +525,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_distributed_cm
   }
   t8_cmesh_set_partition_range (cmesh, 3, min_tree_id, max_tree_id);
   t8_cmesh_commit (cmesh, comm);
+  ASSERT_TRUE (t8_cmesh_has_boundary_conditions (cmesh));
 
   /* Retrieve boundary conditions and compute how many there should be. */
   auto registered_boundary_conditions
@@ -545,4 +554,19 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_distributed_cm
                   == registered_boundary_conditions.end ());
   }
   t8_cmesh_destroy (&cmesh);
+}
+
+/**
+ * We create an empty cmesh and forest and expect that no boundary conditions are set.
+ */
+TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_no_boundary_conditions)
+{
+  t8_cmesh_t cmesh = NULL;
+  t8_cmesh_new_empty (cmesh, sc_MPI_COMM_WORLD);
+  EXPECT_FALSE (t8_cmesh_has_boundary_conditions (cmesh));
+
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, sc_MPI_COMM_WORLD);
+  EXPECT_FALSE (t8_forest_has_boundary_conditions (forest));
+
+  t8_forest_unref (&forest);
 }
