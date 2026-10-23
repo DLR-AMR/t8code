@@ -30,7 +30,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <random>
 /* Test whether the healpix geometry has an equal radius all across the geometry. */
-TEST (T8GeometryHealpixTest, AllTreesAreOnUnitSphere)
+TEST (t8_geometry_healpix_test, test_all_trees_are_on_unit_sphere)
 {
   t8_geometry_healpix geom;
 
@@ -52,7 +52,6 @@ TEST (T8GeometryHealpixTest, AllTreesAreOnUnitSphere)
 #endif
 
   for (int i = 0; i < num_gen_coords; i++) {
-    std::cout << i << std::endl;
     ref_coords.push_back (dist (gen));
     ref_coords.push_back (dist (gen));
   }
@@ -61,7 +60,7 @@ TEST (T8GeometryHealpixTest, AllTreesAreOnUnitSphere)
   std::vector<double> out_coords (num_coords * 3, 0.0);
   // Loop through all 12 base trees of the HEALPix projection
   for (t8_gloidx_t gtreeid = 0; gtreeid < 12; ++gtreeid) {
-    geom.t8_geom_evaluate (cmesh, gtreeid, ref_coords.data (), num_coords, out_coords.data ());
+    geom.t8_geom_evaluate (nullptr, gtreeid, ref_coords.data (), num_coords, out_coords.data ());
 
     for (size_t i = 0; i < num_coords; ++i) {
       std::span<const double> point (out_coords.data () + 3 * i, 3);

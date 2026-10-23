@@ -36,7 +36,7 @@ struct t8_location_result
   bool have_sintheta;
 };
 
-LocationResult
+t8_location_result
 xyf2loc (double x, double y, int face, const int JRLL[], const int JPLL[])
 {
   double z = 0.0;
@@ -80,7 +80,7 @@ xyf2loc (double x, double y, int face, const int JRLL[], const int JPLL[])
   return { z, phi, sintheta, have_sintheta };
 }
 
-TEST (HealpixGeometryTest, EvaluatesBatchAgainstXyf2LocReference)
+TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
 {
   const int JRLL[12] = { 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4 };
   const int JPLL[12] = { 1, 3, 5, 7, 0, 2, 4, 6, 1, 3, 5, 7 };
@@ -127,7 +127,7 @@ TEST (HealpixGeometryTest, EvaluatesBatchAgainstXyf2LocReference)
         double eta_clamped = std::clamp (eta, 1e-10, 1.0 - 1e-10);
 
         // Pass the 0..11 global face index to xyf2loc
-        LocationResult ref_loc = xyf2loc (xi_clamped, eta_clamped, healpix_face, JRLL, JPLL);
+        t8_location_result ref_loc = xyf2loc (xi_clamped, eta_clamped, healpix_face, JRLL, JPLL);
 
         double ref_sin_theta;
         if (ref_loc.have_sintheta) {
