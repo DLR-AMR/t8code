@@ -413,6 +413,22 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     }
   }
 
+  /** Check if the element is conformal, i.e. there are no hanging nodes on any of its faces.
+   *  This is the case if the element has zero or exactly one face neighbor at each face.
+   *  This function uses the cached face neighbor defined in TCompetences if available.
+   *  \return True if the element is conformal, false otherwise.
+   */
+  bool
+  is_conformal () const
+  {
+    for (int iface = 0; iface < get_num_faces (); ++iface) {
+      if (get_face_neighbors (iface).size () > 1) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /** Convert points from the reference space of this element to the reference space of
    * its tree / its initial coarse mesh element.
    * \param [in] ref_coords Points in the element's reference space [0,1]^dim.

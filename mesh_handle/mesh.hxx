@@ -43,7 +43,8 @@
 #include <memory>
 #include <span>
 #include <type_traits>
-
+#include <t8_forest/t8_forest_subelement.hxx> /* For t8_forest_has_subelements */
+#include <algorithm>
 namespace t8_mesh_handle
 {
 
@@ -237,6 +238,25 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   is_balanced () const
   {
     return t8_forest_is_balanced (m_forest);
+  }
+
+  /** Check if the mesh is conformal, i.e. no element has hanging nodes on any of its faces.
+   *  The check uses \ref element::is_conformal and thus uses cached neighbors.
+   *  This function is collective and has to be called on all processes.
+   *  \return True if the mesh is conformal on all processes, false otherwise.
+   */
+  bool
+  is_conformal () const
+  {
+    SC_CHECK_ABORT (!t8_forest_has_subelements (m_forest),
+                    "The conformity check is not possible for meshes with subelements.");
+    const bool locally_conformal
+      = std::all_of (cbegin (), cend (), [] (const element_class& element) { return element.is_conformal (); });
+    int local = locally_conformal ? 1 : 0;
+    int global = 0;
+    const int mpiret = sc_MPI_Allreduce (&local, &global, 1, sc_MPI_INT, sc_MPI_LAND, t8_forest_get_mpicomm (m_forest));
+    SC_CHECK_MPI (mpiret);
+    return global != 0;
   }
 
   // --- Methods to access elements. ---
