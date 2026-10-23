@@ -170,6 +170,8 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.cxx
+    t8_cmesh/t8_cmesh_healpix/t8_cmesh_healpix.cxx
+    t8_cmesh/t8_cmesh_healpix/t8_geometry_healpix.cxx
     t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions.cxx
     t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.cxx
     t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_c_helper.cxx
