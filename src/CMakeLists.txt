@@ -345,7 +345,6 @@ install( DIRECTORY t8_schemes
     PATTERN "*.h"
     PATTERN "*.hxx"
 )
-
 install( DIRECTORY t8_types
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING
@@ -370,8 +369,6 @@ install( DIRECTORY t8_openfoam
     PATTERN "*.hxx"
     PATTERN "*.h"
 )
-
-
 
 install( TARGETS T8
   EXPORT ${PROJECT_NAME}-targets
