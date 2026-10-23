@@ -345,6 +345,14 @@ install( DIRECTORY t8_schemes
     PATTERN "*.h"
     PATTERN "*.hxx"
 )
+
+install( DIRECTORY test
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.hxx"
+    PATTERN "*.h"
+)
+
 install( DIRECTORY t8_types
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING
