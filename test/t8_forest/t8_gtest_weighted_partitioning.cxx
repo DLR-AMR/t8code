@@ -45,7 +45,7 @@
 // testing
 #include <gtest/gtest.h>
 #include <t8_gtest_schemes.hxx>
-#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include <t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 #include <t8_gtest_macros.hxx>
 #include <t8_gtest_custom_assertion.hxx>
 

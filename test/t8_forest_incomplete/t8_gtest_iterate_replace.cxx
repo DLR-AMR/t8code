@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include <t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
