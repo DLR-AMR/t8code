@@ -24,7 +24,7 @@
 #include "t8_vtk/t8_vtk_writer_helper.hxx"
 #include <t8_vtk/t8_vtk.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include "t8_forest/t8_forest_types.h"
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
@@ -720,7 +720,7 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE *vtufile, const int write_g
   int freturn;
   int sreturn;
   int idata;
-  char description[BUFSIZ];
+  char description[T8_VTK_MAX_STRING_LENGTH];
 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (vtufile != NULL);
@@ -748,9 +748,9 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE *vtufile, const int write_g
     for (idata = 0; idata < num_data; idata++) {
       if (data[idata].type == T8_VTK_SCALAR) {
         /* Write the description string. */
-        sreturn = snprintf (description, BUFSIZ, "%s_%s", data[idata].description, "points");
+        sreturn = snprintf (description, T8_VTK_MAX_STRING_LENGTH, "%s_%s", data[idata].description, "points");
 
-        if (sreturn >= BUFSIZ) {
+        if (sreturn >= T8_VTK_MAX_STRING_LENGTH) {
           /* The output was truncated */
           t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
         }
@@ -758,13 +758,13 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE *vtufile, const int write_g
                                                  t8_forest_vtk_vertices_scalar_kernel, write_ghosts, data[idata].data);
       }
       else {
-        char component_string[BUFSIZ];
+        char component_string[T8_VTK_MAX_STRING_LENGTH];
         T8_ASSERT (data[idata].type == T8_VTK_VECTOR);
-        snprintf (component_string, BUFSIZ, "NumberOfComponents=\"3\"");
+        snprintf (component_string, T8_VTK_MAX_STRING_LENGTH, "NumberOfComponents=\"3\"");
         /* Write the description string. */
-        sreturn = snprintf (description, BUFSIZ, "%s_%s", data[idata].description, "points");
+        sreturn = snprintf (description, T8_VTK_MAX_STRING_LENGTH, "%s_%s", data[idata].description, "points");
 
-        if (sreturn >= BUFSIZ) {
+        if (sreturn >= T8_VTK_MAX_STRING_LENGTH) {
           /* The output was truncated */
           /* Note: gcc >= 7.1 prints a warning if we
            * do not check the return value of snprintf. */

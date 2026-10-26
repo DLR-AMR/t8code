@@ -152,6 +152,15 @@ t8_forest_is_initialized (t8_forest_t forest);
 int
 t8_forest_is_committed (t8_forest_t forest);
 
+/** Check whether a committed forest has (potentially) incomplete trees.
+ * A tree is incomplete if an element has been removed from it.
+ * \param [in] forest           A committed forest.
+ * \return                      True if \a forest has (potentially) incomplete trees, false otherwise.
+ *                              The result is the same on all processes.
+ */
+int
+t8_forest_has_incomplete_trees (const t8_forest_t forest);
+
 /** Check whether the forest has local overlapping elements.
  * \param [in] forest   The forest to consider.
  * \return              True if \a forest has no elements which are inside each other.
@@ -230,6 +239,15 @@ t8_forest_set_level (t8_forest_t forest, int level);
  */
 void
 t8_forest_set_copy (t8_forest_t forest, const t8_forest_t from);
+
+/** Get the forest from which a not yet committed forest is derived in \ref t8_forest_commit.
+ * \param [in] forest  An initialized, not committed forest.
+ * \return             The source forest passed to \ref t8_forest_set_copy, \ref t8_forest_set_adapt,
+ *                     \ref t8_forest_set_partition, or \ref t8_forest_set_balance.
+ *                     NULL if none of these functions has been called with a source forest yet.
+ */
+t8_forest_t
+t8_forest_get_set_from (const t8_forest_t forest);
 
 /** Set a source forest with an adapt function to be adapted on committing.
  * By default, the forest takes ownership of the source \b set_from such that it
@@ -323,6 +341,24 @@ t8_forest_get_user_function (const t8_forest_t forest);
 void
 t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening);
 
+/** Query whether a forest is set to be partitioned during commit, see \ref t8_forest_set_partition.
+ * \param [in]      forest              An initialized, not committed forest.
+ * \param [out]     set_for_coarsening  The \a set_for_coarsening argument of \ref t8_forest_set_partition if the
+ *                                      forest is set to be partitioned, false otherwise.
+ *                                      May be NULL, if the argument is not needed.
+ * \return                              True if the forest is set to be partitioned, false otherwise.
+ */
+int
+t8_forest_partition_is_set (const t8_forest_t forest, int *set_for_coarsening);
+
+/** Undo \ref t8_forest_set_partition, such that the forest is not partitioned during commit.
+ * If the forest is set to be neither adapted nor balanced, it is copied from its source forest during commit.
+ * Nothing happens if the forest is not set to be partitioned.
+ * \param [in, out] forest  An initialized, not committed forest.
+ */
+void
+t8_forest_unset_partition (t8_forest_t forest);
+
 /** Set a user-defined weight function to guide the partitioning.
  * \param [in, out] forest  The forest.
  * \param [in]      weight_callback A callback function defining element weights for the partitioning.
@@ -359,6 +395,16 @@ t8_forest_set_partition_weight_function (t8_forest_t forest, t8_weight_fcn_t *we
 void
 t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_repartition);
 
+/** Query whether a forest is set to be balanced during commit, see \ref t8_forest_set_balance.
+ * \param [in]      forest          An initialized, not committed forest.
+ * \param [out]     no_repartition  The \a no_repartition argument of \ref t8_forest_set_balance if the forest is set
+ *                                  to be balanced, false otherwise.
+ *                                  May be NULL, if the argument is not needed.
+ * \return                          True if the forest is set to be balanced, false otherwise.
+ */
+int
+t8_forest_balance_is_set (const t8_forest_t forest, int *no_repartition);
+
 /** This type controls, which neighbors count as ghost elements.
  * Currently, we support face-neighbors. Vertex and edge neighbors will eventually be added. */
 typedef enum {
@@ -381,7 +427,7 @@ void
 t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type);
 
 /** Set a specific ghost_definition for a forest.
- * This is used both when the application defines its own ghost_definition class and to select a non-default face-neighbor ghost version.
+ * This is used when the application defines its own ghost_definition class.
  * \param [in]    forest            The forest.
  * \param [in]    do_ghost          If 0 no ghost layer will be computed.
  * \param [in]    ghost_definition  Pointer to an object of the class ghost_definition or a derived class
@@ -390,6 +436,22 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
 */
 void
 t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition_c *ghost_definition);
+
+/** Query whether a ghost layer is set to be created during commit,
+ * see \ref t8_forest_set_ghost and \ref t8_forest_set_ghost_ext.
+ * \param [in]      forest  An initialized, not committed forest.
+ * \return                  True if a ghost layer is set to be created, false otherwise.
+ */
+int
+t8_forest_ghost_is_set (const t8_forest_t forest);
+
+/** Get the ghost definition of a forest, see \ref t8_forest_set_ghost_ext.
+ * The forest keeps the ownership of the ghost definition.
+ * \param [in]      forest  An initialized or committed forest.
+ * \return                  The ghost definition of the forest. NULL if the forest has no ghost definition.
+ */
+t8_forest_ghost_definition_c *
+t8_forest_get_ghost_definition (const t8_forest_t forest);
 
 /**
  *  Use assertions and document that the forest_set (..., from) and
@@ -731,6 +793,22 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm, int set_profili
  */
 sc_MPI_Comm
 t8_forest_get_mpicomm (const t8_forest_t forest);
+
+/** Return the rank of this process in the mpi communicator of a forest.
+ * \param [in]      forest      The forest.
+ * \return                      The rank of this process in the communicator of \a forest.
+ * \a forest must be committed before calling this function.
+ */
+int
+t8_forest_get_mpirank (const t8_forest_t forest);
+
+/** Return the number of processes in the mpi communicator of a forest.
+ * \param [in]      forest      The forest.
+ * \return                      The number of processes in the communicator of \a forest.
+ * \a forest must be committed before calling this function.
+ */
+int
+t8_forest_get_mpisize (const t8_forest_t forest);
 
 /** Return the global id of the first local tree of a forest.
  * \param [in]      forest      The forest.

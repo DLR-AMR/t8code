@@ -23,7 +23,7 @@
 /** \file element_data_competences.hxx
  * Handler for the element data of a \ref t8_mesh_handle::mesh.
  * The file defines mesh and element competences for element-data handling.
- * The mesh competences make it possible to manage element data and exchange it for ghost elements between processes. 
+ * The mesh competences make it possible to manage element data and exchange it for ghost elements between processes.
  * The element competences makes it possible to access this element data directly for each element of the mesh.
  * Also, a competence to interpolate data after adaptation using a user-defined callback is provided.
  */
@@ -38,7 +38,6 @@
 #include <type_traits>
 #include <vector>
 #include <functional>
-#include <optional>
 #include <span>
 
 namespace t8_mesh_handle
@@ -49,9 +48,9 @@ namespace detail
 {
 /** Helper function to wrap a span-based interpolation callback (see \ref mesh::interpolate_callback_type) into
  * the element-index-based \ref interpolate_element_data_mesh_competence::internal_interpolate_callback_type.
- * The returned wrapper receives the index/count pairs, builds the element spans, and forwards them to \a callback. 
- * The spans are built here and not in \ref interpolate_element_data_mesh_competence because \a TMesh is complete, 
- * so element_class is nameable — which it is not inside the competence (see note on 
+ * The returned wrapper receives the index/count pairs, builds the element spans, and forwards them to \a callback.
+ * The spans are built here and not in \ref interpolate_element_data_mesh_competence because \a TMesh is complete,
+ * so element_class is nameable — which it is not inside the competence (see note on
  * \ref interpolate_element_data_mesh_competence::internal_interpolate_callback_type).
  * This is used in \ref interpolate_element_data_mesh_competence::set_interpolate_callback
  * \tparam TMesh The (complete) mesh handle type.
@@ -75,16 +74,16 @@ to_replace_callback (typename TMesh::interpolate_callback_type callback)
 // --- Mesh competence for element data management. ---
 /** Handler for the element data of a \ref mesh.
  * Use this competence if you want to manage element data for the elements of the mesh.
- * Use the helper \ref element_data_mesh_competence to get this competence with the correct template parameters form. 
- * If you want to access the data not only in vector form but also directly for each element, 
+ * Use the helper \ref element_data_mesh_competence to get this competence with the correct template parameters form.
+ * If you want to access the data not only in vector form but also directly for each element,
  * you can combine this competence with \ref element_data_element_competence.
- * In summary you can use the competences like this: 
+ * In summary you can use the competences like this:
  *    mesh<element_competence_pack<element_data_element_competence>,
  *         mesh_competence_pack<element_data_mesh_competence<YourElementDataType>::template type>>;
  * Some predefined competences are also defined in \ref competence_pack.hxx.
  *
  * \tparam TUnderlying Use the \ref mesh class here.
- * \tparam TElementDataType The element data type you want to use for each element of the mesh. 
+ * \tparam TElementDataType The element data type you want to use for each element of the mesh.
  *         The data type has to be MPI safe as the data for ghost elements will be exchanged via MPI.
  */
 template <typename TUnderlying, T8MPISafeType TElementDataType>
@@ -93,7 +92,7 @@ class element_data_mesh_competence_impl: public t8_crtp_basic<TUnderlying> {
   using ElementDataType = TElementDataType; /**< Make Type of the element data publicly accessible. */
 
   /** Set the element data vector. The vector should have the length of num_local_elements.
-   * \param [in] element_data The element data vector to set with one entry of class TElementDataType 
+   * \param [in] element_data The element data vector to set with one entry of class TElementDataType
    *            for each local mesh element (excluding ghosts). The vector is moved, not copied.
    */
   void
@@ -139,7 +138,7 @@ class element_data_mesh_competence_impl: public t8_crtp_basic<TUnderlying> {
     m_element_data.resize (num_local_elements + num_ghosts);
     // t8_forest_ghost_exchange_data expects an sc_array, so we need to wrap our data array to one.
     sc_array* sc_array_wrapper
-      = sc_array_new_data (m_element_data.data (), sizeof (ElementDataType), num_local_elements + num_ghosts);
+      = sc_array_new_data (m_element_data.data (), sizeof (TElementDataType), num_local_elements + num_ghosts);
 
     // Data exchange: entries with indices > num_local_elements will get overwritten.
     t8_forest_ghost_exchange_data (this->underlying ().get_forest (), sc_array_wrapper);
@@ -147,21 +146,54 @@ class element_data_mesh_competence_impl: public t8_crtp_basic<TUnderlying> {
     sc_array_destroy (sc_array_wrapper);
   }
 
+  /** Repartition the element data so it follows a newly partitioned forest.
+   * The element data currently belongs to \a forest_from; this moves it to the layout of \a forest_to, which must
+   * have been created by partitioning \a forest_from.
+   * Analogous to \ref exchange_ghost_data, but using \ref t8_forest_partition_data.
+   * This function is called from \ref mesh::commit after the element data has been interpolated (if the mesh was
+   * adapted) and the partitioned forest has been committed.
+   * \param [in] forest_from The (committed) forest the current element data belongs to.
+   * \param [in] forest_to   The committed forest that was partitioned from \a forest_from.
+   * \note Both forests could also be accessed directly (by this->underlying()) but this requires that the function is
+   * called on the exact right states of m_forest and m_uncommitted_forest.
+   * Providing the variables is the safer implementation.
+   */
+  void
+  repartition_element_data (t8_forest_t forest_from, t8_forest_t forest_to)
+  {
+    // Take ownership of old data and wrap into sc_array. This is because the forest functions expect an sc_array.
+    std::vector<TElementDataType> old_data = take_element_data ();
+    const t8_locidx_t num_old_local = t8_forest_get_local_num_leaf_elements (forest_from);
+    T8_ASSERT (old_data.size () >= static_cast<size_t> (num_old_local));
+    sc_array* data_in = sc_array_new_data (old_data.data (), sizeof (TElementDataType), num_old_local);
+    const t8_locidx_t num_new_local = t8_forest_get_local_num_leaf_elements (forest_to);
+    // Define vector for the new data and wrap it.
+    std::vector<TElementDataType> partitioned_data (num_new_local);
+    sc_array* data_out = sc_array_new_data (partitioned_data.data (), sizeof (TElementDataType), num_new_local);
+    // Partition magic using the forest function.
+    t8_forest_partition_data (forest_from, forest_to, data_in, data_out);
+    // Clean up.
+    sc_array_destroy (data_in);
+    sc_array_destroy (data_out);
+    // Set the partitioned element data to the mesh.
+    set_element_data (std::move (partitioned_data));
+  }
+
  protected:
   std::vector<TElementDataType> m_element_data; /**< Vector storing the (local) element data. */
 };
 
-/** Wrapper for \ref element_data_mesh_competence_impl to hide TUnderlying and provide the form needed to 
+/** Wrapper for \ref element_data_mesh_competence_impl to hide TUnderlying and provide the form needed to
  * pass it as a mesh competence.
- * Use mesh_competence_pack<element_data_mesh_competence<YourElementDataType>::template type> 
+ * Use mesh_competence_pack<element_data_mesh_competence<YourElementDataType>::template type>
  * to get this competence with the correct template parameter form for the mesh.
- * \tparam TElementDataType The element data type you want to use for each element of the mesh. 
+ * \tparam TElementDataType The element data type you want to use for each element of the mesh.
  *         The data type has to be MPI safe as the data for ghost elements will be exchanged via MPI.
  */
 template <T8MPISafeType TElementDataType>
 struct element_data_mesh_competence
 {
-  /** Type to provide the form needed for the mesh competence pack. 
+  /** Type to provide the form needed for the mesh competence pack.
   * \tparam TUnderlying Use the \ref mesh class here.
   */
   template <typename TUnderlying>
@@ -170,7 +202,7 @@ struct element_data_mesh_competence
 
 // --- Element competence for element data management. ---
 /** Element competence to enable that element data can be accessed directly for each element of the mesh.
- * \note This competence requires that the mesh has the \ref element_data_mesh_competence_impl 
+ * \note This competence requires that the mesh has the \ref element_data_mesh_competence_impl
  *     (or \ref element_data_mesh_competence) competence that defines the element data vector and the element data type.
  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
@@ -178,9 +210,9 @@ template <typename TUnderlying>
 struct element_data_element_competence: public t8_crtp_operator<TUnderlying, element_data_element_competence>
 {
  public:
-  /** Set the element data for the element. 
+  /** Set the element data for the element.
    * \note You can only set element data for non-ghost elements.
-   * \param [in] element_data The element data to be set of Type TMeshClass::ElementDataType. 
+   * \param [in] element_data The element data to be set of Type TMeshClass::ElementDataType.
    *              element_data is moved, not copied.
    */
   void
@@ -198,7 +230,7 @@ struct element_data_element_competence: public t8_crtp_operator<TUnderlying, ele
   }
 
   /** Getter for the element data.
-   * For ghost elements ensure that \ref element_data_mesh_competence_impl::exchange_ghost_data is called on 
+   * For ghost elements ensure that \ref element_data_mesh_competence_impl::exchange_ghost_data is called on
    * each process first.
    * Element data for non-ghost elements can be accessed (if set) directly.
    * \return Element data with data of Type TMeshClass::ElementDataType.
@@ -219,8 +251,8 @@ struct element_data_element_competence: public t8_crtp_operator<TUnderlying, ele
  * The \ref element_data_mesh_competence stores a vector of element data, but that data has to be updated if
  * the mesh is adapted, since the elements it refers to are refined, coarsened or reordered. This competence adds the
  * ability to interpolate the data after the adaptation via a user-defined callback set using \ref set_interpolate_callback.
- * The next \ref mesh::commit applies it. 
- * \note It therefore only makes sense in combination with the element data competence 
+ * The next \ref mesh::commit applies it.
+ * \note It therefore only makes sense in combination with the element data competence
  *       (see \ref interpolate_data_mesh_competence_pack, which bundles the two).
  * \tparam TUnderlying Use the \ref mesh class here.
  */
@@ -233,11 +265,11 @@ class interpolate_element_data_mesh_competence:
    * \see set_interpolate_callback for registering a callback.
    * The span-based callback is automatically wrapped in \ref set_interpolate_callback to match this type and stored as
    * \ref m_interpolate_callback to be used in the next \ref mesh::commit.
-   * \note We cannot store the span-based \ref mesh::interpolate_callback_type directly: This competence uses the 
+   * \note We cannot store the span-based \ref mesh::interpolate_callback_type directly: This competence uses the
    *       CRTP pattern, so while the competence is instantiated, the mesh (\a TUnderlying) is still an incomplete type.
-   *       A data member of type \ref mesh::interpolate_callback_type would require \c TUnderlying::element_class, 
-   *       which is not available for the incomplete type. Therefore we use this index-based callback type for storage 
-   *       without the need for element_class. Using \ref set_interpolate_callback, we move the element_class lookup 
+   *       A data member of type \ref mesh::interpolate_callback_type would require \c TUnderlying::element_class,
+   *       which is not available for the incomplete type. Therefore we use this index-based callback type for storage
+   *       without the need for element_class. Using \ref set_interpolate_callback, we move the element_class lookup
    *       to the call site.
    * \param [in]     mesh_old  The old mesh that is adapted from.
    * \param [in,out] mesh_new  The new mesh constructed from \a mesh_old.
@@ -254,80 +286,31 @@ class interpolate_element_data_mesh_competence:
 
   /** Register a user callback to interpolate the element data after adaptation.
    * Note that data can only be interpolated for a level difference of at most one.
-   * Please use the type \ref mesh::interpolate_callback_type for the callback. 
+   * Please use the type \ref mesh::interpolate_callback_type for the callback.
    * \see mesh::interpolate_callback_type for the expected callback shape and the meaning of its arguments.
    * \note This function is templated on purpose: it is only instantiated at the call site, where the mesh is a
    *       complete type and \ref mesh::element_class (needed to name \ref mesh::interpolate_callback_type) is
-   *       nameable, which it is not inside this competence. 
+   *       nameable, which it is not inside this competence.
    *       The template parameter is deduced from the passed callback, so you do not have to provide it explicitly.
    * \tparam TInterpolateCallback The user callback type \ref mesh::interpolate_callback_type.
    * \param [in] interpolate_callback The span-based interpolation callback.
-   * 
+   *
    */
   template <typename TInterpolateCallback>
   void
   set_interpolate_callback (TInterpolateCallback&& interpolate_callback)
   {
     /* We wrap the user-defined, span-based callback using \ref detail::to_replace_callback to the index-based callback
-     * type \ref internal_interpolate_callback_type to be able to store the callback without the need of knowing 
+     * type \ref internal_interpolate_callback_type to be able to store the callback without the need of knowing
      * \ref mesh::element_class.*/
     m_interpolate_callback
       = detail::to_replace_callback<TUnderlying> (std::forward<TInterpolateCallback> (interpolate_callback));
   }
 
  protected:
-  /** Decide whether \ref mesh::set_partition has been requested for the upcoming \ref mesh::commit.
-   * With the interpolation competence the partition step is postponed so that it runs after the element data has been
-   * interpolated onto the new mesh; \ref mesh::set_partition therefore records its choice in
-   * \ref m_partition_for_coarsening instead of building the partitioned forest directly.
-   * \return true if \ref mesh::set_partition has been called (i.e. \ref m_partition_for_coarsening holds a value),
-   *         false otherwise.
-   */
-  bool
-  set_partition_called ()
-  {
-    return m_partition_for_coarsening.has_value ();
-  }
-
-  /** Repartition the element data so it follows a newly partitioned forest.
-   * The element data currently belongs to \a forest_from; this moves it to the layout of \a forest_to, which must
-   * have been created by partitioning \a forest_from. 
-   * Analogous to \ref element_data_mesh_competence_impl::exchange_ghost_data, but using \ref t8_forest_partition_data. 
-   * This function is called from \ref mesh::commit after the interpolated data has been produced and the partitioned 
-   * forest has been committed.
-   * \param [in] forest_from The (committed) forest the current element data belongs to.
-   * \param [in] forest_to   The committed forest that was partitioned from \a forest_from.
-   * \note Both forests could also be accessed directly (by this->underlying()) but this requires that the function is
-   * called on the exact right states of m_forest and m_uncommitted_forest. 
-   * Providing the variables is the safer implementation.
-   */
-  void
-  repartition_element_data (t8_forest_t forest_from, t8_forest_t forest_to)
-  {
-    using element_data_type = typename TUnderlying::ElementDataType;
-    // Take ownership of old data and wrap into sc_array. This is because the forest functions expect an sc_array.
-    std::vector<element_data_type> old_data = this->underlying ().take_element_data ();
-    sc_array* data_in = sc_array_new_data (old_data.data (), sizeof (element_data_type),
-                                           t8_forest_get_local_num_leaf_elements (forest_from));
-    const t8_locidx_t num_new_local = t8_forest_get_local_num_leaf_elements (forest_to);
-    // Define vector for the new data and wrap it.
-    std::vector<element_data_type> partitioned_data (num_new_local);
-    sc_array* data_out = sc_array_new_data (partitioned_data.data (), sizeof (element_data_type), num_new_local);
-    // Partition magic using the forest function.
-    t8_forest_partition_data (forest_from, forest_to, data_in, data_out);
-    // Clean up.
-    sc_array_destroy (data_in);
-    sc_array_destroy (data_out);
-    // Set the partitioned element data to the mesh.
-    this->underlying ().set_element_data (std::move (partitioned_data));
-  }
-
   internal_interpolate_callback_type
-    m_interpolate_callback; /**< The wrapped element-index-based interpolation callback, 
+    m_interpolate_callback; /**< The wrapped element-index-based interpolation callback,
                               * applied on the next \ref mesh::commit. */
-  std::optional<bool>
-    m_partition_for_coarsening; /**< Postponed \ref mesh::set_partition request: a value means partition on the next 
-                          * commit (with value passed to \ref mesh::set_partition); no value means do not partition. */
 };
 
 }  // namespace t8_mesh_handle

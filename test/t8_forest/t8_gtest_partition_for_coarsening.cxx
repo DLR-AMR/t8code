@@ -67,7 +67,6 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_io.h>
-#include <t8_forest/t8_forest_types.h>
 
 /**
  * Callback to perform some arbitrary mesh adaptation within the test suite.
@@ -96,7 +95,7 @@ refine_some_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_f
                       [[maybe_unused]] t8_element_t *elements[])
 {
   // Refine some elements.
-  return (lelement_id % (forest_from->mpirank + 1) ? 1 : 0);
+  return (lelement_id % (t8_forest_get_mpirank (forest_from) + 1) ? 1 : 0);
 }
 
 /**
@@ -237,7 +236,7 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   // In some cases, we will adapt the uniform base forest.
   t8_forest_t adapted_base_forest;
 
-  /* Ensure that in case of the root level test there is no adaptation, such that the partition bound will 
+  /* Ensure that in case of the root level test there is no adaptation, such that the partition bound will
   * definitely fall upon a root level element and the corresponding code section is covered. */
   if (level != 0) {
     // In any other case, we perform some adaptation.

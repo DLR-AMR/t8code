@@ -41,7 +41,7 @@ struct TestBFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
   virtual void
   check_element () {};
 
-  /** recursive breadth first search to iterate over all descendants of elem up to \a max_bfs_recursion_level 
+  /** recursive breadth first search to iterate over all descendants of elem up to \a max_bfs_recursion_level
    * \param [in] max_bfs_recursion_level Maximum recursion level.
    */
   void

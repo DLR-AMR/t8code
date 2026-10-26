@@ -39,7 +39,6 @@
 
 TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
 {
-
   auto fileprefix = t8_test_data_dir / "test_msh_file_vers4_ascii";
   char filename[BUFSIZ];
 
@@ -74,4 +73,21 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers4_bin)
   ASSERT_TRUE (cmesh == NULL) << "Expected fail of reading binary msh file v.4, but did not fail.";
 
   t8_debugf ("Error handling successful.\n");
+}
+
+/* Reading a msh file with a dimension it has no elements of must fail
+ * cleanly while reading the elements and return a NULL cmesh. */
+TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii_wrong_dim)
+{
+  auto fileprefix = t8_test_data_dir / "test_msh_file_vers4_ascii";
+  char filename[BUFSIZ];
+
+  snprintf (filename, BUFSIZ, "%s.msh", fileprefix.c_str ());
+
+  ASSERT_FALSE (access (filename, R_OK)) << "Could not open file " << filename;
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  /* The file only contains 2D elements. */
+  t8_cmesh_from_msh_file (&cmesh, fileprefix.c_str (), 1, sc_MPI_COMM_WORLD, 3, 0, 0);
+  ASSERT_TRUE (cmesh == NULL) << "Expected fail of reading 3D elements from a 2D msh file, but did not fail.";
 }

@@ -27,7 +27,7 @@
 #pragma once
 
 #include <t8.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <unordered_map>
 
 /** A struct representing a node in the mesh for the deformation, containing its global ID, position, displacement and the mean distance to its neighbors. */
@@ -37,8 +37,8 @@ struct t8_mesh_deformation_node
   t8_gloidx_t global_id;
   /** The old position of the node. */
   t8_3D_vec position;
-  /** The displacement. 
-   * For boundary nodes this is known and calculated from the different coordinates of the CAD geometries. 
+  /** The displacement.
+   * For boundary nodes this is known and calculated from the different coordinates of the CAD geometries.
    * For inner nodes this is the result of the interpolation. */
   t8_3D_vec displacement;
   /** Mean distance to neighbouring vertices (boundary nodes only). */
@@ -64,7 +64,7 @@ struct t8_mesh_deformation_method
     = 0;
 
   /**
-   * Solves the linear system A * alpha = displacements to find the weight. 
+   * Solves the linear system A * alpha = displacements to find the weight.
    * This step is mandatory for RBF to later be able to interpolate the inner nodes.
    */
   virtual void

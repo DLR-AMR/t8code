@@ -22,7 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_common.hxx
- * Collection of data types and callbacks for mesh handle meshes and forests to be used in the mesh handle test cases. 
+ * Collection of data types and callbacks for mesh handle meshes and forests to be used in the mesh handle test cases.
  */
 #pragma once
 
@@ -34,7 +34,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <span>
 
 /** Dummy element data taken from a tutorial for test purposes. */
@@ -49,7 +49,7 @@ struct data_per_element
     = default;
 };
 
-/** Adapt callback for a mesh handle hypercube that exercises all possible operations (coarsen, refine, nothing). 
+/** Adapt callback for a mesh handle hypercube that exercises all possible operations (coarsen, refine, nothing).
  * Adaption with this callback produces an unbalanced mesh (if the initial refinement level fits).
  * The callback coarsens the left half (x < 0.5), refines a band 0.5 <= x < 0.75 and leaves the rest untouched.
  * The centroid is used to determine the x-coordinate.

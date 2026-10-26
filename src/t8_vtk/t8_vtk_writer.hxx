@@ -33,13 +33,12 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8.h>
-#include "t8_forest/t8_forest_types.h"
 #include "t8_vtk/t8_vtk_writer_helper.hxx"
 #include "t8_vtk/t8_vtk_write_ASCII.hxx"
 
 #include <string>
 #include <t8_vtk/t8_vtk.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 
 #if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
@@ -255,26 +254,23 @@ struct vtk_writer
     vtkIdType *vecCellIds = new vtkIdType[num_node];
 
     /* Compute the coordinates of the element/tree. */
-    double *coordinates = T8_ALLOC (double, 3 * num_node);
+    std::vector<t8_3D_vec> coordinates (num_node);
 
-    T8_ASSERT (coordinates != NULL);
+    // Static assert to make sure no padding is used and the entries are actually continguously.
+    static_assert (sizeof (t8_3D_vec) == 3 * sizeof (double));
 
-    grid_element_to_coords (grid, itree, element, curved_flag, coordinates, element_shape);
+    grid_element_to_coords (grid, itree, element, curved_flag, coordinates.front ().data (), element_shape);
     vtkIdType ptId = -1;
     for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
-      const size_t offset_3d = 3 * ivertex;
-      /* Insert the point in the points array. */
-      double vtkCoords[3] = { coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2] };
       if (merge_points) {
-        points->InsertUniquePoint (vtkCoords, ptId);
+        points->InsertUniquePoint (coordinates[ivertex].data (), ptId);
       }
       else {
-        ptId = points->InsertNextPoint (vtkCoords);
+        ptId = points->InsertNextPoint (coordinates[ivertex].data ());
       }
       /* Add the returned point id to the cell ids*/
       vecCellIds[ivertex] = ptId;
     }
-    T8_FREE (coordinates);
 
     /* Fill the cell array. */
     cellArray->InsertNextCell (num_node, vecCellIds);

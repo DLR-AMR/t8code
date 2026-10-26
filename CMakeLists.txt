@@ -54,16 +54,19 @@ option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
-option( T8CODE_ENABLE_EIGEN "Enable t8code's features which rely on eigen" OFF )
+option( T8CODE_ENABLE_EIGEN "Enable t8code's features which rely on Eigen" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
+cmake_dependent_option( T8CODE_USE_SYSTEM_EIGEN "Use system-installed Eigen library" OFF "T8CODE_ENABLE_EIGEN" OFF )
 
 option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
 set(T8CODE_CUSTOM_PARALLEL_TEST_COMMAND "" CACHE STRING "Define a custom command for parallel tests , e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
 set(T8CODE_CUSTOM_SERIAL_TEST_COMMAND "" CACHE STRING "Define a custom command for serial tests.")
+
+include(cmake/PostInstallTests.cmake)
 
 # Reading the option T8CODE_TEST_LEVEL: Possible choices are T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC. Default is T8_TEST_LEVEL_FULL.
 set(T8CODE_TEST_LEVEL "T8_TEST_LEVEL_FULL" CACHE STRING "Test level: T8_TEST_LEVEL_FULL for full tests, T8_TEST_LEVEL_MEDIUM for less thorough tests, T8_TEST_LEVEL_BASIC for minimal tests. (WARNING: Use with care.)")
@@ -175,6 +178,13 @@ else()
     set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -w" CACHE STRING "" FORCE)
 endif()
 
+# Eigen is only downloaded if it is enabled and no system-installed Eigen should be used.
+if( T8CODE_ENABLE_EIGEN AND NOT T8CODE_USE_SYSTEM_EIGEN )
+    set( T8CODE_FETCH_EIGEN ON )
+else()
+    set( T8CODE_FETCH_EIGEN OFF )
+endif()
+
 # Capture the list of variables before adding the thirdparty libraries to mark the added ones as advanced.
 get_cmake_property(_vars_before_thirdparty VARIABLES )
 
@@ -231,15 +241,21 @@ endif( T8CODE_ENABLE_OCC )
 
 if ( T8CODE_USE_SYSTEM_SC )
     find_package( SC REQUIRED )
-else()
+elseif( T8CODE_ENABLE_MPI )
     ########################## Fix for OpenMPI ############################################
     # OpenMPI sometimes has a mismatch between their C and CXX interface which produces a warning in SC.
     # The warning makes t8codes build fail when Werror is activated. This fix checks if t8code
     # is linked against OpenMPI and then suppresses that Werror treats this warning as error.
     # The warning is still displayed while compiling.
     # We compile a test program mich checks if a OpenMPI specific macro is defined and then apply the fix.
+    # The checks link MPI::MPI_C, so that they find mpi.h also without an MPI compiler wrapper.
+    # They skip the MPI C++ bindings, which MPI::MPI_C does not provide.
 
     include(CheckIncludeFile)
+    include(CMakePushCheckState)
+    cmake_push_check_state()
+    set(CMAKE_REQUIRED_LIBRARIES MPI::MPI_C)
+    set(CMAKE_REQUIRED_DEFINITIONS -DOMPI_SKIP_MPICXX=1 -DMPICH_SKIP_MPICXX=1)
 
     # Check if mpi.h is available
     check_include_file("mpi.h" MPI_HEADER_FOUND)
@@ -262,12 +278,17 @@ else()
     else()
         message(WARNING "mpi.h not found!")
     endif()
+    cmake_pop_check_state()
     ########################## End of fix for OpenMPI ############################################
 endif()
 
 
 if ( T8CODE_USE_SYSTEM_P4EST )
     find_package( P4EST REQUIRED )
+endif()
+
+if ( T8CODE_USE_SYSTEM_EIGEN )
+    find_package( Eigen3 REQUIRED NO_MODULE )
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )

@@ -35,13 +35,20 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 
+/**
+ * Calculates the mean euclidean distance from a given vertex based on its neighbor vertices.
+ * The result will later be multiplied with the scaling factor chosen by the user.
+ * \param [in] cmesh The mesh.
+ * \param [in] tree_list The list of trees where the vertex is present.
+ * \param [in] current_global_vertex_id The global ID of the current vertex.
+ * \return The mean distance to the neighbor vertices.
+ */
 static double
-calculate_mean_neighbor_distance (t8_cmesh_t cmesh, const std::vector<std::pair<t8_locidx_t, int>> &tree_list,
-                                  t8_gloidx_t current_global_vertex_id)
+t8_calculate_mean_neighbor_distance (const t8_cmesh_t cmesh, const std::vector<std::pair<t8_locidx_t, int>> &tree_list,
+                                     const t8_gloidx_t current_global_vertex_id)
 {
   double total_distance = 0.0;
-
-  /** Get the first tree where this vertex exists. */
+  /* Get the first tree where the current boundary vertex (with ID current_global_vertex_id) exists. */
   const auto &first_tree = tree_list.front ();
   const t8_locidx_t first_tree_id = first_tree.first;
   const int first_local_index = first_tree.second;
@@ -49,63 +56,64 @@ calculate_mean_neighbor_distance (t8_cmesh_t cmesh, const std::vector<std::pair<
   const double *first_tree_coords = (const double *) t8_cmesh_get_attribute (
     cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, first_tree_id);
 
-  /** Check if the coordinates are available. */
+  /* Check if the coordinates are available. */
   if (first_tree_coords == nullptr) {
-    t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree_id);
-    SC_ABORTF ("Vertex coordinates are missing.");
+    t8_errorf ("Error: Coordinates attribute missing for tree %d.\n", first_tree_id);
+    SC_ABORT ("Vertex coordinates are missing.");
   }
 
   const double current_vertex_x = first_tree_coords[3 * first_local_index + 0];
   const double current_vertex_y = first_tree_coords[3 * first_local_index + 1];
   const double current_vertex_z = first_tree_coords[3 * first_local_index + 2];
 
-  /** Set up a set to calculate the distance to every neighbors vertex just once. */
+  /* Set up a set to calculate the distance to every neighbors vertex just once. */
   std::set<std::tuple<double, double, double>> unique_neighbors;
 
-  /** Iterate over the tree list in which the current vertex is present. */
+  /* Iterate over the tree list in which the current vertex is present. */
   for (const auto &[tree_id, local_vertex_index_of_the_current_vertex] : tree_list) {
 
-    /** Get the vertex coordinates array of the current tree. */
+    /* Get the vertex coordinates array of the current tree. */
     const double *tree_vertex_coords
       = (const double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, tree_id);
 
-    /** Check if the coordinates are available. */
+    /* Check if the coordinates are available. */
     if (tree_vertex_coords != nullptr) {
 
-      int num_vertices = t8_eclass_num_vertices[t8_cmesh_get_tree_class (cmesh, tree_id)];
+      const int num_vertices = t8_eclass_num_vertices[t8_cmesh_get_tree_class (cmesh, tree_id)];
 
       for (int neighbor_vertex = 0; neighbor_vertex < num_vertices; ++neighbor_vertex) {
-        /** If the vertex is the current vertex itself, we do not calculate the distance. */
+        /* If the vertex is the current vertex itself, we do not calculate the distance. */
         if (neighbor_vertex != local_vertex_index_of_the_current_vertex) {
 
-          /** Get the coordinates of the neighbor vertex. */
-          double x = tree_vertex_coords[3 * neighbor_vertex + 0];
-          double y = tree_vertex_coords[3 * neighbor_vertex + 1];
-          double z = tree_vertex_coords[3 * neighbor_vertex + 2];
+          /* Get the coordinates of the neighbor vertex. */
+          const double x_coord = tree_vertex_coords[3 * neighbor_vertex + 0];
+          const double y_coord = tree_vertex_coords[3 * neighbor_vertex + 1];
+          const double z_coord = tree_vertex_coords[3 * neighbor_vertex + 2];
 
-          /** Save the coordinates in the set, in which double coordinates will be filtered out. */
-          unique_neighbors.insert (std::make_tuple (x, y, z));
+          /* Save the coordinates in the set, in which double coordinates will be filtered out. */
+          unique_neighbors.insert (std::make_tuple (x_coord, y_coord, z_coord));
         }
       }
     }
   }
 
-  /** Check if the set is empty. */
+  /* Check if the set is empty. */
   if (unique_neighbors.empty ()) {
-    t8_errorf ("Error: No neighbor vertices found for global vertex %d to calculate local support radius.\n",
+    t8_errorf ("Error: No neighbor vertices found for global vertex %" T8_GLOIDX_FORMAT
+               " to calculate local support radius.\n",
                current_global_vertex_id);
-    SC_ABORTF ("Calculation of local support radius failed due to missing neighbor vertices.");
+    SC_ABORT ("Calculation of local support radius failed due to missing neighbor vertices.");
   }
-  /** Calculate the distance to every neighbor node. */
-  for (const auto &[x, y, z] : unique_neighbors) {
-    double distance_x = current_vertex_x - x;
-    double distance_y = current_vertex_y - y;
-    double distance_z = current_vertex_z - z;
+  /* Calculate the distance to every neighbor node. */
+  for (const auto &[x_coord, y_coord, z_coord] : unique_neighbors) {
+    const double distance_x = current_vertex_x - x_coord;
+    const double distance_y = current_vertex_y - y_coord;
+    const double distance_z = current_vertex_z - z_coord;
 
     total_distance += std::sqrt (distance_x * distance_x + distance_y * distance_y + distance_z * distance_z);
   }
-
-  return (total_distance / static_cast<double> (unique_neighbors.size ()));
+  /* Return the average distance. */
+  return total_distance / static_cast<double> (unique_neighbors.size ());
 }
 
 std::unordered_map<t8_gloidx_t, t8_mesh_deformation_node>
@@ -135,8 +143,8 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
     /* Check if the geometry attribute is available for this tree. */
     if (first_tree_geom_attribute == nullptr) {
-      t8_errorf ("Error: Geometry attribute missing for tree %d\n.", first_tree_id);
-      SC_ABORTF ("Geometry attribute is missing.\n");
+      t8_errorf ("Error: Geometry attribute missing for tree %d.\n", first_tree_id);
+      SC_ABORT ("Geometry attribute is missing.\n");
     }
 
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
@@ -155,10 +163,10 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
       /* Check if the attribute of the vertex is the same in all trees. */
       if (!(entity_dim == first_tree_entity_dim && entity_tag == first_tree_entity_tag)) {
-        t8_errorf (
-          "Error: Inconsistent entity info for global vertex %li: tree %d: dim=%d tag=%d, expected dim=%d tag=%d\n",
-          global_vertex_id, tree_id, entity_dim, entity_tag, first_tree_entity_dim, first_tree_entity_tag);
-        SC_ABORTF ("Inconsistency in vertex info.\n");
+        t8_errorf ("Error: Inconsistent entity info for global vertex %" T8_GLOIDX_FORMAT
+                   ": tree %d: dim=%d tag=%d, expected dim=%d tag=%d.\n",
+                   global_vertex_id, tree_id, entity_dim, entity_tag, first_tree_entity_dim, first_tree_entity_tag);
+        SC_ABORT ("Inconsistency in vertex info.\n");
       }
     }
 #endif /* T8_ENABLE_DEBUG */
@@ -172,8 +180,8 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
       /* Check if the (u,v)-parameters are available. */
       if (uv_attribute == nullptr) {
-        t8_errorf ("Error: (u,v)-parameters are missing for tree %d\n.", first_tree_id);
-        SC_ABORTF ("(u,v)-parameters are missing.\n");
+        t8_errorf ("Error: (u,v)-parameters are missing for tree %d.\n", first_tree_id);
+        SC_ABORT ("(u,v)-parameters are missing.\n");
       }
       /* Get the (u,v)-parameter of the vertex. */
       const double *uv_parameter = &uv_attribute[2 * local_corner_index];
@@ -184,8 +192,8 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
       /* Check if the coordinates are available. */
       if (old_coords == nullptr) {
-        t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree_id);
-        SC_ABORTF ("Vertex coordinates are missing.\n");
+        t8_errorf ("Error: Coordinates attribute missing for tree %d.\n", first_tree_id);
+        SC_ABORT ("Vertex coordinates are missing.\n");
       }
 
       gp_Pnt new_coords;
@@ -197,12 +205,12 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
         break;
       }
       case 1: {
-        Handle_Geom_Curve curve = cad->get_cad_curve (first_tree_entity_tag);
+        const Handle_Geom_Curve curve = cad->get_cad_curve (first_tree_entity_tag);
         curve->D0 (uv_parameter[0], new_coords);
         break;
       }
       case 2: {
-        Handle_Geom_Surface surface = cad->get_cad_surface (first_tree_entity_tag);
+        const Handle_Geom_Surface surface = cad->get_cad_surface (first_tree_entity_tag);
         surface->D0 (uv_parameter[0], uv_parameter[1], new_coords);
         break;
       }
@@ -222,10 +230,10 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       /* Calculate the displacement of the vertex which should be then done in the deformation. */
       node.displacement = { new_coords.X () - old_x, new_coords.Y () - old_y, new_coords.Z () - old_z };
 
-      /* Calculate the mesh neighbor distance from the node, which can be used to calcuslate the radius for a compat RBF. */
-      node.mean_neighbor_distance = calculate_mean_neighbor_distance (associated_cmesh, tree_list, global_vertex_id);
+      /* Calculate the mean neighbor distance of the node, which can be used to calculate the radius for a compactly supported RBF. */
+      node.mean_neighbor_distance = t8_calculate_mean_neighbor_distance (associated_cmesh, tree_list, global_vertex_id);
 
-      /* Set the global id of the node.*/
+      /* Set the global id of the node. */
       node.global_id = global_vertex_id;
       boundary_node_data[global_vertex_id] = node;
     }
@@ -241,18 +249,20 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
 
   SC_CHECK_ABORT (deformation_method != nullptr, "No deformation method set. Call set_deformation_method first.\n");
 
+  const int mesh_dimension = t8_cmesh_get_dimension (associated_cmesh);
+
   std::unordered_map<t8_gloidx_t, t8_3D_vec> vertex_displacements;
   std::vector<t8_mesh_deformation_node> inner_nodes;
 
-  /** Iterate over all vertices in the displacement map. */
+  /* Iterate over all vertices in the displacement map. */
   for (const auto &global_vertex : *(associated_cmesh->vertex_connectivity)) {
-    /** Get the global vertex ID of the current vertex. */
-    t8_gloidx_t global_vertex_id = global_vertex.first;
+    /* Get the global vertex ID of the current vertex. */
+    const t8_gloidx_t global_vertex_id = global_vertex.first;
 
-    /** Get the list of trees where this vertex exists. */
+    /* Get the list of trees where this vertex exists. */
     const auto &tree_list = global_vertex.second;
 
-    /** Get the first tree where this vertex exists as a reference. */
+    /* Get the first tree where this vertex exists as a reference. */
     const auto &first_tree = tree_list.front ();
 
     /* Get the data of the first tree. */
@@ -261,32 +271,30 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
 
     /* Check if the geometry attribute is available for this tree. */
     if (first_tree_geom_attribute == nullptr) {
-      t8_errorf ("Error: Geometry attribute missing for tree %d\n.", first_tree.first);
-      SC_ABORTF ("Geometry attribute is missing.");
+      t8_errorf ("Error: Geometry attribute missing for tree %d.\n", first_tree.first);
+      SC_ABORT ("Geometry attribute is missing.");
     }
 
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
 
-    const int mesh_dimension = t8_cmesh_get_dimension (associated_cmesh);
-
-    /* Check if this vertex is a boundary node. 
-      If so, we can use the already known displacement extracted from the new CAD geometry input given.*/
+    /* Check if this vertex is a boundary node.
+       If so, we can use the already known displacement extracted from the new CAD geometry input given. */
     if (first_tree_entity_dim < mesh_dimension && first_tree_entity_dim >= 0) {
 
       vertex_displacements[global_vertex_id] = boundary_node_data.at (global_vertex_id).displacement;
     }
-    /** If it is an inner node, we do not know the displacement right away and need to interpolate to get the new coordinates. */
+    /* If it is an inner node, we do not know the displacement right away and need to interpolate to get the new coordinates. */
     else {
 
       const double *vertex_coords = static_cast<const double *> (t8_cmesh_get_attribute (
         associated_cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, first_tree.first));
-      /** Check if the coordinates are available. */
+      /* Check if the coordinates are available. */
       if (vertex_coords == nullptr) {
-        t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree.first);
-        SC_ABORTF ("Vertex coordinates are missing.");
+        t8_errorf ("Error: Coordinates attribute missing for tree %d.\n", first_tree.first);
+        SC_ABORT ("Vertex coordinates are missing.");
       }
 
-      /** Save the initial coordinates of the inner node. */
+      /* Save the initial coordinates of the inner node. */
       t8_mesh_deformation_node inner_node;
       inner_node.global_id = global_vertex_id;
       inner_node.position = { vertex_coords[3 * first_tree.second], vertex_coords[3 * first_tree.second + 1],
@@ -295,27 +303,30 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
     }
   }
 
+  /* Calculate the weights of the deformation method from the known boundary displacements. */
   deformation_method->set_boundary_nodes (boundary_node_data);
   deformation_method->solve ();
 
+  /* Interpolate the displacement of the inner nodes. */
   for (auto &inner_node : inner_nodes) {
     deformation_method->interpolate (inner_node);
     vertex_displacements[inner_node.global_id] = inner_node.displacement;
   }
 
   for (const auto &global_vertex : *(associated_cmesh->vertex_connectivity)) {
-    /** Get the global vertex ID of the current vertex. */
-    t8_gloidx_t global_vertex_id = global_vertex.first;
-    /** Update the vertex coordinates in each tree. */
+    /* Get the global vertex ID of the current vertex. */
+    const t8_gloidx_t global_vertex_id = global_vertex.first;
+    /* Get the list of trees where this vertex exists. */
     const auto &tree_list = global_vertex.second;
+    /* Update the vertex coordinates in each tree. */
     for (const auto &[tree_id, local_vertex_index] : tree_list) {
-      /** Get the vertex coordinates of the current tree. */
+      /* Get the vertex coordinates of the current tree. */
       double *tree_vertex_coords = (double *) t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (),
                                                                       T8_CMESH_VERTICES_ATTRIBUTE_KEY, tree_id);
 
-      /** Check if the coordinates are available. */
+      /* Check if the coordinates are available. */
       if (tree_vertex_coords != nullptr) {
-        /** Update the coordinates of the vertex. */
+        /* Update the coordinates of the vertex. */
         for (int coord_index = 0; coord_index < 3; ++coord_index) {
           tree_vertex_coords[3 * local_vertex_index + coord_index]
             += vertex_displacements.at (global_vertex_id)[coord_index];
@@ -324,8 +335,8 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
     }
   }
 
-  /** Update the cad geometry. */
-  t8_geometry_handler *geometry_handler = associated_cmesh->geometry_handler;
+  /* Update the cad geometry. */
+  detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (associated_cmesh);
   T8_ASSERT (geometry_handler != nullptr);
 
   for (auto geom = geometry_handler->begin (); geom != geometry_handler->end (); ++geom) {
