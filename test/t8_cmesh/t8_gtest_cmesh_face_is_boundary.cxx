@@ -176,7 +176,7 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees)
           << "eclass of non-existing face neighbor should be invalid but is not.";
       }
       else {
-        /* checkface == iface 
+        /* checkface == iface
          * Thus, tree 0 is connected to tree 1 across this face */
         t8_locidx_t face_neighbor;
         int dual_face = -1, orientation = -1;

@@ -41,7 +41,6 @@
 #include <vector>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <span>
 #include <type_traits>
 
@@ -62,7 +61,7 @@ concept MeshCompetencePack = requires { typename TType::is_mesh_competence_pack;
  * \tparam TElementCompetencePack The competences you want to add to the default functionality of the elements.
  *         \see element for more details on the choice of the template parameter.
  *         \note Please pack your competences using the \ref element_competence_pack class.
- * \tparam TMeshCompetences The competences you want to add to the default functionality of the mesh.
+ * \tparam TMeshCompetencePack The competences you want to add to the default functionality of the mesh.
  *         \note Please pack your competences using the \ref t8_mesh_handle::mesh_competence_pack class.
  *         One of the most important competences to add is \ref element_data_mesh_competence.
  */
@@ -116,14 +115,15 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     = std::function<int (const SelfType& mesh, std::span<const element_class> elements, TUserDataType user_data)>;
 
   /** Callback function prototype to interpolate the element data after refining or coarsening.
+   * The callback is applied in each \ref commit that adapts or balances the mesh, if element data is set.
    * \note You need to include \ref interpolate_element_data_mesh_competence to your competences to be able to
    * interpolate. The best way to do this is via the predefined pack \ref interpolate_data_mesh_competence_pack
    * defined in \ref competence_pack.hxx.
    *
-   * For each group of elements that changed during adaption, the outgoing elements of the old mesh are passed in
-   * \a old_elements and the incoming elements of the new mesh in \a new_elements; the callback reads the old data
-   * and writes the interpolated data onto the new elements. \a refine is the value \ref adapt_callback_type returned
-   * for this group.
+   * For each group of elements that changed during adaption or balancing, the outgoing elements of the old mesh are
+   * passed in \a old_elements and the incoming elements of the new mesh in \a new_elements; the callback reads the old
+   * data and writes the interpolated data onto the new elements. \a refine is the value \ref adapt_callback_type
+   * returned for this group.
    * \see interpolate_element_data_mesh_competence::set_interpolate_callback for the usage of this callback.
    * \param [in]     mesh_old     The old mesh that is adapted from.
    * \param [in,out] mesh_new     The new mesh constructed from \a mesh_old.
@@ -257,10 +257,9 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   }
 
   /** Check if the local elements of the mesh are balanced.
-  * The mesh is said to be balanced if the level difference between face neighbors is at most 1.
-  * at most +1 or -1 of the element's level.
-  * \return true if the local elements are balanced, false otherwise.
-  */
+   * The mesh is said to be balanced if the level difference between face neighbors is at most 1.
+   * \return true if the local elements are balanced, false otherwise.
+   */
   bool
   is_balanced () const
   {
@@ -389,7 +388,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * \param [in] adapt_callback_with_userdata The adapt callback including user data.
    * \param [in] user_data The user data to be used during the adaptation process.
    * \return An adapt callback without user data parameter that can be passed to \ref set_adapt.
-  */
+   */
   template <typename TUserDataType>
   static adapt_callback_type
   mesh_adapt_callback_wrapper (adapt_callback_type_with_userdata<TUserDataType> adapt_callback_with_userdata,
@@ -404,17 +403,15 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * \param [in] adapt_callback The adapt callback used on committing.
    * \note The adaptation is carried out only when \ref commit is called.
    * \note We currently do not provide the functionality to delete elements.
-   * \note This setting can be combined with set_partition and set_balance. The order in which
-   * these operations are executed is always 1) Adapt 2) Balance 3) Partition.
+   * \note This setting can be combined with \ref set_balance, \ref set_partition and \ref set_ghost.
    */
   void
   set_adapt (adapt_callback_type adapt_callback)
   {
     SC_CHECK_ABORT (!t8_forest_has_incomplete_trees (m_forest),
                     "The mesh handle can't adapt forests with incomplete trees.\n");
-    if (!m_uncommitted_forest.has_value ()) {
-      m_uncommitted_forest.emplace ();
-      t8_forest_init (&*m_uncommitted_forest);
+    if (m_uncommitted_forest == nullptr) {
+      t8_forest_init (&m_uncommitted_forest);
     }
     // Create and register adaptation context holding the mesh handle and the user-defined callback.
     detail::adapt_registry::register_context (
@@ -422,59 +419,48 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
 
     // Set up the forest for adaptation using the wrapper callback.
     // Recursive adaptation is currently not supported.
-    t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, false);
+    t8_forest_set_adapt (m_uncommitted_forest, m_forest, detail::mesh_adapt_callback_wrapper, false);
   }
 
   /** If this function is called, the mesh will be partitioned on committing.
    * The partitioning is done according to the SFC and each rank is assigned
    * the same (+-1) number of elements (+- one family in case of \a set_for_coarsening being true).
+   * If element data is set, it is repartitioned accordingly.
    * \note The partition is carried out only when \ref commit is called.
-   * \note This setting can be combined with \ref set_adapt and \ref set_balance. The order in which
-   * these operations are executed is always 1) Adapt 2) Balance 3) Partition.
+   * \note This setting can be combined with \ref set_adapt, \ref set_balance and \ref set_ghost.
    * \param [in] set_for_coarsening If true, the partitions are chosen such that coarsening
    *        an element once is a process local operation. Default is false.
    */
   void
   set_partition (bool set_for_coarsening = false)
   {
-    if (!m_uncommitted_forest.has_value ()) {
-      t8_forest_t new_forest;
-      t8_forest_init (&new_forest);
-      m_uncommitted_forest = new_forest;
+    if (m_uncommitted_forest == nullptr) {
+      t8_forest_init (&m_uncommitted_forest);
     }
-    t8_forest_set_partition (m_uncommitted_forest.value (), m_forest, set_for_coarsening);
+    t8_forest_set_partition (m_uncommitted_forest, m_forest, set_for_coarsening);
   }
 
   /** If this function is called, the mesh will be balanced when calling \ref commit.
    * The mesh is said to be balanced if the element level between face neighbors differs by at most 1.
-   * \param [in] no_repartition The balance routine performs multiple adaption rounds to reach the balanced state.
-   *                            To maintain a load balanced mesh, the balance routine can partition the mesh in between each adaptation round.
-   *                            \warning  This is only possible if the mesh contains no data which is interpolated using the
-   *                                      \ref interpolate_element_data_mesh_competence since the old and new elements and their data have to be on
-   *                                      the same rank to be able to be interpolated.
-   * \note This setting can be combined with \ref set_adapt and \ref set_partition. The order in which
-   * these operations are executed is always 1) Adapt 2) Balance 3) Partition.
+   * If element data is set, it is interpolated if the mesh has the \ref interpolate_element_data_mesh_competence
+   * and discarded otherwise (see \ref commit).
+   * \note This setting can be combined with \ref set_adapt, \ref set_partition and \ref set_ghost.
    */
   void
-  set_balance (bool no_repartition = false)
+  set_balance ()
   {
-    if constexpr (has_interpolate_data_competence ()) {
-      // If we interpolate the data, the elements must stay at the same rank. We partition after interpolation.
-      if (!no_repartition) {
-        t8_global_errorf ("WARNING: Data interpolation needs the regions of the mesh to stay on their current "
-                          "processes. Therefore, balance is not allowed to repartition the mesh. The mesh will instead "
-                          "be repartitioned after the interpolation and the resulting mesh will be as expected.\n");
-      }
+    if (m_uncommitted_forest == nullptr) {
+      t8_forest_init (&m_uncommitted_forest);
     }
-    if (!m_uncommitted_forest.has_value ()) {
-      t8_forest_t new_forest;
-      t8_forest_init (&new_forest);
-      m_uncommitted_forest = new_forest;
-    }
-    t8_forest_set_balance (m_uncommitted_forest.value (), m_forest, no_repartition);
+    // We repartition while balancing only if \ref set_partition is called as well and no element data is
+    // interpolated (that needs to remain on one process). In most cases, we work with data, such that we set
+    // no_repartition = true as default. We may change the flag in the commit routine.
+    const bool no_repartition = true;
+    t8_forest_set_balance (m_uncommitted_forest, m_forest, no_repartition);
   }
 
   /** Enable or disable the creation of a layer of ghost elements.
+   * If element data is set, the data of the ghost elements is exchanged on \ref commit.
    * \param [in]      do_ghost  If true a ghost layer will be created.
    * \param [in]      ghost_type Controls which neighbors count as ghost elements,
    *                             currently only T8_GHOST_FACES is supported. This value
@@ -483,132 +469,197 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   void
   set_ghost (bool do_ghost = true, t8_ghost_type_t ghost_type = T8_GHOST_FACES)
   {
-    if (!m_uncommitted_forest.has_value ()) {
-      m_uncommitted_forest.emplace ();
-      t8_forest_init (&*m_uncommitted_forest);
+    if (m_uncommitted_forest == nullptr) {
+      t8_forest_init (&m_uncommitted_forest);
     }
-    t8_forest_set_ghost (m_uncommitted_forest.value (), do_ghost, ghost_type);
+    t8_forest_set_ghost (m_uncommitted_forest, do_ghost, ghost_type);
   }
 
   /** After allocating and adding properties to the mesh, commit the changes.
    * This call updates the internal state of the mesh.
    * The forest used to define the mesh handle is replaced in this function.
    * The previous forest is unreferenced. Call \ref t8_forest_ref before if you want to keep it alive.
-   * Specialize the update with calls like \ref set_adapt first.
-   * The order of the calls is always 1) Adapt 2) Balance 3) Data Interpolation 4) Partition 5) Ghost,
-   * where calls not set beforehand are skipped.
-   * The order of the calls does not matter, the operations are always executed in this order.
+   *
+   * Specialize the update with calls like \ref set_adapt, \ref set_balance, \ref set_partition and \ref set_ghost
+   * first. The order of these calls does not matter.
+   *
+   * If element data is set (see \ref element_data_mesh_competence), it is updated as follows:
+   * - If the mesh is adapted or balanced and has the \ref interpolate_element_data_mesh_competence, the data is
+   *   interpolated with the callback set by \ref interpolate_element_data_mesh_competence::set_interpolate_callback.
+   * - If the mesh is adapted or balanced without this competence, the data does not match the elements anymore and is
+   *   discarded. Use \ref element_data_mesh_competence_impl::set_element_data to provide new data.
+   * - If the mesh is partitioned, the data is repartitioned accordingly.
+   * - If a ghost layer exists, the data of the ghost elements is exchanged. This is also done if only
+   *   \ref set_ghost was called.
    */
   void
   commit ()
   {
-    if (!m_uncommitted_forest.has_value ()) {
-      m_uncommitted_forest.emplace ();
-      t8_forest_init (&*m_uncommitted_forest);
+    /* The operations are always executed in the following order, where operations not requested are skipped.
+   * If element data is interpolated, i.e. element data is set, the mesh has the
+   * interpolate_element_data_mesh_competence and set_adapt or set_balance was called:
+   *  1. Adapt
+   *  2. Balance (without repartitioning)
+   *  3. Interpolation of the element data
+   *  4. Partition
+   *  5. Repartitioning of the element data
+   *  6. Ghost
+   *  7. Exchange of the ghost data
+   *
+   * Otherwise if no data is interpolated:
+   *  1. Adapt
+   *  2. Partition
+   *  3. Balance (repartitioning in each balance step if \ref set_partition was called)
+   *  4. Repartitioning of the element data
+   *  5. Ghost
+   *  6. Exchange of the ghost data
+   */
+    if (m_uncommitted_forest == nullptr) {
+      t8_forest_init (&m_uncommitted_forest);
     }
-    /* It can happen that the user only calls set_ghost before commit.
-    This does not set the set_from member of the forest and we copy the current forest in this case. */
-    if (t8_forest_get_set_from (m_uncommitted_forest.value ()) == nullptr) {
-      t8_forest_set_copy (m_uncommitted_forest.value (), m_forest);
+    // It can happen that the user only calls set_ghost before commit.
+    // This does not set the set_from member of the forest and we copy the current forest in this case.
+    if (t8_forest_get_set_from (m_uncommitted_forest) == nullptr) {
+      t8_forest_set_copy (m_uncommitted_forest, m_forest);
     }
-    /* With the interpolation competence, set_partition has to be called after the interpolation so that the same regions
-     * remain process local. Since the interpolation is not part of the forest commit routine, we have to take the partition and
-     * ghost flags out of the current forest, commit, then interpolate, then reapply the flags and then commit again. */
 
-    /** True if the partitioning has to be carried out after the interpolation, since set_partition or set_balance with
-     * repartitioning was called for this commit. False otherwise, in which case a requested partitioning is part of the
-     * forest commit (mesh without interpolation competence). */
-    bool partition_postponed = false;
-    /** The set_for_coarsening argument of the postponed partitioning: the argument of set_partition if it was called,
-     * false otherwise, as the balancing repartitions with set_for_coarsening false.
-     * Only meaningful if partition_postponed is true. */
-    int partition_for_coarsening = false;
-    /** True if the ghost layer has to be created for the forest of the postponed partitioning, false otherwise. */
-    bool ghost_postponed = false;
+    // Query which operations are requested for this commit.
+    // True if the mesh is set to be adapted.
+    const bool adapt_set = (detail::adapt_registry::get (m_forest) != nullptr);
+    // True if the mesh is set to be balanced.
+    const bool balance_set = t8_forest_balance_is_set (m_uncommitted_forest, nullptr);
+    // True if the elements change during this commit, such that element data does not match them anymore.
+    const bool elements_change = adapt_set || balance_set;
+    // True if the mesh is set to be partitioned (without the partitioning inside balance).
+    const bool partition_set = t8_forest_partition_is_set (m_uncommitted_forest, nullptr);
+    // True if element data is set that has to be interpolated, repartitioned or exchanged with the ghosts.
+    // If no data is set (e.g. if we partition the mesh before setting data), nothing has to be done for the data.
+    bool data_set = false;
+    if constexpr (has_element_data_handler_competence ()) {
+      data_set = !this->get_element_data ().empty ();
+    }
+    // True if the data is interpolated in this commit: Only if data is set and the elements change.
+    bool interpolate = false;
     if constexpr (has_interpolate_data_competence ()) {
-      const t8_forest_t forest = m_uncommitted_forest.value ();
-      /** The no_repartition argument of set_balance if it was called, false otherwise. */
-      int balance_no_repartition = false;
-      // When we have to interpolate the data, balance cannot repartition the forest.
-      // A requested repartitioning is carried out after the interpolation instead.
-      if (t8_forest_balance_is_set (forest, &balance_no_repartition)) {
-        t8_forest_set_balance (forest, nullptr, true);
-        partition_postponed = !balance_no_repartition;
-      }
-      // Same for the requested partition
-      if (t8_forest_partition_is_set (forest, &partition_for_coarsening)) {
-        t8_forest_unset_partition (forest);
+      interpolate = data_set && elements_change;
+    }
+
+    /* If we interpolate the data, the partition has to be carried out after the interpolation so that the same regions
+     * remain process local. Since the interpolation is not part of the forest commit routine, we have to take the
+     * partition and ghost flags out of the current forest, commit (adapt, balance), then interpolate, then reapply the
+     * flags and commit again (partition, ghost).
+     * If we do not interpolate, everything is done in one forest commit (adapt, partition, balance, ghost). */
+
+    /* True if the partitioning has to be carried out after the interpolation, since set_partition was called for this
+     * commit and the data is interpolated. False otherwise, in which case a requested partitioning is part of
+     * the forest commit. */
+    bool partition_postponed = false;
+    // The set_for_coarsening argument of set_partition. Only meaningful if partition_postponed is true.
+    int partition_for_coarsening = false;
+    // True if the ghost layer has to be created for the forest of the postponed partitioning, false otherwise.
+    bool ghost_postponed = false;
+    if (interpolate) {
+      /* Balance was set without repartitioning in set_balance, so the elements stay on their process while
+       * balancing. A requested partitioning is carried out after the interpolation instead. */
+      if (t8_forest_partition_is_set (m_uncommitted_forest, &partition_for_coarsening)) {
+        t8_forest_unset_partition (m_uncommitted_forest);
         partition_postponed = true;
-      }
-      // If partition was postponed, ghost also has to be postponed
-      if (partition_postponed && t8_forest_ghost_is_set (forest)) {
-        t8_forest_set_ghost_ext (forest, 0, nullptr);
-        ghost_postponed = true;
+        // The ghost layer has to be created for the partitioned forest, so ghost is postponed as well.
+        if (t8_forest_ghost_is_set (m_uncommitted_forest)) {
+          t8_forest_set_ghost_ext (m_uncommitted_forest, 0, nullptr);
+          ghost_postponed = true;
+        }
       }
     }
-    t8_forest_ref (m_forest);
-    t8_forest_commit (m_uncommitted_forest.value ());
-    // Check if we adapted and unregister the adapt context if so.
-    if (detail::adapt_registry::get (m_forest) != nullptr) {
-      detail::adapt_registry::unregister_context (m_forest);
+    else if (balance_set && partition_set) {
+      // No data has to be interpolated. The forest commit carries out adapt, partition and balance in this order.
+      // To keep the load balanced, the balancing repartitions the mesh in each balance step.
+      t8_forest_set_balance (m_uncommitted_forest, nullptr, false);
+    }
 
-      // If data are set for the mesh, we now try to interpolate them after adaptation.
-      if constexpr (has_element_data_handler_competence ()) {
+    // Keep the current forest alive during the commit, since the element data still belongs to it.
+    t8_forest_ref (m_forest);
+    t8_forest_commit (m_uncommitted_forest);
+    // Check if we adapted and unregister the adapt context if so.
+    if (adapt_set) {
+      detail::adapt_registry::unregister_context (m_forest);
+    }
+
+    if constexpr (has_element_data_handler_competence ()) {
+      if (interpolate) {
         if constexpr (has_interpolate_data_competence ()) {
-          if (this->m_interpolate_callback) {
-            // Create new intermediate mesh to interpolate the data from the current mesh to the new mesh.
-            SelfType new_mesh (m_uncommitted_forest.value ());
-            t8_forest_ref (m_uncommitted_forest.value ());
-            // Register the interpolate context with the callback for the new mesh. With this, the standard
-            // iterate replace can be called, passing the mesh's callback.
-            detail::interpolate_registry::register_context (
-              m_forest, std::make_unique<detail::mesh_interpolate_context<SelfType>> (
-                          *this, new_mesh, std::move (this->m_interpolate_callback)));
-            t8_global_productionf ("MESH HANDLE start data interpolation.\n");
-            t8_forest_iterate_replace (m_uncommitted_forest.value (), m_forest, detail::mesh_replace_callback_wrapper);
-            t8_global_productionf ("MESH HANDLE finished data interpolation.\n");
-            detail::interpolate_registry::unregister_context (m_forest);
-            // Override the element data of the current mesh with the interpolated data from the "new mesh".
-            this->m_element_data = new_mesh.take_element_data ();
-          }
-          else {
-            SC_ABORTF ("ERROR: No interpolation callback set. Please provide a callback or do not use "
-                       "the competence interpolate_element_data_mesh_competence.\n");
-          }
+          SC_CHECK_ABORT (this->m_interpolate_callback,
+                          "ERROR: No interpolation callback set. Please provide a callback or do not use the "
+                          "competence interpolate_element_data_mesh_competence.\n");
+          // Create new intermediate mesh to interpolate the data from the current mesh to the new mesh.
+          SelfType new_mesh (m_uncommitted_forest);
+          t8_forest_ref (m_uncommitted_forest);
+          // Register the interpolate context with the callback for the new mesh. With this, the standard
+          // iterate replace can be called, passing the mesh's callback.
+          // Pass a copy of the callback instead of moving it out of the mesh to be reusable.
+          using callback_type = typename detail::mesh_interpolate_context<SelfType>::callback_type;
+          detail::interpolate_registry::register_context (
+            m_forest, std::make_unique<detail::mesh_interpolate_context<SelfType>> (
+                        *this, new_mesh, callback_type (this->m_interpolate_callback)));
+          t8_global_productionf ("MESH HANDLE start data interpolation.\n");
+          t8_forest_iterate_replace (m_uncommitted_forest, m_forest, detail::mesh_replace_callback_wrapper);
+          t8_global_productionf ("MESH HANDLE finished data interpolation.\n");
+          detail::interpolate_registry::unregister_context (m_forest);
+          // Override the element data of the current mesh with the interpolated data from the "new mesh".
+          this->m_element_data = new_mesh.take_element_data ();
         }
-        else {
-          t8_global_infof ("The element data was not interpolated during adaptation. Use set_element_data() to provide "
-                           "new data or use the mesh competence interpolate_element_data_mesh_competence.\n");
-        }
+      }
+      else if (data_set && elements_change) {
+        // The data does not match the new elements anymore and cannot be interpolated without the competence.
+        t8_global_infof ("The element data was not interpolated during adaptation or balancing and is discarded. Use "
+                         "set_element_data() to provide new data or use the mesh competence "
+                         "interpolate_element_data_mesh_competence.\n");
+        this->m_element_data.clear ();
+        // There is no data left to repartition or to exchange with the ghosts.
+        data_set = false;
+      }
+      else if (data_set && partition_set) {
+        // If the elements did not change, partition is done on commit. In this case, repartition also the element data.
+        this->repartition_element_data (m_forest, m_uncommitted_forest);
       }
     }
     t8_forest_unref (&m_forest);
     // Update underlying forest of the mesh.
-    m_forest = m_uncommitted_forest.value ();
-    m_uncommitted_forest.reset ();
+    m_forest = m_uncommitted_forest;
+    m_uncommitted_forest = nullptr;
 
-    // Lastly, we perform the postponed partition and ghost steps
-    if constexpr (has_interpolate_data_competence ()) {
-      if (partition_postponed) {
-        // The forest before partitioning. We keep it alive, since the element data still follows it and is
-        // repartitioned below.
-        t8_forest_t unpartitioned_forest = m_forest;
-        t8_forest_ref (unpartitioned_forest);
-        t8_forest_init (&m_forest);
-        t8_forest_set_partition (m_forest, unpartitioned_forest, partition_for_coarsening);
-        if (ghost_postponed) {
-          // The requested ghost definition, which is still owned by the unpartitioned forest.
-          t8_forest_ghost_definition* const ghost_definition = t8_forest_get_ghost_definition (unpartitioned_forest);
-          // The forest takes ownership of the ghost definition, hence the additional reference.
-          ghost_definition->ref ();
-          t8_forest_set_ghost_ext (m_forest, 1, ghost_definition);
-        }
-        t8_forest_commit (m_forest);
-        this->repartition_element_data (unpartitioned_forest, m_forest);
-        t8_forest_unref (&unpartitioned_forest);
+    // Lastly, we perform the postponed partition and ghost steps (only if the data was interpolated).
+    if (partition_postponed) {
+      // The forest before partitioning. We keep it alive, since the element data still follows it and is
+      // repartitioned below.
+      t8_forest_t unpartitioned_forest = m_forest;
+      t8_forest_ref (unpartitioned_forest);
+      t8_forest_init (&m_forest);
+      t8_forest_set_partition (m_forest, unpartitioned_forest, partition_for_coarsening);
+      if (ghost_postponed) {
+        // The requested ghost definition, which is still owned by the unpartitioned forest.
+        t8_forest_ghost_definition* const ghost_definition = t8_forest_get_ghost_definition (unpartitioned_forest);
+        // The forest takes ownership of the ghost definition, hence the additional reference.
+        ghost_definition->ref ();
+        t8_forest_set_ghost_ext (m_forest, 1, ghost_definition);
       }
+      t8_forest_commit (m_forest);
+      if constexpr (has_element_data_handler_competence ()) {
+        if (data_set) {
+          this->repartition_element_data (unpartitioned_forest, m_forest);
+        }
+      }
+      t8_forest_unref (&unpartitioned_forest);
     }
     update_elements ();
+
+    // Exchange the data of the ghost elements, now that the ghost layer of the final forest exists.
+    if constexpr (has_element_data_handler_competence ()) {
+      if (data_set) {
+        this->exchange_ghost_data ();
+      }
+    }
+    T8_ASSERT (m_uncommitted_forest == nullptr);
   }
 
   // --- Methods to check for mesh competences. ---
@@ -704,8 +755,9 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   t8_forest_t m_forest;                  /**< The forest the mesh should be defined for. */
   std::vector<element_class> m_elements; /**< Vector storing the (local) mesh elements. */
   std::vector<element_class> m_ghosts;   /**< Vector storing the (local) ghost elements. */
-  std::optional<t8_forest_t>
-    m_uncommitted_forest; /**< Forest in which the set flags are set for a new forest before committing. */
+  t8_forest_t m_uncommitted_forest
+    = nullptr; /**< Forest in which the set flags are set for a new forest before committing. nullptr if nothing was
+                    set since the last \ref commit. */
 };
 
 }  // namespace t8_mesh_handle

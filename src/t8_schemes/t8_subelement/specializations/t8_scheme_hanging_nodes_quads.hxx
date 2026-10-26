@@ -35,7 +35,7 @@
 #include <array>
 #include <bit>
 
-/** Maximum subelement type. The subelement type ranges from 0 (=no subelement, normal standalone quad) to 14. 
+/** Maximum subelement type. The subelement type ranges from 0 (=no subelement, normal standalone quad) to 14.
 * The type 15 would mean in binary representation that all faces are hanging but in this case, the element just get
 * refined by the standard recursive refinement in 4 standalone quads.*/
 #define T8_SUB_QUAD_MAX_SUBELEMENT_TYPE 14
@@ -59,7 +59,7 @@
          x - - - - - x              x - - - - - x      enumeration (here faces f0 and f3
               f2                          0            are hanging)
  * \endverbatim
- * Also have a look at \a vertex_coords_of_subelement for the definition of the subelement ids for quads and the 
+ * Also have a look at \a vertex_coords_of_subelement for the definition of the subelement ids for quads and the
  * order of vertices.
  */
 struct t8_subelem_scheme_hanging_nodes_quad:
@@ -130,10 +130,10 @@ struct t8_subelem_scheme_hanging_nodes_quad:
 
   /** This defines how an element is refined into subelements using a specified subelement type.
    * \param [in] elem The element to be refined.
-   * \param [in] length   The length of the output array \a c must match the number of subelements.   
+   * \param [in] length   The length of the output array \a c must match the number of subelements.
    *                      See \ref element_get_num_children.
-   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
-   * \param [in] subelem_type The subelement type to be used for refinement. This is a binary encoding of the 
+   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem.
+   * \param [in] subelem_type The subelement type to be used for refinement. This is a binary encoding of the
    *                          hanging faces.
    * \note The different subelement types (up to rotation) are:
    * \verbatim
@@ -223,19 +223,19 @@ struct t8_subelem_scheme_hanging_nodes_quad:
   }
 
   /** Compute the integer coordinates of all three vertices of a triangular subelement.
-   * We use the following order of subelements in a quad: 
+   * We use the following order of subelements in a quad:
    * Subelement ids are counted clockwise, starting with the (lower) left subelement with id 0.
    * The vertices are enumerated clockwise, starting at the center of the transition cell.
-   * Therefore vertex 0 is always the center of the transition cell. 
-   * For example: 
+   * Therefore vertex 0 is always the center of the transition cell.
+   * For example:
    * \verbatim
    *               f3                     V1
    *         x - - - - - x                 x
    *         | \   2   / |               / |
    *         | 1 \   / 3 |             / 3 |
-   *      f0 x - - + - - x f1  -->   + - - x 
+   *      f0 x - - + - - x f1  -->   + - - x
    *         | 0 / | \ 4 |           V0    V2
-   *         | / 6 | 5 \ | 
+   *         | / 6 | 5 \ |
    *         x - - x - - x
    *               f2
    * \endverbatim
@@ -295,9 +295,9 @@ struct t8_subelem_scheme_hanging_nodes_quad:
     vertex_coords[2] = (split && (sub_face_id == 0)) ? face_midpoint : vertex_end;
   }
 
-  /** Determine the location of a subelement within its transition cell.  
+  /** Determine the location of a subelement within its transition cell.
    * \param [in] elem The subelement.
-   * \return Three values: 
+   * \return Three values:
    *  - the face of the parent quad the subelement is adjacent to ({0,1,2,3})
    *  - whether that face is split in half ({0,1})
    *  - and whether it is the first or second subelement at the face ({0,1}).
@@ -308,9 +308,9 @@ struct t8_subelem_scheme_hanging_nodes_quad:
    *         x - - - - - x                 x
    *         | \   2   / |               / |
    *         | 1 \   / 3 |             / 3 |
-   *      f0 x - - + - - x f1  -->   + - - x 
+   *      f0 x - - + - - x f1  -->   + - - x
    *         | 0 / | \ 4 |           V0    V2
-   *         | / 6 | 5 \ | 
+   *         | / 6 | 5 \ |
    *         x - - x - - x
    *               f2
    * \endverbatim
@@ -341,7 +341,7 @@ struct t8_subelem_scheme_hanging_nodes_quad:
         break;
       }
     }  // Now split and the clockwise face are set correctly.
-    /* On a split face the two subelements take the last two ids of its range. Determine which one. 
+    /* On a split face the two subelements take the last two ids of its range. Determine which one.
      * It is the second subelement if sub_id + 1 == subelements_up_to (as this is the last sub id that is contained in
      * this face), otherwise it is the first. (and 0=false if not split). */
     const int sub_face_id = split && (sub_id + 1 == subelements_up_to);

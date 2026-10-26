@@ -41,7 +41,7 @@
  */
 typedef struct
 {
-  /** 
+  /**
    * The scheme of which elements should be stored.
    */
   const t8_scheme_c *scheme; /**!< A scheme of which elements should be stored */
@@ -267,7 +267,7 @@ t8_element_array_get_array_mutable (t8_element_array_t *element_array);
 
 /** Search for an element in an array.
  * \param [in] element_array Array structure.
- * \param [in] element Element to be found in \a element_array. 
+ * \param [in] element Element to be found in \a element_array.
  *                     The element must have been created with the scheme used in \a element_array.
  * \return If \a element was found in \a element_array then the position in the array is returned.
  *  If the element is not found, -1 is returned.
