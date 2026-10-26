@@ -18,7 +18,7 @@
   You should have received a copy of the GNU General Public License
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-*/
+  */
 
 #include <gtest/gtest.h>
 #include <t8_cmesh/t8_cmesh.h>
@@ -27,6 +27,12 @@
 #include <t8_cmesh/t8_cmesh_healpix/t8_cmesh_healpix.h>
 #include <test/t8_gtest_macros.hxx>
 #include <numbers>
+
+/* We cross reference our implementaion with this of
+ * xyf2loc from the HEALPix Julia source code. We evaluate
+ * both implementation and compare them to eachother.
+ * if the evaluation is close enough then the test passes.
+ */
 
 struct t8_location_result
 {
@@ -40,7 +46,7 @@ constexpr t8_location_result
 xyf2loc (const double x, const double y, const int face, const int JRLL[], const int JPLL[])
 {
   /*
-   A helper fuction translated from the HEALPix julia code base.
+   A helper function translated from the HEALPix julia code base.
    */
   double z = 0.0;
   double nr = 0.0;
