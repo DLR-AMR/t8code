@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This file is part of the step7 example of t8code.
+/** \file t8_step7_interpolation.cxx
+ * This file is part of the step7 example of t8code.
  * Showcase how to interpolate/project data during adaptation of a mesh.
  * Uses a single datapoint on each element, that is replicated during refinement, and averaged during coarsening.
  * Implementation of the t8_forest_replace callback, t8_forest_adapt callback
@@ -41,26 +42,26 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* The data that we want to store for each element.
+/** The data that we want to store for each element.
 In this tutorial we will store the distance to the centroid in the data.
 You can store more than one element here (see for example tutorial - step 5). */
 struct t8_step7_element_data_t
 {
-  /* Storage for our element values. */
+  /** Storage for our element values. */
   double values;
 };
 
-/* This is our own defined data that we will pass on to the
+/** This is our own defined data that we will pass on to the
  * adaptation callback. */
 struct t8_step7_adapt_data
 {
-  t8_3D_vec midpoint;               /* The midpoint of our sphere. */
-  double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
-  double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
-  sc_array_t *element_data;
+  t8_3D_vec midpoint;               /**< The midpoint of our sphere. */
+  double refine_if_inside_radius;   /**< if an element's center is smaller than this value, we refine the element. */
+  double coarsen_if_outside_radius; /**< if an element's center is larger this value, we coarsen its family. */
+  sc_array_t *element_data;         /**< Array with the element data. */
 };
 
-/* Set the value of an element to a given entry. */
+/** Set the value of an element to a given entry. */
 static void
 t8_element_set_value (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielement, double value)
 {
@@ -69,14 +70,14 @@ t8_element_set_value (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielemen
   *((t8_step7_element_data_t *) t8_sc_array_index_locidx (adapt_data->element_data, ielement)) = elem_data;
 }
 
-/* Set the value of an element to a given element data. */
+/** Set the value of an element to a given element data. */
 static void
 t8_element_set_element (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielement, t8_step7_element_data_t element)
 {
   *((t8_step7_element_data_t *) t8_sc_array_index_locidx (adapt_data->element_data, ielement)) = element;
 }
 
-/* Get the value of an element. */
+/** Get the value of an element. */
 static t8_step7_element_data_t
 t8_element_get_value (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielement)
 {
@@ -100,7 +101,6 @@ t8_element_get_value (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielemen
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
  * \param [in] tree_class   The eclass of \a which_tree
- * \param [in] tree_class   The tree_class of the elements of the tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
  * \param [in] scheme       The refinement scheme of the forest.
  * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
@@ -271,7 +271,7 @@ t8_write_vtu (t8_forest_t forest, struct t8_step7_adapt_data *data, const char *
   T8_FREE (element_data);
 }
 
-/* In this function the interpolation is described. As a first step a
+/** In this function the interpolation is described. As a first step a
  * hypercubic cmesh and then a forest is created.
  * We create a data array with the distance to the centroid of each cell.
  * The forest is adapted and the data array is interpolated corresponding to

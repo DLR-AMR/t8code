@@ -20,13 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This file is part of the step3 example of t8code.
+/** \file t8_step3_main.cxx
+ * This file is part of the step3 example of t8code.
  * Here, we only wrap the main function. See t8_step3_adapt_forest.cxx for the documentation of
  * the step3 example.
  */
 
 #include <tutorials/general/t8_step3.h>
 
+/** Entry point of the program. */
 int
 main (int argc, char **argv)
 {

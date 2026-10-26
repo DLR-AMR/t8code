@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/DLR-AMR/t8code/wiki/Build-Cmesh
+/** \file t8_tutorial_build_cmesh.cxx
+ * See also: https://github.com/DLR-AMR/t8code/wiki/Build-Cmesh
  *
  * This is a tutorial regarding the creation of a cmesh using the C++ interface of t8code.
  * In the following we will create two user defined meshes.
@@ -121,9 +122,9 @@ T8_EXTERN_C_BEGIN ();
  *
  * 7. Commit the mesh
  *             t8_cmesh_commit (cmesh, comm);
- *  */
+ */
 
-/* Definition of a two dimensional mesh with linear geometry and periodic boundaries.
+/** Definition of a two dimensional mesh with linear geometry and periodic boundaries.
  * The mesh consists of four triangles and two quads.
  *
  *  This is how the cmesh looks like. The numbers are the tree numbers:
@@ -199,9 +200,9 @@ t8_cmesh_new_periodic_hybrid_2d (sc_MPI_Comm comm)
   return cmesh;
 }
 
-/* Definition of a three dimensional mesh with linear geometry.
+/** Definition of a three dimensional mesh with linear geometry.
  * The mesh consists of two tetrahedra, two prisms, one pyramid, and one hexahedron.
- *  */
+ */
 t8_cmesh_t
 t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
 {
