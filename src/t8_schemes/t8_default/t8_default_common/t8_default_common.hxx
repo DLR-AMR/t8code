@@ -192,7 +192,7 @@ struct t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEc
   }
 
   /** Query whether element A is an ancestor of the element B.
-   * An element A is ancestor of an element B if A == B or if B can 
+   * An element A is ancestor of an element B if A == B or if B can
    * be obtained from A via successive refinement.
    * \param [in] element_A An element of class \a eclass in scheme \a scheme.
    * \param [in] element_B An element of class \a eclass in scheme \a scheme.
@@ -213,7 +213,7 @@ struct t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEc
     const int level_B = this->underlying ().element_get_level (element_B);
 
     if (level_A > level_B) {
-      /* element A is finer than element B and thus cannot be 
+      /* element A is finer than element B and thus cannot be
       * an ancestor of B. */
       return false;
     }

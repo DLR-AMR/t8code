@@ -6,8 +6,8 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DLR-SC/googletest_mpi.git",
-                "ref": "98bfff426b057400268a00f97677d749a9e25096",
-                "shallow": "TRUE"
+                "ref": "fd961ee4e57c0c58588a978d490cc43ba909dea9",
+                "shallow": "FALSE"
             }
         },
         {
