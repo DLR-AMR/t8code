@@ -7,7 +7,7 @@
                 "type": "git",
                 "url": "https://github.com/DLR-SC/googletest_mpi.git",
                 "ref": "fd961ee4e57c0c58588a978d490cc43ba909dea9",
-                "shallow": "TRUE"
+                "shallow": "FALSE"
             }
         },
         {
