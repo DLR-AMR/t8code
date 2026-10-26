@@ -45,7 +45,7 @@
  * \a adapt_callback and remove the hanging nodes. Then check the vertices and face centroids of the leaf \a ileaf.
  * \param [in] eclass             The class of the root element.
  * \param [in] adapt_callback     The callback refining the elements that cause the hanging nodes.
- * \param [in] ileaf              The index of the leaf to check in the (only) tree after adapt. 
+ * \param [in] ileaf              The index of the leaf to check in the (only) tree after adapt.
  *                                Should be a subelement index.
  * \param [in] expected_vertex    The expected coordinates of all vertices of the leaf.
  * \param [in] expected_centroid  The expected coordinates of all face centroids of the leaf.

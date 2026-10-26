@@ -20,8 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_step3_main.cxx This file is part of the step3 example of t8code.
- * Here, we only wrap the main function. See t8_step3_adapt_forest.cxx for the documentation of 
+/** \file t8_step3_main.cxx
+ * This file is part of the step3 example of t8code.
+ * Here, we only wrap the main function. See t8_step3_adapt_forest.cxx for the documentation of
  * the step3 example.
  */
 

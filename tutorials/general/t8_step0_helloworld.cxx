@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_step0_helloworld.cxx 
+/** \file t8_step0_helloworld.cxx
  * See also: https://github.com/DLR-AMR/t8code/wiki/Step-0---Hello-World
  *
  * In this example we initialize t8code and print a small welcome message.

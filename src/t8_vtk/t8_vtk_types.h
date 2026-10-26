@@ -31,9 +31,9 @@
 #include <t8_eclass/t8_eclass.h>
 
 /**
- * Translator between vtk-type of elements and t8code-elements. 
+ * Translator between vtk-type of elements and t8code-elements.
  * Not all elements are supported. Return T8_ECLASS_INVALID for unsupported
- * elements.  
+ * elements.
  */
 const t8_eclass_t t8_cmesh_vtk_type_to_t8_type[82]
   = { T8_ECLASS_INVALID, T8_ECLASS_VERTEX,  T8_ECLASS_INVALID, T8_ECLASS_LINE,    T8_ECLASS_INVALID, T8_ECLASS_TRIANGLE,
@@ -52,7 +52,7 @@ const t8_eclass_t t8_cmesh_vtk_type_to_t8_type[82]
       T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID };
 
 /**
- * Enumerator for all types of files readable by t8code. 
+ * Enumerator for all types of files readable by t8code.
  */
 typedef enum vtk_file_type {
   VTK_FILE_ERROR = -1,  ///< For Testing purpose.

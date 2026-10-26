@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_step2_uniform_forest.cxx 
+/** \file t8_step2_uniform_forest.cxx
  * See also: https://github.com/DLR-AMR/t8code/wiki/Step-2---Creating-a-uniform-forest
  *
  * After we learned how to create a cmesh in step1, we will

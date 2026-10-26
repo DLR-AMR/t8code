@@ -63,7 +63,7 @@ struct t8_step5_data_per_element
 };
 
 /** Build an adapted, partitioned and balanced forest with ghost elements as the initial forest, to which we will add
- * element data in subsequent steps.  
+ * element data in subsequent steps.
  * \param [in] comm   The MPI communicator to use.
  * \param [in] level  An initial uniform refinement level.
  */
@@ -95,7 +95,7 @@ t8_step5_build_forest (sc_MPI_Comm comm, int level)
   return forest_apbg;
 }
 
-/** Create an array for the element data of the forest.  
+/** Create an array for the element data of the forest.
  * \param [in] forest The forest we want to create data for.
  */
 static struct t8_step5_data_per_element *
