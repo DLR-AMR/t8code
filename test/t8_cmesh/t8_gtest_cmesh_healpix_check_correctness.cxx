@@ -36,19 +36,19 @@ struct t8_location_result
   bool have_sintheta;
 };
 
-t8_location_result
-xyf2loc (double x, double y, int face, const int JRLL[], const int JPLL[])
+constexpr t8_location_result
+xyf2loc (const double x, const double y, cosnt int face, const int JRLL[], const int JPLL[])
 {
   double z = 0.0;
   double nr = 0.0;
   double sintheta = 0.0;
   bool have_sintheta = false;
 
-  double jr = static_cast<double> (JRLL[face]) - x - y;
+  const double jr = static_cast<double> (JRLL[face]) - x - y;
 
   if (jr < 1.0) {
     nr = jr;
-    double tmp = (nr * nr) / 3.0;
+    const double tmp = (nr * nr) / 3.0;
     z = 1.0 - tmp;
     if (z > 0.99) {
       sintheta = std::sqrt (tmp * (2.0 - tmp));
@@ -57,7 +57,7 @@ xyf2loc (double x, double y, int face, const int JRLL[], const int JPLL[])
   }
   else if (jr > 3.0) {
     nr = 4.0 - jr;
-    double tmp = (nr * nr) / 3.0;
+    const double tmp = (nr * nr) / 3.0;
     z = tmp - 1.0;
     if (z < -0.99) {
       sintheta = std::sqrt (tmp * (2.0 - tmp));
@@ -69,13 +69,13 @@ xyf2loc (double x, double y, int face, const int JRLL[], const int JPLL[])
     z = (2.0 - jr) * 2.0 / 3.0;
   }
 
-  double tmp = static_cast<double> (JPLL[face]) * nr + x - y;
+  const double tmp = static_cast<double> (JPLL[face]) * nr + x - y;
   if (tmp < 0.0)
     tmp += 8.0;
   if (tmp >= 8.0)
     tmp -= 8.0;
 
-  double phi = (std::abs (nr) < 1e-15) ? 0.0 : ((std::numbers::pi / 4.0 * tmp) / nr);
+  const double phi = (std::abs (nr) < 1e-15) ? 0.0 : ((std::numbers::pi / 4.0 * tmp) / nr);
 
   return { z, phi, sintheta, have_sintheta };
 }
@@ -85,7 +85,7 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
   const int JRLL[12] = { 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4 };
   const int JPLL[12] = { 1, 3, 5, 7, 0, 2, 4, 6, 1, 3, 5, 7 };
 
-  std::vector<double> test_samples = { 0.0, 0.001, 0.25, 0.5, 0.75, 0.999, 1.0 };
+  std::array<double> test_samples = { 0.0, 0.001, 0.25, 0.5, 0.75, 0.999, 1.0 };
   const double tolerance = 1e-10;
   t8_geometry_healpix geom;
 
@@ -97,19 +97,19 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
       ref_coords.push_back (eta);
     }
   }
-  size_t num_coords = test_samples.size () * test_samples.size ();
+  const size_t num_coords = test_samples.size () * test_samples.size ();
 
   // Loop through all t8code layers and faces
   for (int layer = 0; layer < 3; ++layer) {
     for (int face = 0; face < 4; ++face) {
       // t8code Tree ID (0..11)
-      int gtreeid = layer * 4 + face;
+      const t8_gloidx_t gtreeid = layer * 4 + face;
 
       // HEALPix base face index corresponding to t8code's layer
       // layer 0 (South) -> HEALPix faces 8..11
       // layer 1 (Equator) -> HEALPix faces 4..7
       // layer 2 (North) -> HEALPix faces 0..3
-      int healpix_face = (2 - layer) * 4 + face;
+      const int healpix_face = (2 - layer) * 4 + face;
 
       // Output buffers
       std::vector<double> t8_out (num_coords * 3);
@@ -119,31 +119,25 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
 
       // Validate each point in the batch against xyf2loc reference
       for (size_t i = 0; i < num_coords; ++i) {
-        double xi = ref_coords[i * 2 + 0];
-        double eta = ref_coords[i * 2 + 1];
+        const double xi = ref_coords[i * 2 + 0];
+        const double eta = ref_coords[i * 2 + 1];
 
         // Clamped values used inside t8_geom_evaluate
-        double xi_clamped = std::clamp (xi, 1e-10, 1.0 - 1e-10);
-        double eta_clamped = std::clamp (eta, 1e-10, 1.0 - 1e-10);
+        const double xi_clamped = std::clamp (xi, 1e-10, 1.0 - 1e-10);
+        const double eta_clamped = std::clamp (eta, 1e-10, 1.0 - 1e-10);
 
         // Pass the 0..11 global face index to xyf2loc
-        t8_location_result ref_loc = xyf2loc (xi_clamped, eta_clamped, healpix_face, JRLL, JPLL);
+        const t8_location_result ref_loc = xyf2loc (xi_clamped, eta_clamped, healpix_face, JRLL, JPLL);
 
-        double ref_sin_theta;
-        if (ref_loc.have_sintheta) {
-          ref_sin_theta = ref_loc.sintheta;
-        }
-        else {
-          ref_sin_theta = std::sqrt (std::max (0.0, 1.0 - ref_loc.z * ref_loc.z));
-        }
-        double ref_x = ref_sin_theta * std::cos (ref_loc.phi);
-        double ref_y = ref_sin_theta * std::sin (ref_loc.phi);
-        double ref_z = ref_loc.z;
+        const double ref_sin_theta = ref_loc.have_sintheta ? ref_loc.sitheta : std::sqrt ( std::max (0.0, 1.0 - ref_loc.z * ref_loc.z));
+        const double ref_x = ref_sin_theta * std::cos (ref_loc.phi);
+        const double ref_y = ref_sin_theta * std::sin (ref_loc.phi);
+        const double ref_z = ref_loc.z;
 
-        size_t idx3d = i * 3;
+        const size_t idx3d = i * 3;
 
         // Allow a slightly relaxed tolerance near the poles where sin(theta) ~ 0
-        double adaptive_tol = (std::abs (ref_z) > 0.99) ? 2e-10 : tolerance;
+        const double adaptive_tol = (std::abs (ref_z) > 0.99) ? T8_PRECISION_SQRT_EPS : T8_PRECISION_EPS;
 
         EXPECT_NEAR (t8_out[idx3d + 0], ref_x, adaptive_tol)
           << "Mismatch in X | Tree ID: " << gtreeid << " (Layer: " << layer << ", Face: " << face << ")"

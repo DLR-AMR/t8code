@@ -43,12 +43,11 @@ TEST (t8_geometry_healpix_test, test_all_trees_are_on_unit_sphere)
     0.0, 0.0,                                // Corners
     1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5,  // Center
   };
-  int num_gen_coords = 0;
 // in addition to the basic test cases generate random coordinates to test out implementation
 #if T8_TEST_LEVEL_INT >= 2
-  num_gen_coords = 10;  // Test level basic
+  const int num_gen_coords = 10;  // Test level basic
 #else
-  num_gen_coords = 20;
+  const int num_gen_coords = 20;
 #endif
 
   for (int i = 0; i < num_gen_coords; i++) {
@@ -57,16 +56,16 @@ TEST (t8_geometry_healpix_test, test_all_trees_are_on_unit_sphere)
   }
 
   const size_t num_coords = ref_coords.size () / 2;
-  std::vector<double> out_coords (num_coords * 3, 0.0);
+  std::array<double, num_coords * 3> out_coords (0.0);
   // Loop through all 12 base trees of the HEALPix projection
   for (t8_gloidx_t gtreeid = 0; gtreeid < 12; ++gtreeid) {
     geom.t8_geom_evaluate (nullptr, gtreeid, ref_coords.data (), num_coords, out_coords.data ());
 
     for (size_t i = 0; i < num_coords; ++i) {
-      std::span<const double> point (out_coords.data () + 3 * i, 3);
-      double distance = t8_norm (point);
+      const std::span<const double> point (out_coords.data () + 3 * i, 3);
+      const double distance = t8_norm (point);
       // Expect distance to be 1.0 (Unit Sphere)
-      EXPECT_NEAR (distance, 1.0, 1e-7) << "Radius check failed at Tree ID: " << gtreeid << " for point index: " << i
+      EXPECT_NEAR (distance, 1.0, T8_PRECISION_EPS) << "Radius check failed at Tree ID: " << gtreeid << " for point index: " << i
                                         << " (xi=" << ref_coords[i * 2] << ", eta=" << ref_coords[i * 2 + 1] << ")";
     }
   }
