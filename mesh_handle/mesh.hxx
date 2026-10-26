@@ -179,11 +179,11 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   }
 
   /** Deleted copy constructor. Needed because of the user-defined destructor (rule of five).
-   * We delete the copy constructor because the mesh needs a fixed address: 
-   * Every element in \a m_elements stores a pointer to its underlying mesh. 
-   * A copy would keep pointing to the original mesh and updating all elements is expensive. 
+   * We delete the copy constructor because the mesh needs a fixed address:
+   * Every element in \a m_elements stores a pointer to its underlying mesh.
+   * A copy would keep pointing to the original mesh and updating all elements is expensive.
    * Additionally, \a m_forest would be shared without being referenced, which leads to a double unref.
-   * Use a smart pointer (e.g. std::unique_ptr) if the mesh needs to be passed around. 
+   * Use a smart pointer (e.g. std::unique_ptr) if the mesh needs to be passed around.
    */
   mesh (const mesh&) = delete;
 
@@ -195,7 +195,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
 
   /** Deleted move constructor.
    * Moving changes the address of the mesh, such that the pointers to the mesh in \a m_elements are invalid.
-   * See copy constructor for details.  
+   * See copy constructor for details.
    */
   mesh (mesh&&) = delete;
 
