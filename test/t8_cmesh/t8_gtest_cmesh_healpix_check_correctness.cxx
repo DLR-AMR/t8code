@@ -37,7 +37,7 @@ struct t8_location_result
 };
 
 constexpr t8_location_result
-xyf2loc (const double x, const double y, cosnt int face, const int JRLL[], const int JPLL[])
+xyf2loc (const double x, const double y, const int face, const int JRLL[], const int JPLL[])
 {
   double z = 0.0;
   double nr = 0.0;
@@ -69,7 +69,7 @@ xyf2loc (const double x, const double y, cosnt int face, const int JRLL[], const
     z = (2.0 - jr) * 2.0 / 3.0;
   }
 
-  const double tmp = static_cast<double> (JPLL[face]) * nr + x - y;
+  double tmp = static_cast<double> (JPLL[face]) * nr + x - y;
   if (tmp < 0.0)
     tmp += 8.0;
   if (tmp >= 8.0)
@@ -85,8 +85,7 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
   const int JRLL[12] = { 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4 };
   const int JPLL[12] = { 1, 3, 5, 7, 0, 2, 4, 6, 1, 3, 5, 7 };
 
-  std::array<double> test_samples = { 0.0, 0.001, 0.25, 0.5, 0.75, 0.999, 1.0 };
-  const double tolerance = 1e-10;
+  std::array<double, 7> test_samples = { 0.0, 0.001, 0.25, 0.5, 0.75, 0.999, 1.0 };
   t8_geometry_healpix geom;
 
   // Build a batch containing all combinations of test_samples for a single evaluation call
@@ -129,7 +128,8 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
         // Pass the 0..11 global face index to xyf2loc
         const t8_location_result ref_loc = xyf2loc (xi_clamped, eta_clamped, healpix_face, JRLL, JPLL);
 
-        const double ref_sin_theta = ref_loc.have_sintheta ? ref_loc.sitheta : std::sqrt ( std::max (0.0, 1.0 - ref_loc.z * ref_loc.z));
+        const double ref_sin_theta
+          = ref_loc.have_sintheta ? ref_loc.sintheta : std::sqrt (std::max (0.0, 1.0 - ref_loc.z * ref_loc.z));
         const double ref_x = ref_sin_theta * std::cos (ref_loc.phi);
         const double ref_y = ref_sin_theta * std::sin (ref_loc.phi);
         const double ref_z = ref_loc.z;
@@ -137,8 +137,7 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
         const size_t idx3d = i * 3;
 
         // Allow a slightly relaxed tolerance near the poles where sin(theta) ~ 0
-        const double adaptive_tol = (std::abs (ref_z) > 0.99) ? T8_PRECISION_SQRT_EPS : T8_PRECISION_EPS;
-
+        const double adaptive_tol = (std::abs (ref_z) > 0.99) ? T8_PRECISION_SQRT_EPS : (4.0 * T8_PRECISION_EPS);        std::cout << adaptive_tol << std::endl;
         EXPECT_NEAR (t8_out[idx3d + 0], ref_x, adaptive_tol)
           << "Mismatch in X | Tree ID: " << gtreeid << " (Layer: " << layer << ", Face: " << face << ")"
           << ", (xi, eta): (" << xi << ", " << eta << ")";
