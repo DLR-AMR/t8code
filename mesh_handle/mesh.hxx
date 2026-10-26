@@ -178,17 +178,32 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     t8_forest_unref (&m_forest);
   }
 
-  /** Delete copy constructor because the elements in copy.m_elements would still contain pointers to the original mesh
-   * and its quite expensive to update the elements. Therefore, the mesh needs a fixed address.
-   * Also m_forest is copied but not reffed. 
-   * I think we do not need it for now.
+  /** Deleted copy constructor. Needed because of the user-defined destructor (rule of five).
+   * We delete the copy constructor because the mesh needs a fixed address: 
+   * Every element in \a m_elements stores a pointer to its underlying mesh. 
+   * A copy would keep pointing to the original mesh and updating all elements is expensive. 
+   * Additionally, \a m_forest would be shared without being referenced, which leads to a double unref.
+   * Use a smart pointer (e.g. std::unique_ptr) if the mesh needs to be passed around. 
+   */
+  mesh (const mesh&) = delete;
+
+  /** Deleted copy assignment operator. See deleted copy constructor for reasons.
    */
   mesh&
   operator= (const mesh&)
     = delete;
 
-  /** Delete move constructor for the same reasons as for the copy constructor.  */
-  mesh (const mesh&) = delete;
+  /** Deleted move constructor.
+   * Moving changes the address of the mesh, such that the pointers to the mesh in \a m_elements are invalid.
+   * See copy constructor for details.  
+   */
+  mesh (mesh&&) = delete;
+
+  /** Deleted move assignment operator. See move constructor for details.
+    */
+  mesh&
+  operator= (mesh&&)
+    = delete;
 
   // --- Getter for mesh related information. ---
   /**
