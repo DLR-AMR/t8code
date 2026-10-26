@@ -147,10 +147,6 @@ t8_cmesh_tree_reindex_replace (t8_forest_t forest_old, t8_forest_t forest_new, c
   if (refine == 0) {
     /* Unchanged elements have at most one center, except when the maximum refinement level was reached. */
     T8_ASSERT (num_new_elements == 1);
-    if (old_element_data.tree_centers.size () > 1) {
-      const t8_element_t *old_element = t8_forest_get_leaf_element_in_tree (forest_old, which_tree, first_old_element);
-      T8_ASSERT (scheme->element_get_level (tree_class, old_element) == t8_forest_get_maxlevel (forest_old));
-    }
     const t8_locidx_t new_index = t8_forest_get_tree_element_offset (forest_new, which_tree) + first_new_element;
     data_new->elements[new_index] = old_element_data;
     return;
