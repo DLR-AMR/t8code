@@ -39,6 +39,9 @@ struct t8_location_result
 constexpr t8_location_result
 xyf2loc (const double x, const double y, const int face, const int JRLL[], const int JPLL[])
 {
+  /*
+   A helper fuction translated from the HEALPix julia code base.
+   */
   double z = 0.0;
   double nr = 0.0;
   double sintheta = 0.0;
@@ -137,7 +140,7 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
         const size_t idx3d = i * 3;
 
         // Allow a slightly relaxed tolerance near the poles where sin(theta) ~ 0
-        const double adaptive_tol = (std::abs (ref_z) > 0.99) ? T8_PRECISION_SQRT_EPS : (4.0 * T8_PRECISION_EPS);        std::cout << adaptive_tol << std::endl;
+        const double adaptive_tol = (std::abs (ref_z) > 0.99) ? T8_PRECISION_SQRT_EPS : (4.0 * T8_PRECISION_EPS);
         EXPECT_NEAR (t8_out[idx3d + 0], ref_x, adaptive_tol)
           << "Mismatch in X | Tree ID: " << gtreeid << " (Layer: " << layer << ", Face: " << face << ")"
           << ", (xi, eta): (" << xi << ", " << eta << ")";
