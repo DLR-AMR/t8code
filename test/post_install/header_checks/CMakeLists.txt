@@ -45,13 +45,6 @@ set(HEADER_CHECK_INCLUDE_REGEX "^t8(_|\\.h$)" CACHE STRING "Regex selecting this
 set(HEADER_CHECK_EXCLUDE_REGEX "/detail/"     CACHE STRING "Regex of headers to skip (empty = check all)")
 set(HEADER_CHECK_CXX_STANDARD  "20"           CACHE STRING "Minimum C++ standard the headers must support")
 
-# Optional allowlist for an incremental rollout: if this file exists, ONLY the
-# headers listed in it are checked (one path per line, relative to the include
-# dir, '#' starts a comment line). Delete the file to check all headers.
-# It is a normal variable, not a cache entry, so editing it takes effect on
-# the next configure without clearing the cache.
-set(HEADER_CHECK_LIST_FILE "${CMAKE_CURRENT_SOURCE_DIR}/headers_to_check.txt")
-
 # ---------------------------------------------------------------------------
 # Find the installed package (normally already done by the parent project)
 # ---------------------------------------------------------------------------
@@ -93,43 +86,6 @@ endforeach()
 list(REMOVE_DUPLICATES all_headers)
 list(SORT all_headers)
 
-# TODO: Remove this later again once the workflow works.
-# Restrict to the allowlist, if present
-if(EXISTS "${HEADER_CHECK_LIST_FILE}")
-  # Re-run configure automatically when the list changes
-  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${HEADER_CHECK_LIST_FILE}")
-
-  file(STRINGS "${HEADER_CHECK_LIST_FILE}" lines)
-  set(selected)
-  set(missing)
-  foreach(line IN LISTS lines)
-    string(STRIP "${line}" line)
-    if(line STREQUAL "" OR line MATCHES "^#")
-      continue()
-    endif()
-    list(APPEND selected "${line}")
-    if(NOT line IN_LIST all_headers)
-      list(APPEND missing "${line}")
-    endif()
-  endforeach()
-
-  if(missing)
-    list(JOIN missing "\n  " missing_str)
-    message(FATAL_ERROR
-      "Headers listed in ${HEADER_CHECK_LIST_FILE} are not installed "
-      "(or do not match HEADER_CHECK_INCLUDE_REGEX):\n  ${missing_str}")
-  endif()
-  if(NOT selected)
-    message(FATAL_ERROR "${HEADER_CHECK_LIST_FILE} lists no headers. "
-                        "Add some, or delete the file to check all headers.")
-  endif()
-
-  list(LENGTH all_headers num_installed)
-  list(REMOVE_DUPLICATES selected)
-  set(all_headers ${selected})
-  list(LENGTH all_headers num_selected)
-  message(STATUS "Header check: allowlist active, checking ${num_selected} of ${num_installed} headers")
-endif()
 
 list(LENGTH all_headers num_headers)
 if(num_headers EQUAL 0)
