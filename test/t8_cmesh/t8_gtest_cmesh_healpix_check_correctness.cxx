@@ -28,7 +28,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <numbers>
 
-/* We cross reference our implementaion with this of
+/* We cross reference our implementation with this of
  * xyf2loc from the HEALPix Julia source code. We evaluate
  * both implementation and compare them to eachother.
  * if the evaluation is close enough then the test passes.
