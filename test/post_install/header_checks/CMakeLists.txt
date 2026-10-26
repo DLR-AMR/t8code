@@ -1,4 +1,24 @@
-# Post-install header check for an installed CMake package.
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2026 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+# Post-install header check for the installed t8code headers.
 #
 # For every public header, this generates:
 #   - one translation unit that includes the header twice
@@ -10,25 +30,20 @@
 # and links everything into one executable, so non-inline definitions in
 # headers show up as "multiple definition" link errors.
 #
-# Usage (against an install prefix, ideally on a machine/container without
-# the source and build trees):
-#   cmake -S <this dir> -B build-header-check -DCMAKE_PREFIX_PATH=<install prefix>
-#   cmake --build build-header-check
-#   ctest --test-dir build-header-check     # optional, see add_test below
-
-cmake_minimum_required(VERSION 3.20)
-project(MyLibHeaderCheck LANGUAGES C CXX)
+# The check is the build itself: if header_check compiles and links, it passes.
+# T8CODE is found by the parent CMakeLists.txt.
 
 # ---------------------------------------------------------------------------
-# Configuration — adapt the defaults to your library
+# Configuration
 # ---------------------------------------------------------------------------
-set(HEADER_CHECK_PACKAGE       "T8CODE"        CACHE STRING "Package name passed to find_package()")
-set(HEADER_CHECK_TARGET        "T8CODE::T8" CACHE STRING "Imported target whose headers are checked")
+set(HEADER_CHECK_PACKAGE       "T8CODE"      CACHE STRING "Package name passed to find_package()")
+set(HEADER_CHECK_TARGET        "T8CODE::T8"  CACHE STRING "Imported target whose headers are checked")
 # Matched against the header path relative to the include dir, e.g.
 # "t8_foo.h", "t8_cmesh/t8_cmesh.h", "t8_schemes/sub/bar.hxx".
 # "^t8(_|\\.h$)" = everything starting with "t8_" (files and folders) plus t8.h
 set(HEADER_CHECK_INCLUDE_REGEX "^t8(_|\\.h$)" CACHE STRING "Regex selecting this library's headers")
-set(HEADER_CHECK_EXCLUDE_REGEX "/detail/"             CACHE STRING "Regex of headers to skip (empty = check all)")
+set(HEADER_CHECK_EXCLUDE_REGEX "/detail/"     CACHE STRING "Regex of headers to skip (empty = check all)")
+set(HEADER_CHECK_CXX_STANDARD  "20"           CACHE STRING "Minimum C++ standard the headers must support")
 
 # Optional allowlist for an incremental rollout: if this file exists, ONLY the
 # headers listed in it are checked (one path per line, relative to the include
@@ -36,12 +51,13 @@ set(HEADER_CHECK_EXCLUDE_REGEX "/detail/"             CACHE STRING "Regex of hea
 # It is a normal variable, not a cache entry, so editing it takes effect on
 # the next configure without clearing the cache.
 set(HEADER_CHECK_LIST_FILE "${CMAKE_CURRENT_SOURCE_DIR}/headers_to_check.txt")
-set(HEADER_CHECK_CXX_STANDARD  "20"           CACHE STRING "Minimum C++ standard the headers must support")
 
 # ---------------------------------------------------------------------------
-# Find the installed package
+# Find the installed package (normally already done by the parent project)
 # ---------------------------------------------------------------------------
-find_package(${HEADER_CHECK_PACKAGE} REQUIRED)
+if(NOT TARGET ${HEADER_CHECK_TARGET})
+  find_package(${HEADER_CHECK_PACKAGE} CONFIG REQUIRED)
+endif()
 
 if(NOT TARGET ${HEADER_CHECK_TARGET})
   message(FATAL_ERROR "Package ${HEADER_CHECK_PACKAGE} does not provide target ${HEADER_CHECK_TARGET}")
@@ -150,7 +166,8 @@ file(CONFIGURE OUTPUT "${gen_dir}/main.cpp"        @ONLY CONTENT "int main() { r
 list(APPEND sources "${gen_dir}/all_headers.cpp" "${gen_dir}/main.cpp")
 
 # ---------------------------------------------------------------------------
-# Build target
+# Build target: part of the normal build, so a header problem fails the
+# build just as it would in a downstream project.
 # ---------------------------------------------------------------------------
 add_executable(header_check ${sources})
 target_link_libraries(header_check PRIVATE ${HEADER_CHECK_TARGET})
@@ -167,10 +184,8 @@ target_compile_options(header_check PRIVATE
   $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /permissive- /Zc:__cplusplus>)
 
 # ---------------------------------------------------------------------------
-# CTest integration: the test is that the target builds (compile + link).
-# The executable itself does nothing, so it is not run.
+# CTest entry: the real check already happened when header_check was built.
+# Running the (empty) executable only lists the check in the CTest summary.
 # ---------------------------------------------------------------------------
-enable_testing()
-add_test(NAME header_check
-         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                 --target header_check --config $<CONFIG>)
+add_test(NAME t8code_post_install_header_check COMMAND header_check)
+set_tests_properties(t8code_post_install_header_check PROPERTIES LABELS "post_install;headers")

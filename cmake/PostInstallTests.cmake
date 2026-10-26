@@ -18,10 +18,17 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+# Post-install tests: configure, build, and run small downstream projects
+# (test/post_install) against the installed t8code, the same way an external
+# project would consume it. Run after "make / ninja install" with "make / ninja post_install_tests".
+
 set(T8CODE_POST_INSTALL_TEST_SOURCE_DIR ${PROJECT_SOURCE_DIR}/test/post_install)
 set(T8CODE_POST_INSTALL_TEST_BINARY_DIR ${PROJECT_BINARY_DIR}/post_install_tests)
 set(T8CODE_POST_INSTALL_TEST_CMAKE_ARGS
   -DCMAKE_PREFIX_PATH=${CMAKE_INSTALL_PREFIX}
+  # Use the same compilers as t8code itself (e.g. MPI wrappers)
+  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
 )
 
 if(CMAKE_BUILD_TYPE)
@@ -36,6 +43,16 @@ if(DEFINED P4EST_DIR AND NOT "${P4EST_DIR}" STREQUAL "")
   list(APPEND T8CODE_POST_INSTALL_TEST_CMAKE_ARGS -DP4EST_DIR=${P4EST_DIR})
 endif()
 
+# Only pass a configuration for multi-config generators (VS, Xcode,
+# Ninja Multi-Config); single-config generators use CMAKE_BUILD_TYPE above.
+set(T8CODE_POST_INSTALL_BUILD_CONFIG)
+set(T8CODE_POST_INSTALL_CTEST_CONFIG)
+get_property(T8CODE_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(T8CODE_IS_MULTI_CONFIG)
+  set(T8CODE_POST_INSTALL_BUILD_CONFIG --config $<CONFIG>)
+  set(T8CODE_POST_INSTALL_CTEST_CONFIG -C $<CONFIG>)
+endif()
+
 add_custom_target( post_install_tests
   COMMAND ${CMAKE_COMMAND} -E rm -rf ${T8CODE_POST_INSTALL_TEST_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${T8CODE_POST_INSTALL_TEST_BINARY_DIR}
@@ -45,7 +62,10 @@ add_custom_target( post_install_tests
           -B ${T8CODE_POST_INSTALL_TEST_BINARY_DIR}
           ${T8CODE_POST_INSTALL_TEST_CMAKE_ARGS}
   COMMAND ${CMAKE_COMMAND} --build ${T8CODE_POST_INSTALL_TEST_BINARY_DIR}
-  COMMAND ${CMAKE_CTEST_COMMAND} --test-dir ${T8CODE_POST_INSTALL_TEST_BINARY_DIR} --output-on-failure
-  COMMENT "Build and run the installed t8code post-installation sanity test"
+          ${T8CODE_POST_INSTALL_BUILD_CONFIG}
+  COMMAND ${CMAKE_CTEST_COMMAND} --test-dir ${T8CODE_POST_INSTALL_TEST_BINARY_DIR}
+          ${T8CODE_POST_INSTALL_CTEST_CONFIG} --output-on-failure
+  COMMENT "Build and run the t8code post-installation tests (sanity check, header checks)"
   VERBATIM
+  COMMAND_EXPAND_LISTS
 )
