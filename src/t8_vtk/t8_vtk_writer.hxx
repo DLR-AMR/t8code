@@ -41,6 +41,12 @@
 #include <t8_vector/t8_vec.hxx>
 
 #if T8_ENABLE_VTK
+/* OpenCASCADE defines the function-like macro Handle(Class). If an OpenCASCADE
+ * header (e.g. via t8_cad_handle.hxx) is included before this file, the macro
+ * breaks VTK code using "Handle" as an identifier, e.g. the member initializer
+ * Handle(MPI_FILE_NULL) in vtkMPI.h. Hide the macro while including VTK. */
+#pragma push_macro("Handle")
+#undef Handle
 #include <vtkUnstructuredGrid.h>
 #include <vtkXMLPUnstructuredGridWriter.h>
 #include <vtkDoubleArray.h>
@@ -53,6 +59,7 @@
 #include <vtkMPICommunicator.h>
 #include <vtkMPIController.h>
 #endif /* T8_ENABLE_MPI */
+#pragma pop_macro("Handle")
 #endif /* T8_ENABLE_VTK */
 
 /**
