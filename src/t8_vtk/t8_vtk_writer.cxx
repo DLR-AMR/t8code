@@ -30,7 +30,27 @@
 
 #if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
+#if T8_ENABLE_MPI
+#include <vtkMPI.h>
+#include <vtkMPICommunicator.h>
+#include <vtkMPIController.h>
 #endif
+#endif
+
+#if T8_ENABLE_VTK && T8_ENABLE_MPI
+void
+t8_vtk_writer_set_mpi_controller (vtkXMLPUnstructuredGridWriter *writer, sc_MPI_Comm *comm)
+{
+  vtkSmartPointer<vtkMPICommunicator> vtk_comm = vtkSmartPointer<vtkMPICommunicator>::New ();
+  vtkMPICommunicatorOpaqueComm vtk_opaque_comm (comm);
+  vtk_comm->InitializeExternal (&vtk_opaque_comm);
+
+  vtkSmartPointer<vtkMPIController> vtk_mpi_ctrl = vtkSmartPointer<vtkMPIController>::New ();
+  vtk_mpi_ctrl->SetCommunicator (vtk_comm);
+
+  writer->SetController (vtk_mpi_ctrl);
+}
+#endif /* T8_ENABLE_VTK && T8_ENABLE_MPI */
 
 #if T8_ENABLE_VTK
 /**
