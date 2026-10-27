@@ -116,15 +116,15 @@ t8_calculate_mean_neighbor_distance (const t8_cmesh_t cmesh, const std::vector<s
   return total_distance / static_cast<double> (unique_neighbors.size ());
 }
 
-std::unordered_map<t8_gloidx_t, t8_mesh_deformation_node>
+std::vector<t8_mesh_deformation_node>
 t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad_handle *cad)
 {
   T8_ASSERT (t8_cmesh_is_committed (associated_cmesh));
 
   const int mesh_dimension = t8_cmesh_get_dimension (associated_cmesh);
 
-  /* Map from global vertex id -> displacement vector. */
-  std::unordered_map<t8_gloidx_t, t8_mesh_deformation_node> boundary_node_data;
+  /* The boundary nodes with their displacements. */
+  std::vector<t8_mesh_deformation_node> boundary_node_data;
 
   for (const auto &global_vertex : *(associated_cmesh->vertex_connectivity)) {
 
@@ -235,15 +235,15 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
       /* Set the global id of the node. */
       node.global_id = global_vertex_id;
-      boundary_node_data[global_vertex_id] = node;
+      boundary_node_data.push_back (node);
     }
   }
   return boundary_node_data;
 }
 
 void
-t8_cmesh_mesh_deformation::apply_vertex_displacements (
-  std::unordered_map<t8_gloidx_t, t8_mesh_deformation_node> &boundary_node_data, std::shared_ptr<t8_cad_handle> cad)
+t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh_deformation_node> &boundary_node_data,
+                                                       std::shared_ptr<t8_cad_handle> cad)
 {
   T8_ASSERT (t8_cmesh_is_committed (associated_cmesh));
 
@@ -254,7 +254,12 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
   std::unordered_map<t8_gloidx_t, t8_3D_vec> vertex_displacements;
   std::vector<t8_mesh_deformation_node> inner_nodes;
 
-  /* Iterate over all vertices in the displacement map. */
+  /* The displacements of the boundary nodes are already known from the new CAD geometry. */
+  for (const auto &boundary_node : boundary_node_data) {
+    vertex_displacements[boundary_node.global_id] = boundary_node.displacement;
+  }
+
+  /* Iterate over all vertices and collect the inner nodes, whose displacement has to be interpolated. */
   for (const auto &global_vertex : *(associated_cmesh->vertex_connectivity)) {
     /* Get the global vertex ID of the current vertex. */
     const t8_gloidx_t global_vertex_id = global_vertex.first;
@@ -277,30 +282,26 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
 
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
 
-    /* Check if this vertex is a boundary node.
-       If so, we can use the already known displacement extracted from the new CAD geometry input given. */
+    /* Boundary nodes were already handled above. */
     if (first_tree_entity_dim < mesh_dimension && first_tree_entity_dim >= 0) {
-
-      vertex_displacements[global_vertex_id] = boundary_node_data.at (global_vertex_id).displacement;
+      continue;
     }
+
     /* If it is an inner node, we do not know the displacement right away and need to interpolate to get the new coordinates. */
-    else {
-
-      const double *vertex_coords = static_cast<const double *> (t8_cmesh_get_attribute (
-        associated_cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, first_tree.first));
-      /* Check if the coordinates are available. */
-      if (vertex_coords == nullptr) {
-        t8_errorf ("Error: Coordinates attribute missing for tree %d.\n", first_tree.first);
-        SC_ABORT ("Vertex coordinates are missing.");
-      }
-
-      /* Save the initial coordinates of the inner node. */
-      t8_mesh_deformation_node inner_node;
-      inner_node.global_id = global_vertex_id;
-      inner_node.position = { vertex_coords[3 * first_tree.second], vertex_coords[3 * first_tree.second + 1],
-                              vertex_coords[3 * first_tree.second + 2] };
-      inner_nodes.push_back (inner_node);
+    const double *vertex_coords = static_cast<const double *> (t8_cmesh_get_attribute (
+      associated_cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, first_tree.first));
+    /* Check if the coordinates are available. */
+    if (vertex_coords == nullptr) {
+      t8_errorf ("Error: Coordinates attribute missing for tree %d.\n", first_tree.first);
+      SC_ABORT ("Vertex coordinates are missing.");
     }
+
+    /* Save the initial coordinates of the inner node. */
+    t8_mesh_deformation_node inner_node;
+    inner_node.global_id = global_vertex_id;
+    inner_node.position = { vertex_coords[3 * first_tree.second], vertex_coords[3 * first_tree.second + 1],
+                            vertex_coords[3 * first_tree.second + 2] };
+    inner_nodes.push_back (inner_node);
   }
 
   /* Calculate the weights of the deformation method from the known boundary displacements. */

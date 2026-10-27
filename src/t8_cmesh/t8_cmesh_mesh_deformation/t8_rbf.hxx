@@ -200,15 +200,14 @@ struct t8_rbf: public t8_mesh_deformation_method
    * \param [in] boundary_node_data Map of global vertex IDs to boundary nodes.
    */
   void
-  set_boundary_nodes (const std::unordered_map<t8_gloidx_t, t8_mesh_deformation_node>& boundary_node_data) override
+  set_boundary_nodes (const std::vector<t8_mesh_deformation_node>& boundary_node_data) override
   {
     boundary_nodes.clear ();
     boundary_nodes.reserve (boundary_node_data.size ());
-    for (const auto& [global_vertex_id, boundary_node] : boundary_node_data) {
+    for (const auto& boundary_node : boundary_node_data) {
 
       t8_rbf_boundary_node rbf_boundary_node;
       static_cast<t8_mesh_deformation_node&> (rbf_boundary_node) = boundary_node;
-      rbf_boundary_node.global_id = global_vertex_id;
       rbf_boundary_node.weight.fill (0.0);
 
       /* Calculate the local support radius based on the mean neighbor distance. Globally supported RBFs keep the default T8_RBF_GLOBAL_SUPPORT. */

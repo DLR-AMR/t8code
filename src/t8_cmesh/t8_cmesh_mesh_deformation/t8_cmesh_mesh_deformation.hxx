@@ -63,9 +63,9 @@ struct t8_cmesh_mesh_deformation
    * Computes the displacements of the surface vertices.
    *
    * \param [in]  cad A pointer to the CAD-based geometry object.
-   * \return Map from global vertex ID to deformation node which contains the displacement and can then be used by the deformation method.
+   * \return The boundary nodes, each containing its global ID and displacement, which can then be used by the deformation method.
    */
-  std::unordered_map<t8_gloidx_t, t8_mesh_deformation_node>
+  std::vector<t8_mesh_deformation_node>
   calculate_displacement_surface_vertices (const t8_cad_handle *cad);
 
   /**
@@ -75,11 +75,11 @@ struct t8_cmesh_mesh_deformation
    * displacement interpolated with the deformation method set via set_deformation_method.
    * Afterwards, the CAD geometry of the cmesh is updated.
    *
-   * \param [in] boundary_node_data Map from global vertex ID to deformation node.
+   * \param [in] boundary_node_data The boundary nodes with their known displacements.
    * \param [in] cad The shared pointer to the CAD geometry to update.
    */
   void
-  apply_vertex_displacements (std::unordered_map<t8_gloidx_t, t8_mesh_deformation_node> &boundary_node_data,
+  apply_vertex_displacements (const std::vector<t8_mesh_deformation_node> &boundary_node_data,
                               std::shared_ptr<t8_cad_handle> cad);
 
  private:

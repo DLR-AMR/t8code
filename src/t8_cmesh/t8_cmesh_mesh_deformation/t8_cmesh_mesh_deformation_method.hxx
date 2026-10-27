@@ -60,7 +60,7 @@ struct t8_mesh_deformation_method
    * \param [in] boundary_node_data Map of global vertex IDs to boundary nodes.
    */
   virtual void
-  set_boundary_nodes (const std::unordered_map<t8_gloidx_t, t8_mesh_deformation_node>& boundary_node_data)
+  set_boundary_nodes (const std::vector<t8_mesh_deformation_node>& boundary_node_data)
     = 0;
 
   /**
