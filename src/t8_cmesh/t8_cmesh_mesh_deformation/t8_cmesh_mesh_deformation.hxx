@@ -29,13 +29,13 @@
 #include <memory>
 #include <unordered_map>
 #include <array>
+#include <type_traits>
 
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cad/t8_cad_handle.hxx>
 #include <t8_vector/t8_vec.hxx>
-
-#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx>
+#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation_method.hxx>
 
 /** Struct for mesh deformation. */
 struct t8_cmesh_mesh_deformation
@@ -43,43 +43,48 @@ struct t8_cmesh_mesh_deformation
  public:
   /** Constructor.
    * \param [in] cmesh    The committed cmesh which will be deformed.
-   * \param [in] rbf_type The type of radial basis function used for the deformation.
    */
-  t8_cmesh_mesh_deformation (t8_cmesh_t cmesh, const t8_rbf_function_type rbf_type)
-    : associated_cmesh (cmesh), updated_geometry (nullptr), rbf_type (rbf_type) {};
+  t8_cmesh_mesh_deformation (t8_cmesh_t cmesh): associated_cmesh (cmesh) {};
 
   /** Destructor */
   ~t8_cmesh_mesh_deformation () {};
 
-  /** 
+  /** Create the deformation method of type method_type.
+   * \tparam method_type  Class derived from t8_mesh_deformation_method.
+   * \param [in] args     Arguments passed to the constructor of method_type. */
+  template <typename method_type, typename... args_t>
+  void
+  set_deformation_method (args_t &&...args)
+  {
+    deformation_method = std::make_unique<method_type> (std::forward<args_t> (args)...);
+  }
+
+  /**
    * Computes the displacements of the surface vertices.
-   * 
+   *
    * \param [in]  cad A pointer to the CAD-based geometry object.
-   * \param [in] scale_factor_support_radius The scale factor for the support radius.
-   * \return Map from global vertex ID to RBF boundary node which contains the displacement and can then be used to calculate the weight of the boundary node.
+   * \return The boundary nodes, each containing its global ID and displacement, which can then be used by the deformation method.
    */
-  std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node>
-  calculate_displacement_surface_vertices (const t8_cad_handle *cad, const double scale_factor_support_radius);
+  std::vector<t8_mesh_deformation_node>
+  calculate_displacement_surface_vertices (const t8_cad_handle *cad);
 
   /**
    * Apply vertex displacements to a committed cmesh.
    *
-   * The RBF weights are calculated from the known displacements of the boundary nodes.
    * The boundary nodes are moved by their known displacement, the inner nodes by the
-   * displacement interpolated with the RBF. Afterwards, the CAD geometry of the cmesh is updated.
+   * displacement interpolated with the deformation method set via set_deformation_method.
+   * Afterwards, the CAD geometry of the cmesh is updated.
    *
-   * \param [in, out] boundary_node_data Map from global vertex ID to RBF boundary node.
+   * \param [in] boundary_node_data The boundary nodes with their known displacements.
    * \param [in] cad The shared pointer to the CAD geometry to update.
    */
   void
-  apply_vertex_displacements (std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node> &boundary_node_data,
+  apply_vertex_displacements (const std::vector<t8_mesh_deformation_node> &boundary_node_data,
                               std::shared_ptr<t8_cad_handle> cad);
 
  private:
   /** A pointer to the cmesh for attribute retrieval. */
   t8_cmesh_t associated_cmesh;
-  /** A shared pointer to the updated geometry which comes from a new cad file. */
-  std::shared_ptr<t8_cad_handle> updated_geometry;
-  /** The type of radial basis function used for the deformation. */
-  const t8_rbf_function_type rbf_type;
+  /** The deformation method used to interpolate the boundary displacements to the inner nodes. */
+  std::unique_ptr<t8_mesh_deformation_method> deformation_method;
 };

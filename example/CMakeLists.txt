@@ -88,9 +88,9 @@ if(T8CODE_ENABLE_VTK)
     add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
 endif()
 
-if (T8CODE_ENABLE_EIGEN)
+if (T8CODE_ENABLE_OCC)
     add_t8_example( NAME t8_cmesh_mesh_deformation          SOURCES cmesh/t8_cmesh_mesh_deformation.cxx )
-endif ()
+endif()
 
 add_t8_example( NAME t8_gmsh_to_vtk                     SOURCES IO/forest/gmsh/t8_gmsh_to_vtk.cxx )
 
