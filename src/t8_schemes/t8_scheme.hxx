@@ -1177,6 +1177,204 @@ struct t8_scheme
       eclass_schemes[tree_class]);
   };
 
+  /* Boundaries of all dimensions 0 <= bdy_dim < dim of an element: the boundaries of dimension dim - 1 are the
+   * faces, the boundaries of dimension 0 the vertices. Only implemented for the standalone scheme. */
+
+  /** Return the number of boundaries of an element of a given dimension.
+   * \param [in] tree_class  The eclass of the current tree.
+   * \param [in] element     The element.
+   * \param [in] bdy_dim     The dimension of the boundaries, 0 <= \a bdy_dim < dim.
+   * \return                 The number of boundaries of \a element of dimension \a bdy_dim.
+   */
+  inline int
+  element_get_num_boundaries (const t8_eclass_t tree_class, const t8_element_t *element, const int bdy_dim) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_boundaries (element, bdy_dim); },
+                       eclass_schemes[tree_class]);
+  }
+
+  /** Return the maximum number of children of an element at one of its boundaries.
+   * \param [in] tree_class  The eclass of the current tree.
+   * \return                 The maximum number of children at a boundary.
+   */
+  inline int
+  get_max_num_boundary_children (const t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.get_max_num_boundary_children (); },
+                       eclass_schemes[tree_class]);
+  }
+
+  /** Return the number of children of an element at a boundary.
+   * \param [in] tree_class  The eclass of the current tree.
+   * \param [in] element     The element.
+   * \param [in] bdy_dim     The dimension of the boundary.
+   * \param [in] bdy_id      The boundary of \a element of dimension \a bdy_dim.
+   * \return                 The number of children of \a element that touch the boundary with a boundary of
+   *                         dimension \a bdy_dim.
+   */
+  inline int
+  element_get_num_boundary_children (const t8_eclass_t tree_class, const t8_element_t *element, const int bdy_dim,
+                                     const int bdy_id) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) { return scheme.element_get_num_boundary_children (element, bdy_dim, bdy_id); },
+      eclass_schemes[tree_class]);
+  }
+
+  /** Compute the children of an element at a boundary, in SFC order.
+   * \param [in] tree_class     The eclass of the current tree.
+   * \param [in] element        The element.
+   * \param [in] bdy_dim        The dimension of the boundary.
+   * \param [in] bdy_id         The boundary of \a element of dimension \a bdy_dim.
+   * \param [in,out] children   Allocated elements, on output the children at the boundary.
+   * \param [in] num_children   The number of children at the boundary, see \ref element_get_num_boundary_children.
+   * \param [out] child_bdy_ids If not NULL, an array of \a num_children integers. On output, entry i is the
+   *                            boundary of the i-th child (of dimension \a bdy_dim) that lies in the boundary.
+   * It is valid to call this function with element = children[0].
+   */
+  inline void
+  element_get_children_at_boundary (const t8_eclass_t tree_class, const t8_element_t *element, const int bdy_dim,
+                                    const int bdy_id, t8_element_t *children[], const int num_children,
+                                    int *child_bdy_ids) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) {
+        return scheme.element_get_children_at_boundary (element, bdy_dim, bdy_id, children, num_children,
+                                                        child_bdy_ids);
+      },
+      eclass_schemes[tree_class]);
+  }
+
+  /** Return the maximum number of children of an element touching one of its boundaries in any dimension.
+   * \param [in] tree_class  The eclass of the current tree.
+   * \return                 The maximum number of touching children.
+   */
+  inline int
+  get_max_num_boundary_touching_children (const t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.get_max_num_boundary_touching_children (); },
+                       eclass_schemes[tree_class]);
+  }
+
+  /** Return the number of children of an element whose intersection with a boundary is not empty, including
+   * children that touch it in a boundary of lower dimension (e.g. the inner tetrahedra of a tetrahedron touch
+   * its edges at their midpoints).
+   * \param [in] tree_class  The eclass of the current tree.
+   * \param [in] element     The element.
+   * \param [in] bdy_dim     The dimension of the boundary.
+   * \param [in] bdy_id      The boundary of \a element of dimension \a bdy_dim.
+   * \return                 The number of children touching the boundary.
+   */
+  inline int
+  element_get_num_boundary_touching_children (const t8_eclass_t tree_class, const t8_element_t *element,
+                                              const int bdy_dim, const int bdy_id) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) { return scheme.element_get_num_boundary_touching_children (element, bdy_dim, bdy_id); },
+      eclass_schemes[tree_class]);
+  }
+
+  /** Compute the children of an element that touch a boundary in any dimension, in SFC order.
+   * \param [in] tree_class      The eclass of the current tree.
+   * \param [in] element         The element.
+   * \param [in] bdy_dim         The dimension of the boundary.
+   * \param [in] bdy_id          The boundary of \a element of dimension \a bdy_dim.
+   * \param [in,out] children    Allocated elements, on output the children touching the boundary.
+   * \param [in] num_children    The number of touching children, see \ref element_get_num_boundary_touching_children.
+   * \param [out] child_bdy_dims If not NULL, an array of \a num_children integers. On output, entry i is the dimension
+   *                             of the intersection of the i-th child with the boundary (at most \a bdy_dim).
+   * \param [out] child_bdy_ids  If not NULL, an array of \a num_children integers. On output, entry i is the boundary
+   *                             of the i-th child (of dimension child_bdy_dims[i]) that is its intersection with the
+   *                             boundary.
+   * It is valid to call this function with element = children[0].
+   */
+  inline void
+  element_get_children_touching_boundary (const t8_eclass_t tree_class, const t8_element_t *element, const int bdy_dim,
+                                          const int bdy_id, t8_element_t *children[], const int num_children,
+                                          int *child_bdy_dims, int *child_bdy_ids) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) {
+        return scheme.element_get_children_touching_boundary (element, bdy_dim, bdy_id, children, num_children,
+                                                              child_bdy_dims, child_bdy_ids);
+      },
+      eclass_schemes[tree_class]);
+  }
+
+  /** Compute the first descendant of an element at a given level that touches a boundary with a boundary of the
+   * same dimension.
+   * \param [in] tree_class  The eclass of the current tree.
+   * \param [in] element     The element.
+   * \param [in] bdy_dim     The dimension of the boundary.
+   * \param [in] bdy_id      The boundary of \a element of dimension \a bdy_dim.
+   * \param [in,out] desc    On output, the first descendant at the boundary.
+   * \param [in] level       The level of the descendant.
+   */
+  inline void
+  element_get_first_descendant_boundary (const t8_eclass_t tree_class, const t8_element_t *element, const int bdy_dim,
+                                         const int bdy_id, t8_element_t *desc, const int level) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) {
+        return scheme.element_get_first_descendant_boundary (element, bdy_dim, bdy_id, desc, level);
+      },
+      eclass_schemes[tree_class]);
+  }
+
+  /** Compute the last descendant of an element at a given level that touches a boundary with a boundary of the
+   * same dimension.
+   * \param [in] tree_class  The eclass of the current tree.
+   * \param [in] element     The element.
+   * \param [in] bdy_dim     The dimension of the boundary.
+   * \param [in] bdy_id      The boundary of \a element of dimension \a bdy_dim.
+   * \param [in,out] desc    On output, the last descendant at the boundary.
+   * \param [in] level       The level of the descendant.
+   */
+  inline void
+  element_get_last_descendant_boundary (const t8_eclass_t tree_class, const t8_element_t *element, const int bdy_dim,
+                                        const int bdy_id, t8_element_t *desc, const int level) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) {
+        return scheme.element_get_last_descendant_boundary (element, bdy_dim, bdy_id, desc, level);
+      },
+      eclass_schemes[tree_class]);
+  }
+
+  /** Return the maximum number of elements of the same level at a boundary, including the element itself.
+   * \param [in] tree_class  The eclass of the current tree.
+   * \return                 The maximum number over all boundaries of all dimensions.
+   */
+  inline int
+  get_max_num_boundary_neighbors (const t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.get_max_num_boundary_neighbors (); },
+                       eclass_schemes[tree_class]);
+  }
+
+  /** Compute the elements of the same level as an element that share one of its boundaries and lie inside the root.
+   * The element itself is not included.
+   * \param [in] tree_class     The eclass of the current tree.
+   * \param [in] element        The element.
+   * \param [in] bdy_dim        The dimension of the boundary.
+   * \param [in] bdy_id         The boundary of \a element of dimension \a bdy_dim.
+   * \param [in,out] neighs     At least \ref get_max_num_boundary_neighbors - 1 allocated elements, none of them
+   *                            equal to \a element. On output, the first entries are the neighbors.
+   * \param [out] neigh_bdy_ids If not NULL, an array of the same length as \a neighs. On output, entry i is the
+   *                            boundary of the i-th neighbor that is equal to the boundary of \a element.
+   * \return                    The number of neighbors inside the root.
+   */
+  inline int
+  element_get_boundary_neighbors_inside (const t8_eclass_t tree_class, const t8_element_t *element, const int bdy_dim,
+                                         const int bdy_id, t8_element_t *neighs[], int *neigh_bdy_ids) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) {
+        return scheme.element_get_boundary_neighbors_inside (element, bdy_dim, bdy_id, neighs, neigh_bdy_ids);
+      },
+      eclass_schemes[tree_class]);
+  }
+
   inline void
   element_get_point (t8_eclass_t tree_class, const t8_element_t *element, int vertex, t8_scheme_point *point) const
   {

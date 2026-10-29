@@ -32,6 +32,7 @@
 #include <t8_eclass.h>
 #include <sc_functions.h>
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_lut_boundaries.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <utility>
 #include <algorithm>
@@ -1990,6 +1991,362 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &type, 1, sc_MPI_INT8_T, comm);
       SC_CHECK_MPI (mpiret);
       els[ielem]->type = type;
+    }
+  }
+
+  // ################################################____BOUNDARIES____################################################
+  /* Boundaries of all dimensions 0 <= bdy_dim < dim, numbered as in the generated tables of
+   * t8_standalone_lut_boundaries.hxx: the boundaries of dimension dim - 1 are the faces,
+   * the boundaries of dimension 0 the vertices. */
+
+  /** Index of the type of an element in the boundary tables, hypercubes have a single type.
+   * \param [in] el  The element.
+   * \return         The row of \a el in the boundary tables.
+   */
+  static constexpr int
+  element_get_lut_type ([[maybe_unused]] const t8_standalone_element<TEclass> *el) noexcept
+  {
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return el->type;
+    }
+    else {
+      return 0;
+    }
+  }
+
+  /** Return the number of boundaries of an element of a given dimension.
+   * \param [in] elem     The element.
+   * \param [in] bdy_dim  The dimension of the boundaries, 0 <= \a bdy_dim < dim.
+   * \return              The number of boundaries of \a elem of dimension \a bdy_dim.
+   */
+  static constexpr int
+  element_get_num_boundaries ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    if constexpr (T8_ELEMENT_DIM[TEclass] == 0) {
+      SC_ABORT ("A vertex has no boundaries.");
+      return 0;
+    }
+    else {
+      T8_ASSERT (0 <= bdy_dim && bdy_dim < T8_ELEMENT_DIM[TEclass]);
+      const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+      return t8_standalone_lut_type_bdy_dim_to_num_boundaries<TEclass>[element_get_lut_type (el)][bdy_dim];
+    }
+  }
+
+  /** Return the maximum number of children of an element at one of its boundaries.
+   * \return  The maximum number of children at a boundary over all types and boundaries.
+   */
+  static constexpr int
+  get_max_num_boundary_children () noexcept
+  {
+    return T8_ELEMENT_MAX_NUM_BOUNDARY_CHILDREN[TEclass];
+  }
+
+  /** Return the number of children of an element at a boundary.
+   * This is the number of children of the boundary's shape, not necessarily 2^bdy_dim.
+   * \param [in] elem     The element.
+   * \param [in] bdy_dim  The dimension of the boundary.
+   * \param [in] bdy_id   The boundary of \a elem of dimension \a bdy_dim.
+   * \return              The number of children of \a elem at the boundary.
+   */
+  static constexpr int
+  element_get_num_boundary_children ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                                     [[maybe_unused]] const int bdy_id) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    if constexpr (T8_ELEMENT_DIM[TEclass] == 0) {
+      SC_ABORT ("A vertex has no boundaries.");
+      return 0;
+    }
+    else {
+      T8_ASSERT (0 <= bdy_id && bdy_id < element_get_num_boundaries (elem, bdy_dim));
+      const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+      const int8_t *childids
+        = t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childid<TEclass>[element_get_lut_type (el)][bdy_dim][bdy_id];
+      int num_children = 0;
+      while (num_children < T8_ELEMENT_MAX_NUM_BOUNDARY_CHILDREN[TEclass] && childids[num_children] != -1) {
+        num_children++;
+      }
+      return num_children;
+    }
+  }
+
+  /** Compute the children of an element at a boundary, in SFC order.
+   * \param [in] elem           The element.
+   * \param [in] bdy_dim        The dimension of the boundary.
+   * \param [in] bdy_id         The boundary of \a elem of dimension \a bdy_dim.
+   * \param [in,out] children   Allocated elements, on output the children of \a elem at the boundary.
+   * \param [in] num_children   The number of children at the boundary, see \ref element_get_num_boundary_children.
+   * \param [out] child_bdy_ids If not NULL, an array of \a num_children integers. On output, entry i is the
+   *                            boundary of the i-th child (of dimension \a bdy_dim) that lies in the boundary.
+   * It is valid to call this function with elem = children[0].
+   */
+  static constexpr void
+  element_get_children_at_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                                    [[maybe_unused]] const int bdy_id, [[maybe_unused]] t8_element_t *children[],
+                                    [[maybe_unused]] const int num_children,
+                                    [[maybe_unused]] int *child_bdy_ids) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    if constexpr (T8_ELEMENT_DIM[TEclass] == 0) {
+      SC_ABORT ("A vertex has no boundaries.");
+    }
+    else {
+      T8_ASSERT (num_children == element_get_num_boundary_children (elem, bdy_dim, bdy_id));
+      const int type = element_get_lut_type ((const t8_standalone_element<TEclass> *) elem);
+      /* Read the tables before constructing the children, since elem may be children[0] */
+      int childids[T8_ELEMENT_MAX_NUM_BOUNDARY_CHILDREN[TEclass]];
+      for (int ichild = 0; ichild < num_children; ichild++) {
+        childids[ichild] = t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childid<TEclass>[type][bdy_dim][bdy_id][ichild];
+        if (child_bdy_ids != NULL) {
+          child_bdy_ids[ichild]
+            = t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childbdyid<TEclass>[type][bdy_dim][bdy_id][ichild];
+        }
+      }
+      for (int ichild = num_children - 1; ichild >= 0; ichild--) {
+        element_get_child (elem, childids[ichild], children[ichild]);
+      }
+    }
+  }
+
+  /** Return the maximum number of children of an element touching one of its boundaries in any dimension.
+   * \return  The maximum over all types and boundaries.
+   */
+  static constexpr int
+  get_max_num_boundary_touching_children () noexcept
+  {
+    return T8_ELEMENT_MAX_NUM_BOUNDARY_TOUCHING_CHILDREN[TEclass];
+  }
+
+  /** Return the number of children of an element whose intersection with a boundary is not empty.
+   * This includes the children at the boundary and children that touch it in a boundary of lower dimension,
+   * e.g. the inner tetrahedra of a tetrahedron touch its edges at their midpoints.
+   * \param [in] elem     The element.
+   * \param [in] bdy_dim  The dimension of the boundary.
+   * \param [in] bdy_id   The boundary of \a elem of dimension \a bdy_dim.
+   * \return              The number of children touching the boundary.
+   */
+  static constexpr int
+  element_get_num_boundary_touching_children ([[maybe_unused]] const t8_element_t *elem,
+                                              [[maybe_unused]] const int bdy_dim,
+                                              [[maybe_unused]] const int bdy_id) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    if constexpr (T8_ELEMENT_DIM[TEclass] == 0) {
+      SC_ABORT ("A vertex has no boundaries.");
+      return 0;
+    }
+    else {
+      T8_ASSERT (0 <= bdy_id && bdy_id < element_get_num_boundaries (elem, bdy_dim));
+      const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+      const int8_t *childids
+        = t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childid<TEclass>[element_get_lut_type (el)][bdy_dim][bdy_id];
+      int num_children = 0;
+      while (num_children < T8_ELEMENT_MAX_NUM_BOUNDARY_TOUCHING_CHILDREN[TEclass] && childids[num_children] != -1) {
+        num_children++;
+      }
+      return num_children;
+    }
+  }
+
+  /** Compute the children of an element that touch a boundary in any dimension, in SFC order.
+   * \param [in] elem            The element.
+   * \param [in] bdy_dim         The dimension of the boundary.
+   * \param [in] bdy_id          The boundary of \a elem of dimension \a bdy_dim.
+   * \param [in,out] children    Allocated elements, on output the children touching the boundary.
+   * \param [in] num_children    The number of touching children, see \ref element_get_num_boundary_touching_children.
+   * \param [out] child_bdy_dims If not NULL, an array of \a num_children integers. On output, entry i is the dimension
+   *                             of the intersection of the i-th child with the boundary (at most \a bdy_dim).
+   * \param [out] child_bdy_ids  If not NULL, an array of \a num_children integers. On output, entry i is the boundary
+   *                             of the i-th child (of dimension child_bdy_dims[i]) that is its intersection
+   *                             with the boundary.
+   * It is valid to call this function with elem = children[0].
+   */
+  static constexpr void
+  element_get_children_touching_boundary ([[maybe_unused]] const t8_element_t *elem,
+                                          [[maybe_unused]] const int bdy_dim, [[maybe_unused]] const int bdy_id,
+                                          [[maybe_unused]] t8_element_t *children[],
+                                          [[maybe_unused]] const int num_children,
+                                          [[maybe_unused]] int *child_bdy_dims,
+                                          [[maybe_unused]] int *child_bdy_ids) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    if constexpr (T8_ELEMENT_DIM[TEclass] == 0) {
+      SC_ABORT ("A vertex has no boundaries.");
+    }
+    else {
+      T8_ASSERT (num_children == element_get_num_boundary_touching_children (elem, bdy_dim, bdy_id));
+      const int type = element_get_lut_type ((const t8_standalone_element<TEclass> *) elem);
+      /* Read the tables before constructing the children, since elem may be children[0] */
+      int childids[T8_ELEMENT_MAX_NUM_BOUNDARY_TOUCHING_CHILDREN[TEclass]];
+      for (int ichild = 0; ichild < num_children; ichild++) {
+        childids[ichild]
+          = t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childid<TEclass>[type][bdy_dim][bdy_id][ichild];
+        if (child_bdy_dims != NULL) {
+          child_bdy_dims[ichild]
+            = t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childbdydim<TEclass>[type][bdy_dim][bdy_id][ichild];
+        }
+        if (child_bdy_ids != NULL) {
+          child_bdy_ids[ichild]
+            = t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childbdyid<TEclass>[type][bdy_dim][bdy_id][ichild];
+        }
+      }
+      for (int ichild = num_children - 1; ichild >= 0; ichild--) {
+        element_get_child (elem, childids[ichild], children[ichild]);
+      }
+    }
+  }
+
+  /** Shift the anchor of an element in the coordinates of a bitset by the difference of its length and the
+   * length at a finer level, i.e. compute a descendant at a boundary. The type stays the same, since the
+   * first and last child at a boundary have the type of the parent.
+   * \param [in] elem      The element.
+   * \param [in] coords    Bitset of the coordinates to shift.
+   * \param [in,out] desc  On output, the descendant. It is valid to call this function with elem = desc.
+   * \param [in] level     The level of the descendant.
+   */
+  static constexpr void
+  element_get_shifted_descendant (const t8_element_t *elem, const int coords, t8_element_t *desc,
+                                  const t8_element_level level) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    t8_standalone_element<TEclass> *d = (t8_standalone_element<TEclass> *) desc;
+    T8_ASSERT (el->level <= level && level <= get_maxlevel ());
+    const t8_element_coord offset = element_get_len (el->level) - element_get_len (level);
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      d->coords[idim] = el->coords[idim] + (((coords >> idim) & 1) ? offset : 0);
+    }
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      d->type = el->type;
+    }
+    d->level = level;
+    T8_ASSERT (element_is_valid (desc));
+  }
+
+  /** Compute the first descendant of an element at a given level that touches a boundary with a boundary of the
+   * same dimension.
+   * \param [in] elem      The element.
+   * \param [in] bdy_dim   The dimension of the boundary.
+   * \param [in] bdy_id    The boundary of \a elem of dimension \a bdy_dim.
+   * \param [in,out] desc  On output, the first descendant at the boundary.
+   * \param [in] level     The level of the descendant.
+   * It is valid to call this function with elem = desc.
+   */
+  static constexpr void
+  element_get_first_descendant_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                                         [[maybe_unused]] const int bdy_id, [[maybe_unused]] t8_element_t *desc,
+                                         [[maybe_unused]] const t8_element_level level) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    if constexpr (T8_ELEMENT_DIM[TEclass] == 0) {
+      SC_ABORT ("A vertex has no boundaries.");
+    }
+    else {
+      T8_ASSERT (0 <= bdy_id && bdy_id < element_get_num_boundaries (elem, bdy_dim));
+      const int type = element_get_lut_type ((const t8_standalone_element<TEclass> *) elem);
+      /* Shift in all coordinates that cannot be 0 on the boundary */
+      const int sink_coords = t8_standalone_lut_type_bdy_dim_id_to_sink_coords<TEclass>[type][bdy_dim][bdy_id];
+      element_get_shifted_descendant (elem, ~sink_coords & ((1 << T8_ELEMENT_DIM[TEclass]) - 1), desc, level);
+    }
+  }
+
+  /** Compute the last descendant of an element at a given level that touches a boundary with a boundary of the
+   * same dimension.
+   * \param [in] elem      The element.
+   * \param [in] bdy_dim   The dimension of the boundary.
+   * \param [in] bdy_id    The boundary of \a elem of dimension \a bdy_dim.
+   * \param [in,out] desc  On output, the last descendant at the boundary.
+   * \param [in] level     The level of the descendant.
+   * It is valid to call this function with elem = desc.
+   */
+  static constexpr void
+  element_get_last_descendant_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                                        [[maybe_unused]] const int bdy_id, [[maybe_unused]] t8_element_t *desc,
+                                        [[maybe_unused]] const t8_element_level level) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    if constexpr (T8_ELEMENT_DIM[TEclass] == 0) {
+      SC_ABORT ("A vertex has no boundaries.");
+    }
+    else {
+      T8_ASSERT (0 <= bdy_id && bdy_id < element_get_num_boundaries (elem, bdy_dim));
+      const int type = element_get_lut_type ((const t8_standalone_element<TEclass> *) elem);
+      /* Shift in all coordinates that can be 1 on the boundary */
+      element_get_shifted_descendant (
+        elem, t8_standalone_lut_type_bdy_dim_id_to_source_coords<TEclass>[type][bdy_dim][bdy_id], desc, level);
+    }
+  }
+
+  /** Return the maximum number of elements of the same level at a boundary, including the element itself.
+   * \return  The maximum over all boundaries of all dimensions.
+   */
+  static constexpr int
+  get_max_num_boundary_neighbors () noexcept
+  {
+    return T8_ELEMENT_MAX_NUM_BOUNDARY_NEIGHBORS[TEclass];
+  }
+
+  /** Compute the elements of the same level as an element that share one of its boundaries and lie inside the root.
+   * The element itself is not included.
+   * \param [in] elem           The element.
+   * \param [in] bdy_dim        The dimension of the boundary.
+   * \param [in] bdy_id         The boundary of \a elem of dimension \a bdy_dim.
+   * \param [in,out] neighs     At least \ref get_max_num_boundary_neighbors - 1 allocated elements, none of them
+   *                            equal to \a elem. On output, the first entries are the neighbors.
+   * \param [out] neigh_bdy_ids If not NULL, an array of the same length as \a neighs. On output, entry i is the
+   *                            boundary of the i-th neighbor that is equal to the boundary of \a elem.
+   * \return                    The number of neighbors inside the root.
+   */
+  static int
+  element_get_boundary_neighbors_inside ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                                         [[maybe_unused]] const int bdy_id, [[maybe_unused]] t8_element_t *neighs[],
+                                         [[maybe_unused]] int *neigh_bdy_ids) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    if constexpr (T8_ELEMENT_DIM[TEclass] == 0) {
+      SC_ABORT ("A vertex has no boundaries.");
+      return 0;
+    }
+    else {
+      T8_ASSERT (0 <= bdy_id && bdy_id < element_get_num_boundaries (elem, bdy_dim));
+      const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+      const int type = element_get_lut_type (el);
+      const t8_element_coord length = element_get_len (el->level);
+      /* The anchored boundary: its anchor is the anchor of elem shifted by length in these coordinates */
+      const int shift = t8_standalone_lut_type_bdy_dim_id_to_anchorshift<TEclass>[type][bdy_dim][bdy_id];
+      const int anchored = t8_standalone_lut_type_bdy_dim_id_to_anchored<TEclass>[type][bdy_dim][bdy_id];
+      const int num_elements = t8_standalone_lut_bdy_dim_anchored_to_num_neighbors<TEclass>[bdy_dim][anchored];
+      int num_neighbors = 0;
+      for (int ielem = 0; ielem < num_elements; ielem++) {
+        const int neigh_type = t8_standalone_lut_bdy_dim_anchored_neighbor_to_type<TEclass>[bdy_dim][anchored][ielem];
+        const int neigh_bdy_id = t8_standalone_lut_bdy_dim_anchored_neighbor_to_bdyid<TEclass>[bdy_dim][anchored][ielem];
+        const int neigh_shift
+          = t8_standalone_lut_bdy_dim_anchored_neighbor_to_anchorshift<TEclass>[bdy_dim][anchored][ielem];
+        if (neigh_type == type && neigh_bdy_id == bdy_id && neigh_shift == shift) {
+          /* This is elem itself */
+          continue;
+        }
+        t8_standalone_element<TEclass> *neigh = (t8_standalone_element<TEclass> *) neighs[num_neighbors];
+        T8_ASSERT ((const t8_element_t *) neigh != elem);
+        for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+          neigh->coords[idim] = el->coords[idim] + length * (((shift >> idim) & 1) - ((neigh_shift >> idim) & 1));
+        }
+        neigh->level = el->level;
+        if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+          neigh->type = neigh_type;
+        }
+        if (!element_is_inside_root (neigh)) {
+          /* The entry is overwritten by the next neighbor */
+          continue;
+        }
+        if (neigh_bdy_ids != NULL) {
+          neigh_bdy_ids[num_neighbors] = neigh_bdy_id;
+        }
+        num_neighbors++;
+      }
+      return num_neighbors;
     }
   }
 

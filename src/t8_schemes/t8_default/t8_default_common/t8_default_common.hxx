@@ -329,6 +329,90 @@ struct t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEc
     SC_ABORT ("Not implemented for this eclass\n");
   }
 
+  /* Boundaries of all dimensions are only implemented for the standalone scheme. */
+  inline int
+  element_get_num_boundaries ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim) const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline int
+  get_max_num_boundary_children () const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline int
+  element_get_num_boundary_children ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                                     [[maybe_unused]] const int bdy_id) const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline void
+  element_get_children_at_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                                    [[maybe_unused]] const int bdy_id, [[maybe_unused]] t8_element_t *children[],
+                                    [[maybe_unused]] const int num_children,
+                                    [[maybe_unused]] int *child_bdy_ids) const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline int
+  get_max_num_boundary_touching_children () const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline int
+  element_get_num_boundary_touching_children ([[maybe_unused]] const t8_element_t *elem,
+                                              [[maybe_unused]] const int bdy_dim,
+                                              [[maybe_unused]] const int bdy_id) const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline void
+  element_get_children_touching_boundary ([[maybe_unused]] const t8_element_t *elem,
+                                          [[maybe_unused]] const int bdy_dim, [[maybe_unused]] const int bdy_id,
+                                          [[maybe_unused]] t8_element_t *children[],
+                                          [[maybe_unused]] const int num_children,
+                                          [[maybe_unused]] int *child_bdy_dims,
+                                          [[maybe_unused]] int *child_bdy_ids) const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline void
+  element_get_first_descendant_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                                         [[maybe_unused]] const int bdy_id, [[maybe_unused]] t8_element_t *desc,
+                                         [[maybe_unused]] const int level) const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline void
+  element_get_last_descendant_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                                        [[maybe_unused]] const int bdy_id, [[maybe_unused]] t8_element_t *desc,
+                                        [[maybe_unused]] const int level) const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline int
+  get_max_num_boundary_neighbors () const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline int
+  element_get_boundary_neighbors_inside ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                                         [[maybe_unused]] const int bdy_id, [[maybe_unused]] t8_element_t *neighs[],
+                                         [[maybe_unused]] int *neigh_bdy_ids) const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
   inline void
   construct_descendants_at_point ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] t8_element_t **descs,
                                   [[maybe_unused]] int *num_neighbors) const
