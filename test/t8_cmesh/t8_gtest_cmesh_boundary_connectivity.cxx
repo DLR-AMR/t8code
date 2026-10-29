@@ -39,6 +39,7 @@
 #include <cmath>
 #include <functional>
 #include <set>
+#include <tuple>
 
 /* The tree vertex of corner i of a boundary of the given dimension, in t8code numbering. */
 static int
@@ -142,12 +143,12 @@ TEST_P (cmesh_boundary_connectivity, matches_coordinates)
 
         std::set<std::pair<t8_locidx_t, int>> found;
         for (const auto &neighbor : t8_cmesh_get_boundary_neighbors (cmesh, itree, bdy_dim, bdy_id)) {
-          found.insert ({ neighbor.ltreeid, neighbor.bdy_id });
-          const auto neigh_coords = t8_test_boundary_coords (cmesh, neighbor.ltreeid, bdy_dim, neighbor.bdy_id);
+          found.insert ({ neighbor.gtreeid, neighbor.bdy_id });
+          const auto neigh_coords = t8_test_boundary_coords (cmesh, neighbor.gtreeid, bdy_dim, neighbor.bdy_id);
           for (size_t icorner = 0; icorner < coords.size (); icorner++) {
             EXPECT_EQ (coords[icorner], neigh_coords[neighbor.perm[icorner]])
               << "tree " << itree << " bdy_dim " << bdy_dim << " bdy_id " << bdy_id << " corner " << icorner
-              << " neighbor tree " << neighbor.ltreeid << " bdy_id " << neighbor.bdy_id;
+              << " neighbor tree " << neighbor.gtreeid << " bdy_id " << neighbor.bdy_id;
           }
         }
         EXPECT_EQ (found, expected) << "tree " << itree << " bdy_dim " << bdy_dim << " bdy_id " << bdy_id;
@@ -189,8 +190,8 @@ TEST_P (cmesh_boundary_connectivity_symmetry, is_symmetric)
         const int num_corners = t8_test_num_boundary_corners (eclass, bdy_dim, bdy_id);
         for (const auto &neighbor : t8_cmesh_get_boundary_neighbors (cmesh, itree, bdy_dim, bdy_id)) {
           int num_back = 0;
-          for (const auto &back : t8_cmesh_get_boundary_neighbors (cmesh, neighbor.ltreeid, bdy_dim, neighbor.bdy_id)) {
-            if (back.ltreeid == itree && back.bdy_id == bdy_id) {
+          for (const auto &back : t8_cmesh_get_boundary_neighbors (cmesh, neighbor.gtreeid, bdy_dim, neighbor.bdy_id)) {
+            if (back.gtreeid == itree && back.bdy_id == bdy_id) {
               num_back++;
               for (int icorner = 0; icorner < num_corners; icorner++) {
                 EXPECT_EQ (back.perm[neighbor.perm[icorner]], icorner)
@@ -214,6 +215,54 @@ static const std::pair<const char *, std::function<t8_cmesh_t ()>> t8_test_orien
   { "periodic_hex_brick", [] () { return t8_cmesh_new_brick_3d (2, 3, 2, 1, 1, 1, sc_MPI_COMM_WORLD); } },
 };
 
+/* In a partitioned cmesh, each local tree has the same neighbors as in the replicated cmesh. */
+struct cmesh_boundary_connectivity_partitioned: public cmesh_boundary_connectivity
+{
+};
+
+TEST_P (cmesh_boundary_connectivity_partitioned, matches_replicated)
+{
+  /* Partition the trees uniformly, so that with several processes trees are shared */
+  t8_cmesh_t partitioned;
+  t8_cmesh_init (&partitioned);
+  t8_cmesh_ref (cmesh);
+  t8_cmesh_set_derive (partitioned, cmesh);
+  t8_cmesh_set_partition_uniform (partitioned, 1, t8_scheme_new_standalone ());
+  t8_cmesh_commit (partitioned, sc_MPI_COMM_WORLD);
+  t8_cmesh_build_boundary_connectivity (partitioned, sc_MPI_COMM_WORLD);
+
+  using t8_test_neighbor = std::tuple<t8_gloidx_t, int, int, std::vector<int>>;
+  for (t8_locidx_t itree = 0; itree < t8_cmesh_get_num_local_trees (partitioned); itree++) {
+    const t8_gloidx_t gtreeid = t8_cmesh_get_global_id (partitioned, itree);
+    const t8_eclass_t eclass = t8_cmesh_get_tree_class (partitioned, itree);
+    const int dim = t8_eclass_to_dimension[eclass];
+    for (int bdy_dim = 0; bdy_dim < dim; bdy_dim++) {
+      for (int bdy_id = 0; bdy_id < t8_test_num_boundaries (eclass, bdy_dim); bdy_id++) {
+        const int num_corners = t8_test_num_boundary_corners (eclass, bdy_dim, bdy_id);
+        auto neighbor_set = [&] (const std::vector<t8_cmesh_boundary_neighbor> &neighbors) {
+          std::set<t8_test_neighbor> result;
+          for (const auto &neighbor : neighbors) {
+            result.insert ({ neighbor.gtreeid, neighbor.eclass, neighbor.bdy_id,
+                             std::vector<int> (neighbor.perm, neighbor.perm + num_corners) });
+          }
+          return result;
+        };
+        EXPECT_EQ (neighbor_set (t8_cmesh_get_boundary_neighbors (partitioned, itree, bdy_dim, bdy_id)),
+                   neighbor_set (t8_cmesh_get_boundary_neighbors (cmesh, gtreeid, bdy_dim, bdy_id)))
+          << "tree " << gtreeid << " bdy_dim " << bdy_dim << " bdy_id " << bdy_id;
+      }
+    }
+  }
+  t8_cmesh_destroy (&partitioned);
+}
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_boundary_connectivity_geometric, cmesh_boundary_connectivity_partitioned,
+                          testing::ValuesIn (t8_test_cmeshes),
+                          [] (const auto &info) { return std::string (info.param.first); });
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_boundary_connectivity_orientation, cmesh_boundary_connectivity_partitioned,
+                          testing::ValuesIn (t8_test_orientation_cmeshes),
+                          [] (const auto &info) { return std::string (info.param.first); });
+
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_boundary_connectivity_geometric, cmesh_boundary_connectivity_symmetry,
                           testing::ValuesIn (t8_test_cmeshes),
                           [] (const auto &info) { return std::string (info.param.first); });
@@ -235,7 +284,7 @@ TEST (cmesh_boundary_connectivity_periodic, unit_cube)
         /* The number of copies of a k-dimensional boundary in the cube is 2^(dim - k) */
         EXPECT_EQ ((int) neighbors.size (), (1 << (dim - bdy_dim)) - 1);
         for (const auto &neighbor : neighbors) {
-          EXPECT_EQ (neighbor.ltreeid, 0);
+          EXPECT_EQ (neighbor.gtreeid, 0);
           if (bdy_dim > 0) {
             /* Parallel boundaries have the same direction and are mapped by a translation. */
             for (int icorner = 0; icorner < t8_test_num_boundary_corners (eclass, bdy_dim, bdy_id); icorner++) {

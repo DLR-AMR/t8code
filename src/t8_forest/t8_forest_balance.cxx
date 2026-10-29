@@ -33,6 +33,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <vector>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -171,7 +172,12 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
 
     int *pdone = (int *) forest->t8code_data;
 
-    if (forest->balance_type == T8_GHOST_FACES) {
+    /* The smallest dimension of the boundaries considered by the balance type */
+    const int dim = t8_eclass_to_dimension[tree_class];
+    const int min_bdy_dim = forest->balance_type == T8_GHOST_FACES   ? SC_MAX (dim - 1, 0)
+                            : forest->balance_type == T8_GHOST_EDGES ? SC_MAX (dim - 2, 0)
+                                                                     : 0;
+    if (min_bdy_dim == dim - 1) {
       const int num_faces = scheme->element_get_num_faces (tree_class, element);
       for (int iface = 0; iface < num_faces; iface++) {
         if (t8_forest_balance_face_is_unbalanced (forest_from, ltree_id, tree_class, scheme, element, iface)) {
@@ -183,8 +189,6 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
     }
     else {
       /* Loop over the boundaries of all dimensions considered by the balance type */
-      const int dim = t8_eclass_to_dimension[tree_class];
-      const int min_bdy_dim = forest->balance_type == T8_GHOST_EDGES ? SC_MAX (dim - 2, 0) : 0;
       for (int bdy_dim = min_bdy_dim; bdy_dim < dim; bdy_dim++) {
         const int num_boundaries = scheme->element_get_num_boundaries (tree_class, element, bdy_dim);
         for (int bdy_id = 0; bdy_id < num_boundaries; bdy_id++) {
@@ -297,6 +301,10 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     forest_temp->balance_type = forest->balance_type;
     /* Adapt the forest */
     t8_forest_set_adapt (forest_temp, forest_from, t8_forest_balance_adapt, 0);
+    if (forest->balance_type != T8_GHOST_FACES) {
+      /* The neighbors across tree boundaries need the vertex and edge connectivity of the trees */
+      t8_cmesh_build_boundary_connectivity (t8_forest_get_cmesh (forest_from), forest->mpicomm);
+    }
     if (!repartition) {
       t8_forest_set_ghost (forest_temp, 1, forest->balance_type);
     }

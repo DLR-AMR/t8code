@@ -477,7 +477,8 @@ typedef struct
  * \param [in]     bdy_id    The boundary of \a element of dimension \a bdy_dim.
  * \param [in,out] neighbors An initialized array of \ref t8_forest_boundary_neighbor_t, filled with the neighbors.
  *                           Free it with \ref t8_forest_boundary_neighbors_reset.
- * \note The coarse mesh of \a forest must be replicated if \a element lies at a tree boundary.
+ * \note If the coarse mesh of \a forest is partitioned, \ref t8_cmesh_build_boundary_connectivity must have been
+ *       called for it, see \ref t8_forest_ghost_create.
  */
 void
 t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,

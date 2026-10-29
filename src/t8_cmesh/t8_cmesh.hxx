@@ -127,25 +127,37 @@ t8_cmesh_get_vertex_to_tree_list (const t8_cmesh_t cmesh, const t8_gloidx_t glob
 /** A boundary of a tree that coincides with a boundary of another tree, see \ref t8_cmesh_get_boundary_neighbors. */
 struct t8_cmesh_boundary_neighbor
 {
-  t8_locidx_t ltreeid; /**< The local id of the neighbor tree. */
+  t8_gloidx_t gtreeid; /**< The global id of the neighbor tree, which need not be a local tree or ghost. */
+  t8_eclass_t eclass;  /**< The eclass of the neighbor tree. */
   int bdy_id;          /**< The vertex, edge or face of the neighbor tree, in t8code numbering. */
   /** Corner i of the boundary lies on corner perm[i] of the neighbor boundary. The corners of an edge or face are
    * numbered as in \ref t8_edge_vertex_to_tree_vertex and \ref t8_face_vertex_to_tree_vertex. */
   int perm[T8_ECLASS_MAX_CORNERS_2D];
 };
 
-/** Return all tree boundaries that coincide with a vertex, edge or face of a tree, together with the permutation
- * of their corners. Faces are connected by the face connections. Vertices and edges are identified across all
- * face connections, and vertices additionally by their global vertex ids if these were set with
+/** Build the connectivity of the vertices, edges and faces of the trees of a cmesh, which
+ * \ref t8_cmesh_get_boundary_neighbors uses. Vertices and edges are identified across all face connections, and
+ * in a replicated cmesh vertices additionally by their global vertex ids if these were set with
  * \ref t8_cmesh_set_global_vertices_of_tree, which also covers trees that only share a vertex. Trees that only
  * share an edge, without a chain of face connections around it, are not found.
+ * Does nothing if the connectivity was already built.
+ * \param [in] cmesh     A committed cmesh.
+ * \param [in] comm      The communicator of \a cmesh.
+ * \note Collective if \a cmesh is partitioned. A replicated cmesh builds the connectivity on the first call of
+ *       \ref t8_cmesh_get_boundary_neighbors, without communication.
+ */
+void
+t8_cmesh_build_boundary_connectivity (const t8_cmesh_t cmesh, sc_MPI_Comm comm);
+
+/** Return all tree boundaries that coincide with a vertex, edge or face of a local tree, together with the
+ * permutation of their corners. The neighbor trees need not be local trees or ghosts.
  * The list does not contain the boundary itself, but other boundaries of the same tree in periodic meshes.
- * \param [in] cmesh     A committed cmesh that is not partitioned.
+ * \param [in] cmesh     A committed cmesh. If it is partitioned, \ref t8_cmesh_build_boundary_connectivity must
+ *                       have been called.
  * \param [in] ltreeid   A local tree of \a cmesh.
  * \param [in] bdy_dim   The dimension of the boundary, smaller than the dimension of the tree.
  * \param [in] bdy_id    The vertex, edge or face of the tree, in t8code numbering.
  * \return               The coinciding boundaries of all trees.
- * \note The connectivity is built on the first call.
  */
 std::vector<t8_cmesh_boundary_neighbor>
 t8_cmesh_get_boundary_neighbors (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int bdy_dim,

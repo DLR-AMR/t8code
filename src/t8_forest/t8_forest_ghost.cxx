@@ -34,6 +34,7 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_data/t8_containers.h>
 #include <sc_statistics.h>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include "t8_eclass.h"
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -861,6 +862,10 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
   /* Set the user data for the search routine */
   t8_forest_set_user_data (forest, &data);
   /* Loop over the trees of the forest */
+  if (forest->ghost_type != T8_GHOST_FACES) {
+    /* The neighbors across tree boundaries need the vertex and edge connectivity of the trees */
+    t8_cmesh_build_boundary_connectivity (t8_forest_get_cmesh (forest), forest->mpicomm);
+  }
   switch (forest->ghost_type) {
   case T8_GHOST_FACES:
     t8_forest_search (forest, t8_forest_ghost_search_face_boundary, NULL, NULL);

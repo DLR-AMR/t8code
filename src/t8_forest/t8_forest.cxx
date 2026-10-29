@@ -2568,7 +2568,7 @@ t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, c
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   const t8_locidx_t cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
   for (const auto &tree_neighbor : t8_cmesh_get_boundary_neighbors (cmesh, cmesh_ltreeid, root_dim, root_id)) {
-    const t8_eclass_t neigh_eclass = t8_cmesh_get_tree_class (cmesh, tree_neighbor.ltreeid);
+    const t8_eclass_t neigh_eclass = tree_neighbor.eclass;
     max_neighbors = scheme->get_max_num_boundary_neighbors (neigh_eclass);
     neighs.resize (max_neighbors);
     neigh_bdy_ids.resize (max_neighbors);
@@ -2576,7 +2576,7 @@ t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, c
     const int num_across = scheme->element_get_boundary_neighbors_across_root (
       eclass, element, bdy_dim, bdy_id, root_dim, root_id, neigh_eclass, tree_neighbor.bdy_id, tree_neighbor.perm,
       neighs.data (), neigh_bdy_ids.data ());
-    t8_forest_append_boundary_neighbors (scheme, t8_cmesh_get_global_id (cmesh, tree_neighbor.ltreeid), neigh_eclass,
+    t8_forest_append_boundary_neighbors (scheme, tree_neighbor.gtreeid, neigh_eclass,
                                          num_across, max_neighbors, neighs.data (), neigh_bdy_ids.data (), neighbors);
   }
 }

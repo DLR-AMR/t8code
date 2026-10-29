@@ -554,7 +554,7 @@ t8_test_adapt_unbalanced (t8_forest_t forest, [[maybe_unused]] t8_forest_t fores
 /* A test mesh: its name and a function that creates the replicated cmesh */
 using t8_test_cmesh = std::pair<std::string, std::function<t8_cmesh_t ()>>;
 
-struct forest_ghost_balance_boundaries: public testing::TestWithParam<std::tuple<t8_test_cmesh, t8_ghost_type_t>>
+struct forest_ghost_balance_boundaries: public testing::TestWithParam<std::tuple<t8_test_cmesh, t8_ghost_type_t, bool>>
 {
  protected:
   void
@@ -606,6 +606,30 @@ struct forest_ghost_balance_boundaries: public testing::TestWithParam<std::tuple
       }
     }
     const t8_scheme *scheme = t8_scheme_new_standalone ();
+    if (std::get<2> (GetParam ())) {
+      /* A partitioned cmesh must not have empty processes, so the uniform forest needs an element per process */
+      t8_gloidx_t num_elements = 0;
+      for (t8_gloidx_t itree = 0; itree < num_trees; itree++) {
+        num_elements += scheme->count_leaves_from_root (t8_cmesh_get_tree_class (cmesh, itree), 1);
+      }
+      int mpisize;
+      const int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+      SC_CHECK_MPI (mpiret);
+      if (num_elements < mpisize) {
+        scheme->unref ();
+        t8_cmesh_destroy (&cmesh);
+        unbalanced = NULL;
+        GTEST_SKIP () << "Fewer elements than processes";
+      }
+      /* Partition the cmesh. The forest repartitions it with the elements, and trees are shared between processes. */
+      t8_cmesh_t partitioned;
+      t8_cmesh_init (&partitioned);
+      t8_cmesh_set_derive (partitioned, cmesh);
+      scheme->ref ();
+      t8_cmesh_set_partition_uniform (partitioned, 1, scheme);
+      t8_cmesh_commit (partitioned, sc_MPI_COMM_WORLD);
+      cmesh = partitioned;
+    }
     t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
     forest = t8_forest_new_adapt (forest, t8_test_adapt_unbalanced, 1, 0, &data);
     /* Partition and create the ghost layer of the type */
@@ -618,7 +642,9 @@ struct forest_ghost_balance_boundaries: public testing::TestWithParam<std::tuple
   void
   TearDown () override
   {
-    t8_forest_unref (&unbalanced);
+    if (unbalanced != NULL) {
+      t8_forest_unref (&unbalanced);
+    }
   }
 
   /* Whether each leaf of the forest has only neighbors of the type whose level differs by at most one
@@ -764,12 +790,14 @@ static const t8_test_cmesh t8_test_cmeshes[] = {
   { "Hybrid", [] () { return t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0); } },
 };
 
-auto print_cmesh_ghost_type = [] (const testing::TestParamInfo<std::tuple<t8_test_cmesh, t8_ghost_type_t>> &info) {
+auto print_cmesh_ghost_type = [] (const testing::TestParamInfo<std::tuple<t8_test_cmesh, t8_ghost_type_t, bool>> &info) {
   static const char *type_names[] = { "none", "faces", "edges", "vertices" };
-  return std::get<0> (info.param).first + "_" + type_names[std::get<1> (info.param)];
+  return std::get<0> (info.param).first + "_" + type_names[std::get<1> (info.param)]
+         + (std::get<2> (info.param) ? "_partitioned" : "");
 };
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_balance_boundaries, forest_ghost_balance_boundaries,
                           ::testing::Combine (::testing::ValuesIn (t8_test_cmeshes),
-                                              ::testing::Values (T8_GHOST_FACES, T8_GHOST_EDGES, T8_GHOST_VERTICES)),
+                                              ::testing::Values (T8_GHOST_FACES, T8_GHOST_EDGES, T8_GHOST_VERTICES),
+                                              ::testing::Bool ()),
                           print_cmesh_ghost_type);

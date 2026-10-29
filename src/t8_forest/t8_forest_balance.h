@@ -49,6 +49,9 @@ t8_forest_balance (t8_forest_t forest, int repartition);
 
 /**
  * Check whether the local elements of a forest are balanced. 
+ * For edge and vertex balance types (in dimension 2 or more) with a partitioned coarse mesh, the vertex and edge
+ * connectivity of the trees must have been built, which ghost creation with these types does,
+ * see \ref t8_cmesh_build_boundary_connectivity.
  *
  * \param[in,out] forest The forest to be checked.
  * \return               1 if the local elements are balanced, 0 otherwise.
