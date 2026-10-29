@@ -46,6 +46,14 @@ function( add_t8_example )
     target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE T8 t8example SC::SC )
     target_include_directories( ${ADD_T8_EXAMPLE_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
 
+    # Potentially, link cmc
+    if( T8CODE_ENABLE_CMC )
+        string( FIND ${ADD_T8_EXAMPLE_NAME} "cmc" is_cmc_file )
+        if( ${is_cmc_file} GREATER_EQUAL 0 )
+            target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE cmc::cmc)
+        endif()
+    endif( T8CODE_ENABLE_CMC )
+
     set_target_properties(${ADD_T8_EXAMPLE_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${EXAMPLE_BUILD_DIR}"
         LIBRARY_OUTPUT_DIRECTORY "${EXAMPLE_BUILD_DIR}"
@@ -90,6 +98,7 @@ if(T8CODE_ENABLE_VTK)
 endif()
 
 add_t8_example( NAME t8_gmsh_to_vtk                     SOURCES IO/forest/gmsh/t8_gmsh_to_vtk.cxx )
+add_t8_example( NAME t8_write_forest_to_cmc_file        SOURCES IO/forest/t8_write_forest_to_cmc_file.cxx )
 
 add_t8_example( NAME t8_example_spheres                 SOURCES remove/t8_example_spheres.cxx )
 add_t8_example( NAME t8_example_gauss_blob              SOURCES remove/t8_example_gauss_blob.cxx )
