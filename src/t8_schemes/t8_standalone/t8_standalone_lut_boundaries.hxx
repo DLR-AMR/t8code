@@ -31,6 +31,8 @@
 constexpr uint8_t T8_ELEMENT_MAX_NUM_BOUNDARY_CHILDREN[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 4, 4, 4, 4 };
 /** Maximum number of children touching a boundary in any dimension */
 constexpr uint8_t T8_ELEMENT_MAX_NUM_BOUNDARY_TOUCHING_CHILDREN[T8_ECLASS_COUNT] = { 0, 1, 2, 3, 4, 7, 6, 9 };
+/** Maximum number of corners of a boundary */
+constexpr uint8_t T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 4, 3, 4, 4 };
 /** Maximum number of anchored boundaries of one dimension */
 constexpr uint8_t T8_ELEMENT_MAX_NUM_ANCHORED_BOUNDARIES[T8_ECLASS_COUNT] = { 0, 1, 2, 3, 3, 12, 5, 9 };
 /** Maximum number of elements at an anchored boundary */
@@ -80,6 +82,9 @@ static_assert (T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID] == 2);
 /** Number of boundaries of each dimension */
 template <t8_eclass TEclass>
 constexpr int8_t t8_standalone_lut_type_bdy_dim_to_num_boundaries[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]];
+/** Corners of a boundary, as ascending corner ids of the element */
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_corners[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]][T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[TEclass]];
 /** Child ids of the children at a boundary, in SFC order */
 template <t8_eclass TEclass>
 constexpr int8_t t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]][T8_ELEMENT_MAX_NUM_BOUNDARY_CHILDREN[TEclass]];

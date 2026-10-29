@@ -685,8 +685,8 @@ constexpr int8_t t8_standalone_lut_bdy_dim_id_idim_to_elem_idim<T8_ECLASS_TET>[T
   {
     {0, -1, -1},
     {0, -1, -1},
-    {1, -1, -1},
     {0, -1, -1},
+    {1, -1, -1},
     {1, -1, -1},
     {2, -1, -1}
   },
@@ -713,8 +713,8 @@ constexpr int8_t t8_standalone_lut_bdy_dim_id_elem_idim_to_bdy_idim<T8_ECLASS_TE
   {
     {0, -1, -1},
     {0, 0, -1},
-    {-1, 0, -1},
     {0, 0, 0},
+    {-1, 0, -1},
     {-1, 0, 0},
     {-1, -1, 0}
   },
@@ -741,8 +741,8 @@ constexpr int8_t t8_standalone_lut_bdy_dim_id_elem_idim_to_1_bdy<T8_ECLASS_TET>[
   {
     {-1, 0, 0},
     {-1, -1, 0},
-    {1, -1, 0},
     {-1, -1, -1},
+    {1, -1, 0},
     {1, -1, -1},
     {1, 1, -1}
   },
@@ -760,8 +760,8 @@ template <>
 constexpr int t8_standalone_lut_line_boundary_id_type_to_equality<T8_ECLASS_TET>[T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_TET]][T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_TET]] = {
   {0, 1, 0},
   {1, 0, 0},
-  {0, 0, 0},
   {1, 1, 1},
+  {0, 0, 0},
   {0, 1, 0},
   {1, 0, 0}
 };

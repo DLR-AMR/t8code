@@ -33,6 +33,34 @@ constexpr int8_t t8_standalone_lut_type_bdy_dim_to_num_boundaries<T8_ECLASS_TRIA
 };
 
 template <>
+constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_corners<T8_ECLASS_TRIANGLE>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_TRIANGLE]][T8_ELEMENT_DIM[T8_ECLASS_TRIANGLE]][T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_TRIANGLE]][T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[T8_ECLASS_TRIANGLE]] = {
+  {
+    {
+      {0, -1},
+      {1, -1},
+      {2, -1}
+    },
+    {
+      {1, 2},
+      {0, 2},
+      {0, 1}
+    }
+  },
+  {
+    {
+      {0, -1},
+      {1, -1},
+      {2, -1}
+    },
+    {
+      {1, 2},
+      {0, 2},
+      {0, 1}
+    }
+  }
+};
+
+template <>
 constexpr int8_t t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childid<T8_ECLASS_TRIANGLE>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_TRIANGLE]][T8_ELEMENT_DIM[T8_ECLASS_TRIANGLE]][T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_TRIANGLE]][T8_ELEMENT_MAX_NUM_BOUNDARY_CHILDREN[T8_ECLASS_TRIANGLE]] = {
   {
     {

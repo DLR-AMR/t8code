@@ -32,6 +32,54 @@ constexpr int8_t t8_standalone_lut_type_bdy_dim_to_num_boundaries<T8_ECLASS_HEX>
 };
 
 template <>
+constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_corners<T8_ECLASS_HEX>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_HEX]][T8_ELEMENT_DIM[T8_ECLASS_HEX]][T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_HEX]][T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[T8_ECLASS_HEX]] = {
+  {
+    {
+      {0, -1, -1, -1},
+      {1, -1, -1, -1},
+      {2, -1, -1, -1},
+      {3, -1, -1, -1},
+      {4, -1, -1, -1},
+      {5, -1, -1, -1},
+      {6, -1, -1, -1},
+      {7, -1, -1, -1},
+      {-1, -1, -1, -1},
+      {-1, -1, -1, -1},
+      {-1, -1, -1, -1},
+      {-1, -1, -1, -1}
+    },
+    {
+      {0, 1, -1, -1},
+      {2, 3, -1, -1},
+      {4, 5, -1, -1},
+      {6, 7, -1, -1},
+      {0, 2, -1, -1},
+      {1, 3, -1, -1},
+      {4, 6, -1, -1},
+      {5, 7, -1, -1},
+      {0, 4, -1, -1},
+      {1, 5, -1, -1},
+      {2, 6, -1, -1},
+      {3, 7, -1, -1}
+    },
+    {
+      {0, 2, 4, 6},
+      {1, 3, 5, 7},
+      {0, 1, 4, 5},
+      {2, 3, 6, 7},
+      {0, 1, 2, 3},
+      {4, 5, 6, 7},
+      {-1, -1, -1, -1},
+      {-1, -1, -1, -1},
+      {-1, -1, -1, -1},
+      {-1, -1, -1, -1},
+      {-1, -1, -1, -1},
+      {-1, -1, -1, -1}
+    }
+  }
+};
+
+template <>
 constexpr int8_t t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childid<T8_ECLASS_HEX>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_HEX]][T8_ELEMENT_DIM[T8_ECLASS_HEX]][T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_HEX]][T8_ELEMENT_MAX_NUM_BOUNDARY_CHILDREN[T8_ECLASS_HEX]] = {
   {
     {
