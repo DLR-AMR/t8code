@@ -34,10 +34,13 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_helpers.h>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <functional>
+#include <map>
 #include <set>
 #include <tuple>
 
@@ -157,6 +160,37 @@ TEST_P (cmesh_boundary_connectivity, matches_coordinates)
   }
 }
 
+/* The orientation of each face connection can be computed from global vertex ids, here given by the coordinates. */
+TEST_P (cmesh_boundary_connectivity, orientation_by_vertex_ids)
+{
+  const t8_locidx_t num_trees = t8_cmesh_get_num_local_trees (cmesh);
+  std::map<t8_test_point, t8_gloidx_t> vertex_ids;
+  std::vector<std::vector<t8_gloidx_t>> tree_vertex_ids (num_trees);
+  for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
+    const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, itree);
+    for (int ivertex = 0; ivertex < t8_eclass_num_vertices[eclass]; ivertex++) {
+      const t8_test_point point = t8_test_boundary_coords (cmesh, itree, 0, ivertex)[0];
+      const auto [entry, is_new] = vertex_ids.try_emplace (point, vertex_ids.size ());
+      tree_vertex_ids[itree].push_back (entry->second);
+    }
+  }
+  for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
+    const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, itree);
+    for (int iface = 0; iface < t8_eclass_num_faces[eclass]; iface++) {
+      int neigh_face, orientation;
+      const t8_locidx_t neigh_tree = t8_cmesh_get_face_neighbor (cmesh, itree, iface, &neigh_face, &orientation);
+      if (neigh_tree < 0 || (neigh_tree == itree && neigh_face == iface)) {
+        continue;
+      }
+      EXPECT_EQ (t8_cmesh_face_orientation_by_vertex_ids (eclass, iface, tree_vertex_ids[itree].data (),
+                                                          t8_cmesh_get_tree_class (cmesh, neigh_tree), neigh_face,
+                                                          tree_vertex_ids[neigh_tree].data ()),
+                 orientation)
+        << "tree " << itree << " face " << iface;
+    }
+  }
+}
+
 static const std::pair<const char *, std::function<t8_cmesh_t ()>> t8_test_cmeshes[] = {
   { "line", [] () { return t8_cmesh_new_hypercube_pad (T8_ECLASS_LINE, sc_MPI_COMM_WORLD, std::array<double, 6> { 0, 0, 0, 1, 0, 0 }.data (), 3, 0, 0, 0); } },
   { "quad", [] () { return t8_cmesh_new_hypercube_pad (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, std::array<double, 12> { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 }.data (), 3, 2, 0, 0); } },
@@ -202,6 +236,47 @@ TEST_P (cmesh_boundary_connectivity_symmetry, is_symmetric)
           EXPECT_EQ (num_back, 1) << "tree " << itree << " bdy_dim " << bdy_dim << " bdy_id " << bdy_id;
         }
       }
+    }
+  }
+}
+
+/* With vertex ids taken from the vertex classes of the connectivity, the orientation of each face connection is
+ * recovered from the vertex ids. Faces of periodic meshes with repeated vertex ids are skipped. */
+TEST_P (cmesh_boundary_connectivity_symmetry, orientation_by_connectivity_vertex_ids)
+{
+  const t8_locidx_t num_trees = t8_cmesh_get_num_local_trees (cmesh);
+  std::vector<std::vector<t8_gloidx_t>> tree_vertex_ids (num_trees);
+  for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
+    const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, itree);
+    for (int ivertex = 0; ivertex < t8_eclass_num_vertices[eclass]; ivertex++) {
+      t8_gloidx_t id = 8 * t8_cmesh_get_global_id (cmesh, itree) + ivertex;
+      for (const auto &neighbor : t8_cmesh_get_boundary_neighbors (cmesh, itree, 0, ivertex)) {
+        id = std::min (id, 8 * neighbor.gtreeid + neighbor.bdy_id);
+      }
+      tree_vertex_ids[itree].push_back (id);
+    }
+  }
+  for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
+    const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, itree);
+    for (int iface = 0; iface < t8_eclass_num_faces[eclass]; iface++) {
+      int neigh_face, orientation;
+      const t8_locidx_t neigh_tree = t8_cmesh_get_face_neighbor (cmesh, itree, iface, &neigh_face, &orientation);
+      if (neigh_tree < 0 || (neigh_tree == itree && neigh_face == iface)) {
+        continue;
+      }
+      std::set<t8_gloidx_t> face_ids;
+      const int num_face_corners = t8_eclass_num_vertices[t8_eclass_face_types[eclass][iface]];
+      for (int icorner = 0; icorner < num_face_corners; icorner++) {
+        face_ids.insert (tree_vertex_ids[itree][t8_face_vertex_to_tree_vertex[eclass][iface][icorner]]);
+      }
+      if ((int) face_ids.size () < num_face_corners) {
+        continue;
+      }
+      EXPECT_EQ (t8_cmesh_face_orientation_by_vertex_ids (eclass, iface, tree_vertex_ids[itree].data (),
+                                                          t8_cmesh_get_tree_class (cmesh, neigh_tree), neigh_face,
+                                                          tree_vertex_ids[neigh_tree].data ()),
+                 orientation)
+        << "tree " << itree << " face " << iface;
     }
   }
 }

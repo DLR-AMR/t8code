@@ -287,3 +287,29 @@ t8_cmesh_set_join_by_stash (t8_cmesh_t cmesh, int **connectivity, const int do_b
   /* Let t8_cmesh_set_join_by_vertices join the trees */
   t8_cmesh_set_join_by_vertices (cmesh, ntrees, eclasses.data (), vertices.data (), connectivity, do_both_directions);
 }
+
+int
+t8_cmesh_face_orientation_by_vertex_ids (const t8_eclass_t eclass, const int face, const t8_gloidx_t *vertices,
+                                         const t8_eclass_t neigh_eclass, const int neigh_face,
+                                         const t8_gloidx_t *neigh_vertices)
+{
+  /* The orientation is defined relative to the smaller face, see t8_forest_element_face_neighbor. */
+  const int eclass_compare = t8_eclass_compare (eclass, neigh_eclass);
+  const int is_smaller = eclass_compare == 0 ? face <= neigh_face : eclass_compare == -1;
+  const t8_eclass_t small_eclass = is_smaller ? eclass : neigh_eclass;
+  const t8_eclass_t big_eclass = is_smaller ? neigh_eclass : eclass;
+  const int small_face = is_smaller ? face : neigh_face;
+  const int big_face = is_smaller ? neigh_face : face;
+  const t8_gloidx_t *small_vertices = is_smaller ? vertices : neigh_vertices;
+  const t8_gloidx_t *big_vertices = is_smaller ? neigh_vertices : vertices;
+
+  const t8_gloidx_t first_vertex = small_vertices[t8_face_vertex_to_tree_vertex[small_eclass][small_face][0]];
+  const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[big_eclass][big_face];
+  for (int icorner = 0; icorner < t8_eclass_num_vertices[face_eclass]; icorner++) {
+    if (big_vertices[t8_face_vertex_to_tree_vertex[big_eclass][big_face][icorner]] == first_vertex) {
+      return icorner;
+    }
+  }
+  SC_ABORT ("The faces do not share their first vertex.\n");
+  return -1;
+}

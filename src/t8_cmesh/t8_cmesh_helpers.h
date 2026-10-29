@@ -78,6 +78,23 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const t8_gloidx_t ntrees, const
 void
 t8_cmesh_set_join_by_stash (t8_cmesh_t cmesh, int **connectivity, const int do_both_directions);
 
+/** Compute the orientation of a face connection between two trees from the global ids of their vertices,
+ * as needed by \ref t8_cmesh_set_join: the corner of the other face that coincides with corner 0 of the smaller
+ * face, see \ref t8_eclass_compare.
+ * \param[in]       eclass              The eclass of the first tree.
+ * \param[in]       face                The face of the first tree.
+ * \param[in]       vertices            The global vertex ids of the first tree, in t8code vertex order.
+ * \param[in]       neigh_eclass        The eclass of the second tree.
+ * \param[in]       neigh_face          The face of the second tree that is connected to \a face.
+ * \param[in]       neigh_vertices      The global vertex ids of the second tree, in t8code vertex order.
+ * \return                              The orientation of the connection.
+ * \note The vertex ids of the two faces must agree as sets, and each face must have distinct vertex ids.
+ */
+int
+t8_cmesh_face_orientation_by_vertex_ids (const t8_eclass_t eclass, const int face, const t8_gloidx_t *vertices,
+                                         const t8_eclass_t neigh_eclass, const int neigh_face,
+                                         const t8_gloidx_t *neigh_vertices);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_HELPERS_H */
