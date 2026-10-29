@@ -146,6 +146,8 @@ typedef struct t8_cmesh
     *vertex_connectivity; /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
   struct t8_cmesh_edge_connectivity
     *edge_connectivity; /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
+  struct t8_cmesh_boundary_connectivity
+    *boundary_connectivity; /**< The trees sharing vertices, edges and faces, built on first use. */
 
 #if T8_ENABLE_DEBUG
   int negative_volume_check;   /**< Whether the negative volume check will be performed */

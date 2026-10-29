@@ -27,6 +27,7 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cmesh/t8_cmesh_edge_connectivity/t8_cmesh_edge_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_boundary_connectivity.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -223,6 +224,7 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
   cmesh->geometry_handler = NULL;
   cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
   cmesh->edge_connectivity = new t8_cmesh_edge_connectivity ();
+  cmesh->boundary_connectivity = NULL;
 #if T8_ENABLE_DEBUG
   cmesh->negative_volume_check = 1;
 #endif /* T8_ENABLE_DEBUG */
@@ -1231,6 +1233,9 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
   if (cmesh->edge_connectivity != NULL) {
     delete cmesh->edge_connectivity;
   }
+  if (cmesh->boundary_connectivity != NULL) {
+    delete cmesh->boundary_connectivity;
+  }
 
   T8_FREE (cmesh);
   *pcmesh = NULL;
@@ -1612,7 +1617,7 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t cmesh_ltreeid, int bdy_dim, i
     int tree_neigh_face = ttf[bdy_id] % F;
     int orientation = ttf[bdy_id] / F;
     t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, cmesh_ltreeid);
-    t8_eclass_t neigh_eclass = t8_cmesh_treeid_is_local_tree (cmesh, cmesh_ltreeid) ? t8_cmesh_get_tree_class(cmesh, cmesh_ltreeid): t8_cmesh_get_ghost_class(cmesh, cmesh_ltreeid-t8_cmesh_get_num_local_trees(cmesh));
+    t8_eclass_t neigh_eclass = t8_cmesh_treeid_is_local_tree (cmesh, neigh_cmesh_ltreeid) ? t8_cmesh_get_tree_class(cmesh, neigh_cmesh_ltreeid): t8_cmesh_get_ghost_class(cmesh, neigh_cmesh_ltreeid-t8_cmesh_get_num_local_trees(cmesh));
     int sign = t8_eclass_face_orientation[eclass][bdy_id] == t8_eclass_face_orientation[neigh_eclass][tree_neigh_face];
 
     int eclass_compare = t8_eclass_compare (eclass, neigh_eclass);
