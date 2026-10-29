@@ -33,6 +33,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_scheme.hxx>
+#include <vector>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -98,44 +99,34 @@ t8_forest_balance_face_is_unbalanced (t8_forest_t forest_from, const t8_locidx_t
  */
 static int
 t8_forest_balance_boundary_is_unbalanced (t8_forest_t forest_from, const t8_locidx_t ltree_id,
-                                          const t8_eclass_t tree_class, const t8_scheme *scheme,
+                                          [[maybe_unused]] const t8_eclass_t tree_class, const t8_scheme *scheme,
                                           const t8_element_t *element, const int bdy_dim, const int bdy_id,
                                           const int min_dim)
 {
   int unbalanced = 0;
-  const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest_from, ltree_id);
-  const int max_neighbors = scheme->get_max_num_boundary_neighbors (tree_class);
-  const int max_children = scheme->get_max_num_boundary_touching_children (tree_class);
-  t8_element_t **neighs = T8_ALLOC (t8_element_t *, max_neighbors);
-  t8_element_t **children = T8_ALLOC (t8_element_t *, max_children);
-  int *neigh_bdy_ids = T8_ALLOC (int, max_neighbors);
-  int *child_bdy_dims = T8_ALLOC (int, max_children);
-  scheme->element_new (tree_class, max_neighbors, neighs);
-  scheme->element_new (tree_class, max_children, children);
-
-  const int num_neighbors
-    = scheme->element_get_boundary_neighbors_inside (tree_class, element, bdy_dim, bdy_id, neighs, neigh_bdy_ids);
-  if (num_neighbors == 0 && bdy_dim == t8_eclass_to_dimension[tree_class] - 1) {
-    /* The face neighbor lies outside of the root, the boundaries of dimension dim - 1 are the faces */
-    unbalanced = t8_forest_balance_face_is_unbalanced (forest_from, ltree_id, tree_class, scheme, element, bdy_id);
-  }
-  for (int ineigh = 0; ineigh < num_neighbors && !unbalanced; ineigh++) {
-    const int num_children = scheme->element_get_num_boundary_touching_children (tree_class, neighs[ineigh], bdy_dim,
-                                                                                neigh_bdy_ids[ineigh]);
-    scheme->element_get_children_touching_boundary (tree_class, neighs[ineigh], bdy_dim, neigh_bdy_ids[ineigh],
-                                                    children, num_children, child_bdy_dims, NULL);
+  sc_array_t neighbors;
+  sc_array_init (&neighbors, sizeof (t8_forest_boundary_neighbor_t));
+  t8_forest_element_boundary_neighbors (forest_from, ltree_id, element, bdy_dim, bdy_id, &neighbors);
+  for (size_t ineigh = 0; ineigh < neighbors.elem_count && !unbalanced; ineigh++) {
+    const t8_forest_boundary_neighbor_t *neighbor
+      = (const t8_forest_boundary_neighbor_t *) sc_array_index (&neighbors, ineigh);
+    const t8_eclass_t neigh_class = neighbor->eclass;
+    const int max_children = scheme->get_max_num_boundary_touching_children (neigh_class);
+    std::vector<t8_element_t *> children (max_children);
+    std::vector<int> child_bdy_dims (max_children);
+    scheme->element_new (neigh_class, max_children, children.data ());
+    const int num_children
+      = scheme->element_get_num_boundary_touching_children (neigh_class, neighbor->neigh, bdy_dim, neighbor->bdy_id);
+    scheme->element_get_children_touching_boundary (neigh_class, neighbor->neigh, bdy_dim, neighbor->bdy_id,
+                                                    children.data (), num_children, child_bdy_dims.data (), NULL);
     for (int ichild = 0; ichild < num_children && !unbalanced; ichild++) {
       if (child_bdy_dims[ichild] >= min_dim) {
-        unbalanced = t8_forest_element_has_leaf_desc (forest_from, gtreeid, children[ichild], tree_class);
+        unbalanced = t8_forest_element_has_leaf_desc (forest_from, neighbor->gtreeid, children[ichild], neigh_class);
       }
     }
+    scheme->element_destroy (neigh_class, max_children, children.data ());
   }
-  scheme->element_destroy (tree_class, max_neighbors, neighs);
-  scheme->element_destroy (tree_class, max_children, children);
-  T8_FREE (neighs);
-  T8_FREE (children);
-  T8_FREE (neigh_bdy_ids);
-  T8_FREE (child_bdy_dims);
+  t8_forest_boundary_neighbors_reset (forest_from, &neighbors);
   return unbalanced;
 }
 

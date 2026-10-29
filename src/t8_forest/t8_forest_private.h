@@ -444,8 +444,7 @@ t8_forest_element_owners_touching_boundary (t8_forest_t forest, t8_gloidx_t gtre
 /** Find the owner processes of all leaves that are not descendants of a local element and touch a boundary of it
  * with a boundary of dimension at least \a min_dim, i.e. the owners touching this boundary of all elements of the
  * same level that share the boundary, see \ref t8_forest_element_owners_touching_boundary.
- * Neighbors outside of the root are only considered for faces (bdy_dim = dim - 1), via
- * \ref t8_forest_element_owners_at_neigh_face. TODO: lower dimensional boundaries across trees.
+ * Neighbors in other trees are found with \ref t8_forest_element_boundary_neighbors.
  * \param [in]     forest  The forest.
  * \param [in]     ltreeid The local id of the tree in which the element lies.
  * \param [in]     element The element.
@@ -458,6 +457,38 @@ t8_forest_element_owners_touching_boundary (t8_forest_t forest, t8_gloidx_t gtre
 void
 t8_forest_element_owners_at_neigh_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                             int bdy_dim, int bdy_id, int min_dim, sc_array_t *owners);
+
+/** An element of the same level as a given element that shares one of its boundaries, possibly in another tree. */
+typedef struct
+{
+  t8_gloidx_t gtreeid;  /**< The global id of the tree of the neighbor. */
+  t8_eclass_t eclass;   /**< The eclass of that tree. */
+  t8_element_t *neigh;  /**< The neighbor, allocated with the scheme of \a eclass. */
+  int bdy_id;           /**< The boundary of the neighbor that coincides with the boundary of the element. */
+} t8_forest_boundary_neighbor_t;
+
+/** Compute all elements of the same level as an element that share one of its boundaries, inside its tree and
+ * across tree boundaries (\ref t8_cmesh_get_boundary_neighbors). The element itself is not included, but in
+ * periodic meshes the element may be its own neighbor at another boundary.
+ * \param [in]     forest    The forest.
+ * \param [in]     ltreeid   The local id of the tree in which the element lies.
+ * \param [in]     element   The element.
+ * \param [in]     bdy_dim   The dimension of the boundary.
+ * \param [in]     bdy_id    The boundary of \a element of dimension \a bdy_dim.
+ * \param [in,out] neighbors An initialized array of \ref t8_forest_boundary_neighbor_t, filled with the neighbors.
+ *                           Free it with \ref t8_forest_boundary_neighbors_reset.
+ * \note The coarse mesh of \a forest must be replicated if \a element lies at a tree boundary.
+ */
+void
+t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      int bdy_dim, int bdy_id, sc_array_t *neighbors);
+
+/** Free the neighbors computed by \ref t8_forest_element_boundary_neighbors and reset the array.
+ * \param [in]     forest    The forest.
+ * \param [in,out] neighbors The neighbors.
+ */
+void
+t8_forest_boundary_neighbors_reset (t8_forest_t forest, sc_array_t *neighbors);
 
 /** Constant time algorithm (per neighbor) to compute bounds for the owners of
  * \ref t8_forest_element_owners_at_neigh_boundary, from the bounds of the owners of the whole neighbors.

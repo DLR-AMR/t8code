@@ -1375,6 +1375,61 @@ struct t8_scheme
       eclass_schemes[tree_class]);
   }
 
+  /** Compute the lowest-dimensional boundary of the root that contains a boundary of an element.
+   * \param [in] tree_class The eclass of the current tree.
+   * \param [in] element    The element.
+   * \param [in] bdy_dim    The dimension of the boundary.
+   * \param [in] bdy_id     The boundary of \a element of dimension \a bdy_dim.
+   * \param [out] root_dim  The dimension of the root boundary, or -1 if the boundary of \a element is not contained
+   *                        in a boundary of the root.
+   * \param [out] root_id   The root boundary of dimension \a root_dim, in t8code numbering of the vertices, edges
+   *                        and faces of the tree.
+   */
+  inline void
+  element_get_root_boundary (const t8_eclass_t tree_class, const t8_element_t *element, const int bdy_dim,
+                             const int bdy_id, int *root_dim, int *root_id) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) { return scheme.element_get_root_boundary (element, bdy_dim, bdy_id, root_dim, root_id); },
+      eclass_schemes[tree_class]);
+  }
+
+  /** Compute the elements of the same level as an element that share one of its boundaries and lie in another tree,
+   * or at another boundary of the same tree. The boundary of the element lies in a root boundary, which coincides
+   * with a root boundary of the other tree, see \ref t8_cmesh_get_boundary_neighbors.
+   * \param [in] tree_class     The eclass of the current tree.
+   * \param [in] element        The element.
+   * \param [in] bdy_dim        The dimension of the boundary.
+   * \param [in] bdy_id         The boundary of \a element of dimension \a bdy_dim.
+   * \param [in] root_dim       The dimension of the root boundary containing the boundary of \a element,
+   *                            see \ref element_get_root_boundary.
+   * \param [in] root_id        The root boundary containing the boundary of \a element.
+   * \param [in] neigh_class    The eclass of the other tree.
+   * \param [in] neigh_root_id  The root boundary of the other tree, of dimension \a root_dim.
+   * \param [in] perm           Corner i of the root boundary lies on corner \a perm[i] of the other root boundary,
+   *                            in t8code numbering.
+   * \param [in,out] neighs     At least \ref get_max_num_boundary_neighbors (\a neigh_class) allocated elements of
+   *                            \a neigh_class. On output, the first entries are the neighbors.
+   * \param [out] neigh_bdy_ids An array of the same length as \a neighs. On output, entry i is the boundary of the
+   *                            i-th neighbor that coincides with the boundary of \a element.
+   * \return                    The number of neighbors.
+   */
+  inline int
+  element_get_boundary_neighbors_across_root (const t8_eclass_t tree_class, const t8_element_t *element,
+                                              const int bdy_dim, const int bdy_id, const int root_dim,
+                                              const int root_id, const t8_eclass_t neigh_class,
+                                              const int neigh_root_id, const int *perm, t8_element_t *neighs[],
+                                              int *neigh_bdy_ids) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) {
+        return scheme.element_get_boundary_neighbors_across_root (element, bdy_dim, bdy_id, root_dim, root_id,
+                                                                  neigh_class, neigh_root_id, perm, neighs,
+                                                                  neigh_bdy_ids);
+      },
+      eclass_schemes[tree_class]);
+  }
+
   inline void
   element_get_point (t8_eclass_t tree_class, const t8_element_t *element, int vertex, t8_scheme_point *point) const
   {

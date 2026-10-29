@@ -414,6 +414,25 @@ struct t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEc
   }
 
   inline void
+  element_get_root_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                             [[maybe_unused]] const int bdy_id, [[maybe_unused]] int *root_dim,
+                             [[maybe_unused]] int *root_id) const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline int
+  element_get_boundary_neighbors_across_root (
+    [[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim, [[maybe_unused]] const int bdy_id,
+    [[maybe_unused]] const int root_dim, [[maybe_unused]] const int root_id,
+    [[maybe_unused]] const t8_eclass_t neigh_eclass, [[maybe_unused]] const int neigh_root_id,
+    [[maybe_unused]] const int *perm, [[maybe_unused]] t8_element_t *neighs[],
+    [[maybe_unused]] int *neigh_bdy_ids) const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline void
   construct_descendants_at_point ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] t8_element_t **descs,
                                   [[maybe_unused]] int *num_neighbors) const
   {

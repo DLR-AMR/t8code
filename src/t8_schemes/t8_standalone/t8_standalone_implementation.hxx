@@ -1217,31 +1217,9 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       const t8_element_coord root_len = get_root_len ();
       const t8_element_coord len = element_get_len (el1->level);
 
-      /* The offset c is the image of the root corner 0, which is the origin. Column j of A is the image of a root
-       * edge in direction j. */
-      t8_element_coord offset[dim];
+      int offset[dim];
       int matrix[dim][dim];
-      for (int idim = 0; idim < dim; idim++) {
-        offset[idim] = root_len * corner_binary (0, perm[0], idim);
-      }
-      for (int jdim = 0; jdim < dim; jdim++) {
-        [[maybe_unused]] bool found = false;
-        for (int icorner = 0; icorner < num_corners && !found; icorner++) {
-          for (int jcorner = 0; jcorner < num_corners && !found; jcorner++) {
-            bool is_edge = true;
-            for (int idim = 0; idim < dim; idim++) {
-              is_edge &= corner_binary (0, jcorner, idim) - corner_binary (0, icorner, idim) == (idim == jdim);
-            }
-            if (is_edge) {
-              for (int idim = 0; idim < dim; idim++) {
-                matrix[idim][jdim] = corner_binary (0, perm[jcorner], idim) - corner_binary (0, perm[icorner], idim);
-              }
-              found = true;
-            }
-          }
-        }
-        T8_ASSERT (found);
-      }
+      root_symmetry (perm, matrix, offset);
 
       /* Map the corners of the element and take their minimum as the anchor. */
       t8_element_coord corners[num_corners][dim];
@@ -1251,7 +1229,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       }
       for (int icorner = 0; icorner < num_corners; icorner++) {
         for (int idim = 0; idim < dim; idim++) {
-          corners[icorner][idim] = offset[idim];
+          corners[icorner][idim] = root_len * offset[idim];
           for (int jdim = 0; jdim < dim; jdim++) {
             corners[icorner][idim]
               += matrix[idim][jdim] * (el1->coords[jdim] + len * corner_binary (el1->type, icorner, jdim));
@@ -1282,6 +1260,42 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     }
     el2->level = el1->level;
     T8_ASSERT (element_is_valid (elem2));
+  }
+
+  /** The affine map x -> A x + c L of the symmetry of the root element (of length L) that maps root corner i to root
+   *  corner \a perm[i].
+   *  \param [in] perm    A permutation of the root corners that is a symmetry of the root element.
+   *  \param [out] matrix The matrix A.
+   *  \param [out] offset The offset c, the image of the origin in units of the root length.
+   */
+  static constexpr void
+  root_symmetry (const int *perm, int matrix[][T8_ELEMENT_DIM[TEclass]], int *offset) noexcept
+  {
+    constexpr int dim = T8_ELEMENT_DIM[TEclass];
+    constexpr int num_corners = T8_ELEMENT_NUM_CORNERS[TEclass];
+    /* The offset c is the image of the root corner 0, which is the origin. Column j of A is the image of a root
+     * edge in direction j. */
+    for (int idim = 0; idim < dim; idim++) {
+      offset[idim] = corner_binary (0, perm[0], idim);
+    }
+    for (int jdim = 0; jdim < dim; jdim++) {
+      [[maybe_unused]] bool found = false;
+      for (int icorner = 0; icorner < num_corners && !found; icorner++) {
+        for (int jcorner = 0; jcorner < num_corners && !found; jcorner++) {
+          bool is_edge = true;
+          for (int idim = 0; idim < dim; idim++) {
+            is_edge &= corner_binary (0, jcorner, idim) - corner_binary (0, icorner, idim) == (idim == jdim);
+          }
+          if (is_edge) {
+            for (int idim = 0; idim < dim; idim++) {
+              matrix[idim][jdim] = corner_binary (0, perm[jcorner], idim) - corner_binary (0, perm[icorner], idim);
+            }
+            found = true;
+          }
+        }
+      }
+      T8_ASSERT (found);
+    }
   }
 
   /** The cube vertex of a corner of an element of a given type, as bit \a idim of its offset from the anchor.
@@ -2456,6 +2470,373 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
           neigh_bdy_ids[num_neighbors] = neigh_bdy_id;
         }
         num_neighbors++;
+      }
+      return num_neighbors;
+    }
+  }
+
+  /** Compute the lowest-dimensional boundary of the root that contains a boundary of an element.
+   * \param [in] elem       The element.
+   * \param [in] bdy_dim    The dimension of the boundary.
+   * \param [in] bdy_id     The boundary of \a elem of dimension \a bdy_dim.
+   * \param [out] root_dim  The dimension of the root boundary, or -1 if the boundary of \a elem is not contained in
+   *                        a boundary of the root.
+   * \param [out] root_id   The root boundary of dimension \a root_dim, in t8code numbering of the vertices, edges and
+   *                        faces of the tree.
+   */
+  static inline void
+  element_get_root_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                             [[maybe_unused]] const int bdy_id, int *root_dim, int *root_id) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    *root_dim = -1;
+    *root_id = -1;
+    if constexpr (T8_ELEMENT_DIM[TEclass] > 0) {
+      const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+      t8_element_coord corners[T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[TEclass]][T8_ELEMENT_DIM[TEclass]];
+      const int num_corners = boundary_corners (el, bdy_dim, bdy_id, corners);
+      for (int rdim = bdy_dim; rdim < T8_ELEMENT_DIM[TEclass]; rdim++) {
+        for (int rid = 0; rid < t8_standalone_lut_type_bdy_dim_to_num_boundaries<TEclass>[0][rdim]; rid++) {
+          bool contains = true;
+          for (int icorner = 0; icorner < num_corners && contains; icorner++) {
+            contains = root_boundary_contains (rdim, rid, corners[icorner], el->level);
+          }
+          if (contains) {
+            *root_dim = rdim;
+            *root_id = rid;
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  /** Compute the elements of the same level as an element that share one of its boundaries and lie in another tree,
+   * or at another boundary of the same tree. The boundary of the element lies in a root boundary, which coincides
+   * with a root boundary of the other tree, see \ref t8_cmesh_get_boundary_neighbors.
+   * \param [in] elem           The element.
+   * \param [in] bdy_dim        The dimension of the boundary.
+   * \param [in] bdy_id         The boundary of \a elem of dimension \a bdy_dim.
+   * \param [in] root_dim       The dimension of the root boundary containing the boundary of \a elem,
+   *                            see \ref element_get_root_boundary.
+   * \param [in] root_id        The root boundary containing the boundary of \a elem.
+   * \param [in] neigh_eclass   The eclass of the other tree.
+   * \param [in] neigh_root_id  The root boundary of the other tree, of dimension \a root_dim.
+   * \param [in] perm           Corner i of the root boundary lies on corner \a perm[i] of the other root boundary,
+   *                            in t8code numbering.
+   * \param [in,out] neighs     At least get_max_num_boundary_neighbors allocated elements of \a neigh_eclass.
+   *                            On output, the first entries are the neighbors.
+   * \param [out] neigh_bdy_ids An array of the same length as \a neighs. On output, entry i is the boundary of the
+   *                            i-th neighbor that coincides with the boundary of \a elem.
+   * \return                    The number of neighbors.
+   */
+  static inline int
+  element_get_boundary_neighbors_across_root ([[maybe_unused]] const t8_element_t *elem,
+                                              [[maybe_unused]] const int bdy_dim, [[maybe_unused]] const int bdy_id,
+                                              [[maybe_unused]] const int root_dim, [[maybe_unused]] const int root_id,
+                                              [[maybe_unused]] const t8_eclass_t neigh_eclass,
+                                              [[maybe_unused]] const int neigh_root_id,
+                                              [[maybe_unused]] const int *perm,
+                                              [[maybe_unused]] t8_element_t *neighs[],
+                                              [[maybe_unused]] int *neigh_bdy_ids) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    if constexpr (T8_ELEMENT_DIM[TEclass] == 0) {
+      SC_ABORT ("A vertex has no boundaries.");
+      return 0;
+    }
+    else {
+      const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+      t8_element_coord corners[T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[TEclass]][T8_ELEMENT_DIM[TEclass]];
+      const int num_corners = boundary_corners (el, bdy_dim, bdy_id, corners);
+      /* The corners in the coordinates of the root boundary, in units of the element length */
+      t8_element_coord points[T8_ECLASS_MAX_CORNERS_2D][3] = {};
+      T8_ASSERT (num_corners <= T8_ECLASS_MAX_CORNERS_2D);
+      for (int icorner = 0; icorner < num_corners; icorner++) {
+        for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+          int bdy_idim, fixed;
+          root_boundary_coordinate (root_dim, root_id, idim, &bdy_idim, &fixed);
+          if (bdy_idim >= 0) {
+            points[icorner][bdy_idim] = corners[icorner][idim];
+          }
+        }
+      }
+      /* Map them to the other root boundary */
+      switch (root_dim == 0 ? T8_ECLASS_VERTEX
+                            : root_dim == 1 ? T8_ECLASS_LINE : (t8_eclass_t) t8_eclass_face_types[TEclass][root_id]) {
+      case T8_ECLASS_VERTEX:
+        break;
+      case T8_ECLASS_LINE:
+        t8_standalone_scheme<T8_ECLASS_LINE>::transform_root_points (perm, el->level, num_corners, points);
+        break;
+      case T8_ECLASS_QUAD:
+        t8_standalone_scheme<T8_ECLASS_QUAD>::transform_root_points (perm, el->level, num_corners, points);
+        break;
+      case T8_ECLASS_TRIANGLE:
+        t8_standalone_scheme<T8_ECLASS_TRIANGLE>::transform_root_points (perm, el->level, num_corners, points);
+        break;
+      default:
+        SC_ABORT_NOT_REACHED ();
+      }
+      /* Find the elements of the other tree at these points */
+      switch (neigh_eclass) {
+      case T8_ECLASS_LINE:
+        return t8_standalone_scheme<T8_ECLASS_LINE>::elements_at_root_points (
+          el->level, root_dim, neigh_root_id, bdy_dim, num_corners, points, neighs, neigh_bdy_ids);
+      case T8_ECLASS_QUAD:
+        return t8_standalone_scheme<T8_ECLASS_QUAD>::elements_at_root_points (
+          el->level, root_dim, neigh_root_id, bdy_dim, num_corners, points, neighs, neigh_bdy_ids);
+      case T8_ECLASS_TRIANGLE:
+        return t8_standalone_scheme<T8_ECLASS_TRIANGLE>::elements_at_root_points (
+          el->level, root_dim, neigh_root_id, bdy_dim, num_corners, points, neighs, neigh_bdy_ids);
+      case T8_ECLASS_HEX:
+        return t8_standalone_scheme<T8_ECLASS_HEX>::elements_at_root_points (
+          el->level, root_dim, neigh_root_id, bdy_dim, num_corners, points, neighs, neigh_bdy_ids);
+      case T8_ECLASS_TET:
+        return t8_standalone_scheme<T8_ECLASS_TET>::elements_at_root_points (
+          el->level, root_dim, neigh_root_id, bdy_dim, num_corners, points, neighs, neigh_bdy_ids);
+      case T8_ECLASS_PRISM:
+        return t8_standalone_scheme<T8_ECLASS_PRISM>::elements_at_root_points (
+          el->level, root_dim, neigh_root_id, bdy_dim, num_corners, points, neighs, neigh_bdy_ids);
+      case T8_ECLASS_PYRAMID:
+        return t8_standalone_scheme<T8_ECLASS_PYRAMID>::elements_at_root_points (
+          el->level, root_dim, neigh_root_id, bdy_dim, num_corners, points, neighs, neigh_bdy_ids);
+      default:
+        SC_ABORT_NOT_REACHED ();
+      }
+      return 0;
+    }
+  }
+
+  /** Compute the corners of a boundary of an element, in units of the element length.
+   * \param [in] el       The element.
+   * \param [in] bdy_dim  The dimension of the boundary.
+   * \param [in] bdy_id   The boundary.
+   * \param [out] corners The coordinates of the corners.
+   * \return              The number of corners.
+   */
+  static constexpr int
+  boundary_corners (const t8_standalone_element<TEclass> *el, const int bdy_dim, const int bdy_id,
+                    t8_element_coord corners[][T8_ELEMENT_DIM[TEclass]]) noexcept
+  {
+    const int type = element_get_lut_type (el);
+    const t8_element_coord len = element_get_len (el->level);
+    int num_corners = 0;
+    for (; num_corners < T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[TEclass]; num_corners++) {
+      const int corner = t8_standalone_lut_type_bdy_dim_id_to_corners<TEclass>[type][bdy_dim][bdy_id][num_corners];
+      if (corner < 0) {
+        break;
+      }
+      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+        corners[num_corners][idim] = el->coords[idim] / len + corner_binary (type, corner, idim);
+      }
+    }
+    return num_corners;
+  }
+
+  /** The coordinate of a root boundary that a coordinate of the root is equal to on the boundary.
+   * \param [in] root_dim  The dimension of the root boundary.
+   * \param [in] root_id   The root boundary.
+   * \param [in] idim      A coordinate of the root.
+   * \param [out] bdy_idim The coordinate of the root boundary, or -1 if \a idim is constant on the boundary.
+   * \param [out] fixed    If \a bdy_idim is -1, the value of \a idim on the boundary in units of the root length.
+   */
+  static constexpr void
+  root_boundary_coordinate (const int root_dim, const int root_id, const int idim, int *bdy_idim, int *fixed) noexcept
+  {
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      *bdy_idim = t8_standalone_lut_bdy_dim_id_elem_idim_to_bdy_idim<TEclass>[root_dim][root_id][idim];
+      *fixed = t8_standalone_lut_bdy_dim_id_elem_idim_to_1_bdy<TEclass>[root_dim][root_id][idim];
+    }
+    else {
+      /* The free coordinates of a hypercube boundary are independent and keep their order. */
+      const int source = t8_standalone_lut_type_bdy_dim_id_to_source_coords<TEclass>[0][root_dim][root_id];
+      const int sink = t8_standalone_lut_type_bdy_dim_id_to_sink_coords<TEclass>[0][root_dim][root_id];
+      *fixed = -1;
+      *bdy_idim = -1;
+      if (!((source >> idim) & 1)) {
+        *fixed = 0;
+      }
+      else if (!((sink >> idim) & 1)) {
+        *fixed = 1;
+      }
+      else {
+        *bdy_idim = 0;
+        for (int jdim = 0; jdim < idim; jdim++) {
+          *bdy_idim += (source >> jdim) & (sink >> jdim) & 1;
+        }
+      }
+    }
+  }
+
+  /** Check whether a point lies on a root boundary.
+   * \param [in] root_dim  The dimension of the root boundary.
+   * \param [in] root_id   The root boundary.
+   * \param [in] point     The coordinates of the point, in units of the length of \a level.
+   * \param [in] level     The level.
+   * \return               Whether \a point lies on the root boundary.
+   */
+  static constexpr bool
+  root_boundary_contains (const int root_dim, const int root_id, const t8_element_coord *point,
+                          const int level) noexcept
+  {
+    /* The value of each boundary coordinate, set by the first root coordinate equal to it */
+    t8_element_coord bdy_point[T8_ELEMENT_DIM[TEclass]];
+    bool is_set[T8_ELEMENT_DIM[TEclass]] = {};
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      int bdy_idim, fixed;
+      root_boundary_coordinate (root_dim, root_id, idim, &bdy_idim, &fixed);
+      if (bdy_idim < 0) {
+        if (point[idim] != fixed * ((t8_element_coord) 1 << level)) {
+          return false;
+        }
+      }
+      else if (!is_set[bdy_idim]) {
+        bdy_point[bdy_idim] = point[idim];
+        is_set[bdy_idim] = true;
+      }
+      else if (bdy_point[bdy_idim] != point[idim]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /** Map points of the root by the symmetry of the root that maps root corner i to root corner \a perm[i].
+   * \param [in] perm       A permutation of the root corners that is a symmetry of the root.
+   * \param [in] level      The level that is the unit of the coordinates.
+   * \param [in] num_points The number of points.
+   * \param [in,out] points The coordinates of the points in units of the length of \a level, mapped on output.
+   */
+  static constexpr void
+  transform_root_points (const int *perm, const int level, const int num_points,
+                         t8_element_coord points[][3]) noexcept
+  {
+    constexpr int dim = T8_ELEMENT_DIM[TEclass];
+    int matrix[dim][dim];
+    int offset[dim];
+    root_symmetry (perm, matrix, offset);
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      t8_element_coord image[dim];
+      for (int idim = 0; idim < dim; idim++) {
+        image[idim] = offset[idim] * ((t8_element_coord) 1 << level);
+        for (int jdim = 0; jdim < dim; jdim++) {
+          image[idim] += matrix[idim][jdim] * points[ipoint][jdim];
+        }
+      }
+      for (int idim = 0; idim < dim; idim++) {
+        points[ipoint][idim] = image[idim];
+      }
+    }
+  }
+
+  /** Compute the elements of a level that have given points on a root boundary as the corners of one of their
+   * boundaries.
+   * \param [in] level          The level of the elements.
+   * \param [in] root_dim       The dimension of the root boundary.
+   * \param [in] root_id        The root boundary.
+   * \param [in] bdy_dim        The dimension of the boundary of the elements.
+   * \param [in] num_points     The number of points, the corners of the boundary.
+   * \param [in] points         The points in the coordinates of the root boundary, in units of the length of
+   *                            \a level.
+   * \param [in,out] neighs     At least \ref get_max_num_boundary_neighbors allocated elements. On output, the first
+   *                            entries are the elements.
+   * \param [out] neigh_bdy_ids On output, entry i is the boundary of the i-th element with the points as corners.
+   * \return                    The number of elements.
+   */
+  static inline int
+  elements_at_root_points ([[maybe_unused]] const int level, [[maybe_unused]] const int root_dim,
+                           [[maybe_unused]] const int root_id, [[maybe_unused]] const int bdy_dim,
+                           [[maybe_unused]] const int num_points, [[maybe_unused]] const t8_element_coord points[][3],
+                           [[maybe_unused]] t8_element_t *neighs[], [[maybe_unused]] int *neigh_bdy_ids) noexcept
+  {
+    if constexpr (T8_ELEMENT_DIM[TEclass] == 0) {
+      SC_ABORT ("A vertex has no boundaries.");
+      return 0;
+    }
+    else {
+      constexpr int dim = T8_ELEMENT_DIM[TEclass];
+      T8_ASSERT (level <= get_maxlevel ());
+      const t8_element_coord num_cubes = (t8_element_coord) 1 << level;
+      /* The points in the coordinates of the root */
+      t8_element_coord root_points[T8_ECLASS_MAX_CORNERS_2D][dim];
+      for (int ipoint = 0; ipoint < num_points; ipoint++) {
+        for (int idim = 0; idim < dim; idim++) {
+          int bdy_idim, fixed;
+          root_boundary_coordinate (root_dim, root_id, idim, &bdy_idim, &fixed);
+          root_points[ipoint][idim] = bdy_idim < 0 ? fixed * num_cubes : points[ipoint][bdy_idim];
+        }
+      }
+      /* The cube of an element with these corners has its anchor at the minimum of the points, or one length below
+       * in the coordinates in which all points agree. */
+      t8_element_coord lower[dim], upper[dim];
+      for (int idim = 0; idim < dim; idim++) {
+        t8_element_coord min = root_points[0][idim], max = root_points[0][idim];
+        for (int ipoint = 1; ipoint < num_points; ipoint++) {
+          min = SC_MIN (min, root_points[ipoint][idim]);
+          max = SC_MAX (max, root_points[ipoint][idim]);
+        }
+        lower[idim] = SC_MAX (max - 1, (t8_element_coord) 0);
+        upper[idim] = SC_MIN (min, num_cubes - 1);
+      }
+      int num_neighbors = 0;
+      for (int icube = 0; icube < (1 << dim); icube++) {
+        t8_element_coord anchor[dim];
+        bool valid_cube = true;
+        for (int idim = 0; idim < dim; idim++) {
+          anchor[idim] = lower[idim] + ((icube >> idim) & 1);
+          valid_cube &= anchor[idim] <= upper[idim];
+        }
+        if (!valid_cube) {
+          continue;
+        }
+        for (int type = 0; type < (1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]); type++) {
+          if (t8_standalone_lut_type_bdy_dim_to_num_boundaries<TEclass>[type][0] <= 0) {
+            continue;
+          }
+          /* Find the boundary whose corners are the points */
+          int neigh_bdy_id = -1;
+          for (int ibdy = 0; ibdy < t8_standalone_lut_type_bdy_dim_to_num_boundaries<TEclass>[type][bdy_dim]; ibdy++) {
+            int num_corners = 0;
+            bool matches = true;
+            for (; num_corners < T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[TEclass]; num_corners++) {
+              const int corner = t8_standalone_lut_type_bdy_dim_id_to_corners<TEclass>[type][bdy_dim][ibdy][num_corners];
+              if (corner < 0) {
+                break;
+              }
+              bool is_point = false;
+              for (int ipoint = 0; ipoint < num_points && !is_point; ipoint++) {
+                bool equal = true;
+                for (int idim = 0; idim < dim; idim++) {
+                  equal &= anchor[idim] + corner_binary (type, corner, idim) == root_points[ipoint][idim];
+                }
+                is_point = equal;
+              }
+              matches &= is_point;
+            }
+            if (matches && num_corners == num_points) {
+              neigh_bdy_id = ibdy;
+              break;
+            }
+          }
+          if (neigh_bdy_id < 0) {
+            continue;
+          }
+          t8_standalone_element<TEclass> *neigh = (t8_standalone_element<TEclass> *) neighs[num_neighbors];
+          for (int idim = 0; idim < dim; idim++) {
+            neigh->coords[idim] = anchor[idim] * element_get_len (level);
+          }
+          neigh->level = level;
+          if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+            neigh->type = type;
+          }
+          if (!element_is_inside_root (neigh)) {
+            continue;
+          }
+          T8_ASSERT (num_neighbors < get_max_num_boundary_neighbors ());
+          neigh_bdy_ids[num_neighbors] = neigh_bdy_id;
+          num_neighbors++;
+        }
       }
       return num_neighbors;
     }

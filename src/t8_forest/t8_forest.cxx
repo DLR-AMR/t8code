@@ -37,6 +37,7 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_adapt.h>
@@ -2523,15 +2524,72 @@ t8_forest_append_owners (sc_array_t *owners, sc_array_t *more_owners)
   }
 }
 
-/* Compute the neighbors of the same level of an element at a boundary inside the root.
- * neighs and neigh_bdy_ids must have get_max_num_boundary_neighbors entries. Returns the number of neighbors. */
-static int
-t8_forest_element_boundary_neighbors_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                             int bdy_dim, int bdy_id, t8_element_t **neighs, int *neigh_bdy_ids)
+/* Append the first num_neighbors of neighs to the neighbor array and destroy the others. */
+static void
+t8_forest_append_boundary_neighbors (const t8_scheme *scheme, t8_gloidx_t gtreeid, t8_eclass_t eclass,
+                                     int num_neighbors, int max_neighbors, t8_element_t **neighs, int *neigh_bdy_ids,
+                                     sc_array_t *neighbors)
+{
+  for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
+    t8_forest_boundary_neighbor_t *neighbor = (t8_forest_boundary_neighbor_t *) sc_array_push (neighbors);
+    neighbor->gtreeid = gtreeid;
+    neighbor->eclass = eclass;
+    neighbor->neigh = neighs[ineigh];
+    neighbor->bdy_id = neigh_bdy_ids[ineigh];
+  }
+  scheme->element_destroy (eclass, max_neighbors - num_neighbors, neighs + num_neighbors);
+}
+
+void
+t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      int bdy_dim, int bdy_id, sc_array_t *neighbors)
 {
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
-  return scheme->element_get_boundary_neighbors_inside (eclass, element, bdy_dim, bdy_id, neighs, neigh_bdy_ids);
+  T8_ASSERT (neighbors->elem_size == sizeof (t8_forest_boundary_neighbor_t));
+  sc_array_resize (neighbors, 0);
+
+  /* The neighbors inside the tree */
+  int max_neighbors = scheme->get_max_num_boundary_neighbors (eclass);
+  std::vector<t8_element_t *> neighs (max_neighbors);
+  std::vector<int> neigh_bdy_ids (max_neighbors);
+  scheme->element_new (eclass, max_neighbors, neighs.data ());
+  const int num_inside = scheme->element_get_boundary_neighbors_inside (eclass, element, bdy_dim, bdy_id,
+                                                                        neighs.data (), neigh_bdy_ids.data ());
+  t8_forest_append_boundary_neighbors (scheme, t8_forest_global_tree_id (forest, ltreeid), eclass, num_inside,
+                                       max_neighbors, neighs.data (), neigh_bdy_ids.data (), neighbors);
+
+  /* The neighbors in the trees at the root boundary that contains the boundary of element */
+  int root_dim, root_id;
+  scheme->element_get_root_boundary (eclass, element, bdy_dim, bdy_id, &root_dim, &root_id);
+  if (root_dim < 0) {
+    return;
+  }
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+  const t8_locidx_t cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+  for (const auto &tree_neighbor : t8_cmesh_get_boundary_neighbors (cmesh, cmesh_ltreeid, root_dim, root_id)) {
+    const t8_eclass_t neigh_eclass = t8_cmesh_get_tree_class (cmesh, tree_neighbor.ltreeid);
+    max_neighbors = scheme->get_max_num_boundary_neighbors (neigh_eclass);
+    neighs.resize (max_neighbors);
+    neigh_bdy_ids.resize (max_neighbors);
+    scheme->element_new (neigh_eclass, max_neighbors, neighs.data ());
+    const int num_across = scheme->element_get_boundary_neighbors_across_root (
+      eclass, element, bdy_dim, bdy_id, root_dim, root_id, neigh_eclass, tree_neighbor.bdy_id, tree_neighbor.perm,
+      neighs.data (), neigh_bdy_ids.data ());
+    t8_forest_append_boundary_neighbors (scheme, t8_cmesh_get_global_id (cmesh, tree_neighbor.ltreeid), neigh_eclass,
+                                         num_across, max_neighbors, neighs.data (), neigh_bdy_ids.data (), neighbors);
+  }
+}
+
+void
+t8_forest_boundary_neighbors_reset (t8_forest_t forest, sc_array_t *neighbors)
+{
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  for (size_t ineigh = 0; ineigh < neighbors->elem_count; ineigh++) {
+    t8_forest_boundary_neighbor_t *neighbor = (t8_forest_boundary_neighbor_t *) sc_array_index (neighbors, ineigh);
+    scheme->element_destroy (neighbor->eclass, 1, &neighbor->neigh);
+  }
+  sc_array_reset (neighbors);
 }
 
 /* Recursively find all owners of descendants of an element that touch a boundary of the element with a boundary
@@ -2594,41 +2652,24 @@ void
 t8_forest_element_owners_at_neigh_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                             int bdy_dim, int bdy_id, int min_dim, sc_array_t *owners)
 {
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
-  const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
-  const int max_neighbors = scheme->get_max_num_boundary_neighbors (eclass);
-  t8_element_t **neighs = T8_ALLOC (t8_element_t *, max_neighbors);
-  int *neigh_bdy_ids = T8_ALLOC (int, max_neighbors);
-  sc_array_t neigh_owners;
-
-  scheme->element_new (eclass, max_neighbors, neighs);
+  sc_array_t neighbors, neigh_owners;
+  sc_array_init (&neighbors, sizeof (t8_forest_boundary_neighbor_t));
   sc_array_init (&neigh_owners, sizeof (int));
   sc_array_resize (owners, 0);
-  const int num_neighbors
-    = t8_forest_element_boundary_neighbors_inside (forest, ltreeid, element, bdy_dim, bdy_id, neighs, neigh_bdy_ids);
-  for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
-    t8_forest_element_owners_touching_boundary (forest, gtreeid, neighs[ineigh], eclass, bdy_dim,
-                                                neigh_bdy_ids[ineigh], min_dim, &neigh_owners);
+  t8_forest_element_boundary_neighbors (forest, ltreeid, element, bdy_dim, bdy_id, &neighbors);
+  for (size_t ineigh = 0; ineigh < neighbors.elem_count; ineigh++) {
+    const t8_forest_boundary_neighbor_t *neighbor
+      = (const t8_forest_boundary_neighbor_t *) sc_array_index (&neighbors, ineigh);
+    t8_forest_element_owners_touching_boundary (forest, neighbor->gtreeid, neighbor->neigh, neighbor->eclass, bdy_dim,
+                                                neighbor->bdy_id, min_dim, &neigh_owners);
     t8_forest_append_owners (owners, &neigh_owners);
   }
-  if (num_neighbors == 0 && bdy_dim == t8_eclass_to_dimension[eclass] - 1) {
-    /* The face neighbor lies outside of the root, possibly in another tree. The boundaries of dimension
-     * dim - 1 are the faces, with the same numbering.
-     * TODO: Leaves of the face neighbor that touch the face in a lower dimension only. */
-    sc_array_resize (&neigh_owners, 0);
-    t8_forest_element_owners_at_neigh_face (forest, ltreeid, element, bdy_id, &neigh_owners);
-    t8_forest_append_owners (owners, &neigh_owners);
-  }
-  /* TODO: Neighbors outside of the root at boundaries of lower dimension (tree boundaries) */
   /* The owners of the different neighbors overlap, sort them and remove duplicates */
   sc_array_sort (owners, sc_int_compare);
   sc_array_uniq (owners, sc_int_compare);
 
   sc_array_reset (&neigh_owners);
-  scheme->element_destroy (eclass, max_neighbors, neighs);
-  T8_FREE (neighs);
-  T8_FREE (neigh_bdy_ids);
+  t8_forest_boundary_neighbors_reset (forest, &neighbors);
 }
 
 void
@@ -2636,22 +2677,19 @@ t8_forest_element_owners_at_neigh_boundary_bounds (t8_forest_t forest, t8_locidx
                                                    const t8_element_t *element, int bdy_dim, int bdy_id, int *lower,
                                                    int *upper)
 {
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
-  const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
-  const int max_neighbors = scheme->get_max_num_boundary_neighbors (eclass);
-  t8_element_t **neighs = T8_ALLOC (t8_element_t *, max_neighbors);
-  int *neigh_bdy_ids = T8_ALLOC (int, max_neighbors);
+  sc_array_t neighbors;
   /* The union of the bounds of all neighbors, empty if lower > upper */
   int union_lower = 1, union_upper = 0;
 
-  scheme->element_new (eclass, max_neighbors, neighs);
-  const int num_neighbors
-    = t8_forest_element_boundary_neighbors_inside (forest, ltreeid, element, bdy_dim, bdy_id, neighs, neigh_bdy_ids);
-  for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
+  sc_array_init (&neighbors, sizeof (t8_forest_boundary_neighbor_t));
+  t8_forest_element_boundary_neighbors (forest, ltreeid, element, bdy_dim, bdy_id, &neighbors);
+  for (size_t ineigh = 0; ineigh < neighbors.elem_count; ineigh++) {
+    const t8_forest_boundary_neighbor_t *neighbor
+      = (const t8_forest_boundary_neighbor_t *) sc_array_index (&neighbors, ineigh);
     /* Bounds for the owners of the whole neighbor, which contain the owners touching any of its boundaries */
     int neigh_lower = *lower, neigh_upper = *upper;
-    t8_forest_element_owners_bounds (forest, gtreeid, neighs[ineigh], eclass, &neigh_lower, &neigh_upper);
+    t8_forest_element_owners_bounds (forest, neighbor->gtreeid, neighbor->neigh, neighbor->eclass, &neigh_lower,
+                                     &neigh_upper);
     if (union_lower > union_upper) {
       union_lower = neigh_lower;
       union_upper = neigh_upper;
@@ -2661,17 +2699,9 @@ t8_forest_element_owners_at_neigh_boundary_bounds (t8_forest_t forest, t8_locidx
       union_upper = SC_MAX (union_upper, neigh_upper);
     }
   }
-  if (num_neighbors == 0 && bdy_dim == t8_eclass_to_dimension[eclass] - 1) {
-    /* The face neighbor lies outside of the root, possibly in another tree */
-    union_lower = *lower;
-    union_upper = *upper;
-    t8_forest_element_owners_at_neigh_face_bounds (forest, ltreeid, element, bdy_id, &union_lower, &union_upper);
-  }
   *lower = union_lower;
   *upper = union_upper;
-  scheme->element_destroy (eclass, max_neighbors, neighs);
-  T8_FREE (neighs);
-  T8_FREE (neigh_bdy_ids);
+  t8_forest_boundary_neighbors_reset (forest, &neighbors);
 }
 
 /* Recursively find all owners of descendants of a given element that touch a given face.
