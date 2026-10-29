@@ -35,6 +35,7 @@
  *  - We only need to provide an interpolation callback that receives spans over the old and the new elements.
  *    The mesh calls it automatically on commit, so there is no need to
  *    call t8_forest_iterate_replace ourselves or to compute tree offsets for the data indices.
+ *    After that, the mesh gets automatically repartitioned and ghost data gets exchanged automatically on commit as well.
  */
 
 #include <t8.h>                        /** General t8code header. Always include this. */
@@ -50,7 +51,7 @@
 */
 struct step7_element_data_type
 {
-  double value; /**< Storage for our element value. */
+  double distance; /**< Storage for our element value. */
 };
 
 /** Our interpolation callback function. This decides how element data is recomputed after adaptation.
@@ -70,7 +71,7 @@ struct step7_element_data_type
  *                              (the children on refinement, a single element otherwise).
  */
 template <t8_mesh_handle::T8MeshType TMeshClass>
-void
+static void
 interpolate_callback ([[maybe_unused]] const TMeshClass &mesh_old, [[maybe_unused]] TMeshClass &mesh_new,
                       const int refine, std::span<const typename TMeshClass::element_class> old_elements,
                       std::span<typename TMeshClass::element_class> new_elements)
@@ -93,7 +94,7 @@ interpolate_callback ([[maybe_unused]] const TMeshClass &mesh_old, [[maybe_unuse
     T8_ASSERT (new_elements.size () == 1);
     double sum = 0;
     for (const auto &child : old_elements) {
-      sum += child.get_element_data ().value;
+      sum += child.get_element_data ().distance;
     }
     new_elements[0].set_element_data (step7_element_data_type { sum / old_elements.size () });
   }
@@ -108,7 +109,7 @@ interpolate_callback ([[maybe_unused]] const TMeshClass &mesh_old, [[maybe_unuse
  * \param [in]      midpoint The point to which the distance is computed.
  */
 template <t8_mesh_handle::T8MeshType TMeshClass>
-void
+static void
 set_initial_element_data (TMeshClass &mesh, const t8_3D_vec &midpoint)
 {
   /* Iterate over each element and set the data directly on the element. */
@@ -134,7 +135,7 @@ write_vtu (TMeshClass &mesh, const char *prefix)
 
   /* Copy the elements' distances from the mesh to the output vector. */
   for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
-    element_values[ielem] = mesh[ielem].get_element_data ().value;
+    element_values[ielem] = mesh[ielem].get_element_data ().distance;
   }
 
   /* To write user-defined data, we use write_mesh_to_vtk_ext_data.
@@ -158,8 +159,8 @@ write_vtu (TMeshClass &mesh, const char *prefix)
  * \param [in] adapted_prefix     Prefix for the adapted mesh output file.
  */
 template <t8_mesh_handle::T8MeshType TMeshClass>
-void
-t8_step7_mesh_interpolation (TMeshClass &mesh, const char *initial_prefix, const char *adapted_prefix)
+static void
+step7_mesh_interpolation (TMeshClass &mesh, const char *initial_prefix, const char *adapted_prefix)
 {
   /* The parameters for the adaptation. */
   const adapt_data adapt_params = {
@@ -168,7 +169,7 @@ t8_step7_mesh_interpolation (TMeshClass &mesh, const char *initial_prefix, const
     0.4              /* Coarsen if outside this radius. */
   };
 
-  /* Compute and set the initial element data and exchange ghost data. */
+  /* Compute and set the initial element data and exchange ghost data for the data output. */
   set_initial_element_data (mesh, adapt_params.midpoint);
   mesh.exchange_ghost_data ();
 
@@ -187,11 +188,11 @@ t8_step7_mesh_interpolation (TMeshClass &mesh, const char *initial_prefix, const
   mesh.set_ghost ();
 
   /** Commit the mesh to change it according to all set flags.
-   *  This will first adapt and partition the mesh. After that, it will automatically exchange all the ghost data.
-   *  In the end, it will interpolate the data automatically according to the repartitioned mesh.
+   *  This will first adapt the mesh. After that, it will interpolate the data automatically according to the interpolation callback.
+   *  Then, the mesh will be partitioned and a ghost layer will be created.
+   *  In the end the data will be repartitioned and ghost data will be exchanged automatically.
   */
   mesh.commit ();
-  mesh.exchange_ghost_data ();
 
   /* Write the adapted mesh with the interpolated data. */
   write_vtu (mesh, adapted_prefix);
@@ -215,7 +216,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   /* Initialize the sc library; this must happen before we initialize t8code. */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  sc_init (comm, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
   t8_init (SC_LP_PRODUCTION);
 
@@ -239,10 +240,11 @@ main (int argc, char **argv)
     t8_global_productionf (" [mesh_step7] \n");
     t8_global_productionf (" [mesh_step7] Creating a uniform hybrid mesh. \n");
 
-    auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, comm);
+    /* The true flag indicates that we want to create a ghost layer for the mesh. */
+    auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, comm, true);
 
     /* Define the element data, adapt the mesh and interpolate the element data accordingly. */
-    t8_step7_mesh_interpolation (*mesh, prefix_uniform_mesh, prefix_adapted_mesh);
+    step7_mesh_interpolation (*mesh, prefix_uniform_mesh, prefix_adapted_mesh);
 
   } /* End of mesh scope. */
   t8_global_productionf (" [mesh_step7] \n");
