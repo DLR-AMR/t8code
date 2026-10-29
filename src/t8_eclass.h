@@ -443,6 +443,23 @@ t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass);
 int
 t8_eclass_compare (t8_eclass_t eclass1, t8_eclass_t eclass2);
 
+/** Compute the corner permutation of a face-to-face connection between two trees.
+  * Corner i of the face, in the face numbering of \ref t8_face_vertex_to_tree_vertex,
+  * lies on corner \a perm[i] of the face in the other tree.
+  * By definition of the orientation (see \ref t8_cmesh_set_join), corner 0 of the smaller face lies on
+  * corner \a orientation of the other face. The two faces are glued by a rotation if their
+  * \ref t8_eclass_face_orientation differ (\a sign = 0) and by a reflection otherwise (\a sign = 1).
+  *  \param [in] face_eclass  The eclass of the face, of dimension 2 or lower.
+  *  \param [in] orientation  The orientation of the connection.
+  *  \param [in] sign         1 if both faces have the same \ref t8_eclass_face_orientation, 0 otherwise.
+  *  \param [in] is_smaller_face 1 if the face belongs to the smaller face of the connection
+  *                           (see \ref t8_eclass_compare), 0 otherwise.
+  *  \param [out] perm        Array of length t8_eclass_num_vertices[face_eclass].
+  */
+void
+t8_eclass_face_orientation_to_corner_permutation (t8_eclass_t face_eclass, int orientation, int sign,
+                                                  int is_smaller_face, int *perm);
+
 /** Check whether a class is a valid class. Returns non-zero if it is a valid class,
   *  returns zero, if the class is equal to T8_ECLASS_INVALID.
   *

@@ -123,6 +123,37 @@ t8_eclass_compare (t8_eclass_t eclass1, t8_eclass_t eclass2)
   }
 }
 
+void
+t8_eclass_face_orientation_to_corner_permutation (t8_eclass_t face_eclass, int orientation, int sign,
+                                                  int is_smaller_face, int *perm)
+{
+  /* The corners of each face eclass in cyclic order around the face. Since the quad order 0, 1, 3, 2 is an
+   * involution, the same table gives the position of each corner in the cyclic order. */
+  const int cyclic_order[4][4] = { { 0 }, { 0, 1 }, { 0, 1, 3, 2 }, { 0, 1, 2 } };
+  const int num_corners = t8_eclass_num_vertices[face_eclass];
+  int smaller_perm[T8_ECLASS_MAX_CORNERS_2D];
+  int icorner;
+
+  T8_ASSERT (t8_eclass_to_dimension[face_eclass] <= 2);
+  T8_ASSERT (0 <= orientation && orientation < num_corners);
+  /* Corner i of the smaller face lies on the corner at cyclic position p(orientation) + p(i) of the other face
+   * for a rotation, and at p(orientation) - p(i) for a reflection. */
+  for (icorner = 0; icorner < num_corners; icorner++) {
+    const int position = cyclic_order[face_eclass][icorner];
+    const int offset = sign ? num_corners - position : position;
+    smaller_perm[icorner] = cyclic_order[face_eclass][(cyclic_order[face_eclass][orientation] + offset) % num_corners];
+  }
+  for (icorner = 0; icorner < num_corners; icorner++) {
+    if (is_smaller_face) {
+      perm[icorner] = smaller_perm[icorner];
+    }
+    else {
+      /* The other face maps back with the inverse permutation. */
+      perm[smaller_perm[icorner]] = icorner;
+    }
+  }
+}
+
 int
 t8_eclass_is_valid (t8_eclass_t eclass)
 {
