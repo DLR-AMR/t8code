@@ -32,7 +32,6 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h>
-#include <t8_cmesh/t8_cmesh_edge_connectivity/t8_cmesh_edge_connectivity.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
 #include "t8_element.h"
 
@@ -144,8 +143,6 @@ typedef struct t8_cmesh
 
   struct t8_cmesh_vertex_connectivity
     *vertex_connectivity; /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
-  struct t8_cmesh_edge_connectivity
-    *edge_connectivity; /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
   struct t8_cmesh_boundary_connectivity
     *boundary_connectivity; /**< The trees sharing vertices, edges and faces, built on first use. */
 

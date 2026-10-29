@@ -26,7 +26,6 @@
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
-#include <t8_cmesh/t8_cmesh_edge_connectivity/t8_cmesh_edge_connectivity.hxx>
 #include <t8_cmesh/t8_cmesh_boundary_connectivity.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
@@ -223,7 +222,6 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
    * or when the cmesh gets committed. */
   cmesh->geometry_handler = NULL;
   cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
-  cmesh->edge_connectivity = new t8_cmesh_edge_connectivity ();
   cmesh->boundary_connectivity = NULL;
 #if T8_ENABLE_DEBUG
   cmesh->negative_volume_check = 1;
@@ -1229,9 +1227,6 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
 
   if (cmesh->vertex_connectivity != NULL) {
     delete cmesh->vertex_connectivity;
-  }
-  if (cmesh->edge_connectivity != NULL) {
-    delete cmesh->edge_connectivity;
   }
   if (cmesh->boundary_connectivity != NULL) {
     delete cmesh->boundary_connectivity;
