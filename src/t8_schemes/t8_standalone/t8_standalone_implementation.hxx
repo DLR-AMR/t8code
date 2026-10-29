@@ -2299,7 +2299,11 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       t8_debugf("exctract::: idim: %i, elem_coord: %i, val: %i\n", idim, elem_coord, ((int *)point)[elem_coord]);
       //TODO: getter and setter functions for points!!
       t8_debugf("exctract::: shift: %i\n",  (T8_ELEMENT_MAXLEVEL[TBoundaryEclass] - T8_ELEMENT_MAXLEVEL[TEclass]));
-      (*bdy_point)[idim] = (*point)[elem_coord] << (T8_ELEMENT_MAXLEVEL[TBoundaryEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+      if constexpr (T8_ELEMENT_MAXLEVEL[TBoundaryEclass] >= T8_ELEMENT_MAXLEVEL[TEclass]) {
+        (*bdy_point)[idim] = (*point)[elem_coord] << (T8_ELEMENT_MAXLEVEL[TBoundaryEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+      }else{
+        SC_ABORTF("Not meaningful!");
+      }
       t8_debugf("exctract::: new_val: %i\n",  (*bdy_point)[idim]);
       // ((int *)bdy_point)[idim] = ((int *)el_point)[elem_coord];
     }
@@ -2322,7 +2326,11 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     for (int idim=0; idim< T8_ELEMENT_DIM[TEclass]; idim++){
       int bdy_coord = get_bdy_coord(bdy_dim,bdy_id, idim);
       if(bdy_coord != -1 ){
-        (*point)[idim] = (*bdy_point)[bdy_coord] >> (T8_ELEMENT_MAXLEVEL[TBoundaryEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+        if constexpr (T8_ELEMENT_MAXLEVEL[TBoundaryEclass] >= T8_ELEMENT_MAXLEVEL[TEclass]) {
+          (*point)[idim] = (*bdy_point)[bdy_coord] >> (T8_ELEMENT_MAXLEVEL[TBoundaryEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+        }else{
+          SC_ABORTF("Not meaningful!");
+        }
         // ((int *)point)[idim] = ((int *)bdy_point)[bdy_coord];
         // t8_debugf("coord %i comes from coord %i, val: %i\n", idim, bdy_coord, ((int *)point)[idim]);
       }else{

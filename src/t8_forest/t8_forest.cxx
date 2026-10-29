@@ -2410,6 +2410,69 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   return proc;
 }
 
+void
+t8_forest_element_owners_at_boundary (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
+                                  t8_eclass_t eclass, int boundary_dim, int element_boundary, sc_array_t *owners)
+{
+  t8_element_t *first_desc, *last_desc;
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+
+  
+
+  int first_owner = t8_forest_element_find_owner (forest, gtreeid, first_desc, eclass);
+  int last_owner = t8_forest_element_find_owner (forest, gtreeid, last_desc, eclass);
+
+
+  /* It is impossible for an element with bigger id to belong to a smaller process */
+  T8_ASSERT (first_owner <= last_owner);
+
+  if (first_owner == last_owner) {
+    /* This element has a unique owner, no recursion is necessary */
+    /* Add the owner to the array of owners */
+    /* TODO: check if this process is already listed. If we traverse the face children
+     * in SFC order, we can just check the last entry in owners here */
+
+   /* Get the last process that we added as owner */
+   int last_owner_entry = -1;
+   if (owners->elem_count > 0) {
+      last_owner_entry = *(int *) sc_array_index (owners, owners->elem_count - 1);
+   }
+
+    if (first_owner > last_owner_entry) {
+      /* We did not count this process as an owner, thus we add it */
+      *(int *) sc_array_push (owners) = first_owner;
+    }
+    T8_ASSERT (t8_forest_element_check_owner (forest, first_desc, gtreeid, eclass, first_owner, 1));
+    T8_ASSERT (t8_forest_element_check_owner (forest, last_desc, gtreeid, eclass, first_owner, 1));
+    /* free memory */
+    scheme->element_destroy (eclass, 1, &first_desc);
+    scheme->element_destroy (eclass, 1, &last_desc);
+    return;
+  }
+  else {
+    T8_ASSERT (scheme->element_get_level (eclass, element) < t8_forest_get_maxlevel (forest));
+    /* This element has different owners, we have to create its face children and continue with the recursion. */
+    int num_children = 0;//TODO: scheme->element_get_num_boundary_children (eclass, element, boundary_dim, element_boundary);
+    /* allocate memory */
+    t8_element_t **boundary_children = T8_ALLOC (t8_element_t *, num_children);
+    scheme->element_new (eclass, num_children, boundary_children);
+    /* construct the children of element that touch face */
+    //TODO scheme->element_get_children_at_boundary (eclass, element, boundary_dim, element_boundary, boundary_children, num_children, NULL);
+    for (int ichild = 0; ichild < num_children; ichild++) {
+      /* the face number of the child may not be the same as face */
+      int child_boundary = 0;// TODO scheme->element_boundary_get_child_boundary (eclass, element, boundary_dim, boundary_children, ichild);
+      /* find owners of this child */
+      t8_forest_element_owners_at_boundary (forest, gtreeid, boundary_children[ichild], eclass, boundary_dim, child_boundary, owners);
+    }
+    scheme->element_destroy (eclass, num_children, boundary_children);
+    T8_FREE (boundary_children);
+  }
+
+
+}
+
+
+
 /* Recursively find all owners of descendants of a given element that touch a given face.
  * We do this by constructing the first and last possible descendants of the element that touch the face.
  * If those belong to different processes, we construct all children of the element that touch the face.

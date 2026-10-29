@@ -82,6 +82,12 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
 
     pdone = (int *) forest->t8code_data;
 
+    //TODO
+    //Loop over boundaries
+      //Loop over next level neighbors across boundaries
+        //If there is a descendant present in the forest, element needs to be refined.
+
+
     num_faces = scheme->element_get_num_faces (tree_class, element);
     for (iface = 0; iface < num_faces; iface++) {
       /* Get the element class and scheme of the face neighbor */
