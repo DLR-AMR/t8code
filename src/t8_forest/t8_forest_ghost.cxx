@@ -34,7 +34,6 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_data/t8_containers.h>
 #include <sc_statistics.h>
-#include <t8_cmesh/t8_cmesh.hxx>
 #include "t8_eclass.h"
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -744,81 +743,6 @@ t8_forest_ghost_search_face_boundary (t8_forest_t forest, t8_locidx_t ltreeid, c
   return 1;
 }
 
-static void
-forest_element_add_owners_at_other_point (t8_forest_t forest, t8_locidx_t element_ltree_id, const t8_element_t *element,
-                                          const t8_locidx_t tree_leaf_index, t8_gloidx_t point_gtree_id,
-                                          t8_eclass point_eclass, const t8_scheme_point *point)
-{
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  const int max_neighbors = scheme->get_max_num_descendants_at_point (point_eclass);
-  t8_element_t **descs = T8_ALLOC (t8_element_t *, max_neighbors);
-  scheme->element_new (point_eclass, max_neighbors, descs);
-  int num_neighbors;
-  scheme->construct_descendants_at_point (point_eclass, point, descs, &num_neighbors);
-
-  for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
-    const int remote_rank
-      = t8_forest_element_find_owner_ext (forest, point_gtree_id, descs[ineigh], point_eclass, 0, forest->mpisize - 1,
-                                          (forest->mpisize - 1) / 2, 1);  //the elements are already descs
-    if (remote_rank != forest->mpirank) {
-      t8_debugf ("!!!!!!!!!!!!! Found owner %i !!!!!!!!!!!!!!!\n", remote_rank);
-      t8_ghost_add_remote (forest, forest->ghosts, remote_rank, element_ltree_id, element, tree_leaf_index);
-    }
-  }
-  scheme->element_destroy (point_eclass, max_neighbors, descs);
-  T8_FREE (descs);
-}
-
-static t8_eclass
-t8_cmesh_get_class (t8_cmesh_t cmesh, t8_gloidx_t gid)
-{
-  t8_locidx_t lid = t8_cmesh_get_local_id (cmesh, gid);
-  if (lid < t8_cmesh_get_num_local_trees (cmesh)) {
-    /* The tree neighbor is a local tree */
-    return t8_cmesh_get_tree_class (cmesh, lid);
-  }
-  else {
-    T8_ASSERT (lid - t8_cmesh_get_num_local_trees (cmesh) < cmesh->num_ghosts);
-    /* The tree neighbor is a ghost */
-    return t8_cmesh_get_ghost_class (cmesh, lid - t8_cmesh_get_num_local_trees (cmesh));
-  }
-}
-
-static t8_eclass
-t8_forest_boundary_class (t8_eclass eclass, int bdy_dim, int bdy_id)
-{
-  // Find the correct place and implementation
-  switch (bdy_dim) {
-  case 0:
-    return T8_ECLASS_VERTEX;
-  case 1:
-    return T8_ECLASS_LINE;
-  case 2:
-    switch ((int)eclass) {
-      case 4:
-        return T8_ECLASS_QUAD;
-      case 5:
-        return T8_ECLASS_TRIANGLE;
-      case 6:
-        if(bdy_id == 3 || bdy_id == 4){
-          return T8_ECLASS_QUAD;
-        }
-        return T8_ECLASS_TRIANGLE;
-      case 7:
-        if(bdy_id == 4){
-          return T8_ECLASS_QUAD;
-        }
-        return T8_ECLASS_TRIANGLE;
-      default:
-        SC_ABORT("not implemented");
-    }
-
-  default:  
-    SC_ABORT ("4D not implemented");
-    break;
-  }
-}
-
 /** The smallest boundary dimension whose neighbors are ghosts for a ghost type.
  * \param [in] ghost_type  The ghost type.
  * \param [in] dim         The dimension of the elements.
@@ -847,7 +771,6 @@ t8_forest_ghost_min_boundary_dim (t8_ghost_type_t ghost_type, int dim)
  *  \ref t8_forest_element_owners_at_neigh_boundary. The search does not continue below an element if it and
  *  the owners at all its boundaries are this rank.
  *  Only implemented for schemes that implement boundaries (standalone).
- *  TODO: Boundaries of dimension smaller than dim - 1 across tree boundaries.
  *
  *  \param[in] forest           The forest.
  *  \param[in] ltreeid          Local ID of the tree.
@@ -904,78 +827,6 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
       }
     }
   }
-  return 0;
-}
-
-/* Former point based vertex ghost search, it only considers the vertices of the leaves and thus misses
- * neighbors in unbalanced forests. Replaced by t8_forest_ghost_search_boundary. */
-[[maybe_unused]] static int
-t8_forest_ghost_search_vertex_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                        const int is_leaf, const t8_element_array_t *leaves,
-                                        const t8_locidx_t tree_leaf_index)
-{
-  if (!is_leaf) {
-    /** TODO: Cut off search if all neighbors are owned by ourselves.
-      * Use bounds to efficiently check */
-    return 1;
-  }
-  t8_debugf ("enter search for leafindex %i\n", tree_leaf_index);
-  t8_eclass eclass = t8_forest_get_eclass (forest, ltreeid);
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-  const int num_vertices
-    = t8_eclass_num_vertices[eclass];  //for pyramids dependent on shape, but rather a reference element definition
-  t8_scheme_point *point;
-  t8_scheme_point *neigh_point;
-  t8_scheme_point *bdy_point;
-  t8_scheme_point *neigh_bdy_point;
-  scheme->point_new (eclass, &point);
-
-  for (int vertex = 0; vertex < num_vertices; vertex++) {
-    t8_debugf ("look at vertex %i \n", vertex);
-    scheme->element_get_point (eclass, element, vertex, point);
-    forest_element_add_owners_at_other_point (forest, ltreeid, element, tree_leaf_index,
-                                              t8_forest_global_tree_id (forest, ltreeid), eclass, point);
-    int bdy_dim, bdy_id;
-    scheme->point_get_lowest_boundary (eclass, point, &bdy_dim, &bdy_id);
-    t8_debugf("lowest boundary dim: %i with id %i\n", bdy_dim, bdy_id);
-    if (bdy_dim == -1) {
-      continue;
-    }
-    t8_eclass bdy_class
-      = t8_forest_boundary_class (eclass, bdy_dim, bdy_id);  //should be scheme or cmesh functionality probably
-    scheme->point_new (bdy_class, &bdy_point);
-    scheme->element_extract_boundary_point (eclass, element, point, bdy_dim, bdy_id, bdy_point);
-//    t8_debugf ("extract point (%li, %li) on bdy_dim %i, bdy_id %i to point (%li)\n",  (*((t8_standalone_point<2> *) (point)))[0], (*((t8_standalone_point<2> *)(point)))[1], bdy_dim, bdy_id,  (*((t8_standalone_point<1> *)(bdy_point)))[0]);
-
-    scheme->point_new (bdy_class, &neigh_bdy_point);
-    const auto cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid(forest, ltreeid);
-    const auto cmesh_neighs = t8_cmesh_get_neighs (cmesh, cmesh_ltreeid, bdy_dim, bdy_id);
-    t8_debugf ("$$$$$$$$$$$ num neighs: %i $$$$$$$$$$$$$\n", cmesh_neighs.size ());
-    for (const auto &neigh : cmesh_neighs) {
-      t8_debugf ("look at cmesh neighbor %li with neigh_bdy_id %i \n", neigh.neighid, neigh.neigh_bdy_id);
-      if (neigh.neighid == t8_forest_global_tree_id (forest, ltreeid) && neigh.neigh_bdy_id == bdy_id) {
-        t8_debugf("neighbor is self\n");
-        continue;
-      }
-      t8_eclass neigh_class = t8_cmesh_get_class (cmesh, neigh.neighid); //TODO: falsch, neigh.neighid is global index
-      scheme->point_transform (bdy_class, bdy_point, neigh.orientation, neigh_bdy_point);
-//      t8_debugf ("transform with orientation %i to point (%li)\n",  neigh.orientation,  (*((t8_standalone_point<1> *)(neigh_bdy_point)))[0]);
-
-      scheme->point_new (neigh_class, &neigh_point);
-      scheme->boundary_point_extrude (neigh_class, neigh_bdy_point, bdy_dim, neigh.neigh_bdy_id, neigh_point);
-      t8_debugf ("extrude on neigh bdy id %i to point (%li, %li)\n",  neigh.neigh_bdy_id,  (*((t8_standalone_point<2> *)(neigh_point)))[0], (*((t8_standalone_point<2> *)(neigh_point)))[1]);
-
-      t8_debugf ("send element to owners of point (%li, %li) on tree %li \n",  (*((t8_standalone_point<2> *) (neigh_point)))[0], (*((t8_standalone_point<2> *)(neigh_point)))[1], neigh.neighid);
-      forest_element_add_owners_at_other_point (forest, ltreeid, element, tree_leaf_index, neigh.neighid, neigh_class,
-                                               neigh_point);
-      scheme->point_destroy (neigh_class, &neigh_point);
-    }
-    scheme->point_destroy (bdy_class, &bdy_point);
-    scheme->point_destroy (bdy_class, &neigh_bdy_point);
-  }
-  scheme->point_destroy (eclass, &point);
-  t8_debugf ("leave search\n");
   return 0;
 }
 

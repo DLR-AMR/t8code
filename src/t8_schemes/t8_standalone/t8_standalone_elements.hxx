@@ -53,9 +53,6 @@ constexpr uint8_t T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 6, 4
 constexpr uint8_t T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_COUNT] = { 0, 2, 4, 3, 12, 6, 9, 8 };
 
 
-/** Maximum number of internal neighbors to a point */
-constexpr uint8_t T8_ELEMENT_MAX_NUM_NEIGHBORS[T8_ECLASS_COUNT] = { 1, 2, 4, 6, 8, 24, 100, 100 }; //TODO
-
 /** Number of children of the standalone element types */
 constexpr uint8_t T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_COUNT] = { 1, 2, 4, 4, 8, 8, 8, 10 };
 
@@ -213,6 +210,4 @@ struct t8_standalone_element
   u_int8_t type;
 };
 
-template <int dim>
-using t8_standalone_point = std::array<t8_element_coord, dim>;
 #endif /* T8_STANDALONE_ELEMENTS_HXX */

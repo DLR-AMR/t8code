@@ -39,7 +39,6 @@ T8_EXTERN_C_BEGIN ();
  * Implementations are free to cast it to their internal data structure.
  */
 typedef struct t8_element t8_element_t;
-typedef struct t8_scheme_point t8_scheme_point;
 
 /** This array holds the reference coordinates of each vertex of each element.
  *  It can e.g. be used with the \ref t8_scheme::element_get_reference_coords function.

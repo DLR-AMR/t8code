@@ -128,18 +128,6 @@ t8_cmesh_get_vertex_to_tree_list (const t8_cmesh_t cmesh, const t8_gloidx_t glob
 const tree_edge_list &
 t8_cmesh_get_edge_to_tree_list (const t8_cmesh_t cmesh, const t8_gloidx_t global_edge);
 
-typedef class t8_neigh_info {
- public:
-  t8_gloidx_t neighid;
-  int neigh_bdy_id;
-  int orientation;
-  int sign;
-  int is_smaller;
-} t8_neigh_info;
-
-std::vector<t8_neigh_info>
-t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t treeid, int bdy_dim, int bdy_id);
-
 /** A boundary of a tree that coincides with a boundary of another tree, see \ref t8_cmesh_get_boundary_neighbors. */
 struct t8_cmesh_boundary_neighbor
 {

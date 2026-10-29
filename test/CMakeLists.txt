@@ -192,7 +192,6 @@ add_t8_cpp_test( NAME t8_gtest_element_ref_coords_serial    SOURCES t8_schemes/t
 add_t8_cpp_test( NAME t8_gtest_descendant_serial            SOURCES t8_schemes/t8_gtest_descendant.cxx )
 add_t8_cpp_test( NAME t8_gtest_find_parent_serial           SOURCES t8_schemes/t8_gtest_find_parent.cxx )
 add_t8_cpp_test( NAME t8_gtest_equal_serial                 SOURCES t8_schemes/t8_gtest_equal.cxx )
-add_t8_cpp_test( NAME t8_gtest_points_serial                 SOURCES t8_schemes/t8_gtest_points.cxx )
 add_t8_cpp_test( NAME t8_gtest_standalone_type_int_serial                 SOURCES t8_schemes/t8_gtest_standalone_type_int.cxx )
 add_t8_cpp_test( NAME t8_gtest_successor_serial             SOURCES t8_schemes/t8_gtest_successor.cxx )
 add_t8_cpp_test( NAME t8_gtest_boundary_extrude_serial      SOURCES t8_schemes/t8_gtest_boundary_extrude.cxx )
