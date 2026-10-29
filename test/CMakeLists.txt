@@ -197,6 +197,7 @@ add_t8_cpp_test( NAME t8_gtest_successor_serial             SOURCES t8_schemes/t
 add_t8_cpp_test( NAME t8_gtest_boundary_extrude_serial      SOURCES t8_schemes/t8_gtest_boundary_extrude.cxx )
 add_t8_cpp_test( NAME t8_gtest_face_descendant_serial       SOURCES t8_schemes/t8_gtest_face_descendant.cxx )
 add_t8_cpp_test( NAME t8_gtest_boundaries_serial            SOURCES t8_schemes/t8_gtest_boundaries.cxx )
+add_t8_cpp_test( NAME t8_gtest_face_transform_serial        SOURCES t8_schemes/t8_gtest_face_transform.cxx )
 add_t8_cpp_test( NAME t8_gtest_default_serial               SOURCES t8_schemes/t8_gtest_default.cxx )
 add_t8_cpp_test( NAME t8_gtest_child_parent_face_serial     SOURCES t8_schemes/t8_gtest_child_parent_face.cxx )
 add_t8_cpp_test( NAME t8_gtest_pack_unpack_serial           SOURCES t8_schemes/t8_gtest_pack_unpack.cxx )

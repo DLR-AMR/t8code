@@ -1181,13 +1181,124 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
    *                        defined in relation to the smaller face.
    * \note \a elem1 and \a elem2 may point to the same element.
    */
-  static inline void
-  element_transform_face ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] t8_element_t *elem2,
-                          [[maybe_unused]] const int orientation, [[maybe_unused]] const int sign,
-                          [[maybe_unused]] const int is_smaller_face) noexcept
+  static constexpr void
+  element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, const int orientation, const int sign,
+                          const int is_smaller_face) noexcept
   {
-    /* This function has an explicit template specialization outside of t8_standalone_scheme*/
-    SC_ABORT ("Not implemented for this eclass.\n");
+    if constexpr (T8_ELEMENT_DIM[TEclass] > 2) {
+      SC_ABORT ("Faces have dimension 2 or lower.\n");
+    }
+    else {
+      int perm[T8_ECLASS_MAX_CORNERS_2D];
+      t8_eclass_face_orientation_to_corner_permutation (TEclass, orientation, sign, is_smaller_face, perm);
+      element_transform_corner_permutation (elem1, elem2, perm);
+    }
+  }
+
+  /** Map an element by the symmetry of the root element that maps root corner i to root corner \a perm[i].
+   *  The symmetry is an affine map x -> A x + c with integer entries, which maps the refinement grid of every level
+   *  onto itself, so the image of an element is an element of the same level. Its anchor is the minimum of the
+   *  mapped corners, and its type follows from the side of each equation plane the mapped element lies on.
+   *  \param [in] elem1     The element.
+   *  \param [in,out] elem2 On return the image of \a elem1.
+   *  \param [in] perm      A permutation of the root corners that is a symmetry of the root element.
+   *  \note \a elem1 and \a elem2 may point to the same element.
+   */
+  static constexpr void
+  element_transform_corner_permutation (const t8_element_t *elem1, t8_element_t *elem2, const int *perm) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem1));
+    const t8_standalone_element<TEclass> *el1 = (const t8_standalone_element<TEclass> *) elem1;
+    t8_standalone_element<TEclass> *el2 = (t8_standalone_element<TEclass> *) elem2;
+
+    if constexpr (T8_ELEMENT_DIM[TEclass] > 0) {
+      constexpr int dim = T8_ELEMENT_DIM[TEclass];
+      constexpr int num_corners = T8_ELEMENT_NUM_CORNERS[TEclass];
+      const t8_element_coord root_len = get_root_len ();
+      const t8_element_coord len = element_get_len (el1->level);
+
+      /* The offset c is the image of the root corner 0, which is the origin. Column j of A is the image of a root
+       * edge in direction j. */
+      t8_element_coord offset[dim];
+      int matrix[dim][dim];
+      for (int idim = 0; idim < dim; idim++) {
+        offset[idim] = root_len * corner_binary (0, perm[0], idim);
+      }
+      for (int jdim = 0; jdim < dim; jdim++) {
+        [[maybe_unused]] bool found = false;
+        for (int icorner = 0; icorner < num_corners && !found; icorner++) {
+          for (int jcorner = 0; jcorner < num_corners && !found; jcorner++) {
+            bool is_edge = true;
+            for (int idim = 0; idim < dim; idim++) {
+              is_edge &= corner_binary (0, jcorner, idim) - corner_binary (0, icorner, idim) == (idim == jdim);
+            }
+            if (is_edge) {
+              for (int idim = 0; idim < dim; idim++) {
+                matrix[idim][jdim] = corner_binary (0, perm[jcorner], idim) - corner_binary (0, perm[icorner], idim);
+              }
+              found = true;
+            }
+          }
+        }
+        T8_ASSERT (found);
+      }
+
+      /* Map the corners of the element and take their minimum as the anchor. */
+      t8_element_coord corners[num_corners][dim];
+      t8_element_coord anchor[dim];
+      for (int idim = 0; idim < dim; idim++) {
+        anchor[idim] = root_len;
+      }
+      for (int icorner = 0; icorner < num_corners; icorner++) {
+        for (int idim = 0; idim < dim; idim++) {
+          corners[icorner][idim] = offset[idim];
+          for (int jdim = 0; jdim < dim; jdim++) {
+            corners[icorner][idim]
+              += matrix[idim][jdim] * (el1->coords[jdim] + len * corner_binary (el1->type, icorner, jdim));
+          }
+          anchor[idim] = SC_MIN (anchor[idim], corners[icorner][idim]);
+        }
+      }
+
+      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        /* Type bit e is 1 if x_j > x_i relative to the anchor in the interior of the element, for equation (i, j).
+         * The sum of the corners is a multiple of the centroid. */
+        u_int8_t type = 0;
+        for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
+          const int i = t8_type_edge_equations<TEclass>[ieq][0];
+          const int j = t8_type_edge_equations<TEclass>[ieq][1];
+          t8_element_coord difference = 0;
+          for (int icorner = 0; icorner < num_corners; icorner++) {
+            difference += (corners[icorner][j] - anchor[j]) - (corners[icorner][i] - anchor[i]);
+          }
+          T8_ASSERT (difference != 0);
+          set_typebit_from_zero (&type, ieq, difference > 0);
+        }
+        el2->type = type;
+      }
+      for (int idim = 0; idim < dim; idim++) {
+        el2->coords[idim] = anchor[idim];
+      }
+    }
+    el2->level = el1->level;
+    T8_ASSERT (element_is_valid (elem2));
+  }
+
+  /** The cube vertex of a corner of an element of a given type, as bit \a idim of its offset from the anchor.
+   *  \param [in] type    The type of the element.
+   *  \param [in] corner  The corner of the element.
+   *  \param [in] idim    The coordinate.
+   *  \return             1 if the corner lies at anchor + len in coordinate \a idim, 0 otherwise.
+   */
+  static constexpr int
+  corner_binary ([[maybe_unused]] const int type, const int corner, const int idim) noexcept
+  {
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return t8_type_vertex_dim_to_binary<TEclass>[type][corner][idim];
+    }
+    else {
+      return (corner >> idim) & 1;
+    }
   }
 
   /** Given a boundary face inside a root tree's face construct
@@ -3302,267 +3413,6 @@ friend class class_test_equal;
       }
     }
     return type;
-  }
-};
-
-/** Suppose we have two trees that share a common face f.
- *  Given an element e that is a subface of f in one of the trees
- *  and given the orientation of the tree connection, construct the face
- *  element of the respective tree neighbor that logically coincides with e
- *  but lies in the coordinate system of the neighbor tree.
- *  \param [in] elem1     The face element.
- *  \param [in,out] elem2 On return the face element \a elem1 with respective
- *                        to the coordinate system of the other tree.
- *  \param [in] orientation The orientation of the tree-tree connection.
- *                        \see t8_cmesh_set_join
- *  \param [in] sign      Depending on the topological orientation of the two tree faces,
- *                        either 0 (both faces have opposite orientation)
- *                        or 1 (both faces have the same top. orientation).
- *                        \ref t8_eclass_face_orientation
- *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
- *                        the smaller face. A face f of tree T is smaller than
- *                        f' of T' if either the eclass of T is smaller or if
- *                        the classes are equal and f<f'. The orientation is
- *                        defined in relation to the smaller face.
- * \note \a elem1 and \a elem2 may point to the same element.
- */
-
-// template <>
-// inline void
-// t8_standalone_scheme<T8_ECLASS_VERTEX>::element_transform_face ([[maybe_unused]] const t8_element_t *elem1,
-//                                                                 [[maybe_unused]] t8_element_t *elem2,
-//                                                                 [[maybe_unused]] const int orientation,
-//                                                                 [[maybe_unused]] const int sign,
-//                                                                 [[maybe_unused]] const int is_smaller_face) noexcept
-// {
-//   T8_ASSERT (t8_standalone_scheme<T8_ECLASS_VERTEX>::element_is_valid (elem1));
-//   return;
-// };
-
-/** Implementation of \ref element_transform_face for lines
- *  \param [in] elem1     The face element.
- *  \param [in,out] elem2 On return the face element \a elem1 with respective
- *                        to the coordinate system of the other tree.
- *  \param [in] orientation The orientation of the tree-tree connection.
- *                        \see t8_cmesh_set_join
- *  \param [in] sign      Depending on the topological orientation of the two tree faces,
- *                        either 0 (both faces have opposite orientation)
- *                        or 1 (both faces have the same top. orientation).
- *                        \ref t8_eclass_face_orientation
- *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
- *                        the smaller face. A face f of tree T is smaller than
- *                        f' of T' if either the eclass of T is smaller or if
- *                        the classes are equal and f<f'. The orientation is
- *                        defined in relation to the smaller face.
- * \note \a elem1 and \a elem2 may point to the same element.
- */
-template <>
-inline void
-t8_standalone_scheme<T8_ECLASS_LINE>::element_transform_face (const t8_element_t *elem1,
-                                                              [[maybe_unused]] t8_element_t *elem2,
-                                                              [[maybe_unused]] const int orientation,
-                                                              [[maybe_unused]] const int sign,
-                                                              [[maybe_unused]] const int is_smaller_face) noexcept
-{
-  T8_ASSERT (t8_standalone_scheme<T8_ECLASS_LINE>::element_is_valid (elem1));
-  const t8_standalone_element<T8_ECLASS_LINE> *el1 = (const t8_standalone_element<T8_ECLASS_LINE> *) elem1;
-  t8_standalone_element<T8_ECLASS_LINE> *el2 = (t8_standalone_element<T8_ECLASS_LINE> *) elem2;
-
-  const int level = el1->level;
-  element_copy ((const t8_element_t *) el1, (t8_element_t *) el2);
-  if (orientation) {
-    const t8_element_coord total_length = 1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_LINE];
-    const t8_element_coord refined_length = 1 << (T8_ELEMENT_MAXLEVEL[T8_ECLASS_LINE] - level);
-    el2->coords[0] = total_length - refined_length - el2->coords[0];
-  }
-  T8_ASSERT (t8_standalone_scheme<T8_ECLASS_LINE>::element_is_valid ((t8_element_t *) el2));
-  return;
-};
-
-/** Implementation of \ref element_transform_face for quads
- *  \param [in] elem1     The face element.
- *  \param [in,out] elem2 On return the face element \a elem1 with respective
- *                        to the coordinate system of the other tree.
- *  \param [in] orientation The orientation of the tree-tree connection.
- *                        \see t8_cmesh_set_join
- *  \param [in] sign      Depending on the topological orientation of the two tree faces,
- *                        either 0 (both faces have opposite orientation)
- *                        or 1 (both faces have the same top. orientation).
- *                        \ref t8_eclass_face_orientation
- *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
- *                        the smaller face. A face f of tree T is smaller than
- *                        f' of T' if either the eclass of T is smaller or if
- *                        the classes are equal and f<f'. The orientation is
- *                        defined in relation to the smaller face.
- * \note \a elem1 and \a elem2 may point to the same element.
- */
-
-template <>
-inline void
-t8_standalone_scheme<T8_ECLASS_QUAD>::element_transform_face (const t8_element_t *elem1, t8_element_t *elem2,
-                                                              [[maybe_unused]] int orientation, const int sign,
-                                                              [[maybe_unused]] const int is_smaller_face) noexcept
-{
-  T8_ASSERT (t8_standalone_scheme<T8_ECLASS_QUAD>::element_is_valid (elem1));
-  const t8_standalone_element<T8_ECLASS_QUAD> *el1 = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem1;
-  t8_standalone_element<T8_ECLASS_QUAD> *el2 = (t8_standalone_element<T8_ECLASS_QUAD> *) elem2;
-
-  t8_standalone_element<T8_ECLASS_QUAD> tmp;
-  element_copy ((const t8_element_t *) el1, (t8_element_t *) &tmp);
-  if (sign) {
-    /* The tree faces have the same topological orientation, and
-      * thus we have to perform a coordinate switch. */
-    /* We use tmp as storage, since el1 and el2 are allowed to
-      * point to the same quad */
-    tmp.coords[0] = el1->coords[1];
-    tmp.coords[1] = el1->coords[0];
-  }
-
-  /*
-    * The faces of the root quadrant are enumerated like this:
-    *
-    *   v_2      v_3
-    *     x -->-- x
-    *     |       |
-    *     ^       ^
-    *     |       |
-    *     x -->-- x
-    *   v_0      v_1
-    *
-    * Orientation is the corner number of the bigger face that coincides
-    * with the corner v_0 of the smaller face.
-    */
-  /* If this face is not smaller, switch the orientation:
-    *  sign = 0   sign = 1
-    *  0 -> 0     0 -> 0
-    *  1 -> 2     1 -> 1
-    *  2 -> 1     2 -> 2
-    *  3 -> 3     3 -> 3
-    */
-  if (!is_smaller_face && (orientation == 1 || orientation == 2) && !sign) {
-    orientation = 3 - orientation;
-  }
-  const t8_element_coord root_len = t8_standalone_scheme<T8_ECLASS_QUAD>::get_root_len ();
-  const t8_element_coord h = t8_standalone_scheme<T8_ECLASS_QUAD>::element_get_len (el1->level);
-  switch (orientation) {
-  case 0: /* Nothing to do */
-    el2->coords[0] = tmp.coords[0];
-    el2->coords[1] = tmp.coords[1];
-    break;
-  case 1:
-    el2->coords[0] = root_len - tmp.coords[1] - h;
-    el2->coords[1] = tmp.coords[0];
-    break;
-  case 2:
-    el2->coords[0] = tmp.coords[1];
-    el2->coords[1] = root_len - tmp.coords[0] - h;
-    break;
-  case 3:
-    el2->coords[0] = root_len - tmp.coords[0] - h;
-    el2->coords[1] = root_len - tmp.coords[1] - h;
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
-  }
-  el2->level = tmp.level;
-  return;
-};
-
-/** Implementation of \ref element_transform_face for triangles.
- *  \param [in] elem1     The face element.
- *  \param [in,out] elem2 On return the face element \a elem1 with respective
- *                        to the coordinate system of the other tree.
- *  \param [in] orientation The orientation of the tree-tree connection.
- *                        \see t8_cmesh_set_join
- *  \param [in] sign      Depending on the topological orientation of the two tree faces,
- *                        either 0 (both faces have opposite orientation)
- *                        or 1 (both faces have the same top. orientation).
- *                        \ref t8_eclass_face_orientation
- *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
- *                        the smaller face. A face f of tree T is smaller than
- *                        f' of T' if either the eclass of T is smaller or if
- *                        the classes are equal and f<f'. The orientation is
- *                        defined in relation to the smaller face.
- * \note \a elem1 and \a elem2 may point to the same element.
- */
-
-template <>
-inline void
-t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_transform_face ([[maybe_unused]] const t8_element_t *elem1,
-                                                                  [[maybe_unused]] t8_element_t *elem2,
-                                                                  [[maybe_unused]] int orientation,
-                                                                  [[maybe_unused]] const int sign,
-                                                                  [[maybe_unused]] const int is_smaller_face) noexcept
-{
-  T8_ASSERT (0 <= orientation && orientation <= 2);
-  const t8_standalone_element<T8_ECLASS_TRIANGLE> *el1 = (const t8_standalone_element<T8_ECLASS_TRIANGLE> *) elem1;
-  t8_standalone_element<T8_ECLASS_TRIANGLE> *el2 = (t8_standalone_element<T8_ECLASS_TRIANGLE> *) elem2;
-
-  const t8_element_coord length = element_get_len (el1->level);
-
-  // copy elem1 in tmp so that results can directly be set in elem2
-  t8_standalone_element<T8_ECLASS_TRIANGLE> tmp;
-  element_copy (elem1, (t8_element_t *) &tmp);
-
-  /*
-    * The corners of the triangle are enumerated like this
-    *        type 0                    type 1
-    *      also root tree
-    *         v_2                     v_1  v_2
-    *         x                         x--x
-    *        /|                         | /
-    *       / |                         |/
-    *      x--x                         x
-    *    v_0  v_1                      v_0
-    *
-    */
-  if (sign) {
-    /* The tree faces have the same topological orientation, and
-      * thus we have to perform a coordinate switch. */
-    if (el1->type == 0) {
-      tmp.coords[1] = el1->coords[0] - el1->coords[1];
-    }
-    else {
-      tmp.coords[1] = el1->coords[0] - el1->coords[1] - length;
-    }
-  }
-
-  if (!is_smaller_face && orientation != 0 && !sign) {
-    /* Translate orientation if triangle1 is not on the smaller face.
-      *  sign = 0  sign = 1
-      *  0 -> 0    0 -> 0
-      *  1 -> 2    1 -> 1
-      *  2 -> 1    2 -> 2
-      */
-    orientation = 3 - orientation;
-  }
-
-  el2->level = tmp.level;
-  el2->type = tmp.type;
-  switch (orientation) {
-  case 0:
-    element_copy ((t8_element_t *) &tmp, (t8_element_t *) el2);
-    break;
-  case 1:
-    el2->coords[0] = get_root_len () - length - tmp.coords[1];
-    if (tmp.type == 0) {
-      el2->coords[1] = tmp.coords[0] - tmp.coords[1];
-    }
-    else {
-      el2->coords[1] = tmp.coords[0] - tmp.coords[1] - length;
-    }
-    break;
-  case 2:
-    if (tmp.type == 0) {
-      el2->coords[0] = get_root_len () - length + tmp.coords[1] - tmp.coords[0];
-    }
-    else {
-      el2->coords[0] = get_root_len () + tmp.coords[1] - tmp.coords[0];
-    }
-    el2->coords[1] = get_root_len () - length - tmp.coords[0];
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
   }
 };
 
