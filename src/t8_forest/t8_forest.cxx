@@ -3014,6 +3014,7 @@ t8_forest_init (t8_forest_t *pforest)
   forest->global_num_leaf_elements = -1;
   forest->set_adapt_recursive = -1;
   forest->set_balance = -1;
+  forest->balance_type = T8_GHOST_FACES;
   forest->maxlevel_existing = -1;
   forest->stats_computed = 0;
   forest->incomplete_trees = -1;
@@ -3147,6 +3148,16 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
   else {
     forest->from_method |= T8_FOREST_FROM_PARTITION;
   }
+}
+
+void
+t8_forest_set_balance_type (t8_forest_t forest, t8_ghost_type_t balance_type)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  SC_CHECK_ABORT (balance_type == T8_GHOST_FACES || balance_type == T8_GHOST_EDGES
+                    || balance_type == T8_GHOST_VERTICES,
+                  "Invalid balance type.\n");
+  forest->balance_type = balance_type;
 }
 
 void

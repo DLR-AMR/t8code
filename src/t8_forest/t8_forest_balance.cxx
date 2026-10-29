@@ -37,6 +37,108 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * Check whether the leaves at a face of an element are more than one level finer than the element, i.e. whether
+ * one of its half face neighbors has local or ghost leaf descendants. Works across tree boundaries.
+ *
+ * \param[in] forest_from  The forest to check.
+ * \param[in] ltree_id     The local id of the tree of \a element.
+ * \param[in] tree_class   The class of the tree.
+ * \param[in] scheme       The scheme of the forest.
+ * \param[in] element      The element.
+ * \param[in] iface        A face of \a element.
+ * \return 1 if \a element has to be refined because of the face, 0 otherwise.
+ */
+static int
+t8_forest_balance_face_is_unbalanced (t8_forest_t forest_from, const t8_locidx_t ltree_id, const t8_eclass_t tree_class,
+                                      const t8_scheme *scheme, const t8_element_t *element, const int iface)
+{
+  int unbalanced = 0;
+  /* Get the element class and scheme of the face neighbor */
+  const t8_eclass_t neigh_class = t8_forest_element_neighbor_eclass (forest_from, ltree_id, element, iface);
+  /* Allocate memory for the number of half face neighbors */
+  const int num_half_neighbors = scheme->element_get_num_face_children (tree_class, element, iface);
+  t8_element_t **half_neighbors = T8_ALLOC (t8_element_t *, num_half_neighbors);
+  scheme->element_new (neigh_class, num_half_neighbors, half_neighbors);
+  /* Compute the half face neighbors of element at this face */
+  const t8_gloidx_t neighbor_tree = t8_forest_element_half_face_neighbors (forest_from, ltree_id, element, half_neighbors,
+                                                                           neigh_class, iface, num_half_neighbors, NULL);
+  if (neighbor_tree >= 0) {
+    /* The face neighbors do exist, check for each one, whether it has
+     * local or ghost leaf descendants in the forest.
+     * If so, the element will be refined. */
+    for (int ineigh = 0; ineigh < num_half_neighbors && !unbalanced; ineigh++) {
+      unbalanced = t8_forest_element_has_leaf_desc (forest_from, neighbor_tree, half_neighbors[ineigh], neigh_class);
+    }
+  }
+  /* clean-up */
+  scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
+  T8_FREE (half_neighbors);
+  return unbalanced;
+}
+
+/**
+ * Check whether leaves that touch a boundary of an element with a boundary of dimension at least min_dim are more
+ * than one level finer than the element, i.e. whether a child of a neighbor (of the same level) at this boundary,
+ * which touches it with dimension at least min_dim, has local or ghost leaf descendants. Then all leaves of this
+ * child, including the ones touching the boundary, are at least two levels finer. The child may touch the boundary
+ * in a part that is not a boundary of the element, e.g. at the midpoint of an edge of a tetrahedron.
+ * Neighbors outside of the root are only considered at faces, via the half face neighbors.
+ * TODO: Boundaries of lower dimension across tree boundaries.
+ *
+ * \param[in] forest_from  The forest to check.
+ * \param[in] ltree_id     The local id of the tree of \a element.
+ * \param[in] tree_class   The class of the tree.
+ * \param[in] scheme       The scheme of the forest.
+ * \param[in] element      The element.
+ * \param[in] bdy_dim      The dimension of the boundary.
+ * \param[in] bdy_id       The boundary of \a element of dimension \a bdy_dim.
+ * \param[in] min_dim      The minimum dimension of the intersection of a leaf with the boundary.
+ * \return 1 if \a element has to be refined because of the boundary, 0 otherwise.
+ */
+static int
+t8_forest_balance_boundary_is_unbalanced (t8_forest_t forest_from, const t8_locidx_t ltree_id,
+                                          const t8_eclass_t tree_class, const t8_scheme *scheme,
+                                          const t8_element_t *element, const int bdy_dim, const int bdy_id,
+                                          const int min_dim)
+{
+  int unbalanced = 0;
+  const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest_from, ltree_id);
+  const int max_neighbors = scheme->get_max_num_boundary_neighbors (tree_class);
+  const int max_children = scheme->get_max_num_boundary_touching_children (tree_class);
+  t8_element_t **neighs = T8_ALLOC (t8_element_t *, max_neighbors);
+  t8_element_t **children = T8_ALLOC (t8_element_t *, max_children);
+  int *neigh_bdy_ids = T8_ALLOC (int, max_neighbors);
+  int *child_bdy_dims = T8_ALLOC (int, max_children);
+  scheme->element_new (tree_class, max_neighbors, neighs);
+  scheme->element_new (tree_class, max_children, children);
+
+  const int num_neighbors
+    = scheme->element_get_boundary_neighbors_inside (tree_class, element, bdy_dim, bdy_id, neighs, neigh_bdy_ids);
+  if (num_neighbors == 0 && bdy_dim == t8_eclass_to_dimension[tree_class] - 1) {
+    /* The face neighbor lies outside of the root, the boundaries of dimension dim - 1 are the faces */
+    unbalanced = t8_forest_balance_face_is_unbalanced (forest_from, ltree_id, tree_class, scheme, element, bdy_id);
+  }
+  for (int ineigh = 0; ineigh < num_neighbors && !unbalanced; ineigh++) {
+    const int num_children = scheme->element_get_num_boundary_touching_children (tree_class, neighs[ineigh], bdy_dim,
+                                                                                neigh_bdy_ids[ineigh]);
+    scheme->element_get_children_touching_boundary (tree_class, neighs[ineigh], bdy_dim, neigh_bdy_ids[ineigh],
+                                                    children, num_children, child_bdy_dims, NULL);
+    for (int ichild = 0; ichild < num_children && !unbalanced; ichild++) {
+      if (child_bdy_dims[ichild] >= min_dim) {
+        unbalanced = t8_forest_element_has_leaf_desc (forest_from, gtreeid, children[ichild], tree_class);
+      }
+    }
+  }
+  scheme->element_destroy (tree_class, max_neighbors, neighs);
+  scheme->element_destroy (tree_class, max_children, children);
+  T8_FREE (neighs);
+  T8_FREE (children);
+  T8_FREE (neigh_bdy_ids);
+  T8_FREE (child_bdy_dims);
+  return unbalanced;
+}
+
 /** This is the adapt function called during one round of balance.
  * We refine an element if it has any face neighbor with a level larger
  * than the element's level + 1.
@@ -64,11 +166,7 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
                          const t8_scheme *scheme, [[maybe_unused]] const int is_family,
                          [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
-  int *pdone, iface, num_faces, num_half_neighbors, ineigh;
-  t8_gloidx_t neighbor_tree;
-  t8_eclass_t neigh_class;
   const t8_element_t *element = elements[0];
-  t8_element_t **half_neighbors;
 
   /* We only need to check an element, if its level is smaller then the maximum
    * level in the forest minus 2.
@@ -80,43 +178,33 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
   if (forest_from->maxlevel_existing <= 0
       || scheme->element_get_level (tree_class, element) <= forest_from->maxlevel_existing - 2) {
 
-    pdone = (int *) forest->t8code_data;
+    int *pdone = (int *) forest->t8code_data;
 
-    //TODO
-    //Loop over boundaries
-      //Loop over next level neighbors across boundaries
-        //If there is a descendant present in the forest, element needs to be refined.
-
-
-    num_faces = scheme->element_get_num_faces (tree_class, element);
-    for (iface = 0; iface < num_faces; iface++) {
-      /* Get the element class and scheme of the face neighbor */
-      neigh_class = t8_forest_element_neighbor_eclass (forest_from, ltree_id, element, iface);
-      /* Allocate memory for the number of half face neighbors */
-      num_half_neighbors = scheme->element_get_num_face_children (tree_class, element, iface);
-      half_neighbors = T8_ALLOC (t8_element_t *, num_half_neighbors);
-      scheme->element_new (neigh_class, num_half_neighbors, half_neighbors);
-      /* Compute the half face neighbors of element at this face */
-      neighbor_tree = t8_forest_element_half_face_neighbors (forest_from, ltree_id, element, half_neighbors,
-                                                             neigh_class, iface, num_half_neighbors, NULL);
-      if (neighbor_tree >= 0) {
-        /* The face neighbors do exist, check for each one, whether it has
-         * local or ghost leaf descendants in the forest.
-         * If so, the element will be refined. */
-        for (ineigh = 0; ineigh < num_half_neighbors; ineigh++) {
-          if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree, half_neighbors[ineigh], neigh_class)) {
+    if (forest->balance_type == T8_GHOST_FACES) {
+      const int num_faces = scheme->element_get_num_faces (tree_class, element);
+      for (int iface = 0; iface < num_faces; iface++) {
+        if (t8_forest_balance_face_is_unbalanced (forest_from, ltree_id, tree_class, scheme, element, iface)) {
+          /* This element should be refined */
+          *pdone = 0;
+          return 1;
+        }
+      }
+    }
+    else {
+      /* Loop over the boundaries of all dimensions considered by the balance type */
+      const int dim = t8_eclass_to_dimension[tree_class];
+      const int min_bdy_dim = forest->balance_type == T8_GHOST_EDGES ? SC_MAX (dim - 2, 0) : 0;
+      for (int bdy_dim = min_bdy_dim; bdy_dim < dim; bdy_dim++) {
+        const int num_boundaries = scheme->element_get_num_boundaries (tree_class, element, bdy_dim);
+        for (int bdy_id = 0; bdy_id < num_boundaries; bdy_id++) {
+          if (t8_forest_balance_boundary_is_unbalanced (forest_from, ltree_id, tree_class, scheme, element, bdy_dim,
+                                                        bdy_id, min_bdy_dim)) {
             /* This element should be refined */
             *pdone = 0;
-            /* clean-up */
-            scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
-            T8_FREE (half_neighbors);
             return 1;
           }
         }
       }
-      /* clean-up */
-      scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
-      T8_FREE (half_neighbors);
     }
   }
 
@@ -198,8 +286,12 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   /* This function is reference neutral regarding forest_from */
   t8_forest_ref (forest_from);
 
-  if (forest->set_from->ghosts == NULL) {
-    forest->set_from->ghost_type = T8_GHOST_FACES;
+  /* The ghost layer must contain all neighbors of the balance type */
+  if (forest->set_from->ghosts == NULL || forest->set_from->ghost_type < forest->balance_type) {
+    if (forest->set_from->ghosts != NULL) {
+      t8_forest_ghost_unref (&forest->set_from->ghosts);
+    }
+    forest->set_from->ghost_type = forest->balance_type;
     t8_forest_ghost_create_topdown (forest->set_from);
   }
 
@@ -211,10 +303,11 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     t8_forest_init (&forest_temp);
     /* Update the maximum occurring level */
     forest_temp->maxlevel_existing = forest_from->maxlevel_existing;
+    forest_temp->balance_type = forest->balance_type;
     /* Adapt the forest */
     t8_forest_set_adapt (forest_temp, forest_from, t8_forest_balance_adapt, 0);
     if (!repartition) {
-      t8_forest_set_ghost (forest_temp, 1, T8_GHOST_FACES);
+      t8_forest_set_ghost (forest_temp, 1, forest->balance_type);
     }
     forest_temp->t8code_data = &done;
     /* If profiling is enabled, measure ghost/adapt runtimes */
@@ -256,8 +349,9 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       t8_forest_init (&forest_partition);
       /* Update the maximum occurring level */
       forest_partition->maxlevel_existing = forest_temp->maxlevel_existing;
+      forest_partition->balance_type = forest->balance_type;
       t8_forest_set_partition (forest_partition, forest_temp, 0);
-      t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
+      t8_forest_set_ghost (forest_partition, 1, forest->balance_type);
       /* If profiling is enabled, measure partition runtimes */
       if (forest->profile != NULL) {
         t8_forest_set_profiling (forest_partition, 1);

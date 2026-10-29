@@ -367,6 +367,17 @@ t8_forest_set_partition_weight_function (t8_forest_t forest, t8_weight_fcn_t *we
 void
 t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_repartition);
 
+/** Set which neighbors are considered in balance: after balance, the levels of two leaves that share a
+ * face (T8_GHOST_FACES, default), an edge or face (T8_GHOST_EDGES), or any boundary (T8_GHOST_VERTICES)
+ * differ by at most one. The ghost layers created during balance are of the same type.
+ * Edges and vertices are only supported for schemes that implement boundaries (standalone),
+ * and across trees only at faces.
+ * \param [in, out] forest       The forest.
+ * \param [in]      balance_type The type of neighbors to balance.
+ */
+void
+t8_forest_set_balance_type (t8_forest_t forest, t8_ghost_type_t balance_type);
+
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.
  * \param [in]      forest    The forest.
