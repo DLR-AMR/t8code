@@ -419,14 +419,14 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
    *  \return True if the element is conformal, false otherwise.
    */
   bool
-  is_conformal () const
+  has_hanging_node () const
   {
     for (int iface = 0; iface < get_num_faces (); ++iface) {
       if (get_face_neighbors (iface).size () > 1) {
-        return false;
+        return true;
       }
     }
-    return true;
+    return false;
   }
 
   /** Convert points from the reference space of this element to the reference space of
