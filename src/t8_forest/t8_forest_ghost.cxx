@@ -234,8 +234,7 @@ t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type)
 {
   t8_forest_ghost_t ghost;
 
-  /* We currently only support face-neighbor ghosts */
-  T8_ASSERT (ghost_type == T8_GHOST_FACES || ghost_type == T8_GHOST_VERTICES);
+  T8_ASSERT (ghost_type == T8_GHOST_FACES || ghost_type == T8_GHOST_EDGES || ghost_type == T8_GHOST_VERTICES);
 
   /* Allocate memory for ghost */
   ghost = *pghost = T8_ALLOC_ZERO (t8_forest_ghost_struct_t, 1);
@@ -820,7 +819,97 @@ t8_forest_boundary_class (t8_eclass eclass, int bdy_dim, int bdy_id)
   }
 }
 
+/** The smallest boundary dimension whose neighbors are ghosts for a ghost type.
+ * \param [in] ghost_type  The ghost type.
+ * \param [in] dim         The dimension of the elements.
+ * \return                 dim - 1 for faces, dim - 2 for edges, 0 for vertices.
+ */
 static int
+t8_forest_ghost_min_boundary_dim (t8_ghost_type_t ghost_type, int dim)
+{
+  switch (ghost_type) {
+  case T8_GHOST_FACES:
+    return SC_MAX (dim - 1, 0);
+  case T8_GHOST_EDGES:
+    return SC_MAX (dim - 2, 0);
+  case T8_GHOST_VERTICES:
+    return 0;
+  default:
+    SC_ABORT_NOT_REACHED ();
+    return 0;
+  }
+}
+
+/**
+ *  Callback for \ref t8_forest_search to find the owners of all leaves that touch a local leaf at a boundary
+ *  of dimension at least \ref t8_forest_ghost_min_boundary_dim. These owners get the leaf as a ghost.
+ *  Works for unbalanced forests, the owners at a boundary are found recursively, see
+ *  \ref t8_forest_element_owners_at_neigh_boundary. The search does not continue below an element if it and
+ *  the owners at all its boundaries are this rank.
+ *  Only implemented for schemes that implement boundaries (standalone).
+ *  TODO: Boundaries of dimension smaller than dim - 1 across tree boundaries.
+ *
+ *  \param[in] forest           The forest.
+ *  \param[in] ltreeid          Local ID of the tree.
+ *  \param[in] element          The current element.
+ *  \param[in] is_leaf          Switch indicating whether \a element is a leaf.
+ *  \param[in] leaves           The array of leaves (unused).
+ *  \param[in] tree_leaf_index  If the element is a leaf, its tree-local id.
+ *  \return 0 if the search does not need to continue below \a element; 1 otherwise.
+ */
+static int
+t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                 const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaves,
+                                 const t8_locidx_t tree_leaf_index)
+{
+  t8_forest_ghost_boundary_data_t *data = (t8_forest_ghost_boundary_data_t *) t8_forest_get_user_data (forest);
+  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const int dim = t8_eclass_to_dimension[eclass];
+  const int min_bdy_dim = t8_forest_ghost_min_boundary_dim (forest->ghost_type, dim);
+
+  if (!is_leaf) {
+    /* Continue the search unless the element and all owners at its boundaries are this rank */
+    int lower = 0, upper = forest->mpisize - 1;
+    t8_forest_element_owners_bounds (forest, t8_forest_global_tree_id (forest, ltreeid), element, eclass, &lower,
+                                     &upper);
+    if (lower != upper || lower != forest->mpirank) {
+      return 1;
+    }
+    for (int bdy_dim = min_bdy_dim; bdy_dim < dim; bdy_dim++) {
+      const int num_boundaries = scheme->element_get_num_boundaries (eclass, element, bdy_dim);
+      for (int bdy_id = 0; bdy_id < num_boundaries; bdy_id++) {
+        lower = 0;
+        upper = forest->mpisize - 1;
+        t8_forest_element_owners_at_neigh_boundary_bounds (forest, ltreeid, element, bdy_dim, bdy_id, &lower, &upper);
+        if (lower <= upper && (lower != upper || lower != forest->mpirank)) {
+          return 1;
+        }
+      }
+    }
+    return 0;
+  }
+
+  /* The element is a leaf, add it as a remote element to all owners at its boundaries */
+  for (int bdy_dim = min_bdy_dim; bdy_dim < dim; bdy_dim++) {
+    const int num_boundaries = scheme->element_get_num_boundaries (eclass, element, bdy_dim);
+    for (int bdy_id = 0; bdy_id < num_boundaries; bdy_id++) {
+      t8_forest_element_owners_at_neigh_boundary (forest, ltreeid, element, bdy_dim, bdy_id, min_bdy_dim,
+                                                  &data->face_owners);
+      for (size_t iowner = 0; iowner < data->face_owners.elem_count; iowner++) {
+        const int remote_rank = *(int *) sc_array_index (&data->face_owners, iowner);
+        if (remote_rank != forest->mpirank) {
+          t8_ghost_add_remote (forest, forest->ghosts, remote_rank, ltreeid, element, tree_leaf_index);
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+/* Former point based vertex ghost search, it only considers the vertices of the leaves and thus misses
+ * neighbors in unbalanced forests. Replaced by t8_forest_ghost_search_boundary. */
+[[maybe_unused]] static int
 t8_forest_ghost_search_vertex_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                         const int is_leaf, const t8_element_array_t *leaves,
                                         const t8_locidx_t tree_leaf_index)
@@ -925,11 +1014,12 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
   case T8_GHOST_FACES:
     t8_forest_search (forest, t8_forest_ghost_search_face_boundary, NULL, NULL);
     break;
+  case T8_GHOST_EDGES:
   case T8_GHOST_VERTICES:
-    t8_forest_search (forest, t8_forest_ghost_search_vertex_boundary, NULL, NULL);
+    t8_forest_search (forest, t8_forest_ghost_search_boundary, NULL, NULL);
     break;
   default:
-    SC_ABORT ("Edge ghosts not yet implemented!");
+    SC_ABORT_NOT_REACHED ();
   }
 
   /* Reset the user data from before search */
@@ -1732,8 +1822,8 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
                  "Ghost layer is not constructed.\n");
       return;
     }
-    /* Currently we only support face ghosts */
-    T8_ASSERT (forest->ghost_type == T8_GHOST_FACES || forest->ghost_type == T8_GHOST_VERTICES);
+    T8_ASSERT (forest->ghost_type == T8_GHOST_FACES || forest->ghost_type == T8_GHOST_EDGES
+               || forest->ghost_type == T8_GHOST_VERTICES);
 
     /* Initialize the ghost structure */
     t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);

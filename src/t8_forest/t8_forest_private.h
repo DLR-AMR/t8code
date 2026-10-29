@@ -387,6 +387,95 @@ void
 t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                                int face, int *lower, int *upper);
 
+/** Find the owner processes of all descendants of an element that touch a boundary of the element with a
+ * boundary of the same dimension. The boundaries of dimension dim - 1 are the faces.
+ * Only implemented for schemes that implement boundaries (standalone).
+ * \param [in]     forest  The forest.
+ * \param [in]     gtreeid The global id of the tree in which the element lies.
+ * \param [in]     element The element.
+ * \param [in]     eclass  The element class of the tree \a gtreeid.
+ * \param [in]     bdy_dim The dimension of the boundary.
+ * \param [in]     bdy_id  The boundary of \a element of dimension \a bdy_dim.
+ * \param [in,out] owners  On input an array of integers. Its first and second entry
+ *                         are taken as lower and upper bounds for the owner processes.
+ *                         If empty, then no bounds are taken.
+ *                         On output it stores all owners in ascending order.
+ * \note \a forest must be committed before calling this function.
+ */
+void
+t8_forest_element_owners_at_boundary (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
+                                      t8_eclass_t eclass, int bdy_dim, int bdy_id, sc_array_t *owners);
+
+/** Constant time algorithm to compute bounds for the owner processes of the descendants of an element
+ * that touch a boundary, see \ref t8_forest_element_owners_at_boundary.
+ * \param [in]     forest  The forest.
+ * \param [in]     gtreeid The global id of the tree in which the element lies.
+ * \param [in]     element The element.
+ * \param [in]     eclass  The element class of the tree \a gtreeid.
+ * \param [in]     bdy_dim The dimension of the boundary.
+ * \param [in]     bdy_id  The boundary of \a element of dimension \a bdy_dim.
+ * \param [in,out] lower   On input a known lower bound for the owner process, on output a (better) bound.
+ * \param [in,out] upper   On input a known upper bound for the owner process, on output a (better) bound.
+ * \note If on input \a lower >= \a upper, then the bounds are not changed.
+ */
+void
+t8_forest_element_owners_at_boundary_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
+                                             t8_eclass_t eclass, int bdy_dim, int bdy_id, int *lower, int *upper);
+
+/** Find the owner processes of all descendants of an element that touch a boundary of the element with a
+ * boundary of dimension at least \a min_dim. Unlike \ref t8_forest_element_owners_at_boundary, this includes
+ * descendants that touch the boundary in a part that is not a boundary of the element, e.g. at the midpoint of
+ * an edge of a tetrahedron. Only implemented for schemes that implement boundaries (standalone).
+ * \param [in]     forest  The forest.
+ * \param [in]     gtreeid The global id of the tree in which the element lies.
+ * \param [in]     element The element.
+ * \param [in]     eclass  The element class of the tree \a gtreeid.
+ * \param [in]     bdy_dim The dimension of the boundary.
+ * \param [in]     bdy_id  The boundary of \a element of dimension \a bdy_dim.
+ * \param [in]     min_dim The minimum dimension of the intersection, 0 <= \a min_dim <= \a bdy_dim.
+ * \param [out]    owners  An array of integers, on output all owners in ascending order.
+ * \note \a forest must be committed before calling this function.
+ */
+void
+t8_forest_element_owners_touching_boundary (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
+                                            t8_eclass_t eclass, int bdy_dim, int bdy_id, int min_dim,
+                                            sc_array_t *owners);
+
+/** Find the owner processes of all leaves that are not descendants of a local element and touch a boundary of it
+ * with a boundary of dimension at least \a min_dim, i.e. the owners touching this boundary of all elements of the
+ * same level that share the boundary, see \ref t8_forest_element_owners_touching_boundary.
+ * Neighbors outside of the root are only considered for faces (bdy_dim = dim - 1), via
+ * \ref t8_forest_element_owners_at_neigh_face. TODO: lower dimensional boundaries across trees.
+ * \param [in]     forest  The forest.
+ * \param [in]     ltreeid The local id of the tree in which the element lies.
+ * \param [in]     element The element.
+ * \param [in]     bdy_dim The dimension of the boundary.
+ * \param [in]     bdy_id  The boundary of \a element of dimension \a bdy_dim.
+ * \param [in]     min_dim The minimum dimension of the intersection, 0 <= \a min_dim <= \a bdy_dim.
+ * \param [out]    owners  An array of integers, on output all owners in ascending order without duplicates.
+ * \note \a forest must be committed before calling this function.
+ */
+void
+t8_forest_element_owners_at_neigh_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                            int bdy_dim, int bdy_id, int min_dim, sc_array_t *owners);
+
+/** Constant time algorithm (per neighbor) to compute bounds for the owners of
+ * \ref t8_forest_element_owners_at_neigh_boundary, from the bounds of the owners of the whole neighbors.
+ * \param [in]     forest  The forest.
+ * \param [in]     ltreeid The local id of the tree in which the element lies.
+ * \param [in]     element The element.
+ * \param [in]     bdy_dim The dimension of the boundary.
+ * \param [in]     bdy_id  The boundary of \a element of dimension \a bdy_dim.
+ * \param [in,out] lower   On input a known lower bound for the owner processes, on output the smallest
+ *                         lower bound over all neighbors.
+ * \param [in,out] upper   On input a known upper bound for the owner processes, on output the largest
+ *                         upper bound over all neighbors. If there are no neighbors, lower > upper on output.
+ */
+void
+t8_forest_element_owners_at_neigh_boundary_bounds (t8_forest_t forest, t8_locidx_t ltreeid,
+                                                   const t8_element_t *element, int bdy_dim, int bdy_id, int *lower,
+                                                   int *upper);
+
 /** Construct all face neighbors of half size of a given element in linear id order.
  * \param [in]     forest  The forest.
  * \param [in]     ltreeid The local tree id of the tree in which the element is.

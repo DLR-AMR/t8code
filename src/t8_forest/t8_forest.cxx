@@ -2410,68 +2410,269 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   return proc;
 }
 
-void
-t8_forest_element_owners_at_boundary (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
-                                  t8_eclass_t eclass, int boundary_dim, int element_boundary, sc_array_t *owners)
+/* Recursively find all owners of descendants of an element that touch a boundary with a boundary of the
+ * same dimension. If the first and last descendant at the boundary have the same owner, it is the only one.
+ * Otherwise we continue with the children at the boundary, in SFC order, so that the owners are added
+ * in ascending order. lower_bound and upper_bound are bounds for the owners. */
+static void
+t8_forest_element_owners_at_boundary_recursion (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
+                                                t8_eclass_t eclass, int bdy_dim, int bdy_id, sc_array_t *owners,
+                                                int lower_bound, int upper_bound)
 {
   t8_element_t *first_desc, *last_desc;
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
-  
+  scheme->element_new (eclass, 1, &first_desc);
+  scheme->element_get_first_descendant_boundary (eclass, element, bdy_dim, bdy_id, first_desc, forest->maxlevel);
+  scheme->element_new (eclass, 1, &last_desc);
+  scheme->element_get_last_descendant_boundary (eclass, element, bdy_dim, bdy_id, last_desc, forest->maxlevel);
 
-  int first_owner = t8_forest_element_find_owner (forest, gtreeid, first_desc, eclass);
-  int last_owner = t8_forest_element_find_owner (forest, gtreeid, last_desc, eclass);
-
+  const int first_owner = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc, eclass, lower_bound,
+                                                            upper_bound, lower_bound, 1);
+  const int last_owner = t8_forest_element_find_owner_ext (forest, gtreeid, last_desc, eclass, lower_bound,
+                                                           upper_bound, upper_bound, 1);
 
   /* It is impossible for an element with bigger id to belong to a smaller process */
   T8_ASSERT (first_owner <= last_owner);
+  T8_ASSERT (t8_forest_element_check_owner (forest, first_desc, gtreeid, eclass, first_owner, 1));
+  T8_ASSERT (t8_forest_element_check_owner (forest, last_desc, gtreeid, eclass, last_owner, 1));
+  scheme->element_destroy (eclass, 1, &first_desc);
+  scheme->element_destroy (eclass, 1, &last_desc);
 
   if (first_owner == last_owner) {
-    /* This element has a unique owner, no recursion is necessary */
-    /* Add the owner to the array of owners */
-    /* TODO: check if this process is already listed. If we traverse the face children
-     * in SFC order, we can just check the last entry in owners here */
-
-   /* Get the last process that we added as owner */
-   int last_owner_entry = -1;
-   if (owners->elem_count > 0) {
-      last_owner_entry = *(int *) sc_array_index (owners, owners->elem_count - 1);
-   }
-
+    /* This element has a unique owner at the boundary, no recursion is necessary.
+     * Since we traverse the children in SFC order, the owners are added in ascending order
+     * and we only need to compare with the last entry. */
+    const int last_owner_entry = owners->elem_count > 0 ? *(int *) sc_array_index (owners, owners->elem_count - 1) : -1;
     if (first_owner > last_owner_entry) {
-      /* We did not count this process as an owner, thus we add it */
       *(int *) sc_array_push (owners) = first_owner;
     }
-    T8_ASSERT (t8_forest_element_check_owner (forest, first_desc, gtreeid, eclass, first_owner, 1));
-    T8_ASSERT (t8_forest_element_check_owner (forest, last_desc, gtreeid, eclass, first_owner, 1));
-    /* free memory */
-    scheme->element_destroy (eclass, 1, &first_desc);
-    scheme->element_destroy (eclass, 1, &last_desc);
     return;
   }
-  else {
-    T8_ASSERT (scheme->element_get_level (eclass, element) < t8_forest_get_maxlevel (forest));
-    /* This element has different owners, we have to create its face children and continue with the recursion. */
-    int num_children = 0;//TODO: scheme->element_get_num_boundary_children (eclass, element, boundary_dim, element_boundary);
-    /* allocate memory */
-    t8_element_t **boundary_children = T8_ALLOC (t8_element_t *, num_children);
-    scheme->element_new (eclass, num_children, boundary_children);
-    /* construct the children of element that touch face */
-    //TODO scheme->element_get_children_at_boundary (eclass, element, boundary_dim, element_boundary, boundary_children, num_children, NULL);
-    for (int ichild = 0; ichild < num_children; ichild++) {
-      /* the face number of the child may not be the same as face */
-      int child_boundary = 0;// TODO scheme->element_boundary_get_child_boundary (eclass, element, boundary_dim, boundary_children, ichild);
-      /* find owners of this child */
-      t8_forest_element_owners_at_boundary (forest, gtreeid, boundary_children[ichild], eclass, boundary_dim, child_boundary, owners);
-    }
-    scheme->element_destroy (eclass, num_children, boundary_children);
-    T8_FREE (boundary_children);
+  /* TODO: If first_owner and last_owner are consecutive non-empty ranks, both own leaves at the boundary
+   * and we could stop here. */
+  T8_ASSERT (scheme->element_get_level (eclass, element) < t8_forest_get_maxlevel (forest));
+  /* The element has different owners at the boundary, we continue with its children at the boundary. */
+  const int num_children = scheme->element_get_num_boundary_children (eclass, element, bdy_dim, bdy_id);
+  t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
+  int *child_bdy_ids = T8_ALLOC (int, num_children);
+  scheme->element_new (eclass, num_children, children);
+  scheme->element_get_children_at_boundary (eclass, element, bdy_dim, bdy_id, children, num_children, child_bdy_ids);
+  for (int ichild = 0; ichild < num_children; ichild++) {
+    t8_forest_element_owners_at_boundary_recursion (forest, gtreeid, children[ichild], eclass, bdy_dim,
+                                                    child_bdy_ids[ichild], owners, first_owner, last_owner);
   }
-
-
+  scheme->element_destroy (eclass, num_children, children);
+  T8_FREE (children);
+  T8_FREE (child_bdy_ids);
 }
 
+void
+t8_forest_element_owners_at_boundary (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
+                                      t8_eclass_t eclass, int bdy_dim, int bdy_id, sc_array_t *owners)
+{
+  int lower_bound = 0;
+  int upper_bound = forest->mpisize - 1;
+  if (owners->elem_count > 0) {
+    /* The first and second entry are bounds for the owners */
+    lower_bound = *(int *) sc_array_index (owners, 0);
+    upper_bound = *(int *) sc_array_index (owners, 1);
+    sc_array_resize (owners, 0);
+  }
+  T8_ASSERT (0 <= lower_bound && upper_bound < forest->mpisize);
+  if (lower_bound == upper_bound) {
+    /* There is no need to search, the owner is unique */
+    *(int *) sc_array_push (owners) = lower_bound;
+    return;
+  }
+  if (lower_bound > upper_bound) {
+    /* There is no owner */
+    return;
+  }
+  t8_forest_element_owners_at_boundary_recursion (forest, gtreeid, element, eclass, bdy_dim, bdy_id, owners,
+                                                  lower_bound, upper_bound);
+}
 
+void
+t8_forest_element_owners_at_boundary_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
+                                             t8_eclass_t eclass, int bdy_dim, int bdy_id, int *lower, int *upper)
+{
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  t8_element_t *first_desc, *last_desc;
+
+  if (*lower >= *upper) {
+    /* Either there is no owner or it is unique. */
+    return;
+  }
+  scheme->element_new (eclass, 1, &first_desc);
+  scheme->element_get_first_descendant_boundary (eclass, element, bdy_dim, bdy_id, first_desc, forest->maxlevel);
+  scheme->element_new (eclass, 1, &last_desc);
+  scheme->element_get_last_descendant_boundary (eclass, element, bdy_dim, bdy_id, last_desc, forest->maxlevel);
+  *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc, eclass, *lower, *upper, *lower, 1);
+  *upper = t8_forest_element_find_owner_ext (forest, gtreeid, last_desc, eclass, *lower, *upper, *upper, 1);
+  scheme->element_destroy (eclass, 1, &first_desc);
+  scheme->element_destroy (eclass, 1, &last_desc);
+}
+
+/* Append the integers of one array to another */
+static void
+t8_forest_append_owners (sc_array_t *owners, sc_array_t *more_owners)
+{
+  for (size_t iowner = 0; iowner < more_owners->elem_count; iowner++) {
+    *(int *) sc_array_push (owners) = *(int *) sc_array_index (more_owners, iowner);
+  }
+}
+
+/* Compute the neighbors of the same level of an element at a boundary inside the root.
+ * neighs and neigh_bdy_ids must have get_max_num_boundary_neighbors entries. Returns the number of neighbors. */
+static int
+t8_forest_element_boundary_neighbors_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                             int bdy_dim, int bdy_id, t8_element_t **neighs, int *neigh_bdy_ids)
+{
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
+  return scheme->element_get_boundary_neighbors_inside (eclass, element, bdy_dim, bdy_id, neighs, neigh_bdy_ids);
+}
+
+/* Recursively find all owners of descendants of an element that touch a boundary of the element with a boundary
+ * of dimension at least min_dim. If the element has a unique owner, it is the only one. Otherwise we continue with
+ * the children whose intersection with the boundary has dimension at least min_dim, in SFC order, so that the
+ * owners are added in ascending order. These children may touch the boundary in a part that is not a boundary of
+ * the element. lower_bound and upper_bound are bounds for the owners. */
+static void
+t8_forest_element_owners_touching_boundary_recursion (t8_forest_t forest, t8_gloidx_t gtreeid,
+                                                      const t8_element_t *element, t8_eclass_t eclass, int bdy_dim,
+                                                      int bdy_id, int min_dim, sc_array_t *owners, int lower_bound,
+                                                      int upper_bound)
+{
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  int lower = lower_bound, upper = upper_bound;
+  t8_forest_element_owners_bounds (forest, gtreeid, element, eclass, &lower, &upper);
+  T8_ASSERT (lower <= upper);
+
+  if (lower == upper) {
+    /* The element has a unique owner, which owns the leaves at the boundary */
+    const int last_owner_entry = owners->elem_count > 0 ? *(int *) sc_array_index (owners, owners->elem_count - 1) : -1;
+    if (lower > last_owner_entry) {
+      *(int *) sc_array_push (owners) = lower;
+    }
+    return;
+  }
+  T8_ASSERT (scheme->element_get_level (eclass, element) < t8_forest_get_maxlevel (forest));
+  const int num_children = scheme->element_get_num_boundary_touching_children (eclass, element, bdy_dim, bdy_id);
+  t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
+  int *child_bdy_dims = T8_ALLOC (int, num_children);
+  int *child_bdy_ids = T8_ALLOC (int, num_children);
+  scheme->element_new (eclass, num_children, children);
+  scheme->element_get_children_touching_boundary (eclass, element, bdy_dim, bdy_id, children, num_children,
+                                                  child_bdy_dims, child_bdy_ids);
+  for (int ichild = 0; ichild < num_children; ichild++) {
+    if (child_bdy_dims[ichild] >= min_dim) {
+      t8_forest_element_owners_touching_boundary_recursion (forest, gtreeid, children[ichild], eclass,
+                                                            child_bdy_dims[ichild], child_bdy_ids[ichild], min_dim,
+                                                            owners, lower, upper);
+    }
+  }
+  scheme->element_destroy (eclass, num_children, children);
+  T8_FREE (children);
+  T8_FREE (child_bdy_dims);
+  T8_FREE (child_bdy_ids);
+}
+
+void
+t8_forest_element_owners_touching_boundary (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
+                                            t8_eclass_t eclass, int bdy_dim, int bdy_id, int min_dim,
+                                            sc_array_t *owners)
+{
+  T8_ASSERT (0 <= min_dim && min_dim <= bdy_dim);
+  sc_array_resize (owners, 0);
+  t8_forest_element_owners_touching_boundary_recursion (forest, gtreeid, element, eclass, bdy_dim, bdy_id, min_dim,
+                                                        owners, 0, forest->mpisize - 1);
+}
+
+void
+t8_forest_element_owners_at_neigh_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                            int bdy_dim, int bdy_id, int min_dim, sc_array_t *owners)
+{
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
+  const int max_neighbors = scheme->get_max_num_boundary_neighbors (eclass);
+  t8_element_t **neighs = T8_ALLOC (t8_element_t *, max_neighbors);
+  int *neigh_bdy_ids = T8_ALLOC (int, max_neighbors);
+  sc_array_t neigh_owners;
+
+  scheme->element_new (eclass, max_neighbors, neighs);
+  sc_array_init (&neigh_owners, sizeof (int));
+  sc_array_resize (owners, 0);
+  const int num_neighbors
+    = t8_forest_element_boundary_neighbors_inside (forest, ltreeid, element, bdy_dim, bdy_id, neighs, neigh_bdy_ids);
+  for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
+    t8_forest_element_owners_touching_boundary (forest, gtreeid, neighs[ineigh], eclass, bdy_dim,
+                                                neigh_bdy_ids[ineigh], min_dim, &neigh_owners);
+    t8_forest_append_owners (owners, &neigh_owners);
+  }
+  if (num_neighbors == 0 && bdy_dim == t8_eclass_to_dimension[eclass] - 1) {
+    /* The face neighbor lies outside of the root, possibly in another tree. The boundaries of dimension
+     * dim - 1 are the faces, with the same numbering.
+     * TODO: Leaves of the face neighbor that touch the face in a lower dimension only. */
+    sc_array_resize (&neigh_owners, 0);
+    t8_forest_element_owners_at_neigh_face (forest, ltreeid, element, bdy_id, &neigh_owners);
+    t8_forest_append_owners (owners, &neigh_owners);
+  }
+  /* TODO: Neighbors outside of the root at boundaries of lower dimension (tree boundaries) */
+  /* The owners of the different neighbors overlap, sort them and remove duplicates */
+  sc_array_sort (owners, sc_int_compare);
+  sc_array_uniq (owners, sc_int_compare);
+
+  sc_array_reset (&neigh_owners);
+  scheme->element_destroy (eclass, max_neighbors, neighs);
+  T8_FREE (neighs);
+  T8_FREE (neigh_bdy_ids);
+}
+
+void
+t8_forest_element_owners_at_neigh_boundary_bounds (t8_forest_t forest, t8_locidx_t ltreeid,
+                                                   const t8_element_t *element, int bdy_dim, int bdy_id, int *lower,
+                                                   int *upper)
+{
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
+  const int max_neighbors = scheme->get_max_num_boundary_neighbors (eclass);
+  t8_element_t **neighs = T8_ALLOC (t8_element_t *, max_neighbors);
+  int *neigh_bdy_ids = T8_ALLOC (int, max_neighbors);
+  /* The union of the bounds of all neighbors, empty if lower > upper */
+  int union_lower = 1, union_upper = 0;
+
+  scheme->element_new (eclass, max_neighbors, neighs);
+  const int num_neighbors
+    = t8_forest_element_boundary_neighbors_inside (forest, ltreeid, element, bdy_dim, bdy_id, neighs, neigh_bdy_ids);
+  for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
+    /* Bounds for the owners of the whole neighbor, which contain the owners touching any of its boundaries */
+    int neigh_lower = *lower, neigh_upper = *upper;
+    t8_forest_element_owners_bounds (forest, gtreeid, neighs[ineigh], eclass, &neigh_lower, &neigh_upper);
+    if (union_lower > union_upper) {
+      union_lower = neigh_lower;
+      union_upper = neigh_upper;
+    }
+    else {
+      union_lower = SC_MIN (union_lower, neigh_lower);
+      union_upper = SC_MAX (union_upper, neigh_upper);
+    }
+  }
+  if (num_neighbors == 0 && bdy_dim == t8_eclass_to_dimension[eclass] - 1) {
+    /* The face neighbor lies outside of the root, possibly in another tree */
+    union_lower = *lower;
+    union_upper = *upper;
+    t8_forest_element_owners_at_neigh_face_bounds (forest, ltreeid, element, bdy_id, &union_lower, &union_upper);
+  }
+  *lower = union_lower;
+  *upper = union_upper;
+  scheme->element_destroy (eclass, max_neighbors, neighs);
+  T8_FREE (neighs);
+  T8_FREE (neigh_bdy_ids);
+}
 
 /* Recursively find all owners of descendants of a given element that touch a given face.
  * We do this by constructing the first and last possible descendants of the element that touch the face.
@@ -2981,11 +3182,14 @@ void
 t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  /* We currently only support face ghosts or vertex ghosts on a hardcoded coarse mesh */
-  SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES || (ghost_type == T8_GHOST_VERTICES),
-                  "Only face-neighbors and vertex-neighbors on a single tree are supported.\n");
+  /* Edge and vertex ghosts are only supported for schemes with boundaries (standalone), and across trees
+   * only at faces */
+  SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES || ghost_type == T8_GHOST_EDGES
+                    || ghost_type == T8_GHOST_VERTICES,
+                  "Invalid ghost type.\n");
   SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3, "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
-  SC_CHECK_ABORT (ghost_type != T8_GHOST_VERTICES || ghost_version == 3, "vertex ghosts only supported in version 3.");
+  SC_CHECK_ABORT (ghost_type == T8_GHOST_FACES || ghost_version == 3,
+                  "Edge and vertex ghosts are only supported in version 3.");
 
   if (ghost_type == T8_GHOST_NONE) {
     /* none type disables ghost */
