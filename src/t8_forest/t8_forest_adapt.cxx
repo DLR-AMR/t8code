@@ -430,7 +430,7 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->incomplete_trees == -1);
   /* TODO: Allocate memory for the trees of forest.
    * Will we do this here or in an extra function? */
-  T8_ASSERT (forest->trees->elem_count == forest_from->trees->elem_count);
+  T8_ASSERT (forest->trees.size () == forest_from->trees.size ());
 
   if (forest->set_adapt_recursive) {
     if (t8_scheme_has_subelement_scheme (t8_forest_get_scheme (forest_from))) {
