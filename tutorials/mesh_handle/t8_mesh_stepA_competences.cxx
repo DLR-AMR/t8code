@@ -49,7 +49,7 @@
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constrain the template parameters to only allow mesh handle classes. */
 #include <t8_vector/t8_vec.hxx>     /** t8code vector dataclass. */
-#include <cstring>
+#include <vector>
 
 using namespace t8_mesh_handle; /** Using the namespace to avoid the t8_mesh_handle:: prefix everywhere and shorten the code. */
 
@@ -217,24 +217,18 @@ main (int argc, char** argv)
     demonstrate_custom_competence (*custom_mesh);
 
     /* Collect the squared volume of each local element (computed by our custom competence) for the vtk output. */
-    double* squared_volumes = T8_ALLOC (double, custom_mesh->get_num_local_elements ());
-    int ielem = 0;
+    std::vector<double> squared_volumes;
+    squared_volumes.reserve (custom_mesh->get_num_local_elements ());
     for (const auto& elem : *custom_mesh) {
-      squared_volumes[ielem++] = elem.get_squared_volume ();
+      squared_volumes.push_back (elem.get_squared_volume ());
     }
 
-    /* Wrap the data in a vtk data field, one scalar value per element. */
-    t8_vtk_data_field_t vtk_data;
-    vtk_data.type = T8_VTK_SCALAR;
-    strcpy (vtk_data.description, "Squared volume");
-    vtk_data.data = squared_volumes;
-
-    /* Output the custom competence data to vtu. */
-    write_mesh_to_vtk_ext (*custom_mesh, prefix_mesh_with_data, 1, &vtk_data);
+    /* Output the custom competence data to vtu.
+     * The data field is given by its name and its values, one scalar value per element. */
+    t8_mesh_handle::write_mesh_to_vtk_ext_data (*custom_mesh, prefix_mesh_with_data,
+                                                { { "Squared volume", squared_volumes } });
     t8_global_productionf (" [mesh_stepA] Wrote mesh and squared volume data to %s*.\n", prefix_mesh_with_data);
 
-    /* Free the memory. */
-    T8_FREE (squared_volumes);
   } /* End of mesh scope. */
   /* Finalizing. */
   sc_finalize ();
