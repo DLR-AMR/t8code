@@ -52,6 +52,8 @@ struct t8_subelement_scheme_common:
  public:
   /** The subelement type used by this subelement scheme defined by a trait. */
   using TSubelementType = typename t8_subelement_traits<TSubelementSchemeSpecialization>::SubelementType;
+  /** The type of the elements of this scheme. */
+  using element_type = TSubelementType;
 
  protected:
   size_t element_size;  /**< The size in bytes of an element. */

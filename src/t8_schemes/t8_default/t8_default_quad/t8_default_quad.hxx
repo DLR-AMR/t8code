@@ -82,8 +82,11 @@ typedef p4est_quadrant_t t8_pquad_t;
 struct t8_default_scheme_quad: public t8_default_scheme_common<T8_ECLASS_QUAD, t8_default_scheme_quad>
 {
  public:
+  /** The type of the elements of this scheme. */
+  using element_type = t8_pquad_t;
+
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_quad () noexcept: t8_default_scheme_common (sizeof (t8_pquad_t)) {};
+  t8_default_scheme_quad () noexcept: t8_default_scheme_common (sizeof (element_type)) {};
 
   /** Destructor */
   ~t8_default_scheme_quad () {};

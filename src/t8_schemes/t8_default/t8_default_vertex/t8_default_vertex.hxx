@@ -38,8 +38,11 @@ struct t8_scheme;
 struct t8_default_scheme_vertex: public t8_default_scheme_common<T8_ECLASS_VERTEX, t8_default_scheme_vertex>
 {
  public:
+  /** The type of the elements of this scheme. */
+  using element_type = t8_dvertex_t;
+
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_vertex () noexcept: t8_default_scheme_common (sizeof (t8_dvertex_t)) {};
+  t8_default_scheme_vertex () noexcept: t8_default_scheme_common (sizeof (element_type)) {};
 
   /** Destructor */
   ~t8_default_scheme_vertex () {};

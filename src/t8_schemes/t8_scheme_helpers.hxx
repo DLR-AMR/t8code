@@ -30,6 +30,7 @@
 #include <t8_element/t8_element.h>
 #include <t8_types/t8_crtp.hxx>
 #include <t8_eclass/t8_eclass.h>
+#include <type_traits>
 
 /**
   * Class which provides helper functions and default implementations for different schemes.
@@ -44,7 +45,12 @@ struct t8_scheme_helpers: public t8_crtp_basic<TUnderlyingEclassScheme>
    * Default constructor which is only accessible by derived classes.
    * This class cannot be constructed on its own.
    */
-  t8_scheme_helpers () noexcept {};
+  t8_scheme_helpers () noexcept
+  {
+    /* Elements are copied byte-wise, e.g. for MPI communication, so they must be trivially copyable. */
+    static_assert (std::is_trivially_copyable_v<typename TUnderlyingEclassScheme::element_type>,
+                   "The element type of a scheme must be trivially copyable.");
+  };
 
  public:
   /** Return the tree dimension of this scheme.

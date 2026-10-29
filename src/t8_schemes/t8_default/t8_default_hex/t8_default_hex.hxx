@@ -45,8 +45,11 @@ typedef p8est_quadrant_t t8_phex_t;
 struct t8_default_scheme_hex: public t8_default_scheme_common<T8_ECLASS_HEX, t8_default_scheme_hex>
 {
  public:
+  /** The type of the elements of this scheme. */
+  using element_type = t8_phex_t;
+
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_hex () noexcept: t8_default_scheme_common (sizeof (t8_phex_t)) {};
+  t8_default_scheme_hex () noexcept: t8_default_scheme_common (sizeof (element_type)) {};
 
   /** Destructor */
   ~t8_default_scheme_hex () {};

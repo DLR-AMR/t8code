@@ -43,8 +43,11 @@ struct t8_scheme;
 struct t8_default_scheme_pyramid: public t8_default_scheme_common<T8_ECLASS_PYRAMID, t8_default_scheme_pyramid>
 {
  public:
+  /** The type of the elements of this scheme. */
+  using element_type = t8_dpyramid_t;
+
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_pyramid () noexcept: t8_default_scheme_common (sizeof (t8_dpyramid_t)) {};
+  t8_default_scheme_pyramid () noexcept: t8_default_scheme_common (sizeof (element_type)) {};
 
   /** Destructor */
   ~t8_default_scheme_pyramid () {};

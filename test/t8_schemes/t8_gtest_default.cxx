@@ -35,7 +35,11 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
+#include <t8_schemes/t8_scheme.hxx>
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
+#include <utility>
+#include <variant>
 
 TEST (gtest_default_scheme, is_default)
 {
@@ -46,3 +50,57 @@ TEST (gtest_default_scheme, is_default)
   }
   scheme->unref ();
 }
+
+/** The eclass scheme at position \a TIndex of \ref t8_scheme::scheme_var. */
+template <size_t TIndex>
+using t8_test_eclass_scheme = std::variant_alternative_t<TIndex, t8_scheme::scheme_var>;
+
+/** Get the size of the element type of the eclass scheme that \a scheme uses for \a tree_class.
+ * \param [in] scheme     The scheme.
+ * \param [in] tree_class The eclass of the current tree.
+ * \tparam TIndices       The indices of all variant alternatives.
+ * \return                The size of the element type, or 0 if no alternative of
+ *                        \ref t8_scheme::scheme_var matches.
+ */
+template <size_t... TIndices>
+static size_t
+t8_test_get_element_type_size (const t8_scheme *scheme, const t8_eclass_t tree_class, std::index_sequence<TIndices...>)
+{
+  /** The size of the element type, 0 as long as no matching eclass scheme was found. */
+  size_t element_type_size = 0;
+  ((scheme->check_eclass_scheme_type<t8_test_eclass_scheme<TIndices>> (tree_class)
+    && (element_type_size = sizeof (typename t8_test_eclass_scheme<TIndices>::element_type), true))
+   || ...);
+  return element_type_size;
+}
+
+struct element_type: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
+ protected:
+  void
+  SetUp () override
+  {
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (GetParam ());
+  }
+  void
+  TearDown () override
+  {
+    scheme->unref ();
+  }
+
+  const t8_scheme *scheme;
+  t8_eclass_t eclass;
+};
+
+/* The element size of each eclass scheme must match the size of its element type. */
+TEST_P (element_type, size_matches_element_size)
+{
+  const size_t element_type_size = t8_test_get_element_type_size (
+    scheme, eclass, std::make_index_sequence<std::variant_size_v<t8_scheme::scheme_var>> {});
+  EXPECT_NE (element_type_size, 0u);
+  EXPECT_EQ (scheme->get_element_size (eclass), element_type_size);
+}
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_type, element_type, AllSchemes, print_all_schemes);

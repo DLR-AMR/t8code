@@ -45,8 +45,11 @@ struct t8_scheme;
 struct t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, t8_default_scheme_prism>
 {
  public:
+  /** The type of the elements of this scheme. */
+  using element_type = t8_dprism_t;
+
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_prism () noexcept: t8_default_scheme_common (sizeof (t8_dprism_t)) {};
+  t8_default_scheme_prism () noexcept: t8_default_scheme_common (sizeof (element_type)) {};
 
   /** Destructor */
   ~t8_default_scheme_prism () {};

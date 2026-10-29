@@ -40,10 +40,13 @@ template <t8_eclass TEclass>
 struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_scheme<TEclass>>
 {
  public:
+  /** The type of the elements of this scheme. */
+  using element_type = t8_standalone_element<TEclass>;
+
   /** Constructor
   */
   t8_standalone_scheme () noexcept
-    : element_size (sizeof (t8_standalone_element<TEclass>)), scheme_context (sc_mempool_new (element_size)) {};
+    : element_size (sizeof (element_type)), scheme_context (sc_mempool_new (element_size)) {};
 
  protected:
   size_t element_size;  /**< The size in bytes of an element of class \a eclass */
@@ -113,7 +116,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   static constexpr size_t
   get_element_size (void) noexcept
   {
-    return sizeof (t8_standalone_element<TEclass>);
+    return sizeof (element_type);
   }
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
