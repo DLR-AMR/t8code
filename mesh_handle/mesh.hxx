@@ -242,13 +242,16 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   }
 
   /** Check if the mesh is conformal, i.e. no element has hanging nodes on any of its faces.
-   *  The check uses \ref element::is_conformal and thus uses cached neighbors.
+   *  The check uses \ref element::has_hanging_node and thus uses cached neighbors.
    *  This function is collective and has to be called on all processes.
    *  \return True if the mesh is conformal on all processes, false otherwise.
    */
   bool
   is_conformal () const
   {
+    if (this->get_dimension () <= 1) {
+      return true;  // 1D or lower-dimensional meshes are always conformal.
+    }
     SC_CHECK_ABORT (!t8_forest_has_subelements (m_forest),
                     "The conformity check is not possible for meshes with subelements.");
     const bool locally_conformal
