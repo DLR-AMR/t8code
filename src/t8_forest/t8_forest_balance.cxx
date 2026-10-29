@@ -370,6 +370,12 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   T8_ASSERT (t8_forest_is_balanced (forest_temp));
   /* Forest_temp is now balanced, we copy its trees and elements to forest */
   t8_forest_copy_trees (forest, forest_temp, 1);
+  if (forest->cmesh != forest_temp->cmesh) {
+    /* Repartitioning the forest also repartitioned a partitioned cmesh, which has to match the trees */
+    t8_cmesh_ref (forest_temp->cmesh);
+    t8_cmesh_unref (&forest->cmesh);
+    forest->cmesh = forest_temp->cmesh;
+  }
   /* TODO: Also copy ghost elements if ghost creation is set */
 
   t8_log_indent_pop ();
