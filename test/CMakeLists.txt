@@ -46,10 +46,14 @@ function( add_t8_test )
 
     # Check if test is a Fortran or mesh handle file.
     string( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file )
+    string( FIND ${ADD_T8_TEST_NAME} "cmc" is_cmc_file )
     string( FIND ${TEST_BUILD_DIR} "mesh_handle" is_mesh_handle_file )
 
     if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI )
         target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE MPI::MPI_Fortran )
+    endif ()
+    if ( (${is_cmc_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_CMC )
+        target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE cmc::cmc )
     endif ()
     if ( (${is_mesh_handle_file} GREATER_EQUAL 0) )
         target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8_MESH_HANDLE )
@@ -195,6 +199,10 @@ add_t8_cpp_test( NAME t8_gtest_point_inside_serial                      SOURCES 
 add_t8_cpp_test( NAME t8_gtest_vtk_writer_parallel          SOURCES t8_IO/t8_gtest_vtk_writer.cxx )
 if( T8CODE_ENABLE_VTK )
     add_t8_cpp_test( NAME t8_gtest_vtk_reader_parallel      SOURCES t8_IO/t8_gtest_vtk_reader.cxx )
+endif()
+
+if( T8CODE_ENABLE_CMC )
+    add_t8_cpp_test( NAME t8_gtest_cmc_linkage                  SOURCES t8_IO/t8_gtest_cmc_linkage.cxx )
 endif()
 
 add_t8_cpp_test( NAME t8_gtest_nca_serial                   SOURCES t8_schemes/t8_gtest_nca.cxx )
