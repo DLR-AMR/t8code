@@ -32,9 +32,34 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <concepts>
+#include <algorithm>
+#include <ranges>
 
 namespace t8_mesh_handle
 {
+// --- Write mesh to vtk basic. ---
+/**
+ * Write the mesh in a parallel vtu format. Writes one master
+ * .pvtu file and each process writes in its own .vtu file.
+ * If linked, the VTK API is used.
+ * If the VTK library is not linked, an ASCII file is written.
+ * This function writes the elements, level, mpirank, element id and the tree id of the underlying forest as data.
+ * This function is collective and must be called on each process.
+ * For more options use \see write_mesh_to_vtk_ext.
+ * \param [in] mesh       The mesh to write.
+ * \param [in] fileprefix The prefix of the files where the vtk will be stored.
+ *             The master file is then fileprefix.pvtu and the process with rank r writes in the file fileprefix_r.vtu.
+ * \return  True if successful, false if not (process local).
+ */
+template <T8MeshType TMeshClass>
+int
+write_mesh_to_vtk (TMeshClass &mesh, const char *fileprefix)
+{
+  return t8_forest_write_vtk (mesh.get_forest (), fileprefix);
+}
+
+// --- Write mesh to vtk extended. ---
 /**
  * Write the mesh in a parallel vtu format. Extended version.
  * See \see write_mesh_to_vtk for the standard version of this function.
@@ -75,10 +100,15 @@ write_mesh_to_vtk_ext (TMeshClass &mesh, const char *fileprefix, const int num_d
                                   write_element_id, write_ghosts, write_curved, do_not_use_API, num_data, data);
 }
 
-/** A named per element data field for the vtk output, see \ref write_mesh_to_vtk_ext_data.
- *  \tparam TValue The value type per element: double for scalar fields and t8_3D_vec for vector fields.
- */
+// --- Write mesh to vtk with data fields. ---
+
 template <typename TValueType>
+concept T8VtkDataValue = std::same_as<TValueType, double> || std::same_as<TValueType, t8_3D_vec>;
+
+/** A named per element data field for the vtk output, see \ref write_mesh_to_vtk_ext_data.
+ *  \tparam TValueType The value type per element: double for scalar fields and t8_3D_vec for vector fields.
+ */
+template <T8VtkDataValue TValueType>
 struct vtk_data_field
 {
   std::string name;                   /**< The name of the field as it should be written to the file. */
@@ -100,7 +130,7 @@ namespace detail
  *  \param [out] buffer The buffer for the values. It has to stay alive until the vtk output is written.
  *  \param [out] vtk_field The converted data field pointing to \a buffer.
 */
-template <T8MeshType TMeshClass, typename TValueType>
+template <T8MeshType TMeshClass, T8VtkDataValue TValueType>
 void
 to_vtk_data_field (const TMeshClass &mesh, const vtk_data_field<TValueType> &field, bool write_ghosts,
                    std::vector<double> &buffer, t8_vtk_data_field_t &vtk_field)
@@ -110,29 +140,33 @@ to_vtk_data_field (const TMeshClass &mesh, const vtk_data_field<TValueType> &fie
   const t8_locidx_t num_ghosts = mesh.get_num_ghosts ();
   T8_ASSERT (field.values.size () == static_cast<size_t> (num_local_elements)
              || field.values.size () == static_cast<size_t> (num_local_elements + num_ghosts));
-  for (const TValueType &value : field.values) {
-    if constexpr (is_scalar) {
-      buffer.push_back (value);
-    }
-    else {
-      buffer.insert (buffer.end (), value.begin (), value.end ());
-    }
-  }
-  /** The vtk writer expects exactly one value per cell. If ghosts are written, but no values are given,
-    * all of them are set to zero. If ghosts are not written, the values are dropped.
-  */
   const t8_locidx_t num_cells = write_ghosts ? num_local_elements + num_ghosts : num_local_elements;
-  buffer.resize (static_cast<size_t> (num_cells) * (is_scalar ? 1 : 3), 0.0);
+  const size_t target_elements = static_cast<size_t> (num_cells);
+  const size_t target_size = target_elements * (is_scalar ? 1 : 3);
+  buffer.assign (target_size, 0.0);
+  const size_t elements_to_copy = std::min (field.values.size (), target_elements);
+  auto values_to_copy = field.values | std::views::take (elements_to_copy);
+  if constexpr (is_scalar) {
+    std::ranges::copy (values_to_copy, buffer.begin ());
+  }
+  else {
+    auto flattened = values_to_copy | std::views::join;
+    std::ranges::copy (flattened, buffer.begin ());
+  }
 
   vtk_field.type = is_scalar ? T8_VTK_SCALAR : T8_VTK_VECTOR;
-  snprintf (vtk_field.description, BUFSIZ, "%s", field.name.c_str ());
+  SC_CHECK_ABORTF (field.name.size () < sizeof (vtk_field.description),
+                   "Field name '%s' exceeds the maximum allowed length of %zu characters.", field.name.c_str (),
+                   sizeof (vtk_field.description) - 1);
+  auto copy_result = std::ranges::copy (field.name, vtk_field.description);
+  *copy_result.out = '\0';
   vtk_field.data = buffer.data ();
 }
 } /* Namespace detail */
 
 /**
  * Write the mesh in a parallel vtu format together with user-defined per element data fields.
- * Convenience wrapper around \see write_mesh_to_vtk_ext that takes the data as named std::vectors,
+ * Convenience wrapper around \ref write_mesh_to_vtk_ext that takes the data as named std::vectors,
  * so there is no need to allocate arrays or to fill t8_vtk_data_field_t structures manually.
  * \param [in] mesh       The mesh to write.
  * \param [in] fileprefix The prefix of the files where the vtk will be stored.
@@ -170,26 +204,6 @@ write_mesh_to_vtk_ext_data (TMeshClass &mesh, const char *fileprefix,
   }
   return write_mesh_to_vtk_ext (mesh, fileprefix, num_data, vtk_data.data (), write_treeid, write_mpirank, write_level,
                                 write_element_id, write_ghosts, write_curved, do_not_use_API);
-}
-
-/**
- * Write the mesh in a parallel vtu format. Writes one master
- * .pvtu file and each process writes in its own .vtu file.
- * If linked, the VTK API is used.
- * If the VTK library is not linked, an ASCII file is written.
- * This function writes the elements, level, mpirank, element id and the tree id of the underlying forest as data.
- * This function is collective and must be called on each process.
- * For more options use \see write_mesh_to_vtk_ext.
- * \param [in] mesh       The mesh to write.
- * \param [in] fileprefix The prefix of the files where the vtk will be stored.
- *             The master file is then fileprefix.pvtu and the process with rank r writes in the file fileprefix_r.vtu.
- * \return  True if successful, false if not (process local).
- */
-template <T8MeshType TMeshClass>
-int
-write_mesh_to_vtk (TMeshClass &mesh, const char *fileprefix)
-{
-  return t8_forest_write_vtk (mesh.get_forest (), fileprefix);
 }
 
 }  // namespace t8_mesh_handle
