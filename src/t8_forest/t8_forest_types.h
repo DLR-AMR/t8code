@@ -36,6 +36,9 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 typedef struct t8_profile t8_profile_t; /**< Defined below */
 
@@ -196,9 +199,63 @@ typedef struct t8_profile
 
 } t8_profile_struct_t;
 
+/** The information stored for the ghost trees.
+ * A ghost tree owns its elements. It is move-only, such that this ownership is never duplicated.
+ * \note The elements are allocated by the scheme of \a elements. Hence, a ghost tree must be destroyed
+ *       before this scheme is.
+ */
+struct t8_ghost_tree
+{
+  t8_gloidx_t global_id = 0;      /**< global id of the tree */
+  t8_locidx_t element_offset = 0; /**< The count of all ghost elements in all smaller ghost trees */
+  t8_element_array_t elements {}; /**< The ghost elements of that tree */
+  t8_eclass_t eclass {};          /**< The trees element class */
+
+  /** Construct an empty ghost tree. Its \a elements are not initialized. */
+  t8_ghost_tree () = default;
+
+  /** Move constructor. Takes over the elements of \a other, which is left without any.
+   * \param [in,out] other The ghost tree to move from.
+   */
+  t8_ghost_tree (t8_ghost_tree &&other) noexcept
+    : global_id (other.global_id), element_offset (other.element_offset), elements (std::exchange (other.elements, {})),
+      eclass (other.eclass)
+  {
+  }
+
+  /** Copying is forbidden, since the ghost tree owns its elements. */
+  t8_ghost_tree (const t8_ghost_tree &) = delete;
+  /** Copying is forbidden, since the ghost tree owns its elements. */
+  t8_ghost_tree &
+  operator= (const t8_ghost_tree &)
+    = delete;
+  /** Move assignment is not needed for storing ghost trees in a std::vector. */
+  t8_ghost_tree &
+  operator= (t8_ghost_tree &&)
+    = delete;
+
+  /** Destructor. Frees the elements. */
+  ~t8_ghost_tree ()
+  {
+    /* A ghost tree whose elements were never initialized (or that was moved from) owns nothing. */
+    if (elements.scheme != nullptr) {
+      t8_element_array_reset (&elements);
+    }
+  }
+};
+
+/** The information stored for each process from which we receive ghost elements. */
+struct t8_ghost_process_offset
+{
+  t8_locidx_t ghost_offset; /**< The number of ghost elements for all previous ranks */
+  size_t tree_index;        /**< index of first ghost tree of this process in ghost_trees */
+  size_t first_element;     /**< the index of the first element in the elements array of the ghost tree. */
+};
+
 /**
  * This struct stores various information about a forest's ghost elements and ghost trees.
- *
+ * Since it is allocated with T8_ALLOC_ZERO, its C++ members are constructed in t8_forest_ghost_init and destroyed
+ * in t8_forest_ghost_reset explicitly.
  */
 typedef struct t8_forest_ghost
 {
@@ -207,25 +264,17 @@ typedef struct t8_forest_ghost
   t8_locidx_t num_ghosts_elements; /**< The count of non-local ghost leaf elements */
   t8_locidx_t num_remote_elements; /**< The count of local leaf elements that are ghost to another process. */
 
-  sc_array_t *ghost_trees;              /**< ghost tree data:
-                                                global_id.
-                                                eclass.
-                                                elements. In linear id order */
-  sc_hash_t *global_tree_to_ghost_tree; /**< Indexes into ghost_trees.
-                                                Given a global tree id I give the index
-                                                i such that the tree is in ghost_trees[i] */
-  sc_hash_t *process_offsets;           /**< Given a process, return the first ghost tree and
-                                                within it the first element of that process. */
-  sc_hash_array_t *remote_ghosts;       /**< array of local trees that have ghost elements for another process.
+  std::vector<t8_ghost_tree> ghost_trees; /**< ghost tree data: global_id, eclass, elements in linear id order. */
+  std::unordered_map<t8_gloidx_t, size_t>
+    global_tree_to_ghost_tree; /**< Given a global tree id, the index i such that the tree is in ghost_trees[i]. */
+  std::unordered_map<int, t8_ghost_process_offset>
+    process_offsets; /**< Given a process, the first ghost tree and within it the first element of that process. */
+  sc_hash_array_t *remote_ghosts;    /**< array of local trees that have ghost elements for another process.
                                                 for each tree an array of t8_element_t * of the local ghost elements.
                                                 Also an array of t8_locidx_t of the local indices of these elements
                                                 within the tree. It is a hash table, hashed with the rank of a remote
                                                 process. Sorted within each process by linear id. */
-  sc_array_t *remote_processes;         /**< The ranks of the processes for which local elements are ghost.
-                                                Array of int's. */
-
-  sc_mempool_t *glo_tree_mempool;    /**< The global tree memory pool. */
-  sc_mempool_t *proc_offset_mempool; /**< The process offset memory pool. */
+  std::vector<int> remote_processes; /**< The ranks of the processes for which local elements are ghost. */
 } t8_forest_ghost_struct_t;
 
 #endif /* ! T8_FOREST_TYPES_H */

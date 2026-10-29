@@ -32,66 +32,8 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
-
-/** The hash function for the global tree hash. As hash value we just return the global tree id.
- * \param [in] ghost_gtree_hash   A \ref t8_ghost_gtree_hash_t.
- * \param [in] data               Unused but needed for usage with sc_hash_new.
- * \return                        The global tree id of \a ghost_gtree_hash.
- */
-static unsigned
-t8_ghost_gtree_hash_function (const void *ghost_gtree_hash, [[maybe_unused]] const void *data)
-{
-  const t8_ghost_gtree_hash_t *object = (const t8_ghost_gtree_hash_t *) ghost_gtree_hash;
-
-  return (unsigned) object->global_id;
-}
-
-/** The equal function for two global tree hash objects.
- * Two \ref t8_ghost_gtree_hash_t are considered equal if the global tree ids are the same.
- * \param [in] ghost_gtreea   A \ref t8_ghost_gtree_hash_t.
- * \param [in] ghost_gtreeb   A \ref t8_ghost_gtree_hash_t.
- * \param [in] user           Unused but needed for usage with sc_hash_new.
- * \return                    True if and only if \a ghost_gtreea and \a ghost_gtreeb have the same global tree id.
- */
-static int
-t8_ghost_gtree_equal_function (const void *ghost_gtreea, const void *ghost_gtreeb, [[maybe_unused]] const void *user)
-{
-  const t8_ghost_gtree_hash_t *objecta = (const t8_ghost_gtree_hash_t *) ghost_gtreea;
-  const t8_ghost_gtree_hash_t *objectb = (const t8_ghost_gtree_hash_t *) ghost_gtreeb;
-
-  /* return true if and only if the global_ids are the same */
-  return objecta->global_id == objectb->global_id;
-}
-
-/** The hash function for the process_offsets hash table. The hash value is the process' mpirank.
- * \param [in] process_data   A \ref t8_ghost_process_hash_t.
- * \param [in] user_data      Unused but needed for usage with sc_hash_new.
- * \return                    The mpirank of \a process_data.
- */
-static unsigned
-t8_ghost_process_hash_function (const void *process_data, [[maybe_unused]] const void *user_data)
-{
-  const t8_ghost_process_hash_t *process = (const t8_ghost_process_hash_t *) process_data;
-
-  return process->mpirank;
-}
-
-/** The equal function for the process_offsets hash table.
- * Two entries are the same if their mpiranks are equal.
- * \param [in] process_dataa   A \ref t8_ghost_process_hash_t.
- * \param [in] process_datab   A \ref t8_ghost_process_hash_t.
- * \param [in] user            Unused but needed for usage with sc_hash_new.
- * \return                     True if and only if \a process_dataa and \a process_datab have the same mpirank.
- */
-static int
-t8_ghost_process_equal_function (const void *process_dataa, const void *process_datab,
-                                 [[maybe_unused]] const void *user)
-{
-  const t8_ghost_process_hash_t *processa = (const t8_ghost_process_hash_t *) process_dataa;
-  const t8_ghost_process_hash_t *processb = (const t8_ghost_process_hash_t *) process_datab;
-
-  return processa->mpirank == processb->mpirank;
-}
+#include <algorithm>
+#include <memory>
 
 /** The hash function for the remote_ghosts hash table. The hash value for an mpirank is just the rank.
  * \param [in] remote_data   A \ref t8_ghost_remote_t.
@@ -158,7 +100,6 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
   t8_element_t *elem_copy;
   sc_array_t *remote_array;
   size_t index, element_count;
-  int *remote_process_entry;
   int level, copy_level = 0;
 
   /* Get the tree's element class and the scheme */
@@ -184,8 +125,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
     /* initialize the remote_tree */
     t8_ghost_init_remote_tree (forest, gtreeid, remote_rank, tree_class, remote_tree);
     /* Since the rank is a new remote rank, we also add it to the remote ranks array */
-    remote_process_entry = (int *) sc_array_push (ghost->remote_processes);
-    *remote_process_entry = remote_rank;
+    ghost->remote_processes.push_back (remote_rank);
   }
   else {
     /* The remote rank already is contained in the remotes array at position index. */
@@ -251,23 +191,15 @@ t8_forest_ghost_init (t8_forest_ghost_t *pghost)
   /* initialize the reference counter */
   t8_refcount_init (&ghost->rc);
 
-  /* Allocate the trees array */
-  ghost->ghost_trees = sc_array_new (sizeof (t8_ghost_tree_t));
+  /* The ghost is allocated C-style, hence we construct its C++ members explicitly. */
+  std::construct_at (&ghost->ghost_trees);
+  std::construct_at (&ghost->global_tree_to_ghost_tree);
+  std::construct_at (&ghost->process_offsets);
+  std::construct_at (&ghost->remote_processes);
 
-  /* initialize the global_tree_to_ghost_tree hash table */
-  ghost->glo_tree_mempool = sc_mempool_new (sizeof (t8_ghost_gtree_hash_t));
-  ghost->global_tree_to_ghost_tree
-    = sc_hash_new (t8_ghost_gtree_hash_function, t8_ghost_gtree_equal_function, nullptr, nullptr);
-
-  /* initialize the process_offset hash table */
-  ghost->proc_offset_mempool = sc_mempool_new (sizeof (t8_ghost_process_hash_t));
-  ghost->process_offsets
-    = sc_hash_new (t8_ghost_process_hash_function, t8_ghost_process_equal_function, nullptr, nullptr);
   /* initialize the remote ghosts hash table */
   ghost->remote_ghosts = sc_hash_array_new (sizeof (t8_ghost_remote_t), t8_ghost_remote_hash_function,
                                             t8_ghost_remote_equal_function, nullptr);
-  /* initialize the remote processes array */
-  ghost->remote_processes = sc_array_new (sizeof (int));
 }
 
 t8_ghost_mpi_send_info_t *
@@ -285,15 +217,15 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
   int mpiret;
 
   /* Allocate a send_buffer for each remote rank */
-  num_remotes = ghost->remote_processes->elem_count;
+  num_remotes = ghost->remote_processes.size ();
   send_info = T8_ALLOC (t8_ghost_mpi_send_info_t, num_remotes);
   *requests = T8_ALLOC (sc_MPI_Request, num_remotes);
 
   /* Loop over all remote processes */
-  for (proc_index = 0; proc_index < (int) ghost->remote_processes->elem_count; proc_index++) {
+  for (proc_index = 0; proc_index < (int) ghost->remote_processes.size (); proc_index++) {
     current_send_info = send_info + proc_index;
     /* Get the rank of the current remote process. */
-    remote_rank = *(int *) sc_array_index_int (ghost->remote_processes, proc_index);
+    remote_rank = ghost->remote_processes[proc_index];
     t8_debugf ("Filling send buffer for process %i\n", remote_rank);
     /* initialize the send_info for the current rank */
     current_send_info->recv_rank = remote_rank;
@@ -397,7 +329,7 @@ t8_forest_ghost_send_end ([[maybe_unused]] t8_forest_t forest, t8_forest_ghost_t
   T8_ASSERT (ghost != nullptr);
 
   /* Get the number of remote processes */
-  num_remotes = ghost->remote_processes->elem_count;
+  num_remotes = ghost->remote_processes.size ();
 
   /* We wait for all communication to end. */
   mpiret = sc_MPI_Waitall (num_remotes, requests, sc_MPI_STATUSES_IGNORE);
@@ -468,14 +400,9 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
   t8_gloidx_t global_id;
   t8_eclass_t eclass;
   size_t num_elements, old_elem_count, ghosts_offset;
-  t8_ghost_gtree_hash_t *tree_hash, **pfound_tree, *found_tree;
-  t8_ghost_tree_t *ghost_tree;
+  t8_ghost_tree *ghost_tree;
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_element_t *element_insert;
-  t8_ghost_process_hash_t *process_hash;
-#if T8_ENABLE_DEBUG
-  int added_process;
-#endif
 
   bytes_read = 0;
   /* read the number of trees */
@@ -509,19 +436,17 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
 
     bytes_read += sizeof (size_t);
     bytes_read += T8_ADD_PADDING (bytes_read);
-    /* Search for the tree in the ghost_trees array */
-    tree_hash = (t8_ghost_gtree_hash_t *) sc_mempool_alloc (ghost->glo_tree_mempool);
-    tree_hash->global_id = global_id;
+    /* Search for the tree in the ghost_trees array. If the tree was not contained, it is the newest tree
+     * in the array and thus has as index the number of currently inserted trees. */
+    const auto [tree_entry, tree_inserted]
+      = ghost->global_tree_to_ghost_tree.try_emplace (global_id, ghost->ghost_trees.size ());
+    /** The index of the tree in the ghost_trees array. */
+    const size_t tree_index = tree_entry->second;
 
-    /* Get the scheme for this tree */
-    if (sc_hash_insert_unique (ghost->global_tree_to_ghost_tree, tree_hash, (void ***) &pfound_tree)) {
-      /* The tree was not stored already, tree_hash is now an entry in the hash table. */
-      /* If the tree was not contained, it is the newest tree in the array and
-       * thus has as index the number of currently inserted trees. */
-      tree_hash->index = ghost->ghost_trees->elem_count;
-      found_tree = tree_hash;
+    if (tree_inserted) {
+      /* The tree was not stored already. */
       /* We grow the array by one and initialize the entry */
-      ghost_tree = (t8_ghost_tree_t *) sc_array_push (ghost->ghost_trees);
+      ghost_tree = &ghost->ghost_trees.emplace_back ();
       ghost_tree->global_id = global_id;
       ghost_tree->eclass = eclass;
       /* Initialize the element array */
@@ -531,16 +456,11 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
       /* Compute the element offset of this new tree by adding the offset
        * of the previous tree to the element count of the previous tree. */
       ghost_tree->element_offset = *current_element_offset;
-      /* Allocate a new tree_hash for the next search */
       old_elem_count = 0;
-      tree_hash = (t8_ghost_gtree_hash_t *) sc_mempool_alloc (ghost->glo_tree_mempool);
     }
     else {
-      /* The entry was found in the trees array */
-      found_tree = *pfound_tree;
-      T8_ASSERT (found_tree->global_id == global_id);
-      /* Get a pointer to the tree */
-      ghost_tree = (t8_ghost_tree_t *) sc_array_index (ghost->ghost_trees, found_tree->index);
+      /* The entry was found in the trees array. Get a pointer to the tree */
+      ghost_tree = &ghost->ghost_trees[tree_index];
       T8_ASSERT (ghost_tree->eclass == eclass);
       T8_ASSERT (ghost_tree->global_id == global_id);
       T8_ASSERT (ghost_tree->elements.tree_class == eclass);
@@ -556,7 +476,7 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
     if (itree == 0) {
       /* We store the index of the first tree and the first element of this
        * rank */
-      first_tree_index = found_tree->index;
+      first_tree_index = tree_index;
       first_element_index = old_elem_count;
     }
     /* Insert the new elements */
@@ -569,19 +489,13 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
   T8_ASSERT (bytes_read == (size_t) recv_bytes);
   T8_FREE (recv_buffer);
 
-  /* At last we add the receiving rank to the ghosts process_offset hash table */
-  process_hash = (t8_ghost_process_hash_t *) sc_mempool_alloc (ghost->proc_offset_mempool);
-  process_hash->mpirank = recv_rank;
-  process_hash->tree_index = first_tree_index;
-  process_hash->first_element = first_element_index;
-  process_hash->ghost_offset = ghosts_offset;
-  /* Insert this rank into the hash table. We assert if the rank was not already contained. */
-#if T8_ENABLE_DEBUG
-  added_process =
-#else
-  (void)
-#endif
-    sc_hash_insert_unique (ghost->process_offsets, process_hash, nullptr);
+  /* At last we add the receiving rank to the ghosts process_offset hash table.
+   * We assert if the rank was not already contained. */
+  [[maybe_unused]] const bool added_process
+    = ghost->process_offsets
+        .try_emplace (recv_rank,
+                      t8_ghost_process_offset { (t8_locidx_t) ghosts_offset, first_tree_index, first_element_index })
+        .second;
   T8_ASSERT (added_process);
 }
 
@@ -637,7 +551,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
 
   comm = forest->mpicomm;
   /* Get the number of remote processes */
-  num_remotes = ghost->remote_processes->elem_count;
+  num_remotes = ghost->remote_processes.size ();
 
   if (num_remotes == 0) {
     /* There is nothing to do */
@@ -681,7 +595,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
 
     /* Sort the array of remote processes, such that the ranks are in
      * ascending order. */
-    sc_array_sort (ghost->remote_processes, sc_int_compare);
+    std::sort (ghost->remote_processes.begin (), ghost->remote_processes.end ());
 
     /* We build a hash table of all ranks from which we receive and their position
      * in the remote_processes array. */
@@ -691,7 +605,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
     recv_list_entries_hash = sc_hash_new (t8_recv_list_entry_hash, t8_recv_list_entry_equal, nullptr, nullptr);
 #endif
     for (proc_pos = 0; proc_pos < num_remotes; proc_pos++) {
-      recv_list_entries[proc_pos].rank = *(int *) sc_array_index_int (ghost->remote_processes, proc_pos);
+      recv_list_entries[proc_pos].rank = ghost->remote_processes[proc_pos];
       recv_list_entries[proc_pos].pos_in_remote_processes = proc_pos;
 #ifndef T8_POLLING
 #if T8_ENABLE_DEBUG
@@ -765,7 +679,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
           T8_ASSERT (last_rank_parsed < proc_pos);
           /* For all ranks that we haven't parsed yet, but can be parsed in order */
           for (parse_it = last_rank_parsed + 1; parse_it < num_remotes && received_flag[parse_it] == 1; parse_it++) {
-            recv_rank = *(int *) sc_array_index_int (ghost->remote_processes, parse_it);
+            recv_rank = ghost->remote_processes[parse_it];
             t8_forest_ghost_parse_received_message (forest, ghost, &current_element_offset, recv_rank, buffer[parse_it],
                                                     recv_bytes[parse_it]);
             last_rank_parsed++;
@@ -801,7 +715,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
     /* parse all messages that are left */
     /* For all ranks that we haven't parsed yet, but can be parsed in order */
     for (parse_it = last_rank_parsed + 1; parse_it < num_remotes && received_flag[parse_it] == 1; parse_it++) {
-      recv_rank = *(int *) sc_array_index_int (ghost->remote_processes, parse_it);
+      recv_rank = ghost->remote_processes[parse_it];
       t8_forest_ghost_parse_received_message (forest, ghost, &current_element_offset, recv_rank, buffer[parse_it],
                                               recv_bytes[parse_it]);
       last_rank_parsed++;
