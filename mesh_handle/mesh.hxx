@@ -38,13 +38,14 @@
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
 #include <t8_forest/t8_forest_iterate.h>
+#include <t8_forest/t8_forest_subelement.hxx>
 #include <vector>
 #include <functional>
 #include <memory>
 #include <span>
 #include <type_traits>
-#include <t8_forest/t8_forest_subelement.hxx> /* For t8_forest_has_subelements */
 #include <algorithm>
+
 namespace t8_mesh_handle
 {
 
@@ -251,7 +252,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     SC_CHECK_ABORT (!t8_forest_has_subelements (m_forest),
                     "The conformity check is not possible for meshes with subelements.");
     const bool locally_conformal
-      = std::all_of (cbegin (), cend (), [] (const element_class& element) { return element.is_conformal (); });
+      = std::all_of (cbegin (), cend (), [] (const element_class& element) { return !element.has_hanging_node (); });
     int local = locally_conformal ? 1 : 0;
     int global = 0;
     const int mpiret = sc_MPI_Allreduce (&local, &global, 1, sc_MPI_INT, sc_MPI_LAND, t8_forest_get_mpicomm (m_forest));
