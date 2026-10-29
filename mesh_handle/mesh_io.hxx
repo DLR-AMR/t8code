@@ -102,6 +102,9 @@ write_mesh_to_vtk_ext (TMeshClass &mesh, const char *fileprefix, const int num_d
 
 // --- Write mesh to vtk with data fields. ---
 
+/** Concept to restrict the value type of a \ref vtk_data_field to the types supported by the vtk writer.
+ *  \tparam TValueType The type of the values in the vtk data field.
+ */
 template <typename TValueType>
 concept T8VtkDataValue = std::same_as<TValueType, double> || std::same_as<TValueType, t8_3D_vec>;
 
@@ -180,6 +183,7 @@ to_vtk_data_field (const TMeshClass &mesh, const vtk_data_field<TValueType> &fie
  * \param [in] write_ghosts  Whether to write ghost elements.
  * \param [in] write_curved  Whether to write curved elements.
  * \param [in] do_not_use_API Whether to bypass the VTK API and write an ASCII file directly.
+ * \return  True if successful, false if not (process local).
 */
 template <T8MeshType TMeshClass>
 int
