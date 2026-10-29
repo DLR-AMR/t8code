@@ -54,6 +54,7 @@ option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
+option( T8CODE_ENABLE_CMC "Enable data compression based on cmc" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
@@ -209,7 +210,6 @@ unset (ORIGINAL_C_FLAGS)
 
 ############################################ End of ThirdParty ############################################
 
-
 if( T8CODE_ENABLE_VTK )
     find_package( VTK REQUIRED COMPONENTS
         IOXML CommonExecutionModel CommonDataModel
@@ -277,6 +277,20 @@ endif()
 if ( T8CODE_USE_SYSTEM_P4EST )
     find_package( P4EST REQUIRED )
 endif()
+
+if( T8CODE_ENABLE_CMC )
+    if( NOT T8CODE_ENABLE_MPI )
+        message( FATAL_ERROR "cmc is only available when MPI is enabled." )
+    endif()
+    # After the thirdparty libraries have been fetched, FetchContent is available to obtain cmc if configured
+    FetchContent_Declare(
+        cmc
+        GIT_REPOSITORY https://github.com/DLR-AMR/cmc.git
+        GIT_TAG f3a49c66b5a03ec02ebd7ae7ab5433287ea49c00
+        GIT_SHALLOW TRUE
+    )
+    # It is made avaiable later after the t8code library target has been defined
+endif( T8CODE_ENABLE_CMC )
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 

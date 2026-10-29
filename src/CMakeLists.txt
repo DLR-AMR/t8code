@@ -33,7 +33,13 @@ else()
     add_library( T8 STATIC )
 endif()
 
-target_compile_features( T8 PUBLIC c_std_11 cxx_std_20 )
+if ( T8CODE_ENABLE_CMC )
+  # CMC needs C++23
+  target_compile_features( T8 PUBLIC c_std_11 cxx_std_23 )
+else()
+  target_compile_features( T8 PUBLIC c_std_11 cxx_std_20 )
+endif( T8CODE_ENABLE_CMC )
+
 add_library( T8CODE::T8 ALIAS T8 )
 target_compile_definitions( T8 PUBLIC T8_TEST_LEVEL_INT=${T8_TEST_LEVEL_INT})
 
@@ -128,6 +134,14 @@ if( T8CODE_ENABLE_OCC )
       t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_mesh_deformation/
     )
+endif()
+
+if( T8CODE_ENABLE_CMC )
+  # The t8code library target needs to be defined before the the cmc is made available
+  FetchContent_MakeAvailable(cmc)
+  set(T8CODE_CMC_VERSION_USED "${CMC_VERSION}")
+  target_compile_definitions( T8 PUBLIC T8CODE_CMC_VERSION_USED="${T8CODE_CMC_VERSION_USED}" )
+  target_compile_definitions( T8 PUBLIC T8_ENABLE_CMC=1 )
 endif()
 
 if( T8CODE_BUILD_PEDANTIC )
