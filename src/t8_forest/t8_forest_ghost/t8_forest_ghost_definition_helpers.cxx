@@ -35,36 +35,7 @@
 #include <algorithm>
 #include <memory>
 
-/** The hash function for the remote_ghosts hash table. The hash value for an mpirank is just the rank.
- * \param [in] remote_data   A \ref t8_ghost_remote_t.
- * \param [in] user_data     Unused but needed for usage with sc_hash_new.
- * \return                   The remote rank of \a remote_data.
- */
-static unsigned
-t8_ghost_remote_hash_function (const void *remote_data, [[maybe_unused]] const void *user_data)
-{
-  const t8_ghost_remote_t *remote = (const t8_ghost_remote_t *) remote_data;
-
-  return remote->remote_rank;
-}
-
-/** The equal function for the remote_ghosts hash table.
- * Two entries are the same if they have the same rank.
- * \param [in] remote_dataa   A \ref t8_ghost_remote_t.
- * \param [in] remote_datab   A \ref t8_ghost_remote_t.
- * \param [in] user           Unused but needed for usage with sc_hash_new.
- * \return                    True if and only if \a remote_dataa and \a remote_datab have the same remote rank.
- */
-static int
-t8_ghost_remote_equal_function (const void *remote_dataa, const void *remote_datab, [[maybe_unused]] const void *user)
-{
-  const t8_ghost_remote_t *remotea = (const t8_ghost_remote_t *) remote_dataa;
-  const t8_ghost_remote_t *remoteb = (const t8_ghost_remote_t *) remote_datab;
-
-  return remotea->remote_rank == remoteb->remote_rank;
-}
-
-/** Initialize a \ref t8_ghost_remote_tree_t.
+/** Initialize a \ref t8_ghost_remote_tree.
  * \param [in] forest        A forest with constructed ghost layer.
  * \param [in] gtreeid       The global tree id of the tree to initialize.
  * \param [in] remote_rank   The remote rank that owns \a remote_tree.
@@ -73,7 +44,7 @@ t8_ghost_remote_equal_function (const void *remote_dataa, const void *remote_dat
  */
 static void
 t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid, int remote_rank, t8_eclass_t tree_class,
-                           t8_ghost_remote_tree_t *remote_tree)
+                           t8_ghost_remote_tree *remote_tree)
 {
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_locidx_t local_treeid;
@@ -87,19 +58,15 @@ t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid, int remote_r
   remote_tree->eclass = t8_forest_get_eclass (forest, local_treeid);
   /* Initialize the array to store the element */
   t8_element_array_init (&remote_tree->elements, scheme, tree_class);
-  /* Initialize the array to store the element indices. */
-  sc_array_init (&remote_tree->element_indices, sizeof (t8_locidx_t));
 }
 
 void
 t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_rank, t8_locidx_t ltreeid,
                      const t8_element_t *elem, t8_locidx_t element_index)
 {
-  t8_ghost_remote_t remote_entry_lookup, *remote_entry;
-  t8_ghost_remote_tree_t *remote_tree;
+  t8_ghost_remote_tree *remote_tree;
   t8_element_t *elem_copy;
-  sc_array_t *remote_array;
-  size_t index, element_count;
+  size_t element_count;
   int level, copy_level = 0;
 
   /* Get the tree's element class and the scheme */
@@ -107,42 +74,27 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   const t8_gloidx_t gtreeid = t8_forest_get_first_local_tree_id (forest) + ltreeid;
 
-  /* Check whether the remote_rank is already present in the remote ghosts
-   * array. */
-  remote_entry_lookup.remote_rank = remote_rank;
-  /* clang-format off */
-  remote_entry = (t8_ghost_remote_t *) sc_hash_array_insert_unique (ghost->remote_ghosts, (void *) &remote_entry_lookup,
-                                                                    &index);
-  /* clang-format on */
-  if (remote_entry != nullptr) {
-    /* The remote rank was not in the array and was inserted now */
-    remote_entry->remote_rank = remote_rank;
-    remote_entry->num_elements = 0;
-    /* Initialize the tree array of the new entry */
-    sc_array_init_size (&remote_entry->remote_trees, sizeof (t8_ghost_remote_tree_t), 1);
-    /* Get a pointer to the new entry */
-    remote_tree = (t8_ghost_remote_tree_t *) sc_array_index (&remote_entry->remote_trees, 0);
-    /* initialize the remote_tree */
-    t8_ghost_init_remote_tree (forest, gtreeid, remote_rank, tree_class, remote_tree);
+  /* Check whether the remote_rank is already present in the remote ghosts. If not, insert it. */
+  const auto [remote_found, remote_inserted] = ghost->remote_ghosts.try_emplace (remote_rank);
+  t8_ghost_remote &remote_entry = remote_found->second;
+  if (remote_inserted) {
+    /* The remote rank was not contained and was inserted now */
+    remote_entry.remote_rank = remote_rank;
     /* Since the rank is a new remote rank, we also add it to the remote ranks array */
     ghost->remote_processes.push_back (remote_rank);
   }
+  T8_ASSERT (remote_entry.remote_rank == remote_rank);
+  /* Check whether the tree has already an entry for this process.
+   * Since we only add in local tree order the current tree is either
+   * the last entry or does not have an entry yet. */
+  if (remote_entry.remote_trees.empty () || remote_entry.remote_trees.back ().global_id != gtreeid) {
+    /* The tree does not exist in the array. We thus need to add it and
+     * initialize it. */
+    remote_tree = &remote_entry.remote_trees.emplace_back ();
+    t8_ghost_init_remote_tree (forest, gtreeid, remote_rank, tree_class, remote_tree);
+  }
   else {
-    /* The remote rank already is contained in the remotes array at position index. */
-    remote_array = &ghost->remote_ghosts->a;
-    remote_entry = (t8_ghost_remote_t *) sc_array_index (remote_array, index);
-    T8_ASSERT (remote_entry->remote_rank == remote_rank);
-    /* Check whether the tree has already an entry for this process.
-     * Since we only add in local tree order the current tree is either
-     * the last entry or does not have an entry yet. */
-    remote_tree = (t8_ghost_remote_tree_t *) sc_array_index (&remote_entry->remote_trees,
-                                                             remote_entry->remote_trees.elem_count - 1);
-    if (remote_tree->global_id != gtreeid) {
-      /* The tree does not exist in the array. We thus need to add it and
-       * initialize it. */
-      remote_tree = (t8_ghost_remote_tree_t *) sc_array_push (&remote_entry->remote_trees);
-      t8_ghost_init_remote_tree (forest, gtreeid, remote_rank, tree_class, remote_tree);
-    }
+    remote_tree = &remote_entry.remote_trees.back ();
   }
   /* remote_tree now points to a valid entry for the tree.
    * We can add a copy of the element to the elements array
@@ -176,8 +128,8 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
     elem_copy = t8_element_array_push (&remote_tree->elements);
     scheme->element_copy (tree_class, elem, elem_copy);
     /* Add the index of the element */
-    *(t8_locidx_t *) sc_array_push (&remote_tree->element_indices) = element_index;
-    remote_entry->num_elements++;
+    remote_tree->element_indices.push_back (element_index);
+    remote_entry.num_elements++;
   }
 }
 
@@ -195,11 +147,8 @@ t8_forest_ghost_init (t8_forest_ghost_t *pghost)
   std::construct_at (&ghost->ghost_trees);
   std::construct_at (&ghost->global_tree_to_ghost_tree);
   std::construct_at (&ghost->process_offsets);
+  std::construct_at (&ghost->remote_ghosts);
   std::construct_at (&ghost->remote_processes);
-
-  /* initialize the remote ghosts hash table */
-  ghost->remote_ghosts = sc_hash_array_new (sizeof (t8_ghost_remote_t), t8_ghost_remote_hash_function,
-                                            t8_ghost_remote_equal_function, nullptr);
 }
 
 t8_ghost_mpi_send_info_t *
@@ -208,9 +157,7 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
   int proc_index, remote_rank;
   int num_remotes;
   size_t remote_index;
-  t8_ghost_remote_t *remote_entry;
-  sc_array_t *remote_trees;
-  t8_ghost_remote_tree_t *remote_tree = nullptr;
+  const t8_ghost_remote *remote_entry;
   t8_ghost_mpi_send_info_t *send_info, *current_send_info;
   char *current_buffer;
   size_t bytes_written, element_bytes, element_count, element_size;
@@ -242,10 +189,13 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
     /* TODO: put this in a function */
     /* TODO: Use remote_entry to count the number of bytes while inserting
      *        the remote ghosts. */
-    remote_trees = &remote_entry->remote_trees;
-    for (remote_index = 0; remote_index < remote_trees->elem_count; remote_index++) {
+    /** The remote trees of the current remote process. */
+    const std::vector<t8_ghost_remote_tree> &remote_trees = remote_entry->remote_trees;
+    /** The number of remote trees of the current remote process. */
+    const size_t num_remote_trees = remote_trees.size ();
+    for (remote_index = 0; remote_index < num_remote_trees; remote_index++) {
       /* Get the next remote tree. */
-      remote_tree = (t8_ghost_remote_tree_t *) sc_array_index (remote_trees, remote_index);
+      const t8_ghost_remote_tree *remote_tree = &remote_trees[remote_index];
       /* We will store the global tree id, the element class and the list
        * of elements in the send_buffer. */
       current_send_info->num_bytes += sizeof (t8_gloidx_t);
@@ -274,13 +224,13 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
     current_buffer = current_send_info->buffer;
     bytes_written = 0;
     /* Start with the number of remote trees in the buffer */
-    memcpy (current_buffer + bytes_written, &remote_trees->elem_count, sizeof (size_t));
+    memcpy (current_buffer + bytes_written, &num_remote_trees, sizeof (size_t));
     bytes_written += sizeof (size_t);
     bytes_written += T8_ADD_PADDING (bytes_written);
 
-    for (remote_index = 0; remote_index < remote_trees->elem_count; remote_index++) {
+    for (remote_index = 0; remote_index < num_remote_trees; remote_index++) {
       /* Get a pointer to the tree */
-      remote_tree = (t8_ghost_remote_tree_t *) sc_array_index (remote_trees, remote_index);
+      const t8_ghost_remote_tree *remote_tree = &remote_trees[remote_index];
       T8_ASSERT (remote_tree->mpirank == remote_rank);
 
       /* Copy the global tree id */

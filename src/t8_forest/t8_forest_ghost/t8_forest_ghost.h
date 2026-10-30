@@ -33,36 +33,10 @@
 /** Opaque pointer to the ghost elements of a forest. */
 typedef struct t8_forest_ghost *t8_forest_ghost_t;
 
+/** Opaque pointer to all local leaf elements of this process that are ghosts on one remote process. */
+typedef struct t8_ghost_remote t8_ghost_remote_t;
+
 T8_EXTERN_C_BEGIN ();
-
-/**
- * A local tree of this process, restricted to those leaf elements that are ghosts on the remote process
- * \a mpirank. There is one such struct per (local tree, remote process) pair. They are stored, sorted by
- * local tree id, in the \a remote_trees array of the corresponding \ref t8_ghost_remote_t. Will be sent to
- * the remote process during \ref t8_forest_ghost_definition::communicate_ghost_elements.
- */
-typedef struct
-{
-  t8_gloidx_t global_id;       /**< The global id of the (local) tree. */
-  int mpirank;                 /**< The rank of the remote process that has these elements as ghosts. */
-  t8_element_array_t elements; /**< Copies of the leaf elements that are ghosts on \a mpirank, in SFC order. */
-  sc_array_t element_indices;  /**< The tree-local index (\ref t8_locidx_t) of each entry in \a elements. */
-  t8_eclass_t eclass;          /**< The element class of the tree. */
-} t8_ghost_remote_tree_t;
-
-/**
- * All local leaf elements of this process that are ghosts on the remote process \a remote_rank.
- * There is one such struct per remote process. They are stored in the \a remote_ghosts hash array of the
- * ghost structure, hashed by \a remote_rank; the ranks themselves are listed in \a remote_processes.
- * Will be sent to the remote process during \ref t8_forest_ghost_definition::communicate_ghost_elements.
- */
-typedef struct
-{
-  int remote_rank;          /**< The rank of the remote process that has these elements as ghosts. */
-  t8_locidx_t num_elements; /**< The total number of elements over all entries in \a remote_trees. */
-  sc_array_t remote_trees;  /**< The \ref t8_ghost_remote_tree_t of each local tree that has ghosts on
-                                 \a remote_rank, sorted by local tree id. */
-} t8_ghost_remote_t;
 
 /* We enumerate the ghost trees by 0, 1, ..., num_ghost_trees - 1
  * In the context of a forest we add the number of local trees as offset,

@@ -244,6 +244,70 @@ struct t8_ghost_tree
   }
 };
 
+/**
+ * A local tree of this process, restricted to those leaf elements that are ghosts on the remote process
+ * \a mpirank. There is one such struct per (local tree, remote process) pair. They are stored, sorted by
+ * local tree id, in the \a remote_trees vector of the corresponding \ref t8_ghost_remote. Will be sent to
+ * the remote process during \ref t8_forest_ghost_definition::communicate_ghost_elements.
+ * A remote tree owns its elements. It is move-only, such that this ownership is never duplicated.
+ * \note The elements are allocated by the scheme of \a elements. Hence, a remote tree must be destroyed
+ *       before this scheme is.
+ */
+struct t8_ghost_remote_tree
+{
+  t8_gloidx_t global_id = 0;      /**< The global id of the (local) tree. */
+  int mpirank = 0;                /**< The rank of the remote process that has these elements as ghosts. */
+  t8_element_array_t elements {}; /**< Copies of the leaf elements that are ghosts on \a mpirank, in SFC order. */
+  std::vector<t8_locidx_t> element_indices; /**< The tree-local index of each entry in \a elements. */
+  t8_eclass_t eclass {};                    /**< The element class of the tree. */
+
+  /** Construct an empty remote tree. Its \a elements are not initialized. */
+  t8_ghost_remote_tree () = default;
+
+  /** Move constructor. Takes over the elements of \a other, which is left without any.
+   * \param [in,out] other The remote tree to move from.
+   */
+  t8_ghost_remote_tree (t8_ghost_remote_tree &&other) noexcept
+    : global_id (other.global_id), mpirank (other.mpirank), elements (std::exchange (other.elements, {})),
+      element_indices (std::move (other.element_indices)), eclass (other.eclass)
+  {
+  }
+
+  /** Copying is forbidden, since the remote tree owns its elements. */
+  t8_ghost_remote_tree (const t8_ghost_remote_tree &) = delete;
+  /** Copying is forbidden, since the remote tree owns its elements. */
+  t8_ghost_remote_tree &
+  operator= (const t8_ghost_remote_tree &)
+    = delete;
+  /** Move assignment is not needed for storing remote trees in a std::vector. */
+  t8_ghost_remote_tree &
+  operator= (t8_ghost_remote_tree &&)
+    = delete;
+
+  /** Destructor. Frees the elements. */
+  ~t8_ghost_remote_tree ()
+  {
+    /* A remote tree whose elements were never initialized (or that was moved from) owns nothing. */
+    if (elements.scheme != nullptr) {
+      t8_element_array_reset (&elements);
+    }
+  }
+};
+
+/**
+ * All local leaf elements of this process that are ghosts on the remote process \a remote_rank.
+ * There is one such struct per remote process. They are stored in the \a remote_ghosts map of the
+ * ghost structure, keyed by \a remote_rank; the ranks themselves are listed in \a remote_processes.
+ * Will be sent to the remote process during \ref t8_forest_ghost_definition::communicate_ghost_elements.
+ */
+struct t8_ghost_remote
+{
+  int remote_rank = 0;          /**< The rank of the remote process that has these elements as ghosts. */
+  t8_locidx_t num_elements = 0; /**< The total number of elements over all entries in \a remote_trees. */
+  std::vector<t8_ghost_remote_tree>
+    remote_trees; /**< The remote tree of each local tree that has ghosts on \a remote_rank, sorted by local tree id. */
+};
+
 /** The information stored for each process from which we receive ghost elements. */
 struct t8_ghost_process_offset
 {
@@ -269,11 +333,8 @@ typedef struct t8_forest_ghost
     global_tree_to_ghost_tree; /**< Given a global tree id, the index i such that the tree is in ghost_trees[i]. */
   std::unordered_map<int, t8_ghost_process_offset>
     process_offsets; /**< Given a process, the first ghost tree and within it the first element of that process. */
-  sc_hash_array_t *remote_ghosts;    /**< array of local trees that have ghost elements for another process.
-                                                for each tree an array of t8_element_t * of the local ghost elements.
-                                                Also an array of t8_locidx_t of the local indices of these elements
-                                                within the tree. It is a hash table, hashed with the rank of a remote
-                                                process. Sorted within each process by linear id. */
+  std::unordered_map<int, t8_ghost_remote>
+    remote_ghosts; /**< For each remote process, the local leaf elements that are ghosts on that process. */
   std::vector<int> remote_processes; /**< The ranks of the processes for which local elements are ghost. */
 } t8_forest_ghost_struct_t;
 

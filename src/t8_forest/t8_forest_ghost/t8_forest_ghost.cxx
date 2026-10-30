@@ -260,23 +260,13 @@ t8_forest_ghost_get_remotes (t8_forest_t forest, int *num_remotes)
 t8_ghost_remote_t *
 t8_forest_ghost_get_remote (t8_forest_t forest, int remote)
 {
-  t8_ghost_remote_t remote_search;
-#if T8_ENABLE_DEBUG
-  int ret;
-#endif
-  size_t index;
-
   T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->ghosts != nullptr);
 
-  remote_search.remote_rank = remote;
-#if T8_ENABLE_DEBUG
-  ret =
-#else
-  (void)
-#endif
-    sc_hash_array_lookup (forest->ghosts->remote_ghosts, &remote_search, &index);
-  T8_ASSERT (ret);
-  return (t8_ghost_remote_t *) sc_array_index (&forest->ghosts->remote_ghosts->a, index);
+  const auto found = forest->ghosts->remote_ghosts.find (remote);
+  T8_ASSERT (found != forest->ghosts->remote_ghosts.end ());
+  T8_ASSERT (found->second.remote_rank == remote);
+  return &found->second;
 }
 
 /** Return a remote processes info about the stored ghost elements.
@@ -324,34 +314,16 @@ static size_t
 t8_forest_ghost_exchange_fill_send_buffer (t8_forest_t forest, int remote, char **pbuffer, sc_array_t *element_data)
 {
   char *buffer;
-  t8_ghost_remote_t lookup_rank, *remote_entry;
-  t8_ghost_remote_tree_t *remote_tree;
-  t8_forest_ghost_t ghost;
-  size_t index, element_index, data_size;
+  size_t element_index, data_size;
   size_t elements_inserted, byte_count;
   t8_tree_t local_tree;
-#if T8_ENABLE_DEBUG
-  int ret;
-#endif
-  t8_locidx_t itree, ielement, element_pos;
   t8_locidx_t ltreeid;
-  size_t elem_count;
 
-  ghost = forest->ghosts;
   data_size = element_data->elem_size;
   elements_inserted = 0;
-  lookup_rank.remote_rank = remote;
 
   /* Lookup the remote entry of this remote process */
-#if T8_ENABLE_DEBUG
-  ret =
-#else
-  (void)
-#endif
-    sc_hash_array_lookup (ghost->remote_ghosts, &lookup_rank, &index);
-  T8_ASSERT (ret != 0);
-  remote_entry = (t8_ghost_remote_t *) sc_array_index (&ghost->remote_ghosts->a, index);
-  T8_ASSERT (remote_entry->remote_rank == remote);
+  const t8_ghost_remote *remote_entry = t8_forest_ghost_get_remote (forest, remote);
 
   /* allocate memory for the send buffer */
   byte_count = data_size * remote_entry->num_elements;
@@ -359,19 +331,17 @@ t8_forest_ghost_exchange_fill_send_buffer (t8_forest_t forest, int remote, char 
 
   /* We now iterate over the remote trees and their elements to find the
    * local element indices of the remote elements */
-  for (itree = 0; itree < (t8_locidx_t) remote_entry->remote_trees.elem_count; itree++) {
+  for (const t8_ghost_remote_tree &remote_tree : remote_entry->remote_trees) {
     /* tree loop */
-    remote_tree = (t8_ghost_remote_tree_t *) t8_sc_array_index_locidx (&remote_entry->remote_trees, itree);
     /* Get the local id of this tree */
     /* TODO: Why does remote_tree store the global id? could be local instead */
-    ltreeid = t8_forest_get_local_id (forest, remote_tree->global_id);
+    ltreeid = t8_forest_get_local_id (forest, remote_tree.global_id);
     /* Get a pointer to the forest tree */
     local_tree = t8_forest_get_tree (forest, ltreeid);
-    elem_count = t8_element_array_get_count (&remote_tree->elements);
-    for (ielement = 0; ielement < (t8_locidx_t) elem_count; ielement++) {
+    T8_ASSERT (remote_tree.element_indices.size () == t8_element_array_get_count (&remote_tree.elements));
+    /* Get the index of each remote element in its local tree */
+    for (const t8_locidx_t element_pos : remote_tree.element_indices) {
       /* element loop */
-      /* Get the index of this remote element in its local tree */
-      element_pos = *(t8_locidx_t *) t8_sc_array_index_locidx (&remote_tree->element_indices, ielement);
       T8_ASSERT (0 <= element_pos);
       /* Compute the index of this element in the element_data array */
       element_index = local_tree->elements_offset + element_pos;
@@ -519,9 +489,8 @@ void
 t8_forest_ghost_print (t8_forest_t forest)
 {
   t8_forest_ghost_t ghost;
-  t8_ghost_remote_t *remote_found;
-  t8_ghost_remote_tree_t *remote_tree;
-  size_t iremote, itree;
+  const t8_ghost_remote *remote_found;
+  size_t iremote;
   int remote_rank;
   char remote_buffer[BUFSIZ] = "";
   char buffer[BUFSIZ] = "";
@@ -542,12 +511,11 @@ t8_forest_ghost_print (t8_forest_t forest)
       remote_found = t8_forest_ghost_get_remote (forest, remote_rank);
       /* investigate the entry of this remote process */
       snprintf (remote_buffer + strlen (remote_buffer), BUFSIZ - strlen (remote_buffer), "\t[Rank %i] (%li trees):\n",
-                remote_found->remote_rank, remote_found->remote_trees.elem_count);
-      for (itree = 0; itree < remote_found->remote_trees.elem_count; itree++) {
-        remote_tree = (t8_ghost_remote_tree_t *) sc_array_index (&remote_found->remote_trees, itree);
+                remote_found->remote_rank, (long) remote_found->remote_trees.size ());
+      for (const t8_ghost_remote_tree &remote_tree : remote_found->remote_trees) {
         snprintf (remote_buffer + strlen (remote_buffer), BUFSIZ - strlen (remote_buffer),
-                  "\t\t[id: %lli, class: %s, #elem: %li]\n", (long long) remote_tree->global_id,
-                  t8_eclass_to_string[remote_tree->eclass], (long) t8_element_array_get_count (&remote_tree->elements));
+                  "\t\t[id: %lli, class: %s, #elem: %li]\n", (long long) remote_tree.global_id,
+                  t8_eclass_to_string[remote_tree.eclass], (long) t8_element_array_get_count (&remote_tree.elements));
       }
 
       /* Investigate the elements that we received from this process */
@@ -567,9 +535,6 @@ static void
 t8_forest_ghost_reset (t8_forest_ghost_t *pghost)
 {
   t8_forest_ghost_t ghost;
-  size_t it, it_trees;
-  t8_ghost_remote_t *remote_entry;
-  t8_ghost_remote_tree_t *remote_tree;
 
   T8_ASSERT (pghost != nullptr);
   ghost = *pghost;
@@ -580,18 +545,8 @@ t8_forest_ghost_reset (t8_forest_ghost_t *pghost)
   std::destroy_at (&ghost->ghost_trees);
   std::destroy_at (&ghost->global_tree_to_ghost_tree);
   std::destroy_at (&ghost->process_offsets);
+  std::destroy_at (&ghost->remote_ghosts);
   std::destroy_at (&ghost->remote_processes);
-  /* Clean-up the remote ghost entries */
-  for (it = 0; it < ghost->remote_ghosts->a.elem_count; it++) {
-    remote_entry = (t8_ghost_remote_t *) sc_array_index (&ghost->remote_ghosts->a, it);
-    for (it_trees = 0; it_trees < remote_entry->remote_trees.elem_count; it_trees++) {
-      remote_tree = (t8_ghost_remote_tree_t *) sc_array_index (&remote_entry->remote_trees, it_trees);
-      t8_element_array_reset (&remote_tree->elements);
-      sc_array_reset (&remote_tree->element_indices);
-    }
-    sc_array_reset (&remote_entry->remote_trees);
-  }
-  sc_hash_array_destroy (ghost->remote_ghosts);
 
   /* Free the ghost */
   T8_FREE (ghost);
