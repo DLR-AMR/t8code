@@ -91,10 +91,11 @@ static const struct t8_healpix_join healpix_joins[24] = {
  * before committing the mesh.
  *
  * @param[in] comm The MPI communicator used to manage parallel partitioning/commit.
+ * @param[in] sphere_radius The radius of the sphere. Default to 1
  * @return t8_cmesh_t A committed coarse mesh object containing the HEALPix base structure.
  */
 t8_cmesh_t
-t8_cmesh_new_healpix (sc_MPI_Comm comm)
+t8_cmesh_new_healpix (sc_MPI_Comm comm, double sphere_radius = 1)
 {
   /* Initialization of the mesh */
   t8_cmesh_t cmesh;

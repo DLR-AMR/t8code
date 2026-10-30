@@ -30,10 +30,18 @@
 */
 struct t8_geometry_healpix: public t8_geometry
 {
+ private:
+  double sphere_radius;
+
  public:
   /* Basic constructor that sets the dimension and the name. */
+  t8_geometry_healpix (double radius): t8_geometry ("t8_geometry_healpix")
+  {
+    sphere_radius = radius;
+  }
   t8_geometry_healpix (): t8_geometry ("t8_geometry_healpix")
   {
+    sphere_radius = 1;
   }
 
   /* The destructor. */

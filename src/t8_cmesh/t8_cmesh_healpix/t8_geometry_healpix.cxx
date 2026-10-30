@@ -38,7 +38,7 @@
  *                       Cartesian coordinates will be stored.
  */
 void
-t8_eval_geom_point (t8_gloidx_t layer, t8_gloidx_t face, double xi, double eta, double *out_coord)
+t8_eval_geom_point (t8_gloidx_t layer, t8_gloidx_t face, double xi, double eta, double *out_coord, double radius)
 {
   const double offset_y = static_cast<double> (layer) - 1.0;
   const double offset_x = 2.0 * face + ((layer + 1) % 2);
@@ -68,9 +68,9 @@ t8_eval_geom_point (t8_gloidx_t layer, t8_gloidx_t face, double xi, double eta, 
   const double theta = std::acos (z);
   const double sin_theta = std::sin (theta);
 
-  out_coord[0] = sin_theta * std::cos (phi);
-  out_coord[1] = sin_theta * std::sin (phi);
-  out_coord[2] = z;
+  out_coord[0] = (sin_theta * std::cos (phi)) * radius;
+  out_coord[1] = sin_theta * std::sin (phi) * radius;
+  out_coord[2] = z * radius;
 }
 
 void
@@ -89,7 +89,7 @@ t8_geometry_healpix::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, t8_glo
     const double eta = std::clamp (ref_coords[base_idx_2d + 1], 1e-10, 1.0 - 1e-10);
 
     // Pass the pointer offset for 3D coordinates: out_coords + base_idx_3d
-    t8_eval_geom_point (layer, face, xi, eta, out_coords + base_idx_3d);
+    t8_eval_geom_point (layer, face, xi, eta, out_coords + base_idx_3d, sphere_radius);
   }
 }
 t8_geometry_type_t
