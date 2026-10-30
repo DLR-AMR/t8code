@@ -76,7 +76,7 @@ struct t8_forest_ghost_definition_face: public t8_forest_ghost_definition_w_sear
    */
   static int
   t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaves,
+                                   const int is_leaf, [[maybe_unused]] const t8_element_array_view &leaves,
                                    const t8_locidx_t tree_leaf_index);
 
   /** Struct which holds data for the search of the face ghost definition */

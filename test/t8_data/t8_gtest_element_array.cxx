@@ -26,6 +26,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_data/t8_element_array.hxx>
+#include <t8_data/t8_element_array.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <test/t8_gtest_schemes.hxx>
 #include <type_traits>
@@ -219,6 +220,19 @@ TEST_P (element_array, visit)
     return span.size ();
   });
   EXPECT_EQ (span_size, array.size ());
+}
+
+/* The C interface of the view gives access to the same elements as the view. */
+TEST_P (element_array, view_c_interface)
+{
+  const t8_element_array array = create_uniform_array ();
+  const t8_element_array_view view = array.view ();
+  EXPECT_EQ (t8_element_array_view_get_count (&view), array.size ());
+  EXPECT_EQ (t8_element_array_view_get_scheme (&view), scheme);
+  EXPECT_EQ (t8_element_array_view_get_tree_class (&view), eclass);
+  for (size_t ielement = 0; ielement < array.size (); ++ielement) {
+    EXPECT_EQ (t8_element_array_view_get_element (&view, ielement), array[ielement]);
+  }
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_array, element_array, AllSchemes, print_all_schemes);

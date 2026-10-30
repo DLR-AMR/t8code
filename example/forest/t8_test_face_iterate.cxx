@@ -43,7 +43,7 @@ typedef struct
 
 static int
 t8_test_fiterate_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face, int is_leaf,
-                           [[maybe_unused]] const t8_element_array_t *leaf_elements, t8_locidx_t leaf_index,
+                           [[maybe_unused]] const t8_element_array_view &leaf_elements, t8_locidx_t leaf_index,
                            void *user_data)
 {
   if (is_leaf) {
@@ -105,7 +105,8 @@ t8_test_fiterate (t8_forest_t forest)
     //
     for (int iface = 0; iface < scheme->element_get_num_faces (eclass, nca); iface++) {
       udata.count = 0;
-      t8_forest_iterate_faces (forest, itree, nca, iface, leaf_elements, 0, t8_test_fiterate_callback, &udata);
+      t8_forest_iterate_faces (forest, itree, nca, iface, t8_element_array_get_view (leaf_elements), 0,
+                               t8_test_fiterate_callback, &udata);
       t8_debugf ("Leaf elements at face %i:\t%i\n", iface, udata.count);
     }
     scheme->element_destroy (eclass, 1, &nca);

@@ -34,7 +34,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 void
 t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *scheme,
-                                  t8_element_array_t *leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf)
+                                  const t8_element_array_view &leaf_elements,
+                                  const t8_locidx_t tree_lindex_of_first_leaf)
 {
   /* Assertions to check for necessary requirements */
   /* The forest must be committed */
@@ -42,7 +43,7 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
   /* The tree must be local */
   T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (this->forest));
 
-  const size_t elem_count = t8_element_array_get_count (leaf_elements);
+  const size_t elem_count = leaf_elements.size ();
   if (elem_count == 0) {
     /* There are no leaves left, so we have nothing to do */
     return;
@@ -57,7 +58,7 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
   bool is_leaf = false;
   if (elem_count == 1) {
     /* There is only one leaf left, we check whether it is the same as element and if so call the callback function */
-    const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
+    const t8_element_t *leaf = leaf_elements[0];
 
     SC_CHECK_ABORT (scheme->element_get_level (eclass, element) <= scheme->element_get_level (eclass, leaf),
                     "Search: element level greater than leaf level\n");
@@ -99,13 +100,11 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
     const size_t indexa = split_offsets[ichild];     /* first leaf of this child */
     const size_t indexb = split_offsets[ichild + 1]; /* first leaf of next child */
     if (indexa < indexb) {
-      t8_element_array_t child_leaves;
       /* There exist leaves of this child in leaf_elements,
-       * we construct an array of these leaves */
-      t8_element_array_init_view (&child_leaves, leaf_elements, indexa, indexb - indexa);
-      /* Enter the recursion */
+       * we enter the recursion with a view of these leaves */
       update_queries (new_active_queries);
-      search_recursion (ltreeid, children[ichild], scheme, &child_leaves, indexa + tree_lindex_of_first_leaf);
+      search_recursion (ltreeid, children[ichild], scheme, leaf_elements.subview (indexa, indexb - indexa),
+                        indexa + tree_lindex_of_first_leaf);
     }
   }
 
@@ -120,12 +119,12 @@ t8_search_base::search_tree (const t8_locidx_t ltreeid)
 {
   const t8_eclass_t eclass = t8_forest_get_eclass (this->forest, ltreeid);
   const t8_scheme *ts = t8_forest_get_scheme (this->forest);
-  t8_element_array_t *leaf_elements = t8_forest_tree_get_leaf_elements (this->forest, ltreeid);
+  const t8_element_array_view leaf_elements
+    = t8_element_array_get_view (t8_forest_tree_get_leaf_elements (this->forest, ltreeid));
 
   /* Get the first and last leaf of this tree */
-  const t8_element_t *first_el = t8_element_array_index_locidx (leaf_elements, 0);
-  const t8_element_t *last_el
-    = t8_element_array_index_locidx (leaf_elements, t8_element_array_get_count (leaf_elements) - 1);
+  const t8_element_t *first_el = leaf_elements[0];
+  const t8_element_t *last_el = leaf_elements[leaf_elements.size () - 1];
   /* Compute their nearest common ancestor */
   t8_element_t *nca;
   ts->element_new (eclass, 1, &nca);
@@ -149,6 +148,22 @@ t8_search_base::do_search ()
 }
 
 /* #################### t8_forest_search c interface #################### */
+
+/** Wrap a C element callback into a C++ element callback. The C callback gets a pointer to the view of the leaf
+ * elements instead of a reference.
+ * \param[in] element_callback The C element callback.
+ * \return                     The C++ element callback.
+ */
+static t8_search_element_callback<void *>
+t8_forest_search_wrap_element_callback (const t8_search_element_callback_c_wrapper element_callback)
+{
+  return [element_callback] (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                             const bool is_leaf, const t8_element_array_view &leaf_elements,
+                             const t8_locidx_t tree_leaf_index, void **user_data) {
+    return element_callback (forest, ltreeid, element, is_leaf, &leaf_elements, tree_leaf_index, user_data) != 0;
+  };
+}
+
 T8_EXTERN_C_BEGIN ();
 
 /**
@@ -165,7 +180,7 @@ t8_forest_init_search (t8_forest_search_c_wrapper search, t8_search_element_call
 {
   T8_ASSERT (search != NULL);
   T8_ASSERT (element_callback != NULL);
-  search->cpp_search = new t8_search<void *> (element_callback, forest);
+  search->cpp_search = new t8_search<void *> (t8_forest_search_wrap_element_callback (element_callback), forest);
 }
 
 void
@@ -221,8 +236,15 @@ t8_forest_init_search_with_queries (t8_forest_search_with_queries_c_wrapper sear
 
   std::vector<void *> queries_vector = std::vector<void *> (queries, queries + num_queries);
 
-  search_with_queries->cpp_search
-    = new t8_search_with_queries<void *, void *> (element_callback, queries_callback, queries_vector, forest);
+  search_with_queries->cpp_search = new t8_search_with_queries<void *, void *> (
+    t8_forest_search_wrap_element_callback (element_callback),
+    [queries_callback] (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                        const bool is_leaf, const t8_element_array_view &leaf_elements,
+                        const t8_locidx_t tree_leaf_index, void *const &query, void **user_data) {
+      return queries_callback (forest, ltreeid, element, is_leaf, &leaf_elements, tree_leaf_index, query, user_data)
+             != 0;
+    },
+    queries_vector, forest);
 }
 
 void
@@ -284,7 +306,7 @@ struct t8_forest_search_with_batched_queries
    * \param[in] ltreeid                 the local tree id of the tree being searched
    * \param[in] element                 the element being searched
    * \param[in] is_leaf                 whether the element is a leaf
-   * \param[in] leaf_elements           the array of leaf elements
+   * \param[in] leaf_elements           a view of the leaf elements
    * \param[in] tree_leaf_index         the index of the first leaf in the tree
    * \param[in] queries                 a vector of pointers to the queries
    * \param[in] active_query_indices    a vector of indices of the active queries
@@ -293,13 +315,13 @@ struct t8_forest_search_with_batched_queries
    */
   void
   wrapped_queries_callback (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                            const bool is_leaf, const t8_element_array_t *leaf_elements,
+                            const bool is_leaf, const t8_element_array_view &leaf_elements,
                             const t8_locidx_t tree_leaf_index, const std::vector<void *> &queries,
                             const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches,
                             void *user_data) const
   {
     std::vector<int> query_matches_int (query_matches.size ());
-    queries_callback (forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, queries.data (),
+    queries_callback (forest, ltreeid, element, is_leaf, &leaf_elements, tree_leaf_index, queries.data (),
                       active_query_indices.data (), query_matches_int.data (), user_data);
     std::transform (query_matches_int.begin (), query_matches_int.end (), query_matches.begin (),
                     [] (int val) { return static_cast<bool> (val); });
@@ -323,10 +345,10 @@ t8_forest_init_search_with_batched_queries (t8_forest_search_with_batched_querie
   search_with_queries->queries_callback = queries_callback;
 
   search_with_queries->cpp_search = new t8_search_with_batched_queries<void *, void *> (
-    element_callback,
-    [&search_with_queries] (
+    t8_forest_search_wrap_element_callback (element_callback),
+    [search_with_queries] (
       const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-      const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const std::vector<void *> &queries,
+      const t8_element_array_view &leaf_elements, const t8_locidx_t tree_leaf_index, const std::vector<void *> &queries,
       const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches, void *user_data) {
       search_with_queries->wrapped_queries_callback (forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index,
                                                      queries, active_query_indices, query_matches, user_data);

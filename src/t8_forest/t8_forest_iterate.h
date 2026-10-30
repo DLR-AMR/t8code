@@ -30,6 +30,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_data/t8_element_array.hxx>
 
 /**
  * Callback function used in \see t8_forest_iterate_faces.
@@ -47,7 +48,7 @@
  */
 typedef int (*t8_forest_iterate_face_fn) (const t8_forest_t forest, const t8_locidx_t ltreeid,
                                           const t8_element_t *element, const int face, const int is_leaf,
-                                          const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
+                                          const t8_element_array_view &leaf_elements, const t8_locidx_t tree_leaf_index,
                                           void *user_data);
 
 /**
@@ -64,7 +65,7 @@ typedef int (*t8_forest_iterate_face_fn) (const t8_forest_t forest, const t8_loc
  * \returns                       non-zero if the search criterion is met, zero otherwise.
  */
 typedef int (*t8_forest_search_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                                    const int is_leaf, const t8_element_array_t *leaf_elements,
+                                    const int is_leaf, const t8_element_array_view &leaf_elements,
                                     const t8_locidx_t tree_leaf_index);
 
 /**
@@ -89,7 +90,7 @@ typedef int (*t8_forest_search_fn) (t8_forest_t forest, const t8_locidx_t ltreei
  *                                \a query_matches and entries of \a query_indices).
  */
 typedef void (*t8_forest_query_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                                    const int is_leaf, const t8_element_array_t *leaf_elements,
+                                    const int is_leaf, const t8_element_array_view &leaf_elements,
                                     const t8_locidx_t tree_leaf_index, sc_array_t *queries, sc_array_t *query_indices,
                                     int *query_matches, const size_t num_active_queries);
 /**
@@ -136,51 +137,6 @@ typedef void (*t8_forest_partition_query_fn) (const t8_forest_t forest, const t8
                                               const size_t num_active_queries);
 
 T8_EXTERN_C_BEGIN ();
-
-/** Split an array of elements according to the children of a given element E.
- *  In other words for each child C of E, find
- *  the index i, j, such that all descendants of C are
- *  elements[i], ..., elements[j-1].
- *
- * \param [in] element       An element.
- * \param [in] leaf_elements An array of leaf elements of \a element. Thus, all
- *                           elements must be descendants. Sorted by linear index.
- * \param [in,out] offsets   On input an allocated array of \a num_children_of_E + 1 entries.
- *                           On output entry i indicates the position in \a leaf_elements
- *                           where the descandents of the i-th child of E start.
- */
-
-void
-t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *leaf_elements, size_t *offsets);
-
-// TODO: Test this function. Uniform mesh test. Refine always same corner, know that neighbors follow geometric series: See https://github.com/DLR-AMR/t8code/issues/2264
-// TODO (maybe): user data should be a template parameter in the long run
-// TODO (maybe): adapt to search interface
-/**
- * Iterate over all leaves of an element that touch a given face of the element.
- * Callback is called in each recursive step with element as input.
- * leaf_index is only not negative if element is a leaf, in which case it indicates
- * the index of the leaf in the leaves of the tree. If it is negative, it is
- * - (index + 1)
- * Top-down iteration and callback is called on each intermediate level.
- * If it returns false, the current element is not traversed further
- *
- * \param[in] forest                    A committed forest.
- * \param[in] ltreeid                   Local index of the tree containing the \a element.
- * \param[in] element                   The considered element.
- * \param[in] face                      The integer index of the considered face of \a element.
- * \param[in] leaf_elements             The array of leaf elements that are descendants of \a element. Sorted by linear index.
- * \param[in] tree_lindex_of_first_leaf Index of the first leaf of \a element in the tree's leaves.
- *                                       The corresponding leaf does not necessarily lie on the face of \a element.
- *                                      \note \a tree_lindex_of_first_leaf is not an index in \a leaf_elements. \a leaf_elements may only be a part of the tree's leaves.
- * \param[in] callback                  The callback function.
- * \param[in] user_data                 The user data passed to the \a callback function.
- */
-void
-t8_forest_iterate_faces (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                         const int face, const t8_element_array_t *const leaf_elements,
-                         const t8_locidx_t tree_lindex_of_first_leaf, const t8_forest_iterate_face_fn callback,
-                         void *user_data);
 
 /**
  * Perform a top-down search of the forest, executing a callback on each
@@ -231,5 +187,49 @@ t8_forest_search_partition (const t8_forest_t forest, t8_forest_partition_search
                             t8_forest_partition_query_fn query_fn, sc_array_t *queries);
 
 T8_EXTERN_C_END ();
+
+/** Split an array of elements according to the children of a given element E.
+ *  In other words for each child C of E, find
+ *  the index i, j, such that all descendants of C are
+ *  elements[i], ..., elements[j-1].
+ *
+ * \param [in] element       An element.
+ * \param [in] leaf_elements An array of leaf elements of \a element. Thus, all
+ *                           elements must be descendants. Sorted by linear index.
+ * \param [in,out] offsets   On input an allocated array of \a num_children_of_E + 1 entries.
+ *                           On output entry i indicates the position in \a leaf_elements
+ *                           where the descandents of the i-th child of E start.
+ */
+void
+t8_forest_split_array (const t8_element_t *element, const t8_element_array_view &leaf_elements, size_t *offsets);
+
+// TODO: Test this function. Uniform mesh test. Refine always same corner, know that neighbors follow geometric series: See https://github.com/DLR-AMR/t8code/issues/2264
+// TODO (maybe): user data should be a template parameter in the long run
+// TODO (maybe): adapt to search interface
+/**
+ * Iterate over all leaves of an element that touch a given face of the element.
+ * Callback is called in each recursive step with element as input.
+ * leaf_index is only not negative if element is a leaf, in which case it indicates
+ * the index of the leaf in the leaves of the tree. If it is negative, it is
+ * - (index + 1)
+ * Top-down iteration and callback is called on each intermediate level.
+ * If it returns false, the current element is not traversed further
+ *
+ * \param[in] forest                    A committed forest.
+ * \param[in] ltreeid                   Local index of the tree containing the \a element.
+ * \param[in] element                   The considered element.
+ * \param[in] face                      The integer index of the considered face of \a element.
+ * \param[in] leaf_elements             The array of leaf elements that are descendants of \a element. Sorted by linear index.
+ * \param[in] tree_lindex_of_first_leaf Index of the first leaf of \a element in the tree's leaves.
+ *                                       The corresponding leaf does not necessarily lie on the face of \a element.
+ *                                      \note \a tree_lindex_of_first_leaf is not an index in \a leaf_elements. \a leaf_elements may only be a part of the tree's leaves.
+ * \param[in] callback                  The callback function.
+ * \param[in] user_data                 The user data passed to the \a callback function.
+ */
+void
+t8_forest_iterate_faces (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                         const int face, const t8_element_array_view &leaf_elements,
+                         const t8_locidx_t tree_lindex_of_first_leaf, const t8_forest_iterate_face_fn callback,
+                         void *user_data);
 
 #endif /* !T8_FOREST_ITERATE_H */

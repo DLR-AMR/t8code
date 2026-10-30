@@ -29,6 +29,7 @@
 #define T8_FOREST_SEARCH_C_INTERFACE_H
 
 #include <t8.h>
+#include <t8_data/t8_element_array.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -40,14 +41,16 @@ T8_EXTERN_C_BEGIN ();
  * \param[in] ltreeid             the local tree id of the current tree in the cmesh.
  * \param[in] element             the element for which the search criterion is checked
  * \param[in] is_leaf             true if and only if \a element is a leaf element
- * \param[in] leaf_elements       the leaf elements in \a forest
+ * \param[in] leaf_elements       a view of the leaf elements in \a forest that are descendants of \a element,
+ *                                accessible with \ref t8_element_array_view_get_count and
+ *                                \ref t8_element_array_view_get_element
  * \param[in] tree_leaf_index     the local index of the first leaf in \a leaf_elements
  * \param[in] user_data           a user data pointer that can be set by the user
  * \returns                       non-zero if the search criterion is met, zero otherwise.
  */
 typedef int (*t8_search_element_callback_c_wrapper) (t8_forest_t forest, const t8_locidx_t ltreeid,
                                                      const t8_element_t *element, const int is_leaf,
-                                                     const t8_element_array_t *leaf_elements,
+                                                     const t8_element_array_view_c *leaf_elements,
                                                      const t8_locidx_t tree_leaf_index, void *user_data);
 
 /** A call-back function used by \ref t8_forest_init_search_with_queries for searching elements and
@@ -59,14 +62,16 @@ typedef int (*t8_search_element_callback_c_wrapper) (t8_forest_t forest, const t
  * \param[in] ltreeid             the local tree id of the current tree in the cmesh.
  * \param[in] element             the element for which the search criterion is checked
  * \param[in] is_leaf             true if and only if \a element is a leaf element
- * \param[in] leaf_elements       the leaf elements in \a forest
+ * \param[in] leaf_elements       a view of the leaf elements in \a forest that are descendants of \a element,
+ *                                accessible with \ref t8_element_array_view_get_count and
+ *                                \ref t8_element_array_view_get_element
  * \param[in] tree_leaf_index     the local index of the first leaf in \a leaf_elements
  * \param[in] queries             a pointer to an array of queries
  * \param[in] user_data           a user data pointer that can be set by the user
  */
 typedef int (*t8_search_queries_callback_c_wrapper) (t8_forest_t forest, const t8_locidx_t ltreeid,
                                                      const t8_element_t *element, const int is_leaf,
-                                                     const t8_element_array_t *leaf_elements,
+                                                     const t8_element_array_view_c *leaf_elements,
                                                      const t8_locidx_t tree_leaf_index, void *queries, void *user_data);
 
 /** A call-back function used by \ref t8_forest_init_search_with_batched_queries for searching elements and
@@ -78,7 +83,9 @@ typedef int (*t8_search_queries_callback_c_wrapper) (t8_forest_t forest, const t
  * \param[in] ltreeid             the local tree id of the current tree in the cmesh.
  * \param[in] element             the element for which the search criterion is checked
  * \param[in] is_leaf             true if and only if \a element is a leaf element
- * \param[in] leaf_elements       the leaf elements in \a forest
+ * \param[in] leaf_elements       a view of the leaf elements in \a forest that are descendants of \a element,
+ *                                accessible with \ref t8_element_array_view_get_count and
+ *                                \ref t8_element_array_view_get_element
  * \param[in] tree_leaf_index     the local index of the first leaf in \a leaf_elements
  * \param[in] queries             a pointer to an array of queries
  * \param[in] active_query_indices a pointer to an array of indices of active queries in \a queries
@@ -89,7 +96,7 @@ typedef int (*t8_search_queries_callback_c_wrapper) (t8_forest_t forest, const t
  */
 typedef void (*t8_search_batched_queries_callback_c_wrapper) (t8_forest_t forest, const t8_locidx_t ltreeid,
                                                               const t8_element_t *element, const int is_leaf,
-                                                              const t8_element_array_t *leaf_elements,
+                                                              const t8_element_array_view_c *leaf_elements,
                                                               const t8_locidx_t tree_leaf_index, const void *queries,
                                                               const size_t *active_query_indices, int *query_matches,
                                                               void *user_data);

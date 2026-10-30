@@ -148,7 +148,7 @@ struct t8_tutorial_search_user_data_t
 static int
 t8_tutorial_search_callback (t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
                              [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int is_leaf,
-                             [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                             [[maybe_unused]] const t8_element_array_view &leaf_elements,
                              [[maybe_unused]] const t8_locidx_t tree_leaf_index)
 {
 
@@ -172,7 +172,7 @@ t8_tutorial_search_callback (t8_forest_t forest, [[maybe_unused]] const t8_locid
  */
 static void
 t8_tutorial_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                                   const int is_leaf, [[maybe_unused]] const t8_element_array_view &leaf_elements,
                                    const t8_locidx_t tree_leaf_index, sc_array_t *queries, sc_array_t *query_indices,
                                    int *query_matches, const size_t num_active_queries)
 {

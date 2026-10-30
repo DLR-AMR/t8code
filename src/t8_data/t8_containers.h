@@ -90,36 +90,6 @@ void
 t8_element_array_init_size (t8_element_array_t *element_array, const t8_scheme_c *scheme, const t8_eclass_t tree_class,
                             const size_t num_elements);
 
-/** Initializes an already allocated (or static) view from existing t8_element_array.
- * The array view returned does not require t8_element_array_reset (doesn't hurt though).
- * \param [in,out] view  Array structure to be initialized.
- * \param [in] array     The array must not be resized while view is alive.
- * \param [in] offset    The offset of the viewed section in element units.
- *                       This offset cannot be changed until the view is reset.
- * \param [in] length    The length of the view in element units.
- *                       The view cannot be resized to exceed this length.
- *                       It is not necessary to call sc_array_reset later.
- */
-void
-t8_element_array_init_view (t8_element_array_t *view, const t8_element_array_t *array, const size_t offset,
-                            const size_t length);
-
-/** Initializes an already allocated (or static) view from given plain C data
- * (array of t8_element_t).
- * The array view returned does not require t8_element_array_reset (doesn't hurt though).
- * \param [in,out] view     Array structure to be initialized.
- * \param [in] base         The data must not be moved while view is alive.
- *                          Must be an array of t8_element_t corresponding to \a scheme.
- * \param [in] scheme       The scheme of the elements stored in \a base.
- * \param [in] tree_class   The tree class of the elements stored in \a base.
- * \param [in] elem_count   The length of the view in element units.
- *                          The view cannot be resized to exceed this length.
- *                          It is not necessary to call t8_element_array_reset later.
- */
-void
-t8_element_array_init_data (t8_element_array_t *view, const t8_element_t *base, const t8_scheme_c *scheme,
-                            const t8_eclass_t tree_class, const size_t elem_count);
-
 /** Initializes an already allocated (or static) array structure
  * and copy an existing array of t8_element_t into it.
  * \param [in,out]  element_array Array structure to be initialized.
@@ -293,5 +263,17 @@ void
 t8_element_array_truncate (t8_element_array_t *element_array);
 
 T8_EXTERN_C_END ();
+
+#ifdef __cplusplus
+#include <t8_data/t8_element_array.hxx>
+
+/** Get a view of all elements of an element array.
+ * \param [in]  element_array Array of elements.
+ * \return      The view. It is invalidated by any operation that changes the number of elements of
+ *              \a element_array.
+ */
+t8_element_array_view
+t8_element_array_get_view (const t8_element_array_t *element_array);
+#endif
 
 #endif /* !T8_CONTAINERS_HXX */

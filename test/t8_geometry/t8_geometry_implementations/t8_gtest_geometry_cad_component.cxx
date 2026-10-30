@@ -142,7 +142,7 @@ struct cell_search_query
 static int
 search_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
                  [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int is_leaf,
-                 [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                 [[maybe_unused]] const t8_element_array_view &leaf_elements,
                  [[maybe_unused]] const t8_locidx_t tree_leaf_index)
 {
   return 1;
@@ -170,7 +170,7 @@ search_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] const t8_
  */
 static void
 search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
-                       [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                       [[maybe_unused]] const t8_element_array_view &leaf_elements,
                        [[maybe_unused]] const t8_locidx_t tree_leaf_index, sc_array_t *queries,
                        sc_array_t *query_indices, int *query_matches, const size_t num_active_queries)
 {

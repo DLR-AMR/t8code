@@ -33,6 +33,7 @@
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest.h>  // Ensure t8_forest_t is defined
+#include <t8_data/t8_element_array.hxx>
 #include <functional>
 #include <numeric>
 #include <ranges>
@@ -52,7 +53,7 @@
  * \param[in] ltreeid The local tree ID of the current element.
  * \param[in] element A pointer to the current element being processed.
  * \param[in] is_leaf A bool indicating whether the current element is a leaf (non-zero) or not (zero).
- * \param[in] leaf_elements A pointer to an array of leaf elements.
+ * \param[in] leaf_elements A view of the leaf elements.
  * \param[in] tree_leaf_index The index of the current leaf element within the tree.
  * \param[in] user_data A reference to user-defined data passed to the callback.
  *
@@ -61,7 +62,7 @@
 template <typename Udata = void>
 using t8_search_element_callback = std::function<bool (
   const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, Udata *user_data)>;
+  const t8_element_array_view &leaf_elements, const t8_locidx_t tree_leaf_index, Udata *user_data)>;
 
 /**
  *  A callback function type used for search queries within a forest.
@@ -73,15 +74,16 @@ using t8_search_element_callback = std::function<bool (
  * \param[in] ltreeid The local tree ID within the forest.
  * \param[in] element The element being queried.
  * \param[in] is_leaf A flag indicating if the element is a leaf.
- * \param[in] leaf_elements The array of leaf elements.
+ * \param[in] leaf_elements A view of the leaf elements.
  * \param[in] tree_leaf_index The index of the leaf within the tree.
  * \param[in] query A single query to be processed.
  * \param[in] user_data User-defined data passed to the callback.
  */
 template <typename Query_T, typename Udata = void>
-using t8_search_query_callback = std::function<bool (
-  const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const Query_T &query, Udata *user_data)>;
+using t8_search_query_callback
+  = std::function<bool (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                        const bool is_leaf, const t8_element_array_view &leaf_elements,
+                        const t8_locidx_t tree_leaf_index, const Query_T &query, Udata *user_data)>;
 
 /**
  *  t8_search_batched_queries_callback
@@ -94,7 +96,7 @@ using t8_search_query_callback = std::function<bool (
  * \param[in] ltreeid The local tree ID within the forest.
  * \param[in] element The element being queried.
  * \param[in] is_leaf A flag indicating if the element is a leaf.
- * \param[in] leaf_elements The array of leaf elements.
+ * \param[in] leaf_elements A view of the leaf elements.
  * \param[in] tree_leaf_index The index of the leaf within the tree.
  * \param[in] queries A vector of queries to be processed.
  * \param[in, out] active_query_indices A vector of indices of active queries.
@@ -104,7 +106,7 @@ using t8_search_query_callback = std::function<bool (
 template <typename Query_T, typename Udata = void>
 using t8_search_batched_queries_callback = std::function<void (
   const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const std::vector<Query_T> &queries,
+  const t8_element_array_view &leaf_elements, const t8_locidx_t tree_leaf_index, const std::vector<Query_T> &queries,
   const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches, Udata *user_data)>;
 
 /**
@@ -258,12 +260,12 @@ struct t8_search_base
    * \param[in] ltreeid The local tree ID of the tree to be searched.
    * \param[in] element The element to be searched.
    * \param[in] scheme The element class scheme.
-   * \param[in] leaf_elements The array of leaf elements.
+   * \param[in] leaf_elements A view of the leaf elements.
    * \param[in] tree_lindex_of_first_leaf The index of the first leaf in the tree.
    */
   void
   search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *scheme,
-                    t8_element_array_t *leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf);
+                    const t8_element_array_view &leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf);
 
   /**  Checks if the search should stop due to empty queries.
    *
@@ -280,14 +282,14 @@ struct t8_search_base
    * \param[in] ltreeid The local tree ID of the current element.
    * \param[in] element A pointer to the current element being processed.
    * \param[in] is_leaf A bool indicating whether the current element is a leaf (non-zero) or not (zero).
-   * \param[in] leaf_elements A pointer to an array of leaf elements.
+   * \param[in] leaf_elements A view of the leaf elements.
    * \param[in] tree_leaf_index The index of the current leaf element within the tree.
    *
    * \return True if the search should continue, false otherwise.
    */
   virtual bool
   check_element (const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-                 const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+                 const t8_element_array_view &leaf_elements, const t8_locidx_t tree_leaf_index)
     = 0;
 
   /**  Checks queries during the search.
@@ -299,12 +301,12 @@ struct t8_search_base
    * \param[in] ltreeid The local tree ID of the current element.
    * \param[in] element A pointer to the current element being processed.
    * \param[in] is_leaf A bool indicating whether the current element is a leaf (non-zero) or not (zero).
-   * \param[in] leaf_elements A pointer to an array of leaf elements.
+   * \param[in] leaf_elements A view of the leaf elements.
    * \param[in] tree_leaf_index The index of the current leaf element within the tree.
    */
   virtual void
   check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
-                 const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+                 const bool is_leaf, const t8_element_array_view &leaf_elements, const t8_locidx_t tree_leaf_index)
     = 0;
 
   /**
@@ -389,13 +391,13 @@ struct t8_search: public t8_search_base
    * \param[in] ltreeid The local tree ID of the current element.
    * \param[in] element A pointer to the current element being processed.
    * \param[in] is_leaf A bool indicating whether the current element is a leaf or not.
-   * \param[in] leaf_elements A pointer to an array of leaf elements.
+   * \param[in] leaf_elements A view of the leaf elements.
    * \param[in] tree_leaf_index The index of the current leaf element within the tree.
    * \return True if the search should continue, false otherwise.
    */
   bool
   check_element (const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-                 const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index) override
+                 const t8_element_array_view &leaf_elements, const t8_locidx_t tree_leaf_index) override
   {
     T8_ASSERT (t8_forest_is_committed (this->forest));
     return this->element_callback (this->forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, user_data);
@@ -407,13 +409,13 @@ struct t8_search: public t8_search_base
    * \param[in] ltreeid The local tree ID of the current element.
    * \param[in] element A pointer to the current element being processed.
    * \param[in] is_leaf A bool indicating whether the current element is a leaf or not.
-   * \param[in] leaf_elements A pointer to an array of leaf elements.
+   * \param[in] leaf_elements A view of the leaf elements.
    * \param[in] tree_leaf_index The index of the current leaf element within the tree.
    */
   void
   check_queries ([[maybe_unused]] std::vector<size_t> &new_active_queries, [[maybe_unused]] const t8_locidx_t ltreeid,
                  [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const bool is_leaf,
-                 [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                 [[maybe_unused]] const t8_element_array_view &leaf_elements,
                  [[maybe_unused]] const t8_locidx_t tree_leaf_index) override
   {
     return;
@@ -504,12 +506,12 @@ struct t8_search_with_queries: public t8_search<Udata>
    * \param[in] ltreeid The ID of the local tree.
    * \param[in] element A pointer to the current element being checked.
    * \param[in] is_leaf A boolean indicating if the current element is a leaf.
-   * \param[in] leaf_elements A pointer to an array of leaf elements.
+   * \param[in] leaf_elements A view of the leaf elements.
    * \param[in] tree_leaf_index The index of the current element in the leaf array.
    */
   void
   check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
-                 const bool is_leaf, const t8_element_array_t *leaf_elements,
+                 const bool is_leaf, const t8_element_array_view &leaf_elements,
                  const t8_locidx_t tree_leaf_index) override
   {
     T8_ASSERT (new_active_queries.empty ());
@@ -617,12 +619,12 @@ struct t8_search_with_batched_queries: public t8_search<Udata>
    * \param[in] ltreeid The ID of the local tree.
    * \param[in] element A pointer to the current element being checked.
    * \param[in] is_leaf A boolean indicating if the current element is a leaf.
-   * \param[in] leaf_elements A pointer to an array of leaf elements.
+   * \param[in] leaf_elements A view of the leaf elements.
    * \param[in] tree_leaf_index The index of the current element in the leaf array.
    */
   void
   check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
-                 const bool is_leaf, const t8_element_array_t *leaf_elements,
+                 const bool is_leaf, const t8_element_array_view &leaf_elements,
                  const t8_locidx_t tree_leaf_index) override
   {
     T8_ASSERT (new_active_queries.empty ());

@@ -25,6 +25,7 @@
  */
 
 #include <t8_data/t8_element_array.hxx>
+#include <t8_data/t8_element_array.h>
 #include <algorithm>
 
 t8_locidx_t
@@ -138,3 +139,36 @@ t8_element_array::update_cache ()
     },
     elements);
 }
+
+/* #################### t8_element_array_view c interface #################### */
+T8_EXTERN_C_BEGIN ();
+
+size_t
+t8_element_array_view_get_count (const t8_element_array_view_c *view)
+{
+  T8_ASSERT (view != nullptr);
+  return view->size ();
+}
+
+const t8_element_t *
+t8_element_array_view_get_element (const t8_element_array_view_c *view, const size_t index)
+{
+  T8_ASSERT (view != nullptr);
+  return (*view)[index];
+}
+
+const t8_scheme_c *
+t8_element_array_view_get_scheme (const t8_element_array_view_c *view)
+{
+  T8_ASSERT (view != nullptr);
+  return view->get_scheme ();
+}
+
+t8_eclass_t
+t8_element_array_view_get_tree_class (const t8_element_array_view_c *view)
+{
+  T8_ASSERT (view != nullptr);
+  return view->get_tree_class ();
+}
+
+T8_EXTERN_C_END ();

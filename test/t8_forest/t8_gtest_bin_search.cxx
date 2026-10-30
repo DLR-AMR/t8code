@@ -110,7 +110,7 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_element_array_t *leaves = t8_forest_tree_get_leaf_elements (forest, itree);
+    const t8_element_array_view leaves = t8_element_array_get_view (t8_forest_tree_get_leaf_elements (forest, itree));
 
     // Iterate over all the tree's leaf elements.
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
@@ -179,7 +179,7 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_element_array_t *leaves = t8_forest_tree_get_leaf_elements (forest, itree);
+    const t8_element_array_view leaves = t8_element_array_get_view (t8_forest_tree_get_leaf_elements (forest, itree));
 
     /* Iterate over all the tree's leaf elements. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
@@ -245,7 +245,7 @@ t8_test_forest_bin_search_first_descendant_ancestor (t8_forest_t forest)
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_element_array_t *leaves = t8_forest_tree_get_leaf_elements (forest, itree);
+    const t8_element_array_view leaves = t8_element_array_get_view (t8_forest_tree_get_leaf_elements (forest, itree));
     t8_element_t *search_element;
     scheme->element_new (tree_class, 1, &search_element);
 

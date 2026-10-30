@@ -51,7 +51,6 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_schemes/t8_subelement/t8_subelement.hxx>
 #endif
-#include <t8_data/t8_element_array_iterator.hxx>
 
 #include <algorithm>
 #include <span>
@@ -1615,7 +1614,7 @@ struct t8_lfn_user_data
 static int
 t8_forest_leaf_face_neighbors_iterate (const t8_forest_t forest, const t8_locidx_t ltreeid,
                                        [[maybe_unused]] const t8_element_t *element, const int face, const int is_leaf,
-                                       [[maybe_unused]] const t8_element_array_t *const leaf_elements,
+                                       [[maybe_unused]] const t8_element_array_view &leaf_elements,
                                        const t8_locidx_t tree_leaf_index, void *user_data)
 {
   // Output of iterate_faces:
@@ -1762,9 +1761,9 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
   // We store these in a vector and iterate over the entries.
   // The leaf arrays themself do not store any information about their tree,
   // whether it is local or ghost.
-  // We thus need to add this info and hence store a pair of element array and
+  // We thus need to add this info and hence store a pair of a view of the element array and
   // a bool that is true if and only if the element array corresponds to a ghost tree.
-  using neighbor_leaf_array = std::pair<const t8_element_array_t *, const bool>;
+  using neighbor_leaf_array = std::pair<const t8_element_array_view, const bool>;
 
   // We compute the owners of the first and last face descendant.
   // If the current rank is in between then the local process might have neighbor elements
@@ -1789,7 +1788,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
       // The neighbor tree is a local tree and hence there may be local neighbor elements.
       const t8_element_array_t *tree_leaves = t8_forest_tree_get_leaf_elements (forest, local_neighbor_tree);
       if (tree_leaves != nullptr) {
-        neighbor_leaf_array *leaf_array = new neighbor_leaf_array (tree_leaves, false);
+        neighbor_leaf_array *leaf_array = new neighbor_leaf_array (t8_element_array_get_view (tree_leaves), false);
         leaf_arrays.push_back (leaf_array);
       }
     }
@@ -1807,7 +1806,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
         const t8_element_array_t *ghost_leaves
           = t8_forest_ghost_get_tree_leaf_elements (forest, local_neighbor_ghost_treeid);
         if (ghost_leaves != NULL) {
-          neighbor_leaf_array *leaf_array = new neighbor_leaf_array (ghost_leaves, true);
+          neighbor_leaf_array *leaf_array = new neighbor_leaf_array (t8_element_array_get_view (ghost_leaves), true);
           leaf_arrays.push_back (leaf_array);
         }
       }
@@ -1833,7 +1832,6 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
     struct t8_lfn_user_data user_data;
     auto &tree_leaves = leaf_array->first;
     const bool leaf_array_is_ghost = leaf_array->second;
-    T8_ASSERT (tree_leaves != NULL);
     const t8_element_t *first_descendant;
     /*
     * Compute the index of the first leaf in tree_leaves that is an ancestor or descendant of
@@ -1872,10 +1870,10 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
 
       // We need to restrict the array such that it contains only elements inside the search element.
       // Thus, we create a new view containing all elements starting at first_leaf_index.
-      t8_element_array_t reduced_leaves;
+      /** The number of leaves inside the search element, starting at first_leaf_index. */
+      size_t reduced_leaf_count = 1;
       if (neighbor_unique) {
         t8_debugf ("Starting search with element indices %i to %i (including).\n", first_leaf_index, first_leaf_index);
-        t8_element_array_init_view (&reduced_leaves, tree_leaves, first_leaf_index, 1);
       }
       else {
         /* We need to compute the first element that is not longer contained in the same_level_neighbor.
@@ -1888,8 +1886,8 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
          * ancestor of same_level_neighbor. If so, then it is automatically the last leaf
          * that we need to check.
          * If not, we build the successor of same_level_neighbor. */
-        const t8_locidx_t leaf_count = t8_element_array_get_count (tree_leaves);
-        const t8_element_t *last_leaf = t8_element_array_index_locidx (tree_leaves, leaf_count - 1);
+        const t8_locidx_t leaf_count = tree_leaves.size ();
+        const t8_element_t *last_leaf = tree_leaves[leaf_count - 1];
         T8_ASSERT (last_leaf != NULL);
         t8_locidx_t last_search_element_index = -1;
         if (scheme->element_is_ancestor (neigh_class, same_level_neighbor, last_leaf)) {
@@ -1910,12 +1908,12 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
           // The last index in our search range is 1 less.
           last_search_element_index = upper_search_for_successor < 0 ? leaf_count - 1 : upper_search_for_successor - 1;
         }
-        const size_t reduced_leaf_count = last_search_element_index - first_leaf_index + 1;
+        reduced_leaf_count = last_search_element_index - first_leaf_index + 1;
         T8_ASSERT (reduced_leaf_count > 0);
         t8_debugf ("Starting search with element indices %i to %i (including).\n", first_leaf_index,
                    last_search_element_index);
-        t8_element_array_init_view (&reduced_leaves, tree_leaves, first_leaf_index, reduced_leaf_count);
       }
+      const t8_element_array_view reduced_leaves = tree_leaves.subview (first_leaf_index, reduced_leaf_count);
       // Iterate over all leaves at the face and collect them as neighbors.
       const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
       // Compute the local or ghost tree id depending on whether this leaf array corresponds to a local
@@ -1924,7 +1922,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
         = leaf_array_is_ghost ? t8_forest_ghost_get_ghost_treeid (forest, computed_gneigh_tree) + num_local_trees
                               : local_neighbor_tree;
       t8_forest_iterate_faces (forest, face_iterate_tree_id, search_this_element, search_element_dual_face,
-                               &reduced_leaves, first_leaf_index, t8_forest_leaf_face_neighbors_iterate, &user_data);
+                               reduced_leaves, first_leaf_index, t8_forest_leaf_face_neighbors_iterate, &user_data);
       // Output of iterate_faces:
       //  Array of indices in tree_leaves of all the face neighbor elements
       //  Assign pneighbor_leaves
@@ -2938,7 +2936,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
     /* Get the elements */
     const t8_element_array_t *elements = t8_forest_get_tree_leaf_element_array (forest, ltreeid);
 
-    index = t8_forest_bin_search_lower (elements, last_desc_id, forest->maxlevel);
+    index = t8_forest_bin_search_lower (t8_element_array_get_view (elements), last_desc_id, forest->maxlevel);
     if (index >= 0) {
       /* There exists an element in the array with id <= last_desc_id,
        * If also elem_id < id, then we found a true decsendant of element */
@@ -2962,7 +2960,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
     if (ghost_treeid >= 0) {
       /* The tree is a ghost tree */
       const t8_element_array_t *elements = t8_forest_ghost_get_tree_leaf_elements (forest, ghost_treeid);
-      index = t8_forest_bin_search_lower (elements, last_desc_id, forest->maxlevel);
+      index = t8_forest_bin_search_lower (t8_element_array_get_view (elements), last_desc_id, forest->maxlevel);
       if (index >= 0) {
         /* There exists an element in the array with id <= last_desc_id,
          * If also elem_id < id, then we found a true decsendant of element */
