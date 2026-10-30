@@ -413,10 +413,10 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     }
   }
 
-  /** Check if the element is conformal, i.e. there are no hanging nodes on any of its faces.
-   *  This is the case if the element has zero or exactly one face neighbor at each face.
+  /** Check if the element has a hanging node i.e. if any of its faces has more than one neighbor.
+   *  This is the case if the element has more than one face neighbor at any face.
    *  This function uses the cached face neighbor defined in TCompetences if available.
-   *  \return True if the element is conformal, false otherwise.
+   *  \return True if the element has a hanging node, false otherwise.
    */
   bool
   has_hanging_node () const
