@@ -30,7 +30,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass/t8_eclass.h>
-#include <test/t8_gtest_schemes.hxx>
+#include <t8_gtest_schemes.hxx>
 
 /** A base class for depth first search tests. */
 struct TestDFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
