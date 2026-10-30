@@ -159,25 +159,27 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     /* Name of the deformation method, used in the output file names. */
     const char *method_name = NULL;
     switch (deformation_type_int) {
-#if T8_ENABLE_EIGEN
     case 0:
+#if T8_ENABLE_EIGEN
       deformation.set_deformation_method<t8_rbf> (T8_RBF_CPC2, scale_factor_support_radius);
       method_name = "cpc2";
       break;
+#endif /* T8_ENABLE_EIGEN */
     case 1:
+#if T8_ENABLE_EIGEN
       deformation.set_deformation_method<t8_rbf> (T8_RBF_TPS);
       method_name = "tps";
       break;
 #else  /* T8_ENABLE_EIGEN */
-      t8_global_errorf ("ERROR: This example requires Eigen to be enabled in t8code.\n");
+      SC_ABORTF ("ERROR: This example requires Eigen to be enabled in t8code.\n");
 #endif /* T8_ENABLE_EIGEN */
-#if T8_ENABLE_GMSH
     case 2:
+#if T8_ENABLE_GMSH
       deformation.set_deformation_method<t8_dgm> ();
       method_name = "dgm";
       break;
 #else  /* T8_ENABLE_GMSH  */
-      t8_global_errorf ("ERROR: This example requires GMSH to be enabled in t8code.\n");
+      SC_ABORTF ("ERROR: This example requires GMSH to be enabled in t8code.\n");
 #endif /* T8_ENABLE_GMSH  */
 
     default:
