@@ -39,8 +39,8 @@
   */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_macros.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_macros.hxx>
+#include <t8_gtest_custom_assertion.hxx>
 
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_forest/t8_forest_general.h>
@@ -48,7 +48,7 @@
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_forest/t8_forest_iterate.h>
-#include <src/t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
 #include <t8_test_data_dir.h>
 
 #include <string>

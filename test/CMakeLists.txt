@@ -253,3 +253,15 @@ if(NOT APPLE)
     add_t8_cpp_test( NAME t8_gtest_compute_first_element_serial                 SOURCES t8_cmesh/t8_gtest_compute_first_element.cxx )
 endif()
 
+target_include_directories( T8 PUBLIC 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}> 
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/test>
+)
+
+# Install test header files
+install( DIRECTORY .
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/test
+  FILES_MATCHING
+    PATTERN "*.hxx"
+    PATTERN "*.h"
+)
