@@ -25,7 +25,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * Checks that the competences for discontinuous Galerkin methods defined in \ref dg_competences.hxx work as expected.
  */
 #include <gtest/gtest.h>
-#include <test/mesh_handle/t8_gtest_common.hxx>
+#include <mesh_handle/t8_gtest_common.hxx>
 #include <t8.h>
 #include <mesh_handle/mesh_handle.hxx>
 
