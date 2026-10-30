@@ -156,13 +156,17 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     /* Initialize the deformation object for the given mesh. */
     t8_cmesh_mesh_deformation deformation (cmesh);
 
+    /* Name of the deformation method, used in the output file names. */
+    const char *method_name = NULL;
     switch (deformation_type_int) {
 #if T8_ENABLE_EIGEN
     case 0:
       deformation.set_deformation_method<t8_rbf> (T8_RBF_CPC2, scale_factor_support_radius);
+      method_name = "cpc2";
       break;
     case 1:
       deformation.set_deformation_method<t8_rbf> (T8_RBF_TPS);
+      method_name = "tps";
       break;
 #else  /* T8_ENABLE_EIGEN */
       t8_global_errorf ("ERROR: This example requires Eigen to be enabled in t8code.\n");
@@ -170,6 +174,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 #if T8_ENABLE_GMSH
     case 2:
       deformation.set_deformation_method<t8_dgm> ();
+      method_name = "dgm";
       break;
 #else  /* T8_ENABLE_GMSH  */
       t8_global_errorf ("ERROR: This example requires GMSH to be enabled in t8code.\n");
@@ -179,8 +184,12 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
       SC_ABORTF ("Unknown or unavailable deformation type %d.\n", deformation_type_int);
     }
 
+    t8_global_productionf ("Using deformation method: %s\n", method_name);
+
     /* Write output. */
-    t8_forest_vtk_write_file (forest, "deformed_forest_step_0000", 1, 1, 1, 1, 0, 0, NULL);
+    char output_name[BUFSIZ];
+    snprintf (output_name, BUFSIZ, "deformed_forest_%s_step_0000", method_name);
+    t8_forest_vtk_write_file (forest, output_name, 1, 1, 1, 1, 0, 0, NULL);
 
     auto brep_files = findBrepFiles (brep_folder);
     std::sort (brep_files.begin (), brep_files.end ());
@@ -201,8 +210,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 
       deformation.apply_vertex_displacements (displacements, cad_deformed);
 
-      char output_name[BUFSIZ];
-      snprintf (output_name, BUFSIZ, "deformed_forest_step_%04d", ++ifile);
+      snprintf (output_name, BUFSIZ, "deformed_forest_%s_step_%04d", method_name, ++ifile);
       t8_forest_vtk_write_file (forest, output_name, 1, 1, 1, 1, 0, 0, NULL);
     }
     /* Cleanup. */
