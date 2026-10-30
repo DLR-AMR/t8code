@@ -33,6 +33,7 @@
 #include <unordered_map>
 #include <t8_vector/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation_method.hxx>
+#include <t8_cmesh/t8_cmesh.h>
 
 /**
  * Struct for mesh deformation using Delaunay Graph Mapping (DGM).
@@ -53,14 +54,9 @@ struct t8_dgm: public t8_mesh_deformation_method
    * \param [in] boundary_node_data Map of global vertex IDs to boundary nodes.
    */
   void
-  set_boundary_nodes (const std::unordered_map<t8_gloidx_t, t8_mesh_deformation_node>& boundary_node_data) override
+  set_boundary_nodes (const std::vector<t8_mesh_deformation_node>& boundary_node_data) override
   {
-    boundary_nodes.clear ();
-    boundary_nodes.reserve (boundary_node_data.size ());
-    for (const auto& [global_vertex_id, boundary_node] : boundary_node_data) {
-      boundary_nodes.push_back (boundary_node);
-      boundary_nodes.back ().global_id = global_vertex_id;
-    }
+    boundary_nodes = boundary_node_data;
   }
 
   /**
@@ -75,9 +71,7 @@ struct t8_dgm: public t8_mesh_deformation_method
    * \param [in, out] inner_node   The inner node which will be interpolated.
    */
   void
-  interpolate (t8_mesh_deformation_node& inner_node) const override
-  {
-  }
+  interpolate (t8_mesh_deformation_node& inner_node) const override;
 
   /**
    * Returns the Delaunay triangles of the boundary nodes.

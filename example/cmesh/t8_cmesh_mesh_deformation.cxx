@@ -34,6 +34,9 @@
 #if T8_ENABLE_EIGEN
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx>
 #endif /* T8_ENABLE_EIGEN */
+#if T8_ENABLE_GMSH
+#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_dgm.hxx>
+#endif /* T8_ENABLE_GMSH */
 #endif /* T8_ENABLE_OCC */
 #include <t8_vtk/t8_vtk_writer.h>
 #include <sc_options.h>
@@ -67,7 +70,7 @@ findBrepFiles (const char *folder)
 int
 main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
-#if T8_ENABLE_OCC && T8_ENABLE_EIGEN
+#if T8_ENABLE_OCC
 
   char usage[BUFSIZ];
   /* Brief help message. */
@@ -121,7 +124,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   sc_options_add_int (opt, 'd', "dimension", &dim, 0, "Dimension of the mesh (1, 2 or 3)");
   sc_options_add_int (opt, 'l', "level", &level, 2, "Uniform refinement level for the input mesh. Default: 2");
   sc_options_add_int (opt, 't', "deformtype", &deformation_type_int, 0,
-                      "Deformation type (0 for RBF CPC2, 1 for RBF TPS). Default: 0");
+                      "Deformation type: 0 for RBF CPC2, 1 for RBF TPS, 2 for Delaunay Graph Mapping. Default: 0");
   sc_options_add_double (opt, 's', "scalefactor", &scale_factor_support_radius, 1.5,
                          "Scale factor for the support radius. Default: 1.5");
 
@@ -161,7 +164,17 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     case 1:
       deformation.set_deformation_method<t8_rbf> (T8_RBF_TPS);
       break;
-#endif
+#else  /* T8_ENABLE_EIGEN */
+      t8_global_errorf ("ERROR: This example requires Eigen to be enabled in t8code.\n");
+#endif /* T8_ENABLE_EIGEN */
+#if T8_ENABLE_GMSH
+    case 2:
+      deformation.set_deformation_method<t8_dgm> ();
+      break;
+#else  /* T8_ENABLE_GMSH  */
+      t8_global_errorf ("ERROR: This example requires GMSH to be enabled in t8code.\n");
+#endif /* T8_ENABLE_GMSH  */
+
     default:
       SC_ABORTF ("Unknown or unavailable deformation type %d.\n", deformation_type_int);
     }
@@ -204,9 +217,9 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
-#else  /* T8_ENABLE_OCC and T8_ENABLE_EIGEN */
-  t8_global_errorf ("ERROR: This example requires OpenCASCADE and Eigen support to be enabled in t8code.\n");
-#endif /* T8_ENABLE_OCC and T8_ENABLE_EIGEN */
+#else  /* T8_ENABLE_OCC  */
+  t8_global_errorf ("ERROR: This example requires OpenCASCADE to be enabled in t8code.\n");
+#endif /* T8_ENABLE_OCC  */
 
   return 0;
 }

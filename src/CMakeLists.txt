@@ -136,17 +136,27 @@ if( T8CODE_ENABLE_EIGEN )
     target_link_libraries( T8 PRIVATE Eigen3::Eigen )
 endif()
 
+if( T8CODE_ENABLE_OCC AND T8CODE_ENABLE_EIGEN )
+target_sources(T8 PRIVATE
+t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.cxx
+    )
+    install( FILES
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_mesh_deformation/
+    )
+endif()
+
 if( T8CODE_ENABLE_GMSH )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_GMSH=1 )
     target_link_libraries( T8 PRIVATE gmsh::shared )
 endif()
 
-if( T8CODE_ENABLE_OCC AND T8CODE_ENABLE_EIGEN )
-    target_sources(T8 PRIVATE
-      t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.cxx
+if( T8CODE_ENABLE_OCC AND T8CODE_ENABLE_GMSH)
+target_sources(T8 PRIVATE
+t8_cmesh/t8_cmesh_mesh_deformation/t8_dgm.cxx
     )
     install( FILES
-      t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_dgm.hxx
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_mesh_deformation/
     )
 endif()
