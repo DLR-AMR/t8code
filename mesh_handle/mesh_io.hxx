@@ -153,7 +153,7 @@ to_vtk_data_field (const TMeshClass &mesh, const vtk_data_field<TValueType> &fie
     std::ranges::copy (values_to_copy, buffer.begin ());
   }
   else {
-    auto flattened = values_to_copy | std::views::join;
+    auto flattened = std::move (values_to_copy) | std::views::join;
     std::ranges::copy (flattened, buffer.begin ());
   }
 
