@@ -233,6 +233,17 @@ struct t8_scheme
     return std::holds_alternative<TEclassScheme> (eclass_schemes[tree_class]);
   }
 
+  /** Get the index of the eclass scheme of a tree class in \ref scheme_var.
+   * \param [in] tree_class    The eclass of the current tree.
+   * \return                   The index of the alternative of \ref scheme_var that holds the eclass scheme of
+   *                           \a tree_class.
+   */
+  inline size_t
+  get_eclass_scheme_index (const t8_eclass_t tree_class) const
+  {
+    return eclass_schemes[tree_class].index ();
+  }
+
   /** Get the eclass an eclass scheme is valid for.
    * \param [in] tree_class     The eclass of the current tree.
    * \return                    The valid tree class for the eclass scheme.
