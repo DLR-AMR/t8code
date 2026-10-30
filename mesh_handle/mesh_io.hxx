@@ -122,7 +122,7 @@ using vtk_vector_field = vtk_data_field<t8_3D_vec>; /**< One 3D vector value per
 
 namespace detail
 {
-/** Helper function to convert a \ref vtk_data_field into the t8_vtk_data_field_t expected by the vtk writer.
+/** Helper function to convert a vtk_data_field into the t8_vtk_data_field_t expected by the vtk writer.
  *  The values are copied into \a buffer, since the vtk writer expects a flat double array.
  *  This is used in \ref write_mesh_to_vtk_ext_data.
  *  \tparam TMeshClass The mesh handle class.
