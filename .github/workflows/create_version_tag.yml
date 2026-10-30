@@ -82,3 +82,35 @@ jobs:
             RELEASE_VERSION: ${{ needs.monthly_release.outputs.version_name }}
             UPLOAD_TO_RELEASE: true
 
+    # Open a PR that updates version and release date in CITATION.cff, only after the release was created
+    update_citation:
+        runs-on: ubuntu-latest
+        needs: [monthly_release, t8code_tarball]
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v7
+              with:
+                  ref: main
+                  token: ${{ secrets.T8DDY_TOKEN }}
+            # Use the version name without the leading "v", e.g., 1.2.3-24.06
+            - name: Update version and release date in CITATION.cff
+              run: |
+                  VERSION_NAME="${{ needs.monthly_release.outputs.version_name }}"
+                  sed -i -E "s/^version: .*/version: ${VERSION_NAME#v}/" CITATION.cff
+                  sed -i -E "s/^date-released: .*/date-released: \"$(date +'%Y-%m-%d')\"/" CITATION.cff
+                  git diff
+            - name: Open pull request
+              env:
+                  GH_TOKEN: ${{ secrets.T8DDY_TOKEN }}
+              run: |
+                  VERSION_NAME="${{ needs.monthly_release.outputs.version_name }}"
+                  BRANCH="update_citation_${VERSION_NAME}"
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git switch -c "$BRANCH"
+                  git commit -am "Update CITATION.cff to ${VERSION_NAME}"
+                  git push origin "$BRANCH"
+                  gh pr create --base main --head "$BRANCH" \
+                      --title "Other: Update CITATION.cff to ${VERSION_NAME}" \
+                      --body "Automated update of version and release date in CITATION.cff after release ${VERSION_NAME}."
+
