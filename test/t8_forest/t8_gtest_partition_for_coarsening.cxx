@@ -198,23 +198,28 @@ struct t8_test_partition_for_coarsening_test: public testing::TestWithParam<std:
   }
 #endif
 
+  /**
+   * Run the steps (1.) to (5.), starting from a uniform forest.
+   *
+   * \param[in] level  The level of the uniform forest.
+   */
+  void
+  check_partition_for_coarsening (const int level);
+
   // Member variables: The currently tested scheme and eclass.
   const t8_scheme *scheme; /**< The currently tested scheme. */
   t8_cmesh_t cmesh;        /**< The currently tested cmesh. */
   std::string cmesh_name;  /**< Name of the currently tested cmesh.*/
 };
 
-// The test's main function.
-TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
+void
+t8_test_partition_for_coarsening_test::check_partition_for_coarsening (const int level)
 {
 
   // -------------------------------------------
   // ----- (1.) Create uniform base forest -----
   // -------------------------------------------
   t8_global_productionf ("Create uniform forest.\n");
-
-  // Initial uniform refinement level
-  const int level = 2;
 
   // Increase reference counters of cmesh and scheme to avoid reaching zero.
   t8_cmesh_ref (cmesh);
@@ -327,6 +332,18 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   // --------------------------------
   t8_forest_unref (&repartitioned_coarse_pfc_forest);
   t8_forest_unref (&repartitioned_coarse_gathered_forest);
+}
+
+// The test's main function.
+TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
+{
+  check_partition_for_coarsening (2);
+}
+
+// Start from the root elements, so that unrefined roots lie at process boundaries.
+TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening_from_roots)
+{
+  check_partition_for_coarsening (0);
 }
 
 // Instantiate parameterized test to be run for all schemes.
