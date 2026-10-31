@@ -112,6 +112,11 @@ t8_forest_balance_boundary_is_unbalanced (t8_forest_t forest_from, const t8_loci
     const t8_forest_boundary_neighbor_t *neighbor
       = (const t8_forest_boundary_neighbor_t *) sc_array_index (&neighbors, ineigh);
     const t8_eclass_t neigh_class = neighbor->eclass;
+    /* If the neighbor has no finer leaves, none of its children has, so we skip them.
+     * This is the common case and much cheaper than checking each child. */
+    if (!t8_forest_element_has_leaf_desc (forest_from, neighbor->gtreeid, neighbor->neigh, neigh_class)) {
+      continue;
+    }
     const int max_children = scheme->get_max_num_boundary_touching_children (neigh_class);
     std::vector<t8_element_t *> children (max_children);
     std::vector<int> child_bdy_dims (max_children);
