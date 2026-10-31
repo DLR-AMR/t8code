@@ -320,7 +320,11 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     }
     t8_global_productionf ("Profiling: %i\n", forest->profile != NULL);
     /* Adapt the forest */
+    /* The adapt function asks whether the same elements (the neighbors of
+     * neighboring elements) have leaf descendants many times */
+    t8_forest_leaf_desc_cache_begin (forest_from);
     t8_forest_commit (forest_temp);
+    t8_forest_leaf_desc_cache_end ();
     /* Store the runtimes of adapt and ghost */
     if (forest->profile != NULL) {
       if (count_rounds > num_stats_allocated - 2) {

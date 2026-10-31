@@ -872,7 +872,11 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
     break;
   case T8_GHOST_EDGES:
   case T8_GHOST_VERTICES:
+    /* The search asks for the owners of each neighbor of each leaf at each of
+     * its boundaries, i.e. for the same elements up to 8 times (around a vertex) */
+    t8_forest_owner_bounds_cache_begin (forest);
     t8_forest_search (forest, t8_forest_ghost_search_boundary, NULL, NULL);
+    t8_forest_owner_bounds_cache_end ();
     break;
   default:
     SC_ABORT_NOT_REACHED ();

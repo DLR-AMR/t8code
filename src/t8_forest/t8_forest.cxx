@@ -50,6 +50,8 @@
 #include <t8_data/t8_element_array_iterator.hxx>
 
 #include <algorithm>
+#include <unordered_map>
+#include <utility>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -2841,6 +2843,100 @@ t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid, const
                                               NULL, NULL);
 }
 
+namespace
+{
+/** The key of an element in the owner bounds cache. */
+struct t8_owner_bounds_key
+{
+  t8_gloidx_t gtreeid;
+  t8_linearidx_t linear_id;
+  int level;
+
+  bool
+  operator== (const t8_owner_bounds_key &other) const
+  {
+    return gtreeid == other.gtreeid && linear_id == other.linear_id && level == other.level;
+  }
+};
+
+struct t8_owner_bounds_key_hash
+{
+  size_t
+  operator() (const t8_owner_bounds_key &key) const
+  {
+    size_t hash = std::hash<t8_gloidx_t> () (key.gtreeid);
+    hash ^= std::hash<t8_linearidx_t> () (key.linear_id) + 0x9e3779b97f4a7c15ULL + (hash << 6) + (hash >> 2);
+    hash ^= std::hash<int> () (key.level) + 0x9e3779b97f4a7c15ULL + (hash << 6) + (hash >> 2);
+    return hash;
+  }
+};
+
+/** The cache of t8_forest_owner_bounds_cache_begin: the forest and the
+ * bounds over all ranks of the elements asked for. */
+struct t8_owner_bounds_cache
+{
+  t8_forest_t forest;
+  std::unordered_map<t8_owner_bounds_key, std::pair<int, int>, t8_owner_bounds_key_hash> bounds;
+  /* scratch elements for the first and last descendants of each eclass, to
+   * avoid allocating them in every call */
+  t8_element_t *descendants[T8_ECLASS_COUNT][2] = {};
+};
+
+t8_owner_bounds_cache *owner_bounds_cache = nullptr;
+
+/** The cache of t8_forest_leaf_desc_cache_begin: the forest and whether the
+ * elements asked for have leaf descendants. */
+struct t8_leaf_desc_cache
+{
+  t8_forest_t forest;
+  std::unordered_map<t8_owner_bounds_key, bool, t8_owner_bounds_key_hash> has_leaf_desc;
+};
+
+t8_leaf_desc_cache *leaf_desc_cache = nullptr;
+}  // namespace
+
+void
+t8_forest_leaf_desc_cache_begin (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  delete leaf_desc_cache;
+  leaf_desc_cache = new t8_leaf_desc_cache;
+  leaf_desc_cache->forest = forest;
+}
+
+void
+t8_forest_leaf_desc_cache_end (void)
+{
+  delete leaf_desc_cache;
+  leaf_desc_cache = nullptr;
+}
+
+void
+t8_forest_owner_bounds_cache_begin (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  delete owner_bounds_cache;
+  owner_bounds_cache = new t8_owner_bounds_cache;
+  owner_bounds_cache->forest = forest;
+}
+
+void
+t8_forest_owner_bounds_cache_end (void)
+{
+  if (owner_bounds_cache != nullptr) {
+    const t8_scheme *scheme = t8_forest_get_scheme (owner_bounds_cache->forest);
+    for (int eclass = 0; eclass < T8_ECLASS_COUNT; ++eclass) {
+      for (int i = 0; i < 2; ++i) {
+        if (owner_bounds_cache->descendants[eclass][i] != nullptr) {
+          scheme->element_destroy ((t8_eclass_t) eclass, 1, &owner_bounds_cache->descendants[eclass][i]);
+        }
+      }
+    }
+  }
+  delete owner_bounds_cache;
+  owner_bounds_cache = nullptr;
+}
+
 void
 t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
                                  t8_eclass_t eclass, int *lower, int *upper)
@@ -2853,17 +2949,61 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const 
     return;
   }
 
-  /* Compute the first and last descendant of element */
-  scheme->element_new (eclass, 1, &first_desc);
+  /* Look up queries over all ranks in the cache */
+  const bool cached
+    = owner_bounds_cache != nullptr && owner_bounds_cache->forest == forest && *lower == 0 && *upper == forest->mpisize - 1;
+  t8_owner_bounds_key key;
+  if (cached) {
+    key.gtreeid = gtreeid;
+    key.level = scheme->element_get_level (eclass, element);
+    key.linear_id = scheme->element_get_linear_id (eclass, element, key.level);
+    const auto found = owner_bounds_cache->bounds.find (key);
+    if (found != owner_bounds_cache->bounds.end ()) {
+      *lower = found->second.first;
+      *upper = found->second.second;
+      return;
+    }
+  }
+
+  /* Compute the first and last descendant of element (in the scratch
+   * elements of the cache if there is one) */
+  const bool use_scratch = owner_bounds_cache != nullptr && owner_bounds_cache->forest == forest;
+  if (use_scratch) {
+    for (int i = 0; i < 2; ++i) {
+      if (owner_bounds_cache->descendants[eclass][i] == nullptr) {
+        scheme->element_new (eclass, 1, &owner_bounds_cache->descendants[eclass][i]);
+      }
+    }
+    first_desc = owner_bounds_cache->descendants[eclass][0];
+    last_desc = owner_bounds_cache->descendants[eclass][1];
+  }
+  else {
+    scheme->element_new (eclass, 1, &first_desc);
+    scheme->element_new (eclass, 1, &last_desc);
+  }
   scheme->element_get_first_descendant (eclass, element, first_desc, forest->maxlevel);
-  scheme->element_new (eclass, 1, &last_desc);
   scheme->element_get_last_descendant (eclass, element, last_desc, forest->maxlevel);
 
-  /* Compute their owners as bounds for all of element's owners */
-  *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc, eclass, *lower, *upper, *lower, 1);
-  *upper = t8_forest_element_find_owner_ext (forest, gtreeid, last_desc, eclass, *lower, *upper, *upper, 1);
-  scheme->element_destroy (eclass, 1, &first_desc);
-  scheme->element_destroy (eclass, 1, &last_desc);
+  /* Most elements whose owners are asked for are local (e.g. the neighbors of
+   * local elements in the ghost search): if both descendants are on this rank,
+   * it is the unique owner, without a binary search over all ranks. */
+  const int rank = forest->mpirank;
+  if (*lower <= rank && rank <= *upper && t8_forest_element_check_owner (forest, first_desc, gtreeid, eclass, rank, 1)
+      && t8_forest_element_check_owner (forest, last_desc, gtreeid, eclass, rank, 1)) {
+    *lower = *upper = rank;
+  }
+  else {
+    /* Compute their owners as bounds for all of element's owners */
+    *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc, eclass, *lower, *upper, *lower, 1);
+    *upper = t8_forest_element_find_owner_ext (forest, gtreeid, last_desc, eclass, *lower, *upper, *upper, 1);
+  }
+  if (!use_scratch) {
+    scheme->element_destroy (eclass, 1, &first_desc);
+    scheme->element_destroy (eclass, 1, &last_desc);
+  }
+  if (cached) {
+    owner_bounds_cache->bounds.emplace (key, std::make_pair (*lower, *upper));
+  }
 }
 
 void
@@ -2947,9 +3087,34 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
   scheme->element_destroy (neigh_class, 1, &face_neighbor);
 }
 
+static int
+t8_forest_element_has_leaf_desc_uncached (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
+                                          const t8_eclass_t tree_class);
+
 int
 t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
                                  const t8_eclass_t tree_class)
+{
+  if (leaf_desc_cache == nullptr || leaf_desc_cache->forest != forest) {
+    return t8_forest_element_has_leaf_desc_uncached (forest, gtreeid, element, tree_class);
+  }
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  t8_owner_bounds_key key;
+  key.gtreeid = gtreeid;
+  key.level = scheme->element_get_level (tree_class, element);
+  key.linear_id = scheme->element_get_linear_id (tree_class, element, key.level);
+  const auto found = leaf_desc_cache->has_leaf_desc.find (key);
+  if (found != leaf_desc_cache->has_leaf_desc.end ()) {
+    return found->second;
+  }
+  const int result = t8_forest_element_has_leaf_desc_uncached (forest, gtreeid, element, tree_class);
+  leaf_desc_cache->has_leaf_desc.emplace (key, result != 0);
+  return result;
+}
+
+static int
+t8_forest_element_has_leaf_desc_uncached (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
+                                          const t8_eclass_t tree_class)
 {
   t8_element_t *last_desc;
   t8_locidx_t ghost_treeid;

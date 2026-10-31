@@ -320,6 +320,34 @@ t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid, const
  * \see t8_forest_element_find_owner
  * \see t8_forest_element_owners_bounds
  */
+/** Start caching the results of \ref t8_forest_element_owners_bounds for
+ * \a forest for queries over all ranks (lower = 0, upper = mpisize - 1), for
+ * algorithms that ask for the owners of the same elements many times, such as
+ * the ghost search (the neighbors of an element are also neighbors of its
+ * neighbors). The cache is valid until \ref t8_forest_owner_bounds_cache_end.
+ * \param[in] forest  A committed forest.
+ */
+void
+t8_forest_owner_bounds_cache_begin (t8_forest_t forest);
+
+/** Stop caching and free the cache of \ref t8_forest_owner_bounds_cache_begin. */
+void
+t8_forest_owner_bounds_cache_end (void);
+
+/** Start caching the results of \ref t8_forest_element_has_leaf_desc for
+ * \a forest, for algorithms that ask for the same elements many times, such as
+ * a balance round (the neighbors of an element are also neighbors of its
+ * neighbors). The cache is valid until \ref t8_forest_leaf_desc_cache_end;
+ * \a forest must not change in between.
+ * \param[in] forest  A committed forest.
+ */
+void
+t8_forest_leaf_desc_cache_begin (t8_forest_t forest);
+
+/** Stop caching and free the cache of \ref t8_forest_leaf_desc_cache_begin. */
+void
+t8_forest_leaf_desc_cache_end (void);
+
 void
 t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
                                  t8_eclass_t eclass, int *lower, int *upper);
