@@ -193,6 +193,31 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
       }
     }
     else {
+      if (min_bdy_dim == 0 && dim > 0) {
+        /* Every neighbor (of the same level) at a boundary of the element is also a
+         * neighbor at a vertex of this boundary. If no neighbor at a vertex has finer
+         * leaves, no boundary is unbalanced, which is the common case and much cheaper
+         * than computing the neighbors at all boundaries. */
+        bool any_finer = false;
+        sc_array_t neighbors;
+        sc_array_init (&neighbors, sizeof (t8_forest_boundary_neighbor_t));
+        const int num_vertices = scheme->element_get_num_boundaries (tree_class, element, 0);
+        for (int ivertex = 0; ivertex < num_vertices && !any_finer; ivertex++) {
+          t8_forest_element_boundary_neighbors (forest_from, ltree_id, element, 0, ivertex, &neighbors);
+          for (size_t ineigh = 0; ineigh < neighbors.elem_count && !any_finer; ineigh++) {
+            const t8_forest_boundary_neighbor_t *neighbor
+              = (const t8_forest_boundary_neighbor_t *) sc_array_index (&neighbors, ineigh);
+            any_finer = t8_forest_element_has_leaf_desc (forest_from, neighbor->gtreeid, neighbor->neigh,
+                                                         neighbor->eclass);
+          }
+          t8_forest_boundary_neighbors_reset (forest_from, &neighbors);
+          sc_array_init (&neighbors, sizeof (t8_forest_boundary_neighbor_t));
+        }
+        sc_array_reset (&neighbors);
+        if (!any_finer) {
+          return 0;
+        }
+      }
       /* Loop over the boundaries of all dimensions considered by the balance type */
       for (int bdy_dim = min_bdy_dim; bdy_dim < dim; bdy_dim++) {
         const int num_boundaries = scheme->element_get_num_boundaries (tree_class, element, bdy_dim);
