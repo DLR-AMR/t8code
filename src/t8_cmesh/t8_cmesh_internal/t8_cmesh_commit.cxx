@@ -633,6 +633,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
              (long) cmesh->num_local_trees, (long long) cmesh->num_trees, (long) cmesh->num_ghosts);
 #if T8_ENABLE_DEBUG
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees));
   T8_ASSERTF (
     t8_cmesh_validate_geometry (cmesh, cmesh->negative_volume_check),
     "There were either problems with incompatible trees and geometries or negative volumes in the trees.\n"
