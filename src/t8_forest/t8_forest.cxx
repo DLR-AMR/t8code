@@ -3219,14 +3219,22 @@ t8_forest_element_has_leaf_desc_uncached (t8_forest_t forest, t8_gloidx_t gtreei
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  /* Compute the linear id of the last descendant of element at forest maxlevel.
+  /* The linear ids are computed at the finest level of the leaves (on all processes) if it is known (in balance),
+   * which preserves their order and is much cheaper than at forest->maxlevel. An element of this level or finer has
+   * no finer leaves. */
+  const int id_level = forest->maxlevel_existing >= 0 ? forest->maxlevel_existing : forest->maxlevel;
+  if (scheme->element_get_level (tree_class, element) >= id_level) {
+    return 0;
+  }
+
+  /* Compute the linear id of the last descendant of element at id_level.
    * We then check whether the forest has any element with id between
    * the id of element and the id of the last descendant */
   /* TODO: element interface function t8_element_last_desc_id */
   scheme->element_new (tree_class, 1, &last_desc);
   /* TODO: set level in last_descendant */
-  scheme->element_get_last_descendant (tree_class, element, last_desc, forest->maxlevel);
-  last_desc_id = scheme->element_get_linear_id (tree_class, last_desc, forest->maxlevel);
+  scheme->element_get_last_descendant (tree_class, element, last_desc, id_level);
+  last_desc_id = scheme->element_get_linear_id (tree_class, last_desc, id_level);
   /* Get the level of the element */
   level = scheme->element_get_level (tree_class, element);
   /* Get the local id of the tree. If the tree is not a local tree,
@@ -3237,14 +3245,14 @@ t8_forest_element_has_leaf_desc_uncached (t8_forest_t forest, t8_gloidx_t gtreei
     /* Get the elements */
     const t8_element_array_t *elements = t8_forest_get_tree_leaf_element_array (forest, ltreeid);
 
-    index = t8_forest_bin_search_lower (elements, last_desc_id, forest->maxlevel);
+    index = t8_forest_bin_search_lower (elements, last_desc_id, id_level);
     if (index >= 0) {
       /* There exists an element in the array with id <= last_desc_id,
        * If also elem_id < id, then we found a true decsendant of element */
       const t8_element_t *elem_found = t8_element_array_index_locidx (elements, index);
-      elem_id = scheme->element_get_linear_id (tree_class, elem_found, forest->maxlevel);
+      elem_id = scheme->element_get_linear_id (tree_class, elem_found, id_level);
       level_found = scheme->element_get_level (tree_class, elem_found);
-      if (scheme->element_get_linear_id (tree_class, element, forest->maxlevel) <= elem_id && level < level_found) {
+      if (scheme->element_get_linear_id (tree_class, element, id_level) <= elem_id && level < level_found) {
         /* The element is a true descendant */
         T8_ASSERT (scheme->element_get_level (tree_class, elem_found)
                    > scheme->element_get_level (tree_class, element));
@@ -3261,14 +3269,14 @@ t8_forest_element_has_leaf_desc_uncached (t8_forest_t forest, t8_gloidx_t gtreei
     if (ghost_treeid >= 0) {
       /* The tree is a ghost tree */
       const t8_element_array_t *elements = t8_forest_ghost_get_tree_leaf_elements (forest, ghost_treeid);
-      index = t8_forest_bin_search_lower (elements, last_desc_id, forest->maxlevel);
+      index = t8_forest_bin_search_lower (elements, last_desc_id, id_level);
       if (index >= 0) {
         /* There exists an element in the array with id <= last_desc_id,
          * If also elem_id < id, then we found a true decsendant of element */
         const t8_element_t *elem_found = t8_element_array_index_int (elements, index);
-        elem_id = scheme->element_get_linear_id (tree_class, elem_found, forest->maxlevel);
+        elem_id = scheme->element_get_linear_id (tree_class, elem_found, id_level);
         level_found = scheme->element_get_level (tree_class, elem_found);
-        if (scheme->element_get_linear_id (tree_class, element, forest->maxlevel) <= elem_id && level < level_found) {
+        if (scheme->element_get_linear_id (tree_class, element, id_level) <= elem_id && level < level_found) {
           /* The element is a true descendant */
           T8_ASSERT (scheme->element_get_level (tree_class, elem_found)
                      > scheme->element_get_level (tree_class, element));
