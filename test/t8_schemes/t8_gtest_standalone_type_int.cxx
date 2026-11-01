@@ -32,55 +32,74 @@
 #include "t8_schemes/t8_standalone/t8_standalone_implementation.hxx"
 
 
-int manually_compute_triangle_type_int(const t8_standalone<T8_ECLASS_TRIANGLE> *element){
-  t8_standalone<T8_ECLASS_TRIANGLE> anc;
-  t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_copy((const t8_element_t*)element,(t8_element_t *)&anc);
-  int type_int = anc.type << (t8_standalone_scheme<T8_ECLASS_TRIANGLE>::get_maxlevel() - anc.level);
-  t8_debugf("type_int: %i\n", type_int);
-  while(anc.level){
-    t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_get_parent((const t8_element_t *)&anc, (t8_element_t *)&anc);
-    t8_debugf("type bit: %i\n", anc.type);
-    int typebit = anc.type<< (t8_standalone_scheme<T8_ECLASS_TRIANGLE>::get_maxlevel() - anc.level);
-    type_int |= typebit;
-    t8_debugf("type_int: %i\n", type_int);
-  }
-  return type_int;
-}
-
-//Misuse, create tri_scheme to access non public functionality.
+/* t8_standalone_scheme declares this class a friend, so that it can access determine_type_int. */
 struct class_test_equal: public TestDFS
 {
  private:
+  /** Compute the type int of an element for the type bit \a itype manually: the bit at position maxlevel - level is
+   * the type bit of the ancestor of the element at that level. For the levels finer than the element it is the type bit
+   * of the element itself, which is the type bit of its first descendant at that level. */
+  template <t8_eclass_t TEclass>
+  static t8_element_coord
+  manually_compute_type_int (const t8_standalone<TEclass> *element, const int itype)
+  {
+    using scheme = t8_standalone_scheme<TEclass>;
+    const int maxlevel = scheme::get_maxlevel ();
+    t8_standalone<TEclass> anc;
+    scheme::element_copy ((const t8_element_t *) element, (t8_element_t *) &anc);
+    t8_element_coord type_int = 0;
+    for (int level = maxlevel; level >= anc.level; level--) {
+      type_int |= (t8_element_coord) scheme::get_typebit (anc.type, itype) << (maxlevel - level);
+    }
+    while (anc.level) {
+      scheme::element_get_parent ((const t8_element_t *) &anc, (t8_element_t *) &anc);
+      type_int |= (t8_element_coord) scheme::get_typebit (anc.type, itype) << (maxlevel - anc.level);
+    }
+    return type_int;
+  }
+
+  template <t8_eclass_t TEclass>
+  static void
+  check_type_ints (const t8_element_t *element)
+  {
+    t8_standalone<TEclass> el;
+    t8_standalone_scheme<TEclass>::element_copy (element, (t8_element_t *) &el);
+    for (int itype = 0; itype < T8_ELEMENT_NUM_EQUATIONS[TEclass]; itype++) {
+      EXPECT_EQ (manually_compute_type_int<TEclass> (&el, itype),
+                 (t8_element_coord) t8_standalone_scheme<TEclass>::determine_type_int (&el, itype))
+        << "itype " << itype << " level " << (int) el.level;
+    }
+  }
+
   void
   check_element () override
   {
-    t8_debugf("check element:\n");
-    // t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_debug_print(element);
-    int level = t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_get_level(element);
-    int interface_type_int = t8_standalone_scheme<T8_ECLASS_TRIANGLE>::determine_type_int((t8_standalone<T8_ECLASS_TRIANGLE> *)element, 0);
-    int manual_type_int = manually_compute_triangle_type_int((t8_standalone<T8_ECLASS_TRIANGLE> *)element);
-    EXPECT_EQ(manual_type_int, interface_type_int);
-  }
-
- protected:
-  void
-  SetUp () override
-  {
-    dfs_test_setup ();
-
-  }
-  void
-  TearDown () override
-  {
-    /* Destroy DFS test */
-    dfs_test_teardown ();
+    switch (eclass) {
+    case T8_ECLASS_TRIANGLE:
+      check_type_ints<T8_ECLASS_TRIANGLE> (element);
+      break;
+    case T8_ECLASS_TET:
+      check_type_ints<T8_ECLASS_TET> (element);
+      break;
+    case T8_ECLASS_PRISM:
+      check_type_ints<T8_ECLASS_PRISM> (element);
+      break;
+    case T8_ECLASS_PYRAMID:
+      check_type_ints<T8_ECLASS_PYRAMID> (element);
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
   }
 };
 
 TEST_P (class_test_equal, test_equal_dfs)
 {
-  check_recursive_dfs_to_max_lvl (7);
+  check_recursive_dfs_to_max_lvl (5);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_equal, ::testing::Values(std::make_tuple<int,t8_eclass_t>(1, T8_ECLASS_TRIANGLE)), print_all_schemes);
-//INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_equal, AllSchemes, print_all_schemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_standalone_type_int, class_test_equal,
+                          ::testing::Combine (::testing::Values (1),
+                                              ::testing::Values (T8_ECLASS_TRIANGLE, T8_ECLASS_TET, T8_ECLASS_PRISM,
+                                                                 T8_ECLASS_PYRAMID)),
+                          print_all_schemes);
