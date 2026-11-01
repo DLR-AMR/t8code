@@ -593,6 +593,7 @@ typedef struct
       |                          *   face_0 low | face_0 high | ... | face_n low | face_n high | owner low | owner high | 
                                  */
   sc_array_t face_owners;      /**< Temporary storage for all owners at a leaf's face. */
+  t8_forest_boundary_scratch_t boundary_scratch; /**< Scratch arrays for the owners at boundaries (version 3). */
   const t8_scheme *scheme;     /**< The scheme. */
   t8_gloidx_t gtreeid;         /**< The global tree id. */
 
@@ -805,7 +806,8 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
       for (int bdy_id = 0; bdy_id < num_boundaries; bdy_id++) {
         lower = 0;
         upper = forest->mpisize - 1;
-        t8_forest_element_owners_at_neigh_boundary_bounds (forest, ltreeid, element, bdy_dim, bdy_id, &lower, &upper);
+        t8_forest_element_owners_at_neigh_boundary_bounds (forest, ltreeid, element, bdy_dim, bdy_id, &lower, &upper,
+                                                           &data->boundary_scratch);
         if (lower <= upper && (lower != upper || lower != forest->mpirank)) {
           return 1;
         }
@@ -819,7 +821,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
     const int num_boundaries = scheme->element_get_num_boundaries (eclass, element, bdy_dim);
     for (int bdy_id = 0; bdy_id < num_boundaries; bdy_id++) {
       t8_forest_element_owners_at_neigh_boundary (forest, ltreeid, element, bdy_dim, bdy_id, min_bdy_dim,
-                                                  &data->face_owners);
+                                                  &data->face_owners, &data->boundary_scratch);
       for (size_t iowner = 0; iowner < data->face_owners.elem_count; iowner++) {
         const int remote_rank = *(int *) sc_array_index (&data->face_owners, iowner);
         if (remote_rank != forest->mpirank) {
@@ -854,6 +856,7 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
   data.left_out = 0;
 #endif
   sc_array_init (&data.face_owners, sizeof (int));
+  t8_forest_boundary_scratch_init (&data.boundary_scratch);
   /* This is a dummy init, since we call sc_array_reset in ghost_search_boundary
    * and we should not call sc_array_reset on a non-initialized array */
   sc_array_init (&data.bounds_per_level, 1);
@@ -887,6 +890,7 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 
   /* Reset the data arrays */
   sc_array_reset (&data.face_owners);
+  t8_forest_boundary_scratch_reset (&data.boundary_scratch);
   sc_array_reset (&data.bounds_per_level);
 #if T8_ENABLE_DEBUG
 #endif

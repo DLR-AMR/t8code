@@ -53,6 +53,34 @@
 #include <unordered_map>
 #include <utility>
 
+/** A buffer of n entries on the stack if n is at most N, on the heap otherwise. */
+template <typename T, int N = 64>
+class t8_small_buffer {
+ public:
+  explicit t8_small_buffer (int n)
+  {
+    resize (n);
+  }
+  void
+  resize (int n)
+  {
+    if (n > N) {
+      heap.resize (n);
+    }
+    ptr = n > N ? heap.data () : stack;
+  }
+  T *
+  data ()
+  {
+    return ptr;
+  }
+
+ private:
+  T stack[N];
+  std::vector<T> heap;
+  T *ptr;
+};
+
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
@@ -2517,6 +2545,47 @@ t8_forest_element_owners_at_boundary_bounds (t8_forest_t forest, t8_gloidx_t gtr
   scheme->element_destroy (eclass, 1, &last_desc);
 }
 
+/** Empty an array but keep its memory (sc_array_resize to 0 frees it). */
+static void
+t8_forest_array_clear (sc_array_t *array)
+{
+  if (array->array != NULL) {
+    sc_array_truncate (array);
+  }
+  else {
+    array->elem_count = 0;
+  }
+}
+
+/** Remove the duplicates of a sorted array of int in place, without shrinking its memory (sc_array_uniq
+ * reallocates). */
+static void
+t8_forest_owners_uniq (sc_array_t *owners)
+{
+  size_t num_unique = 0;
+  int *entries = (int *) owners->array;
+  for (size_t i = 0; i < owners->elem_count; i++) {
+    if (num_unique == 0 || entries[i] != entries[num_unique - 1]) {
+      entries[num_unique++] = entries[i];
+    }
+  }
+  owners->elem_count = num_unique;
+}
+
+void
+t8_forest_boundary_scratch_init (t8_forest_boundary_scratch_t *scratch)
+{
+  sc_array_init (&scratch->neighbors, sizeof (t8_forest_boundary_neighbor_t));
+  sc_array_init (&scratch->owners, sizeof (int));
+}
+
+void
+t8_forest_boundary_scratch_reset (t8_forest_boundary_scratch_t *scratch)
+{
+  sc_array_reset (&scratch->neighbors);
+  sc_array_reset (&scratch->owners);
+}
+
 /* Append the integers of one array to another */
 static void
 t8_forest_append_owners (sc_array_t *owners, sc_array_t *more_owners)
@@ -2549,12 +2618,13 @@ t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, c
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
   T8_ASSERT (neighbors->elem_size == sizeof (t8_forest_boundary_neighbor_t));
-  sc_array_resize (neighbors, 0);
+  t8_forest_array_clear (neighbors);
 
-  /* The neighbors inside the tree */
+  /* The neighbors inside the tree. The buffers are on the stack if they are small enough (always in 3D), since
+   * this function is called for every boundary of every element in the ghost search and in balance. */
   int max_neighbors = scheme->get_max_num_boundary_neighbors (eclass);
-  std::vector<t8_element_t *> neighs (max_neighbors);
-  std::vector<int> neigh_bdy_ids (max_neighbors);
+  t8_small_buffer<t8_element_t *> neighs (max_neighbors);
+  t8_small_buffer<int> neigh_bdy_ids (max_neighbors);
   scheme->element_new (eclass, max_neighbors, neighs.data ());
   const int num_inside = scheme->element_get_boundary_neighbors_inside (eclass, element, bdy_dim, bdy_id,
                                                                         neighs.data (), neigh_bdy_ids.data ());
@@ -2592,6 +2662,17 @@ t8_forest_boundary_neighbors_reset (t8_forest_t forest, sc_array_t *neighbors)
     scheme->element_destroy (neighbor->eclass, 1, &neighbor->neigh);
   }
   sc_array_reset (neighbors);
+}
+
+void
+t8_forest_boundary_neighbors_clear (t8_forest_t forest, sc_array_t *neighbors)
+{
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  for (size_t ineigh = 0; ineigh < neighbors->elem_count; ineigh++) {
+    t8_forest_boundary_neighbor_t *neighbor = (t8_forest_boundary_neighbor_t *) sc_array_index (neighbors, ineigh);
+    scheme->element_destroy (neighbor->eclass, 1, &neighbor->neigh);
+  }
+  t8_forest_array_clear (neighbors);
 }
 
 /* Recursively find all owners of descendants of an element that touch a boundary of the element with a boundary
@@ -2645,49 +2726,58 @@ t8_forest_element_owners_touching_boundary (t8_forest_t forest, t8_gloidx_t gtre
                                             sc_array_t *owners)
 {
   T8_ASSERT (0 <= min_dim && min_dim <= bdy_dim);
-  sc_array_resize (owners, 0);
+  t8_forest_array_clear (owners);
   t8_forest_element_owners_touching_boundary_recursion (forest, gtreeid, element, eclass, bdy_dim, bdy_id, min_dim,
                                                         owners, 0, forest->mpisize - 1);
 }
 
 void
 t8_forest_element_owners_at_neigh_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                            int bdy_dim, int bdy_id, int min_dim, sc_array_t *owners)
+                                            int bdy_dim, int bdy_id, int min_dim, sc_array_t *owners,
+                                            t8_forest_boundary_scratch_t *scratch)
 {
-  sc_array_t neighbors, neigh_owners;
-  sc_array_init (&neighbors, sizeof (t8_forest_boundary_neighbor_t));
-  sc_array_init (&neigh_owners, sizeof (int));
-  sc_array_resize (owners, 0);
-  t8_forest_element_boundary_neighbors (forest, ltreeid, element, bdy_dim, bdy_id, &neighbors);
-  for (size_t ineigh = 0; ineigh < neighbors.elem_count; ineigh++) {
+  t8_forest_boundary_scratch_t local_scratch;
+  if (scratch == NULL) {
+    t8_forest_boundary_scratch_init (&local_scratch);
+  }
+  t8_forest_boundary_scratch_t *s = scratch != NULL ? scratch : &local_scratch;
+  sc_array_t *neighbors = &s->neighbors, *neigh_owners = &s->owners;
+  t8_forest_array_clear (owners);
+  t8_forest_element_boundary_neighbors (forest, ltreeid, element, bdy_dim, bdy_id, neighbors);
+  for (size_t ineigh = 0; ineigh < neighbors->elem_count; ineigh++) {
     const t8_forest_boundary_neighbor_t *neighbor
-      = (const t8_forest_boundary_neighbor_t *) sc_array_index (&neighbors, ineigh);
+      = (const t8_forest_boundary_neighbor_t *) sc_array_index (neighbors, ineigh);
     t8_forest_element_owners_touching_boundary (forest, neighbor->gtreeid, neighbor->neigh, neighbor->eclass, bdy_dim,
-                                                neighbor->bdy_id, min_dim, &neigh_owners);
-    t8_forest_append_owners (owners, &neigh_owners);
+                                                neighbor->bdy_id, min_dim, neigh_owners);
+    t8_forest_append_owners (owners, neigh_owners);
   }
   /* The owners of the different neighbors overlap, sort them and remove duplicates */
   sc_array_sort (owners, sc_int_compare);
-  sc_array_uniq (owners, sc_int_compare);
+  t8_forest_owners_uniq (owners);
 
-  sc_array_reset (&neigh_owners);
-  t8_forest_boundary_neighbors_reset (forest, &neighbors);
+  t8_forest_boundary_neighbors_clear (forest, neighbors);
+  if (scratch == NULL) {
+    t8_forest_boundary_scratch_reset (&local_scratch);
+  }
 }
 
 void
 t8_forest_element_owners_at_neigh_boundary_bounds (t8_forest_t forest, t8_locidx_t ltreeid,
                                                    const t8_element_t *element, int bdy_dim, int bdy_id, int *lower,
-                                                   int *upper)
+                                                   int *upper, t8_forest_boundary_scratch_t *scratch)
 {
-  sc_array_t neighbors;
+  sc_array_t local_neighbors;
+  if (scratch == NULL) {
+    sc_array_init (&local_neighbors, sizeof (t8_forest_boundary_neighbor_t));
+  }
+  sc_array_t *neighbors = scratch != NULL ? &scratch->neighbors : &local_neighbors;
   /* The union of the bounds of all neighbors, empty if lower > upper */
   int union_lower = 1, union_upper = 0;
 
-  sc_array_init (&neighbors, sizeof (t8_forest_boundary_neighbor_t));
-  t8_forest_element_boundary_neighbors (forest, ltreeid, element, bdy_dim, bdy_id, &neighbors);
-  for (size_t ineigh = 0; ineigh < neighbors.elem_count; ineigh++) {
+  t8_forest_element_boundary_neighbors (forest, ltreeid, element, bdy_dim, bdy_id, neighbors);
+  for (size_t ineigh = 0; ineigh < neighbors->elem_count; ineigh++) {
     const t8_forest_boundary_neighbor_t *neighbor
-      = (const t8_forest_boundary_neighbor_t *) sc_array_index (&neighbors, ineigh);
+      = (const t8_forest_boundary_neighbor_t *) sc_array_index (neighbors, ineigh);
     /* Bounds for the owners of the whole neighbor, which contain the owners touching any of its boundaries */
     int neigh_lower = *lower, neigh_upper = *upper;
     t8_forest_element_owners_bounds (forest, neighbor->gtreeid, neighbor->neigh, neighbor->eclass, &neigh_lower,
@@ -2703,7 +2793,12 @@ t8_forest_element_owners_at_neigh_boundary_bounds (t8_forest_t forest, t8_locidx
   }
   *lower = union_lower;
   *upper = union_upper;
-  t8_forest_boundary_neighbors_reset (forest, &neighbors);
+  if (scratch == NULL) {
+    t8_forest_boundary_neighbors_reset (forest, neighbors);
+  }
+  else {
+    t8_forest_boundary_neighbors_clear (forest, neighbors);
+  }
 }
 
 /* Recursively find all owners of descendants of a given element that touch a given face.

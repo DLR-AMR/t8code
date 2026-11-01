@@ -469,6 +469,22 @@ t8_forest_element_owners_touching_boundary (t8_forest_t forest, t8_gloidx_t gtre
                                             t8_eclass_t eclass, int bdy_dim, int bdy_id, int min_dim,
                                             sc_array_t *owners);
 
+/** Scratch arrays for algorithms that call the boundary neighbor and owner functions for many elements (ghost
+ * search, balance), so that the arrays are not allocated in every call. */
+typedef struct
+{
+  sc_array_t neighbors; /**< Array of \ref t8_forest_boundary_neighbor_t. */
+  sc_array_t owners;    /**< Array of int. */
+} t8_forest_boundary_scratch_t;
+
+/** Initialize scratch arrays, free them with \ref t8_forest_boundary_scratch_reset. */
+void
+t8_forest_boundary_scratch_init (t8_forest_boundary_scratch_t *scratch);
+
+/** Free scratch arrays initialized with \ref t8_forest_boundary_scratch_init. */
+void
+t8_forest_boundary_scratch_reset (t8_forest_boundary_scratch_t *scratch);
+
 /** Find the owner processes of all leaves that are not descendants of a local element and touch a boundary of it
  * with a boundary of dimension at least \a min_dim, i.e. the owners touching this boundary of all elements of the
  * same level that share the boundary, see \ref t8_forest_element_owners_touching_boundary.
@@ -484,7 +500,8 @@ t8_forest_element_owners_touching_boundary (t8_forest_t forest, t8_gloidx_t gtre
  */
 void
 t8_forest_element_owners_at_neigh_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                            int bdy_dim, int bdy_id, int min_dim, sc_array_t *owners);
+                                            int bdy_dim, int bdy_id, int min_dim, sc_array_t *owners,
+                                            t8_forest_boundary_scratch_t *scratch);
 
 /** An element of the same level as a given element that shares one of its boundaries, possibly in another tree. */
 typedef struct
@@ -519,6 +536,14 @@ t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, c
 void
 t8_forest_boundary_neighbors_reset (t8_forest_t forest, sc_array_t *neighbors);
 
+/** Free the neighbors computed by \ref t8_forest_element_boundary_neighbors and empty the array, but keep its
+ * memory for the next call.
+ * \param [in]     forest    The forest.
+ * \param [in,out] neighbors The neighbors.
+ */
+void
+t8_forest_boundary_neighbors_clear (t8_forest_t forest, sc_array_t *neighbors);
+
 /** Constant time algorithm (per neighbor) to compute bounds for the owners of
  * \ref t8_forest_element_owners_at_neigh_boundary, from the bounds of the owners of the whole neighbors.
  * \param [in]     forest  The forest.
@@ -534,7 +559,7 @@ t8_forest_boundary_neighbors_reset (t8_forest_t forest, sc_array_t *neighbors);
 void
 t8_forest_element_owners_at_neigh_boundary_bounds (t8_forest_t forest, t8_locidx_t ltreeid,
                                                    const t8_element_t *element, int bdy_dim, int bdy_id, int *lower,
-                                                   int *upper);
+                                                   int *upper, t8_forest_boundary_scratch_t *scratch);
 
 /** Construct all face neighbors of half size of a given element in linear id order.
  * \param [in]     forest  The forest.

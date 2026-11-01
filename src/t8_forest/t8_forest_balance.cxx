@@ -96,21 +96,25 @@ t8_forest_balance_face_is_unbalanced (t8_forest_t forest_from, const t8_locidx_t
  * \param[in] bdy_dim      The dimension of the boundary.
  * \param[in] bdy_id       The boundary of \a element of dimension \a bdy_dim.
  * \param[in] min_dim      The minimum dimension of the intersection of a leaf with the boundary.
+ * \param[in,out] neighbors An initialized array of \ref t8_forest_boundary_neighbor_t for the neighbors (empty on
+ *                          input and output).
  * \return 1 if \a element has to be refined because of the boundary, 0 otherwise.
  */
+/** Scratch arrays for t8_forest_balance_adapt, set during a balance round and in t8_forest_is_balanced, so that
+ * the neighbor arrays are not allocated for every boundary of every element. NULL otherwise. */
+static t8_forest_boundary_scratch_t *balance_scratch = NULL;
+
 static int
 t8_forest_balance_boundary_is_unbalanced (t8_forest_t forest_from, const t8_locidx_t ltree_id,
                                           [[maybe_unused]] const t8_eclass_t tree_class, const t8_scheme *scheme,
                                           const t8_element_t *element, const int bdy_dim, const int bdy_id,
-                                          const int min_dim)
+                                          const int min_dim, sc_array_t *neighbors)
 {
   int unbalanced = 0;
-  sc_array_t neighbors;
-  sc_array_init (&neighbors, sizeof (t8_forest_boundary_neighbor_t));
-  t8_forest_element_boundary_neighbors (forest_from, ltree_id, element, bdy_dim, bdy_id, &neighbors);
-  for (size_t ineigh = 0; ineigh < neighbors.elem_count && !unbalanced; ineigh++) {
+  t8_forest_element_boundary_neighbors (forest_from, ltree_id, element, bdy_dim, bdy_id, neighbors);
+  for (size_t ineigh = 0; ineigh < neighbors->elem_count && !unbalanced; ineigh++) {
     const t8_forest_boundary_neighbor_t *neighbor
-      = (const t8_forest_boundary_neighbor_t *) sc_array_index (&neighbors, ineigh);
+      = (const t8_forest_boundary_neighbor_t *) sc_array_index (neighbors, ineigh);
     const t8_eclass_t neigh_class = neighbor->eclass;
     /* If the neighbor has no finer leaves, none of its children has, so we skip them.
      * This is the common case and much cheaper than checking each child. */
@@ -132,7 +136,7 @@ t8_forest_balance_boundary_is_unbalanced (t8_forest_t forest_from, const t8_loci
     }
     scheme->element_destroy (neigh_class, max_children, children.data ());
   }
-  t8_forest_boundary_neighbors_reset (forest_from, &neighbors);
+  t8_forest_boundary_neighbors_clear (forest_from, neighbors);
   return unbalanced;
 }
 
@@ -193,42 +197,51 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
       }
     }
     else {
+      t8_forest_boundary_scratch_t local_scratch;
+      if (balance_scratch == NULL) {
+        t8_forest_boundary_scratch_init (&local_scratch);
+      }
+      sc_array_t *neighbors = balance_scratch != NULL ? &balance_scratch->neighbors : &local_scratch.neighbors;
+      int unbalanced = 0;
       if (min_bdy_dim == 0 && dim > 0) {
         /* Every neighbor (of the same level) at a boundary of the element is also a
          * neighbor at a vertex of this boundary. If no neighbor at a vertex has finer
          * leaves, no boundary is unbalanced, which is the common case and much cheaper
          * than computing the neighbors at all boundaries. */
         bool any_finer = false;
-        sc_array_t neighbors;
-        sc_array_init (&neighbors, sizeof (t8_forest_boundary_neighbor_t));
         const int num_vertices = scheme->element_get_num_boundaries (tree_class, element, 0);
         for (int ivertex = 0; ivertex < num_vertices && !any_finer; ivertex++) {
-          t8_forest_element_boundary_neighbors (forest_from, ltree_id, element, 0, ivertex, &neighbors);
-          for (size_t ineigh = 0; ineigh < neighbors.elem_count && !any_finer; ineigh++) {
+          t8_forest_element_boundary_neighbors (forest_from, ltree_id, element, 0, ivertex, neighbors);
+          for (size_t ineigh = 0; ineigh < neighbors->elem_count && !any_finer; ineigh++) {
             const t8_forest_boundary_neighbor_t *neighbor
-              = (const t8_forest_boundary_neighbor_t *) sc_array_index (&neighbors, ineigh);
+              = (const t8_forest_boundary_neighbor_t *) sc_array_index (neighbors, ineigh);
             any_finer = t8_forest_element_has_leaf_desc (forest_from, neighbor->gtreeid, neighbor->neigh,
                                                          neighbor->eclass);
           }
-          t8_forest_boundary_neighbors_reset (forest_from, &neighbors);
-          sc_array_init (&neighbors, sizeof (t8_forest_boundary_neighbor_t));
+          t8_forest_boundary_neighbors_clear (forest_from, neighbors);
         }
-        sc_array_reset (&neighbors);
         if (!any_finer) {
+          if (balance_scratch == NULL) {
+            t8_forest_boundary_scratch_reset (&local_scratch);
+          }
           return 0;
         }
       }
       /* Loop over the boundaries of all dimensions considered by the balance type */
-      for (int bdy_dim = min_bdy_dim; bdy_dim < dim; bdy_dim++) {
+      for (int bdy_dim = min_bdy_dim; bdy_dim < dim && !unbalanced; bdy_dim++) {
         const int num_boundaries = scheme->element_get_num_boundaries (tree_class, element, bdy_dim);
-        for (int bdy_id = 0; bdy_id < num_boundaries; bdy_id++) {
-          if (t8_forest_balance_boundary_is_unbalanced (forest_from, ltree_id, tree_class, scheme, element, bdy_dim,
-                                                        bdy_id, min_bdy_dim)) {
-            /* This element should be refined */
-            *pdone = 0;
-            return 1;
-          }
+        for (int bdy_id = 0; bdy_id < num_boundaries && !unbalanced; bdy_id++) {
+          unbalanced = t8_forest_balance_boundary_is_unbalanced (forest_from, ltree_id, tree_class, scheme, element,
+                                                                 bdy_dim, bdy_id, min_bdy_dim, neighbors);
         }
+      }
+      if (balance_scratch == NULL) {
+        t8_forest_boundary_scratch_reset (&local_scratch);
+      }
+      if (unbalanced) {
+        /* This element should be refined */
+        *pdone = 0;
+        return 1;
       }
     }
   }
@@ -347,9 +360,14 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     /* Adapt the forest */
     /* The adapt function asks whether the same elements (the neighbors of
      * neighboring elements) have leaf descendants many times */
+    t8_forest_boundary_scratch_t scratch;
+    t8_forest_boundary_scratch_init (&scratch);
+    balance_scratch = &scratch;
     t8_forest_leaf_desc_cache_begin (forest_from);
     t8_forest_commit (forest_temp);
     t8_forest_leaf_desc_cache_end ();
+    balance_scratch = NULL;
+    t8_forest_boundary_scratch_reset (&scratch);
     /* Store the runtimes of adapt and ghost */
     if (forest->profile != NULL) {
       if (count_rounds > num_stats_allocated - 2) {
@@ -493,6 +511,14 @@ t8_forest_is_balanced (t8_forest_t forest)
   data_temp = forest->t8code_data;
   forest->t8code_data = &dummy_int;
 
+  /* The scratch arrays for t8_forest_balance_adapt (unless we are inside a balance round) */
+  t8_forest_boundary_scratch_t scratch;
+  const bool own_scratch = balance_scratch == NULL;
+  if (own_scratch) {
+    t8_forest_boundary_scratch_init (&scratch);
+    balance_scratch = &scratch;
+  }
+
   num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all trees */
   for (itree = 0; itree < num_trees; itree++) {
@@ -507,12 +533,20 @@ t8_forest_is_balanced (t8_forest_t forest)
                                    (t8_element_t **) (&element))) {
         forest->set_from = forest_from;
         forest->t8code_data = data_temp;
+        if (own_scratch) {
+          balance_scratch = NULL;
+          t8_forest_boundary_scratch_reset (&scratch);
+        }
         return 0;
       }
     }
   }
   forest->set_from = forest_from;
   forest->t8code_data = data_temp;
+  if (own_scratch) {
+    balance_scratch = NULL;
+    t8_forest_boundary_scratch_reset (&scratch);
+  }
   return 1;
 }
 
