@@ -36,6 +36,8 @@
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <utility>
 #include <algorithm>
+#include <array>
+#include <type_traits>
 #include "sc.h"
 #include "t8.h"
 #include "t8_element.h"
@@ -2733,12 +2735,28 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
         upper[idim] = SC_MIN (min, num_cubes - 1);
       }
       int num_neighbors = 0;
+      const auto &bdy_vertex_masks = boundary_cube_vertex_masks ();
       for (int icube = 0; icube < (1 << dim); icube++) {
         t8_element_coord anchor[dim];
         bool valid_cube = true;
         for (int idim = 0; idim < dim; idim++) {
           anchor[idim] = lower[idim] + ((icube >> idim) & 1);
           valid_cube &= anchor[idim] <= upper[idim];
+        }
+        if (!valid_cube) {
+          continue;
+        }
+        /* The points as vertices of this cube: a boundary of an element in the cube has the points as corners iff
+         * the cube vertices of its corners are the vertices of the points. */
+        uint32_t point_mask = 0;
+        for (int ipoint = 0; ipoint < num_points && valid_cube; ipoint++) {
+          int vertex = 0;
+          for (int idim = 0; idim < dim; idim++) {
+            const t8_element_coord offset = root_points[ipoint][idim] - anchor[idim];
+            valid_cube &= offset == 0 || offset == 1;
+            vertex |= (offset & 1) << idim;
+          }
+          point_mask |= (uint32_t) 1 << vertex;
         }
         if (!valid_cube) {
           continue;
@@ -2750,24 +2768,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
           /* Find the boundary whose corners are the points */
           int neigh_bdy_id = -1;
           for (int ibdy = 0; ibdy < t8_standalone_lut_type_bdy_dim_to_num_boundaries<TEclass>[type][bdy_dim]; ibdy++) {
-            int num_corners = 0;
-            bool matches = true;
-            for (; num_corners < T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[TEclass]; num_corners++) {
-              const int corner = t8_standalone_lut_type_bdy_dim_id_to_corners<TEclass>[type][bdy_dim][ibdy][num_corners];
-              if (corner < 0) {
-                break;
-              }
-              bool is_point = false;
-              for (int ipoint = 0; ipoint < num_points && !is_point; ipoint++) {
-                bool equal = true;
-                for (int idim = 0; idim < dim; idim++) {
-                  equal &= anchor[idim] + corner_binary (type, corner, idim) == root_points[ipoint][idim];
-                }
-                is_point = equal;
-              }
-              matches &= is_point;
-            }
-            if (matches && num_corners == num_points) {
+            if (bdy_vertex_masks[type][bdy_dim][ibdy] == point_mask) {
               neigh_bdy_id = ibdy;
               break;
             }
@@ -2797,6 +2798,43 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
 
 friend class class_test_equal;
  private:
+  /** For each type, boundary dimension and boundary, the cube vertices of the corners of the boundary as a bitmask
+   * (bit v for the cube vertex v with coordinate bits v), computed once. */
+  static const auto &
+  boundary_cube_vertex_masks () noexcept
+  {
+    using corners_t = std::remove_cvref_t<decltype (t8_standalone_lut_type_bdy_dim_id_to_corners<TEclass>)>;
+    constexpr size_t num_types = std::extent_v<corners_t, 0>;
+    constexpr size_t num_dims = std::extent_v<corners_t, 1>;
+    constexpr size_t max_bdys = std::extent_v<corners_t, 2>;
+    constexpr size_t max_corners = std::extent_v<corners_t, 3>;
+    using masks_t = std::array<std::array<std::array<uint32_t, max_bdys>, num_dims>, num_types>;
+    static const masks_t masks = [] {
+      masks_t m {};
+      for (size_t type = 0; type < num_types; type++) {
+        for (size_t bdy_dim = 0; bdy_dim < num_dims; bdy_dim++) {
+          for (size_t ibdy = 0; ibdy < max_bdys; ibdy++) {
+            uint32_t mask = 0;
+            for (size_t icorner = 0; icorner < max_corners; icorner++) {
+              const int corner = t8_standalone_lut_type_bdy_dim_id_to_corners<TEclass>[type][bdy_dim][ibdy][icorner];
+              if (corner < 0) {
+                break;
+              }
+              int vertex = 0;
+              for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+                vertex |= corner_binary ((int) type, corner, idim) << idim;
+              }
+              mask |= (uint32_t) 1 << vertex;
+            }
+            m[type][bdy_dim][ibdy] = mask;
+          }
+        }
+      }
+      return m;
+    }();
+    return masks;
+  }
+
   // ################################################____HELPER____################################################
 
   /** The length of a element at a given level in integer coordinates
