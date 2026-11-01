@@ -81,8 +81,8 @@ touches_shell (const double x[3], const int level)
 }
 
 int
-t8_shell_adapt (t8_forest_t, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
-                t8_locidx_t, const t8_scheme_c *scheme, const int, const int, t8_element_t *elements[])
+t8_shell_adapt (t8_forest_t, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class, t8_locidx_t,
+                const t8_scheme_c *scheme, const int, const int, t8_element_t *elements[])
 {
   const int level = scheme->element_get_level (tree_class, elements[0]);
   if (level >= max_level) {
@@ -185,8 +185,8 @@ time_t8code (t8_cmesh_t cmesh, const run_info &info, sc_MPI_Comm comm)
       unbalanced->balance_type = unbalanced_type;
       sc_MPI_Allreduce (MPI_IN_PLACE, &was_balanced, 1, sc_MPI_INT, sc_MPI_MIN, comm);
       sc_MPI_Allreduce (MPI_IN_PLACE, &is_balanced, 1, sc_MPI_INT, sc_MPI_MIN, comm);
-      t8_global_productionf ("check %s %s: balanced before %d, after %d\n", info.eclass, type_names[type],
-                             was_balanced, is_balanced);
+      t8_global_productionf ("check %s %s: balanced before %d, after %d\n", info.eclass, type_names[type], was_balanced,
+                             is_balanced);
       SC_CHECK_ABORT (is_balanced, "The forest is not balanced.");
     }
     write_line (info, "t8code", type, elements, t8_forest_get_global_num_leaf_elements (balanced),
@@ -285,9 +285,9 @@ main (int argc, char **argv)
       const size_t end = std::min (eclasses.find (',', start), eclasses.size ());
       const std::string eclass = eclasses.substr (start, end - start);
       start = end + 1;
-      SC_CHECK_ABORT (eclass == "hex" || eclass == "tet" || eclass == "prism" || eclass == "pyramid"
-                        || eclass == "hybrid",
-                      "Unknown element class.");
+      SC_CHECK_ABORT (
+        eclass == "hex" || eclass == "tet" || eclass == "prism" || eclass == "pyramid" || eclass == "hybrid",
+        "Unknown element class.");
       for (int rep = 0; rep < repetitions; ++rep) {
         const run_info info = { eclass.c_str (), size, level, rlevel, rep, csv };
         tree_size = eclass == "hybrid" ? 0.5 : 1;

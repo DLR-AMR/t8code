@@ -39,11 +39,11 @@ t8_test_binary_search (t8_eclass_t eclass, int level, int num_elements)
 {
   const t8_scheme *scheme = t8_scheme_new_standalone ();
   t8_element_array_t elements;
-  t8_element_array_init_size (&elements,scheme, eclass, num_elements);
+  t8_element_array_init_size (&elements, scheme, eclass, num_elements);
   //create element array, first element first descendant of root at level, then successor
   t8_element_t *first_elem = t8_element_array_index_int_mutable (&elements, 0);
   scheme->set_to_root (eclass, first_elem);
-  scheme->element_get_first_descendant(eclass, first_elem, first_elem, level);
+  scheme->element_get_first_descendant (eclass, first_elem, first_elem, level);
   //check that num_elements <= num_descendants
   for (int i = 1; i < num_elements; i++) {
     scheme->element_construct_successor (eclass, t8_element_array_index_int (&elements, i - 1),
@@ -65,8 +65,8 @@ t8_test_binary_search (t8_eclass_t eclass, int level, int num_elements)
   time = -sc_MPI_Wtime ();
   for (int i = 0; i < num_elements; i++) {
     t8_element_t *element = t8_element_array_index_int_mutable (&elements, i);
-    t8_debugf("################################ \n");
-    t8_debugf("search for element with index %i \n",i);
+    t8_debugf ("################################ \n");
+    t8_debugf ("search for element with index %i \n", i);
     int found = t8_forest_bin_search_lower_compare (&elements, element);
     if (found != i) {
       SC_ABORTF ("i: %i, found: %i\n", i, found);
@@ -74,7 +74,7 @@ t8_test_binary_search (t8_eclass_t eclass, int level, int num_elements)
   }
   time += sc_MPI_Wtime ();
   t8_infof ("time of compare  binary search: %f\n", time);
-  t8_element_array_reset(&elements);
+  t8_element_array_reset (&elements);
   delete scheme;
 }
 
@@ -129,35 +129,34 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else {
-    t8_global_productionf ("Testing binary search with %s elements\n",
-                           t8_eclass_to_string[eclass_int]);
+    t8_global_productionf ("Testing binary search with %s elements\n", t8_eclass_to_string[eclass_int]);
     int start_level, end_level, num_elements;
     int dim = t8_eclass_to_dimension[eclass_int];
     switch (dim) {
-      case 3:
+    case 3:
       start_level = 5;
-      num_elements = 1<<15;
+      num_elements = 1 << 15;
       end_level = 20;
-      if(eclass_int == 7){
+      if (eclass_int == 7) {
         end_level = 19;
       }
-        break;
-      case 2:
+      break;
+    case 2:
       start_level = 5;
-      num_elements = 1<<10;
+      num_elements = 1 << 10;
       // start_level = 7;
       // num_elements = 1<<14;
       end_level = 29;
-        break;
-      default:
-        SC_ABORT("no parameters given for d<=1!\n");
+      break;
+    default:
+      SC_ABORT ("no parameters given for d<=1!\n");
     }
-    for(int level = start_level; level < end_level; level++){
-      t8_global_productionf("level: %i:\n",level);
+    for (int level = start_level; level < end_level; level++) {
+      t8_global_productionf ("level: %i:\n", level);
       t8_test_binary_search ((t8_eclass_t) eclass_int, level, num_elements);
     }
-    for(int level = end_level-1; level >= start_level; level--){
-      t8_global_productionf("level: %i:\n",level);
+    for (int level = end_level - 1; level >= start_level; level--) {
+      t8_global_productionf ("level: %i:\n", level);
       t8_test_binary_search ((t8_eclass_t) eclass_int, level, num_elements);
     }
   }

@@ -2439,4 +2439,3 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
 
   return true;
 }
-

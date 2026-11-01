@@ -35,7 +35,6 @@
 #include <array>
 #include <utility>
 
-
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
 #define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
@@ -337,8 +336,7 @@ struct t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEc
   inline void
   element_get_children_at_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
                                     [[maybe_unused]] const int bdy_id, [[maybe_unused]] t8_element_t *children[],
-                                    [[maybe_unused]] const int num_children,
-                                    [[maybe_unused]] int *child_bdy_ids) const
+                                    [[maybe_unused]] const int num_children, [[maybe_unused]] int *child_bdy_ids) const
   {
     SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
   }
@@ -358,11 +356,9 @@ struct t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEc
   }
 
   inline void
-  element_get_children_touching_boundary ([[maybe_unused]] const t8_element_t *elem,
-                                          [[maybe_unused]] const int bdy_dim, [[maybe_unused]] const int bdy_id,
-                                          [[maybe_unused]] t8_element_t *children[],
-                                          [[maybe_unused]] const int num_children,
-                                          [[maybe_unused]] int *child_bdy_dims,
+  element_get_children_touching_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                                          [[maybe_unused]] const int bdy_id, [[maybe_unused]] t8_element_t *children[],
+                                          [[maybe_unused]] const int num_children, [[maybe_unused]] int *child_bdy_dims,
                                           [[maybe_unused]] int *child_bdy_ids) const
   {
     SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
@@ -407,16 +403,16 @@ struct t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEc
   }
 
   inline int
-  element_get_boundary_neighbors_across_root (
-    [[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim, [[maybe_unused]] const int bdy_id,
-    [[maybe_unused]] const int root_dim, [[maybe_unused]] const int root_id,
-    [[maybe_unused]] const t8_eclass_t neigh_eclass, [[maybe_unused]] const int neigh_root_id,
-    [[maybe_unused]] const int *perm, [[maybe_unused]] t8_element_t *neighs[],
-    [[maybe_unused]] int *neigh_bdy_ids) const
+  element_get_boundary_neighbors_across_root ([[maybe_unused]] const t8_element_t *elem,
+                                              [[maybe_unused]] const int bdy_dim, [[maybe_unused]] const int bdy_id,
+                                              [[maybe_unused]] const int root_dim, [[maybe_unused]] const int root_id,
+                                              [[maybe_unused]] const t8_eclass_t neigh_eclass,
+                                              [[maybe_unused]] const int neigh_root_id,
+                                              [[maybe_unused]] const int *perm, [[maybe_unused]] t8_element_t *neighs[],
+                                              [[maybe_unused]] int *neigh_bdy_ids) const
   {
     SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
   }
-
 };
 
 #endif /* !T8_DEFAULT_COMMON_HXX */

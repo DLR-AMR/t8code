@@ -34,10 +34,7 @@
  * Create ghost layer and print it.
  * partition the forest, create ghost layer and print it. */
 
-
-
-
- static void
+static void
 t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm, int no_vtk)
 {
   t8_cmesh_t cmesh;
@@ -57,19 +54,17 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm, int no
 
   /* Set the cmesh, scheme and level */
   t8_forest_set_cmesh (forest, cmesh, comm);
-  t8_forest_set_scheme (forest, t8_scheme_new_standalone());
+  t8_forest_set_scheme (forest, t8_scheme_new_standalone ());
   t8_forest_set_level (forest, level);
   t8_forest_set_ghost (forest, 1, T8_GHOST_VERTICES);
   /* commit the forest */
   t8_forest_commit (forest);
 
-  char fileprefix[BUFSIZ] ="ghost";
+  char fileprefix[BUFSIZ] = "ghost";
 
-  t8_forest_vtk_write_file(forest,fileprefix,1,1,1,1,1,0,nullptr);
-  t8_forest_unref(&forest);
-
+  t8_forest_vtk_write_file (forest, fileprefix, 1, 1, 1, 1, 1, 0, nullptr);
+  t8_forest_unref (&forest);
 }
-
 
 int
 main (int argc, char **argv)
@@ -129,7 +124,7 @@ main (int argc, char **argv)
   }
   else {
     t8_global_productionf ("Testing ghost on a hypercube cmesh with %s elements\n",
-                            eclass_int < T8_ECLASS_COUNT ? t8_eclass_to_string[eclass_int] : "hybrid");
+                           eclass_int < T8_ECLASS_COUNT ? t8_eclass_to_string[eclass_int] : "hybrid");
     t8_test_ghost_hypercube ((t8_eclass_t) eclass_int, level, sc_MPI_COMM_WORLD, no_vtk);
   }
 

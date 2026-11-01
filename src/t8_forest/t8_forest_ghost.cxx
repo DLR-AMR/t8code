@@ -586,16 +586,16 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
 typedef struct
 {
 
-  sc_array_t bounds_per_level; /**< For each level from the nca to the parent of the current element
+  sc_array_t bounds_per_level;                   /**< For each level from the nca to the parent of the current element
                                  *   we store for each face the lower and upper bounds of the owners at
                                  *   this face. We also store bounds for the element's owners.
                                  *   Each entry is an array of 2 * (max_num_faces + 1) integers,
       |                          *   face_0 low | face_0 high | ... | face_n low | face_n high | owner low | owner high | 
                                  */
-  sc_array_t face_owners;      /**< Temporary storage for all owners at a leaf's face. */
+  sc_array_t face_owners;                        /**< Temporary storage for all owners at a leaf's face. */
   t8_forest_boundary_scratch_t boundary_scratch; /**< Scratch arrays for the owners at boundaries (version 3). */
-  const t8_scheme *scheme;     /**< The scheme. */
-  t8_gloidx_t gtreeid;         /**< The global tree id. */
+  const t8_scheme *scheme;                       /**< The scheme. */
+  t8_gloidx_t gtreeid;                           /**< The global tree id. */
 
   int level_nca;      /**< The refinement level of the root element in the search.
                                      At position element_level - level_nca in bounds_per_level are the bounds

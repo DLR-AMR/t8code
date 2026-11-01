@@ -675,7 +675,6 @@ struct t8_default_scheme_vertex: public t8_default_scheme_common<T8_ECLASS_VERTE
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const;
-
 };
 
 #endif /* !T8_DEFAULT_VERTEX_HXX */

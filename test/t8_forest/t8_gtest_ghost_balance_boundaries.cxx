@@ -265,7 +265,8 @@ struct t8_test_mesh
     std::array<double, 3> point = { 0, 0, 0 };
     for (int idim = 0; idim < dim; idim++) {
       for (int jdim = 0; jdim < dim; jdim++) {
-        point[idim] += inverses[leaf.gtreeid][idim][jdim] * (physical[jdim] - offsets[leaf.gtreeid][jdim]) * root_length;
+        point[idim]
+          += inverses[leaf.gtreeid][idim][jdim] * (physical[jdim] - offsets[leaf.gtreeid][jdim]) * root_length;
       }
     }
     return shape (leaf).contains (leaf, point);
@@ -713,8 +714,8 @@ TEST_P (forest_ghost_balance_boundaries, ghost_layer)
   EXPECT_EQ (ghosts.size (), expected.size ());
   for (const t8_test_leaf &leaf : expected) {
     EXPECT_TRUE (ghosts.count (leaf)) << "Missing ghost in tree " << leaf.gtreeid << " at level " << leaf.level
-                                      << " type " << leaf.type << " anchor " << leaf.coords[0] << " "
-                                      << leaf.coords[1] << " " << leaf.coords[2];
+                                      << " type " << leaf.type << " anchor " << leaf.coords[0] << " " << leaf.coords[1]
+                                      << " " << leaf.coords[2];
   }
   for (const t8_test_leaf &leaf : ghosts) {
     EXPECT_TRUE (expected.count (leaf)) << "Ghost that does not touch a local leaf in tree " << leaf.gtreeid
@@ -794,11 +795,12 @@ static const t8_test_cmesh t8_test_cmeshes[] = {
   { "PyramidCake", [] () { return t8_cmesh_new_pyramid_cake (sc_MPI_COMM_WORLD, 5); } },
 };
 
-auto print_cmesh_ghost_type = [] (const testing::TestParamInfo<std::tuple<t8_test_cmesh, t8_ghost_type_t, bool>> &info) {
-  static const char *type_names[] = { "none", "faces", "edges", "vertices" };
-  return std::get<0> (info.param).first + "_" + type_names[std::get<1> (info.param)]
-         + (std::get<2> (info.param) ? "_partitioned" : "");
-};
+auto print_cmesh_ghost_type
+  = [] (const testing::TestParamInfo<std::tuple<t8_test_cmesh, t8_ghost_type_t, bool>> &info) {
+      static const char *type_names[] = { "none", "faces", "edges", "vertices" };
+      return std::get<0> (info.param).first + "_" + type_names[std::get<1> (info.param)]
+             + (std::get<2> (info.param) ? "_partitioned" : "");
+    };
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_balance_boundaries, forest_ghost_balance_boundaries,
                           ::testing::Combine (::testing::ValuesIn (t8_test_cmeshes),

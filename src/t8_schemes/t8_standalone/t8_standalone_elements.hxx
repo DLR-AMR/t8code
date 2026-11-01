@@ -52,7 +52,6 @@ constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 30, 30, 30, 29, 21, 2
 constexpr uint8_t T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 6, 4, 5, 5 };
 constexpr uint8_t T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_COUNT] = { 0, 2, 4, 3, 12, 6, 9, 8 };
 
-
 /** Number of children of the standalone element types */
 constexpr uint8_t T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_COUNT] = { 1, 2, 4, 4, 8, 8, 8, 10 };
 
@@ -92,13 +91,13 @@ template <t8_eclass TEclass>
 constexpr int8_t t8_type_vertex_dim_to_binary[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_CORNERS[TEclass]]
                                              [T8_ELEMENT_DIM[TEclass]];
 
-
 template <t8_eclass TEclass>
 constexpr int8_t t8_cube_vertex_to_num_adj[1 << T8_ELEMENT_DIM[TEclass]];
 
 template <t8_eclass TEclass>
-constexpr int8_t t8_cube_vertex_adj_to_type[1 << T8_ELEMENT_DIM[TEclass]][1 << T8_ELEMENT_DIM[TEclass]];//TODO: replace by factorial
-                                             
+constexpr int8_t t8_cube_vertex_adj_to_type[1 << T8_ELEMENT_DIM[TEclass]]
+                                           [1 << T8_ELEMENT_DIM[TEclass]];  //TODO: replace by factorial
+
 /**FACE*/
 template <t8_eclass TEclass>
 constexpr int8_t t8_standalone_lut_face_internal[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_FACES[TEclass]];
@@ -161,22 +160,25 @@ template <t8_eclass TEclass>
 constexpr int8_t t8_standalone_lut_backtransform_coords[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]]
                                                        [T8_ELEMENT_DIM[TEclass]];
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_bdy_dim_id_idim_to_elem_idim[T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
-                                                       [T8_ELEMENT_DIM[TEclass]];
+constexpr int8_t t8_standalone_lut_bdy_dim_id_idim_to_elem_idim[T8_ELEMENT_DIM[TEclass]]
+                                                               [T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
+                                                               [T8_ELEMENT_DIM[TEclass]];
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_bdy_dim_id_elem_idim_to_bdy_idim[T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
-                                                       [T8_ELEMENT_DIM[TEclass]];
+constexpr int8_t t8_standalone_lut_bdy_dim_id_elem_idim_to_bdy_idim[T8_ELEMENT_DIM[TEclass]]
+                                                                   [T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
+                                                                   [T8_ELEMENT_DIM[TEclass]];
 
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_bdy_dim_id_elem_idim_to_1_bdy[T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
-                                                       [T8_ELEMENT_DIM[TEclass]];
+constexpr int8_t t8_standalone_lut_bdy_dim_id_elem_idim_to_1_bdy[T8_ELEMENT_DIM[TEclass]]
+                                                                [T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
+                                                                [T8_ELEMENT_DIM[TEclass]];
 
 template <t8_eclass TEclass>
-constexpr int t8_standalone_lut_line_boundary_id_type_to_equality[T8_ELEMENT_MAX_BOUNDARIES[TEclass]][T8_ELEMENT_NUM_EQUATIONS[TEclass]];
+constexpr int t8_standalone_lut_line_boundary_id_type_to_equality[T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
+                                                                 [T8_ELEMENT_NUM_EQUATIONS[TEclass]];
 
 template <t8_eclass TEclass>
 constexpr int t8_standalone_lut_num_boundaries[T8_ELEMENT_DIM[TEclass]];
-
 
 #include "t8_standalone_lut/t8_standalone_lut_triangle.hxx"
 #include "t8_standalone_lut/t8_standalone_lut_prism.hxx"

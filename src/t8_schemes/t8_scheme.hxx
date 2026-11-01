@@ -1417,19 +1417,16 @@ struct t8_scheme
   inline int
   element_get_boundary_neighbors_across_root (const t8_eclass_t tree_class, const t8_element_t *element,
                                               const int bdy_dim, const int bdy_id, const int root_dim,
-                                              const int root_id, const t8_eclass_t neigh_class,
-                                              const int neigh_root_id, const int *perm, t8_element_t *neighs[],
-                                              int *neigh_bdy_ids) const
+                                              const int root_id, const t8_eclass_t neigh_class, const int neigh_root_id,
+                                              const int *perm, t8_element_t *neighs[], int *neigh_bdy_ids) const
   {
     return std::visit (
       [&] (auto &&scheme) {
-        return scheme.element_get_boundary_neighbors_across_root (element, bdy_dim, bdy_id, root_dim, root_id,
-                                                                  neigh_class, neigh_root_id, perm, neighs,
-                                                                  neigh_bdy_ids);
+        return scheme.element_get_boundary_neighbors_across_root (
+          element, bdy_dim, bdy_id, root_dim, root_id, neigh_class, neigh_root_id, perm, neighs, neigh_bdy_ids);
       },
       eclass_schemes[tree_class]);
   }
-
 };
 
 #endif /* !T8_SCHEME_HXX */

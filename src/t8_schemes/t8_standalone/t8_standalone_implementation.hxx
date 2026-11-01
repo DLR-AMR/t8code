@@ -1402,9 +1402,6 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     }
   }
 
-
-
-
   // ################################################____LINEAR ID____################################################
 
   /** Initialize the entries of an allocated element according to a
@@ -2089,7 +2086,8 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       /* Read the tables before constructing the children, since elem may be children[0] */
       int childids[T8_ELEMENT_MAX_NUM_BOUNDARY_CHILDREN[TEclass]];
       for (int ichild = 0; ichild < num_children; ichild++) {
-        childids[ichild] = t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childid<TEclass>[type][bdy_dim][bdy_id][ichild];
+        childids[ichild]
+          = t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childid<TEclass>[type][bdy_dim][bdy_id][ichild];
         if (child_bdy_ids != NULL) {
           child_bdy_ids[ichild]
             = t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childbdyid<TEclass>[type][bdy_dim][bdy_id][ichild];
@@ -2132,7 +2130,8 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       T8_ASSERT (0 <= bdy_id && bdy_id < element_get_num_boundaries (elem, bdy_dim));
       const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
       const int8_t *childids
-        = t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childid<TEclass>[element_get_lut_type (el)][bdy_dim][bdy_id];
+        = t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childid<TEclass>[element_get_lut_type (el)][bdy_dim]
+                                                                            [bdy_id];
       int num_children = 0;
       while (num_children < T8_ELEMENT_MAX_NUM_BOUNDARY_TOUCHING_CHILDREN[TEclass] && childids[num_children] != -1) {
         num_children++;
@@ -2155,11 +2154,9 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
    * It is valid to call this function with elem = children[0].
    */
   static constexpr void
-  element_get_children_touching_boundary ([[maybe_unused]] const t8_element_t *elem,
-                                          [[maybe_unused]] const int bdy_dim, [[maybe_unused]] const int bdy_id,
-                                          [[maybe_unused]] t8_element_t *children[],
-                                          [[maybe_unused]] const int num_children,
-                                          [[maybe_unused]] int *child_bdy_dims,
+  element_get_children_touching_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
+                                          [[maybe_unused]] const int bdy_id, [[maybe_unused]] t8_element_t *children[],
+                                          [[maybe_unused]] const int num_children, [[maybe_unused]] int *child_bdy_dims,
                                           [[maybe_unused]] int *child_bdy_ids) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
@@ -2312,7 +2309,8 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       int num_neighbors = 0;
       for (int ielem = 0; ielem < num_elements; ielem++) {
         const int neigh_type = t8_standalone_lut_bdy_dim_anchored_neighbor_to_type<TEclass>[bdy_dim][anchored][ielem];
-        const int neigh_bdy_id = t8_standalone_lut_bdy_dim_anchored_neighbor_to_bdyid<TEclass>[bdy_dim][anchored][ielem];
+        const int neigh_bdy_id
+          = t8_standalone_lut_bdy_dim_anchored_neighbor_to_bdyid<TEclass>[bdy_dim][anchored][ielem];
         const int neigh_shift
           = t8_standalone_lut_bdy_dim_anchored_neighbor_to_anchorshift<TEclass>[bdy_dim][anchored][ielem];
         if (neigh_type == type && neigh_bdy_id == bdy_id && neigh_shift == shift) {
@@ -2402,8 +2400,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
                                               [[maybe_unused]] const int root_dim, [[maybe_unused]] const int root_id,
                                               [[maybe_unused]] const t8_eclass_t neigh_eclass,
                                               [[maybe_unused]] const int neigh_root_id,
-                                              [[maybe_unused]] const int *perm,
-                                              [[maybe_unused]] t8_element_t *neighs[],
+                                              [[maybe_unused]] const int *perm, [[maybe_unused]] t8_element_t *neighs[],
                                               [[maybe_unused]] int *neigh_bdy_ids) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
@@ -2428,8 +2425,9 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
         }
       }
       /* Map them to the other root boundary */
-      switch (root_dim == 0 ? T8_ECLASS_VERTEX
-                            : root_dim == 1 ? T8_ECLASS_LINE : (t8_eclass_t) t8_eclass_face_types[TEclass][root_id]) {
+      switch (root_dim == 0   ? T8_ECLASS_VERTEX
+              : root_dim == 1 ? T8_ECLASS_LINE
+                              : (t8_eclass_t) t8_eclass_face_types[TEclass][root_id]) {
       case T8_ECLASS_VERTEX:
         break;
       case T8_ECLASS_LINE:
@@ -2575,8 +2573,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
    * \param [in,out] points The coordinates of the points in units of the length of \a level, mapped on output.
    */
   static constexpr void
-  transform_root_points (const int *perm, const int level, const int num_points,
-                         t8_element_coord points[][3]) noexcept
+  transform_root_points (const int *perm, const int level, const int num_points, t8_element_coord points[][3]) noexcept
   {
     constexpr int dim = T8_ELEMENT_DIM[TEclass];
     int matrix[dim][dim];
@@ -2707,7 +2704,8 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     }
   }
 
-friend class class_test_equal;
+  friend class class_test_equal;
+
  private:
   /** For each type, boundary dimension and boundary, the cube vertices of the corners of the boundary as a bitmask
    * (bit v for the cube vertex v with coordinate bits v), computed once. */
@@ -2914,17 +2912,18 @@ friend class class_test_equal;
   static constexpr int
   determine_type_int (t8_standalone<TEclass> *el, int itype) noexcept
   {
-    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]){
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       t8_element_coord x0 = el->coords[t8_type_edge_equations<TEclass>[itype][0]];
       t8_element_coord x1 = el->coords[t8_type_edge_equations<TEclass>[itype][1]];
-      t8_element_coord type_at_maxlevel = get_typebit(el->type, itype);
+      t8_element_coord type_at_maxlevel = get_typebit (el->type, itype);
       t8_element_coord different = x0 ^ x1;
       t8_element_coord equal = (~different);
-      t8_element_coord smaller = 2*(different & x1) + type_at_maxlevel;
+      t8_element_coord smaller = 2 * (different & x1) + type_at_maxlevel;
       t8_element_coord overflow_addition = equal + smaller;
       t8_element_coord types = equal ^ overflow_addition;
       return types;
-    }else {
+    }
+    else {
       return 0;
     }
   }
@@ -3172,7 +3171,6 @@ friend class class_test_equal;
     }
   }
 
-
   /** Get the eclass of the face for the element eclass
    * \return The eclass of the face.
    */
@@ -3181,19 +3179,17 @@ friend class class_test_equal;
   {
 
     switch (bdy_dim) {
-      case 0:
-        return T8_ECLASS_VERTEX;
-      case 1:
-        return T8_ECLASS_LINE;
-      case 2:
-        return get_root_face_eclass(bdy_id);
-      default:
-        SC_ABORT_NOT_REACHED ();
-        return T8_ECLASS_VERTEX;
+    case 0:
+      return T8_ECLASS_VERTEX;
+    case 1:
+      return T8_ECLASS_LINE;
+    case 2:
+      return get_root_face_eclass (bdy_id);
+    default:
+      SC_ABORT_NOT_REACHED ();
+      return T8_ECLASS_VERTEX;
     }
   }
-
-
 
   /** Construct the boundary element at a specific face.
    * \param [in] elem           The input element.
@@ -3405,8 +3401,5 @@ friend class class_test_equal;
     return type;
   }
 };
-
-
-
 
 #endif /* T8_STANDALONE_IMPLEMENTATION_HXX */

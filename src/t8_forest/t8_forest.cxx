@@ -2450,10 +2450,10 @@ t8_forest_element_owners_at_boundary_recursion (t8_forest_t forest, t8_gloidx_t 
   scheme->element_new (eclass, 1, &last_desc);
   scheme->element_get_last_descendant_boundary (eclass, element, bdy_dim, bdy_id, last_desc, forest->maxlevel);
 
-  const int first_owner = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc, eclass, lower_bound,
-                                                            upper_bound, lower_bound, 1);
-  const int last_owner = t8_forest_element_find_owner_ext (forest, gtreeid, last_desc, eclass, lower_bound,
-                                                           upper_bound, upper_bound, 1);
+  const int first_owner
+    = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc, eclass, lower_bound, upper_bound, lower_bound, 1);
+  const int last_owner
+    = t8_forest_element_find_owner_ext (forest, gtreeid, last_desc, eclass, lower_bound, upper_bound, upper_bound, 1);
 
   /* It is impossible for an element with bigger id to belong to a smaller process */
   T8_ASSERT (first_owner <= last_owner);
@@ -2585,8 +2585,8 @@ t8_forest_append_boundary_neighbors (const t8_scheme *scheme, t8_gloidx_t gtreei
 }
 
 void
-t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                      int bdy_dim, int bdy_id, sc_array_t *neighbors)
+t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int bdy_dim,
+                                      int bdy_id, sc_array_t *neighbors)
 {
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
@@ -2621,8 +2621,8 @@ t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, c
     const int num_across = scheme->element_get_boundary_neighbors_across_root (
       eclass, element, bdy_dim, bdy_id, root_dim, root_id, neigh_eclass, tree_neighbor.bdy_id, tree_neighbor.perm,
       neighs.data (), neigh_bdy_ids.data ());
-    t8_forest_append_boundary_neighbors (scheme, tree_neighbor.gtreeid, neigh_eclass,
-                                         num_across, max_neighbors, neighs.data (), neigh_bdy_ids.data (), neighbors);
+    t8_forest_append_boundary_neighbors (scheme, tree_neighbor.gtreeid, neigh_eclass, num_across, max_neighbors,
+                                         neighs.data (), neigh_bdy_ids.data (), neighbors);
   }
 }
 
@@ -2735,9 +2735,9 @@ t8_forest_element_owners_at_neigh_boundary (t8_forest_t forest, t8_locidx_t ltre
 }
 
 void
-t8_forest_element_owners_at_neigh_boundary_bounds (t8_forest_t forest, t8_locidx_t ltreeid,
-                                                   const t8_element_t *element, int bdy_dim, int bdy_id, int *lower,
-                                                   int *upper, t8_forest_boundary_scratch_t *scratch)
+t8_forest_element_owners_at_neigh_boundary_bounds (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                                   int bdy_dim, int bdy_id, int *lower, int *upper,
+                                                   t8_forest_boundary_scratch_t *scratch)
 {
   sc_array_t local_neighbors;
   if (scratch == NULL) {
@@ -3018,8 +3018,8 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const 
   }
 
   /* Look up queries over all ranks in the cache */
-  const bool cached
-    = owner_bounds_cache != nullptr && owner_bounds_cache->forest == forest && *lower == 0 && *upper == forest->mpisize - 1;
+  const bool cached = owner_bounds_cache != nullptr && owner_bounds_cache->forest == forest && *lower == 0
+                      && *upper == forest->mpisize - 1;
   t8_owner_bounds_key key;
   if (cached) {
     key.gtreeid = gtreeid;
@@ -3425,8 +3425,7 @@ void
 t8_forest_set_balance_type (t8_forest_t forest, t8_ghost_type_t balance_type)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  SC_CHECK_ABORT (balance_type == T8_GHOST_FACES || balance_type == T8_GHOST_EDGES
-                    || balance_type == T8_GHOST_VERTICES,
+  SC_CHECK_ABORT (balance_type == T8_GHOST_FACES || balance_type == T8_GHOST_EDGES || balance_type == T8_GHOST_VERTICES,
                   "Invalid balance type.\n");
   forest->balance_type = balance_type;
 }
@@ -3466,9 +3465,9 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
   T8_ASSERT (t8_forest_is_initialized (forest));
   /* Edge and vertex ghosts are only supported for schemes with boundaries (standalone), and across trees
    * only at faces */
-  SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES || ghost_type == T8_GHOST_EDGES
-                    || ghost_type == T8_GHOST_VERTICES,
-                  "Invalid ghost type.\n");
+  SC_CHECK_ABORT (
+    do_ghost == 0 || ghost_type == T8_GHOST_FACES || ghost_type == T8_GHOST_EDGES || ghost_type == T8_GHOST_VERTICES,
+    "Invalid ghost type.\n");
   SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3, "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
   SC_CHECK_ABORT (ghost_type == T8_GHOST_FACES || ghost_version == 3,
                   "Edge and vertex ghosts are only supported in version 3.");

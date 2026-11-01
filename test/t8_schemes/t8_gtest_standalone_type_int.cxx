@@ -32,7 +32,6 @@
 #include "t8_schemes/t8_standalone/t8_standalone_elements.hxx"
 #include "t8_schemes/t8_standalone/t8_standalone_implementation.hxx"
 
-
 /* t8_standalone_scheme declares this class a friend, so that it can access determine_type_int. */
 struct class_test_equal: public TestDFS
 {
@@ -185,6 +184,7 @@ TEST_P (class_test_equal, test_compare_type_int)
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_standalone_type_int, class_test_equal,
                           ::testing::Combine (::testing::Values (1),
-                                              ::testing::Values (T8_ECLASS_LINE, T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE, T8_ECLASS_HEX,
-                                                                 T8_ECLASS_TET, T8_ECLASS_PRISM, T8_ECLASS_PYRAMID)),
+                                              ::testing::Values (T8_ECLASS_LINE, T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE,
+                                                                 T8_ECLASS_HEX, T8_ECLASS_TET, T8_ECLASS_PRISM,
+                                                                 T8_ECLASS_PYRAMID)),
                           print_all_schemes);

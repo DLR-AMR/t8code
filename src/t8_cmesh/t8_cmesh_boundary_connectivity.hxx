@@ -81,9 +81,9 @@ struct t8_cmesh_boundary_connectivity
   void
   build_classes (const int bdy_dim, sc_MPI_Comm comm);
 
-  t8_cmesh_t cmesh;      /**< The cmesh of this connectivity. */
-  classes vertices;      /**< The classes of the vertices. */
-  classes edges;         /**< The classes of the edges. */
+  t8_cmesh_t cmesh; /**< The cmesh of this connectivity. */
+  classes vertices; /**< The classes of the vertices. */
+  classes edges;    /**< The classes of the edges. */
 };
 
 #endif /* !T8_CMESH_BOUNDARY_CONNECTIVITY_HXX */

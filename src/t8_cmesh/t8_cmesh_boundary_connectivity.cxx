@@ -107,8 +107,8 @@ t8_cmesh_face_corner_permutation (const t8_eclass_t eclass, const int face, cons
   /* The orientation is defined relative to the smaller face, see t8_forest_element_face_neighbor. */
   const int eclass_compare = t8_eclass_compare (eclass, neigh_eclass);
   const int is_smaller = eclass_compare == 0 ? face <= neigh_face : eclass_compare == -1;
-  t8_eclass_face_orientation_to_corner_permutation ((t8_eclass_t) t8_eclass_face_types[eclass][face], orientation,
-                                                    sign, is_smaller, perm);
+  t8_eclass_face_orientation_to_corner_permutation ((t8_eclass_t) t8_eclass_face_types[eclass][face], orientation, sign,
+                                                    is_smaller, perm);
 }
 
 /** Send an array of global indices to each process and receive one from each process.
@@ -324,8 +324,8 @@ t8_cmesh_boundary_connectivity::build_classes (const int bdy_dim, sc_MPI_Comm co
       const auto replied = exchange (replies);
       for (int rank = 0; rank < num_procs; rank++) {
         for (size_t ientry = 0; ientry < request_indices[rank].size (); ientry++) {
-          changed |= lower_label (request_indices[rank][ientry], replied[rank][2 * ientry],
-                                  replied[rank][2 * ientry + 1]);
+          changed
+            |= lower_label (request_indices[rank][ientry], replied[rank][2 * ientry], replied[rank][2 * ientry + 1]);
         }
       }
       const int mpiret = sc_MPI_Allreduce (&changed, &changed_global, 1, sc_MPI_INT, sc_MPI_LOR, comm);
@@ -357,8 +357,7 @@ t8_cmesh_boundary_connectivity::build_classes (const int bdy_dim, sc_MPI_Comm co
     for (size_t ientry = 0; ientry < collected[rank].size ();) {
       if (collected[rank][ientry] == 0) {
         const auto *entry = collected[rank].data () + ientry;
-        class_members[entry[1]].push_back (
-          { entry[2], (t8_eclass_t) entry[3], (int) entry[4], (int) entry[5] });
+        class_members[entry[1]].push_back ({ entry[2], (t8_eclass_t) entry[3], (int) entry[4], (int) entry[5] });
         ientry += 6;
       }
       else {
@@ -404,8 +403,7 @@ t8_cmesh_boundary_connectivity::build_classes (const int bdy_dim, sc_MPI_Comm co
   }
 }
 
-t8_cmesh_boundary_connectivity::t8_cmesh_boundary_connectivity (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
-  : cmesh (cmesh)
+t8_cmesh_boundary_connectivity::t8_cmesh_boundary_connectivity (const t8_cmesh_t cmesh, sc_MPI_Comm comm): cmesh (cmesh)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   build_classes (0, comm);
@@ -455,8 +453,7 @@ t8_cmesh_build_boundary_connectivity (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 std::vector<t8_cmesh_boundary_neighbor>
-t8_cmesh_get_boundary_neighbors (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int bdy_dim,
-                                 const int bdy_id)
+t8_cmesh_get_boundary_neighbors (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int bdy_dim, const int bdy_id)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid));

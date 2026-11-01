@@ -81,55 +81,88 @@ static_assert (T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID] == 2);
 
 /** Number of boundaries of each dimension */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_type_bdy_dim_to_num_boundaries[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]];
+constexpr int8_t t8_standalone_lut_type_bdy_dim_to_num_boundaries[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                                 [T8_ELEMENT_DIM[TEclass]];
 /** Corners of a boundary, as ascending corner ids of the element */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_corners[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]][T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[TEclass]];
+constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_corners[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                             [T8_ELEMENT_DIM[TEclass]]
+                                                             [T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
+                                                             [T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[TEclass]];
 /** Child ids of the children at a boundary, in SFC order */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]][T8_ELEMENT_MAX_NUM_BOUNDARY_CHILDREN[TEclass]];
+constexpr int8_t t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                                        [T8_ELEMENT_DIM[TEclass]]
+                                                                        [T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
+                                                                        [T8_ELEMENT_MAX_NUM_BOUNDARY_CHILDREN[TEclass]];
 /** Boundary id of the children at a boundary, in the numbering of the child type */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childbdyid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]][T8_ELEMENT_MAX_NUM_BOUNDARY_CHILDREN[TEclass]];
+constexpr int8_t t8_standalone_lut_type_bdy_dim_id_bdychildid_to_childbdyid
+  [1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
+  [T8_ELEMENT_MAX_NUM_BOUNDARY_CHILDREN[TEclass]];
 /** Child ids of the children touching a boundary in any dimension, in SFC order */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]][T8_ELEMENT_MAX_NUM_BOUNDARY_TOUCHING_CHILDREN[TEclass]];
+constexpr int8_t
+  t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                           [T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
+                                                           [T8_ELEMENT_MAX_NUM_BOUNDARY_TOUCHING_CHILDREN[TEclass]];
 /** Dimension of the intersection of a touching child with the boundary, a boundary of the child */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childbdydim[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]][T8_ELEMENT_MAX_NUM_BOUNDARY_TOUCHING_CHILDREN[TEclass]];
+constexpr int8_t t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childbdydim
+  [1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
+  [T8_ELEMENT_MAX_NUM_BOUNDARY_TOUCHING_CHILDREN[TEclass]];
 /** Boundary id (of that dimension) of the intersection of a touching child with the boundary */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childbdyid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]][T8_ELEMENT_MAX_NUM_BOUNDARY_TOUCHING_CHILDREN[TEclass]];
+constexpr int8_t t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childbdyid
+  [1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]]
+  [T8_ELEMENT_MAX_NUM_BOUNDARY_TOUCHING_CHILDREN[TEclass]];
 /** Coordinates (bitset) in which the anchor is shifted by the element length to obtain the anchored boundary */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_anchorshift[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]];
+constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_anchorshift[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                                 [T8_ELEMENT_DIM[TEclass]]
+                                                                 [T8_ELEMENT_MAX_BOUNDARIES[TEclass]];
 /** Anchored boundary id */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_anchored[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]];
+constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_anchored[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                              [T8_ELEMENT_DIM[TEclass]]
+                                                              [T8_ELEMENT_MAX_BOUNDARIES[TEclass]];
 /** Coordinates (bitset) that can still be 1 on the boundary. Last descendant: anchor + (len - len_maxlevel) in these coordinates */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_source_coords[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]];
+constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_source_coords[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                                   [T8_ELEMENT_DIM[TEclass]]
+                                                                   [T8_ELEMENT_MAX_BOUNDARIES[TEclass]];
 /** Coordinates (bitset) that can still be 0 on the boundary. First descendant: anchor + (len - len_maxlevel) in all other coordinates */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_sink_coords[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_BOUNDARIES[TEclass]];
+constexpr int8_t t8_standalone_lut_type_bdy_dim_id_to_sink_coords[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                                 [T8_ELEMENT_DIM[TEclass]]
+                                                                 [T8_ELEMENT_MAX_BOUNDARIES[TEclass]];
 /** Number of anchored boundaries of each dimension */
 template <t8_eclass TEclass>
 constexpr int8_t t8_standalone_lut_bdy_dim_to_num_anchored[T8_ELEMENT_DIM[TEclass]];
 /** Element class of an anchored boundary */
 template <t8_eclass TEclass>
-constexpr t8_eclass_t t8_standalone_lut_bdy_dim_anchored_to_eclass[T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_NUM_ANCHORED_BOUNDARIES[TEclass]];
+constexpr t8_eclass_t t8_standalone_lut_bdy_dim_anchored_to_eclass[T8_ELEMENT_DIM[TEclass]]
+                                                                  [T8_ELEMENT_MAX_NUM_ANCHORED_BOUNDARIES[TEclass]];
 /** Number of elements at an anchored boundary */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_bdy_dim_anchored_to_num_neighbors[T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_NUM_ANCHORED_BOUNDARIES[TEclass]];
+constexpr int8_t t8_standalone_lut_bdy_dim_anchored_to_num_neighbors[T8_ELEMENT_DIM[TEclass]]
+                                                                    [T8_ELEMENT_MAX_NUM_ANCHORED_BOUNDARIES[TEclass]];
 /** Type of the elements at an anchored boundary */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_bdy_dim_anchored_neighbor_to_type[T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_NUM_ANCHORED_BOUNDARIES[TEclass]][T8_ELEMENT_MAX_NUM_BOUNDARY_NEIGHBORS[TEclass]];
+constexpr int8_t t8_standalone_lut_bdy_dim_anchored_neighbor_to_type[T8_ELEMENT_DIM[TEclass]]
+                                                                    [T8_ELEMENT_MAX_NUM_ANCHORED_BOUNDARIES[TEclass]]
+                                                                    [T8_ELEMENT_MAX_NUM_BOUNDARY_NEIGHBORS[TEclass]];
 /** Boundary id of the anchored boundary in the elements at it */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_bdy_dim_anchored_neighbor_to_bdyid[T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_NUM_ANCHORED_BOUNDARIES[TEclass]][T8_ELEMENT_MAX_NUM_BOUNDARY_NEIGHBORS[TEclass]];
+constexpr int8_t t8_standalone_lut_bdy_dim_anchored_neighbor_to_bdyid[T8_ELEMENT_DIM[TEclass]]
+                                                                     [T8_ELEMENT_MAX_NUM_ANCHORED_BOUNDARIES[TEclass]]
+                                                                     [T8_ELEMENT_MAX_NUM_BOUNDARY_NEIGHBORS[TEclass]];
 /** Element anchor = boundary anchor - len in these coordinates (bitset) */
 template <t8_eclass TEclass>
-constexpr int8_t t8_standalone_lut_bdy_dim_anchored_neighbor_to_anchorshift[T8_ELEMENT_DIM[TEclass]][T8_ELEMENT_MAX_NUM_ANCHORED_BOUNDARIES[TEclass]][T8_ELEMENT_MAX_NUM_BOUNDARY_NEIGHBORS[TEclass]];
+constexpr int8_t
+  t8_standalone_lut_bdy_dim_anchored_neighbor_to_anchorshift[T8_ELEMENT_DIM[TEclass]]
+                                                            [T8_ELEMENT_MAX_NUM_ANCHORED_BOUNDARIES[TEclass]]
+                                                            [T8_ELEMENT_MAX_NUM_BOUNDARY_NEIGHBORS[TEclass]];
 
 /* The generated t8_standalone_lut/t8_standalone_lut_<shape>.hxx replace the files in t8code, they
  * define all tables declared in t8_standalone_elements.hxx. */

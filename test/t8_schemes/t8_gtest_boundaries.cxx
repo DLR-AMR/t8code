@@ -207,8 +207,8 @@ struct class_boundaries: public TestDFS
       for (int iback = 0; iback < num_back; iback++) {
         found += scheme->element_is_equal (eclass, back_neighbors[iback], element) && back_bdy_ids[iback] == bdy_id;
       }
-      EXPECT_EQ (found, 1) << "The element is not a neighbor of its neighbor at boundary " << bdy_id
-                           << " of dimension " << bdy_dim;
+      EXPECT_EQ (found, 1) << "The element is not a neighbor of its neighbor at boundary " << bdy_id << " of dimension "
+                           << bdy_dim;
       if (bdy_dim == 0) {
         double coords[3], neigh_coords[3];
         scheme->element_get_vertex_reference_coords (eclass, element, bdy_id, coords);

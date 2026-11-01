@@ -138,7 +138,8 @@ TEST_P (cmesh_boundary_connectivity, matches_coordinates)
           const t8_eclass_t jeclass = t8_cmesh_get_tree_class (cmesh, jtree);
           for (int jbdy = 0; jbdy < t8_test_num_boundaries (jeclass, bdy_dim); jbdy++) {
             const auto jcoords = t8_test_boundary_coords (cmesh, jtree, bdy_dim, jbdy);
-            if ((jtree != itree || jbdy != bdy_id) && std::set<t8_test_point> (jcoords.begin (), jcoords.end ()) == coord_set) {
+            if ((jtree != itree || jbdy != bdy_id)
+                && std::set<t8_test_point> (jcoords.begin (), jcoords.end ()) == coord_set) {
               expected.insert ({ jtree, jbdy });
             }
           }
@@ -192,12 +193,44 @@ TEST_P (cmesh_boundary_connectivity, orientation_by_vertex_ids)
 }
 
 static const std::pair<const char *, std::function<t8_cmesh_t ()>> t8_test_cmeshes[] = {
-  { "line", [] () { return t8_cmesh_new_hypercube_pad (T8_ECLASS_LINE, sc_MPI_COMM_WORLD, std::array<double, 6> { 0, 0, 0, 1, 0, 0 }.data (), 3, 0, 0, 0); } },
-  { "quad", [] () { return t8_cmesh_new_hypercube_pad (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, std::array<double, 12> { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 }.data (), 3, 2, 0, 0); } },
-  { "triangle", [] () { return t8_cmesh_new_hypercube_pad (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, std::array<double, 12> { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 }.data (), 3, 2, 0, 0); } },
-  { "hex", [] () { return t8_cmesh_new_hypercube_pad (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, std::array<double, 24> { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 }.data (), 2, 2, 2, 0); } },
-  { "tet", [] () { return t8_cmesh_new_hypercube_pad (T8_ECLASS_TET, sc_MPI_COMM_WORLD, std::array<double, 24> { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 }.data (), 2, 2, 2, 0); } },
-  { "prism", [] () { return t8_cmesh_new_hypercube_pad (T8_ECLASS_PRISM, sc_MPI_COMM_WORLD, std::array<double, 24> { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 }.data (), 2, 2, 2, 0); } },
+  { "line",
+    [] () {
+      return t8_cmesh_new_hypercube_pad (T8_ECLASS_LINE, sc_MPI_COMM_WORLD,
+                                         std::array<double, 6> { 0, 0, 0, 1, 0, 0 }.data (), 3, 0, 0, 0);
+    } },
+  { "quad",
+    [] () {
+      return t8_cmesh_new_hypercube_pad (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD,
+                                         std::array<double, 12> { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 }.data (), 3, 2, 0,
+                                         0);
+    } },
+  { "triangle",
+    [] () {
+      return t8_cmesh_new_hypercube_pad (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD,
+                                         std::array<double, 12> { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 }.data (), 3, 2, 0,
+                                         0);
+    } },
+  { "hex",
+    [] () {
+      return t8_cmesh_new_hypercube_pad (
+        T8_ECLASS_HEX, sc_MPI_COMM_WORLD,
+        std::array<double, 24> { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 }.data (), 2, 2,
+        2, 0);
+    } },
+  { "tet",
+    [] () {
+      return t8_cmesh_new_hypercube_pad (
+        T8_ECLASS_TET, sc_MPI_COMM_WORLD,
+        std::array<double, 24> { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 }.data (), 2, 2,
+        2, 0);
+    } },
+  { "prism",
+    [] () {
+      return t8_cmesh_new_hypercube_pad (
+        T8_ECLASS_PRISM, sc_MPI_COMM_WORLD,
+        std::array<double, 24> { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 }.data (), 2, 2,
+        2, 0);
+    } },
   { "pyramid", [] () { return t8_cmesh_new_hypercube (T8_ECLASS_PYRAMID, sc_MPI_COMM_WORLD, 0, 0, 0); } },
   { "hybrid", [] () { return t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0); } },
   { "full_hybrid", [] () { return t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD); } },
@@ -344,7 +377,6 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_boundary_connectivity_geometric, cmesh_
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_boundary_connectivity_orientation, cmesh_boundary_connectivity_symmetry,
                           testing::ValuesIn (t8_test_orientation_cmeshes),
                           [] (const auto &info) { return std::string (info.param.first); });
-
 
 /* In the periodic unit cube of one tree, all vertices are identified, edges with the parallel edges in the same
  * direction and faces with the opposite face. */
