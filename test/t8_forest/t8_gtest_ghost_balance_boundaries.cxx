@@ -788,6 +788,10 @@ static const t8_test_cmesh t8_test_cmeshes[] = {
   { "Prisms", [] () { return t8_test_pad (T8_ECLASS_PRISM, 2); } },
   { "Pyramids", [] () { return t8_cmesh_new_hypercube (T8_ECLASS_PYRAMID, sc_MPI_COMM_WORLD, 0, 0, 0); } },
   { "Hybrid", [] () { return t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0); } },
+  /* Meshes whose trees are connected with non-trivial orientations */
+  { "FullHybrid", [] () { return t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD); } },
+  { "PrismCake", [] () { return t8_cmesh_new_prism_cake (sc_MPI_COMM_WORLD, 5); } },
+  { "PyramidCake", [] () { return t8_cmesh_new_pyramid_cake (sc_MPI_COMM_WORLD, 5); } },
 };
 
 auto print_cmesh_ghost_type = [] (const testing::TestParamInfo<std::tuple<t8_test_cmesh, t8_ghost_type_t, bool>> &info) {

@@ -79,14 +79,18 @@ t8_forest_balance_face_is_unbalanced (t8_forest_t forest_from, const t8_locidx_t
   return unbalanced;
 }
 
+/** Scratch arrays for t8_forest_balance_adapt, set during a balance round and in t8_forest_is_balanced, so that
+ * the neighbor arrays are not allocated for every boundary of every element. NULL otherwise. */
+static t8_forest_boundary_scratch_t *balance_scratch = NULL;
+
 /**
  * Check whether leaves that touch a boundary of an element with a boundary of dimension at least min_dim are more
  * than one level finer than the element, i.e. whether a child of a neighbor (of the same level) at this boundary,
  * which touches it with dimension at least min_dim, has local or ghost leaf descendants. Then all leaves of this
  * child, including the ones touching the boundary, are at least two levels finer. The child may touch the boundary
  * in a part that is not a boundary of the element, e.g. at the midpoint of an edge of a tetrahedron.
- * Neighbors outside of the root are only considered at faces, via the half face neighbors.
- * TODO: Boundaries of lower dimension across tree boundaries.
+ * The neighbors are those of \ref t8_forest_element_boundary_neighbors, inside the tree and in the trees at the
+ * root boundary that contains the boundary.
  *
  * \param[in] forest_from  The forest to check.
  * \param[in] ltree_id     The local id of the tree of \a element.
@@ -100,10 +104,6 @@ t8_forest_balance_face_is_unbalanced (t8_forest_t forest_from, const t8_locidx_t
  *                          input and output).
  * \return 1 if \a element has to be refined because of the boundary, 0 otherwise.
  */
-/** Scratch arrays for t8_forest_balance_adapt, set during a balance round and in t8_forest_is_balanced, so that
- * the neighbor arrays are not allocated for every boundary of every element. NULL otherwise. */
-static t8_forest_boundary_scratch_t *balance_scratch = NULL;
-
 static int
 t8_forest_balance_boundary_is_unbalanced (t8_forest_t forest_from, const t8_locidx_t ltree_id,
                                           [[maybe_unused]] const t8_eclass_t tree_class, const t8_scheme *scheme,
