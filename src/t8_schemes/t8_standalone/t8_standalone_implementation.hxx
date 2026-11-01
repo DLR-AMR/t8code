@@ -1490,21 +1490,29 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     }
 
     t8_linearidx_t id = 0;
-    t8_standalone_element<TEclass> child;
 
+    /* Add the numbers of descendants at level of the siblings before the ancestor at each level. The siblings are
+     * not constructed: their numbers of descendants only depend on their shape, which is given by the child types
+     * of the parent (for pyramids, all siblings have the same shape otherwise). */
     while (ancestor.level != 0) {
       const t8_child_id childid = element_get_child_id ((t8_element_t *) &ancestor);
+      const t8_element_level leveldiff = level - ancestor.level;
       element_get_parent ((t8_element_t *) &ancestor, (t8_element_t *) &ancestor);
-      t8_linearidx_t parent_id = 0;
-
-      for (int ichild = 0; ichild < childid; ichild++) {
-        /* el is now parent, so compute child to get sibling of previous el */
-
-        element_get_child ((const t8_element_t *) &ancestor, ichild, (t8_element_t *) &child);
-        const t8_linearidx_t num_child_descendants = element_count_leaves ((t8_element_t *) &child, level);
-        parent_id += num_child_descendants;
+      if constexpr (TEclass == T8_ECLASS_PYRAMID) {
+        const t8_linearidx_t two_to_l = 1LL << leveldiff;
+        const t8_linearidx_t eight_to_l = 1LL << (3 * leveldiff);
+        const t8_linearidx_t num_pyramid_descendants = ((eight_to_l << 2) - two_to_l) / 3;
+        const t8_linearidx_t num_tet_descendants = ((eight_to_l << 1) + two_to_l) / 3;
+        for (int ichild = 0; ichild < childid; ichild++) {
+          const int child_type = t8_element_type_Iloc_to_childtype<TEclass>[ancestor.type][ichild];
+          const bool is_pyramid
+            = child_type == T8_DPYRAMID_FIRST_PYRA_TYPE || child_type == T8_DPYRAMID_SECOND_PYRA_TYPE;
+          id += is_pyramid ? num_pyramid_descendants : num_tet_descendants;
+        }
       }
-      id += parent_id;
+      else {
+        id += (t8_linearidx_t) childid << (T8_ELEMENT_DIM[TEclass] * leveldiff);
+      }
     }
     T8_ASSERT (id < (size_t) element_count_leaves ((t8_element_t *) &ancestor, level));
     return id;
