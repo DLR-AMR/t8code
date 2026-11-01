@@ -304,22 +304,6 @@ void
 t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
                                   t8_eclass_t eclass, int face, sc_array_t *owners);
 
-/** Constant time algorithm to compute lower and upper bounds for the owner processes of a given element.
- * \param [in]     forest  The forest.
- * \param [in]     gtreeid The global id of the tree in which the element lies.
- * \param [in]     element The element to look for.
- * \param [in]     eclass  The element class of the tree \a gtreeid.
- * \param [in,out] lower   On input a known lower bound for the owner process,
- *                         on output a (better) bound.
- * \param [in,out] upper   On input a known upper bound for the owner process,
- *                         on output a (better) bound.
- *
- * \note If on input \a lower >= \a upper, then the bounds are not changed by this
- *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
- * \note \a forest must be committed before calling this function.
- * \see t8_forest_element_find_owner
- * \see t8_forest_element_owners_bounds
- */
 /** Start caching the results of \ref t8_forest_element_owners_bounds for
  * \a forest for queries over all ranks (lower = 0, upper = mpisize - 1), for
  * algorithms that ask for the owners of the same elements many times, such as
@@ -348,6 +332,22 @@ t8_forest_leaf_desc_cache_begin (t8_forest_t forest);
 void
 t8_forest_leaf_desc_cache_end (void);
 
+/** Constant time algorithm to compute lower and upper bounds for the owner processes of a given element.
+ * \param [in]     forest  The forest.
+ * \param [in]     gtreeid The global id of the tree in which the element lies.
+ * \param [in]     element The element to look for.
+ * \param [in]     eclass  The element class of the tree \a gtreeid.
+ * \param [in,out] lower   On input a known lower bound for the owner process,
+ *                         on output a (better) bound.
+ * \param [in,out] upper   On input a known upper bound for the owner process,
+ *                         on output a (better) bound.
+ *
+ * \note If on input \a lower >= \a upper, then the bounds are not changed by this
+ *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
+ * \note \a forest must be committed before calling this function.
+ * \see t8_forest_element_find_owner
+ * \see t8_forest_element_owners_bounds
+ */
 void
 t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
                                  t8_eclass_t eclass, int *lower, int *upper);
