@@ -203,15 +203,16 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
       }
       sc_array_t *neighbors = balance_scratch != NULL ? &balance_scratch->neighbors : &local_scratch.neighbors;
       int unbalanced = 0;
-      if (min_bdy_dim == 0 && dim > 0) {
+      if (min_bdy_dim < dim - 1) {
         /* Every neighbor (of the same level) at a boundary of the element is also a
-         * neighbor at a vertex of this boundary. If no neighbor at a vertex has finer
-         * leaves, no boundary is unbalanced, which is the common case and much cheaper
-         * than computing the neighbors at all boundaries. */
+         * neighbor at the boundaries of dimension min_bdy_dim contained in this boundary
+         * (e.g. a face neighbor at the edges of the face). If no neighbor at a boundary of
+         * dimension min_bdy_dim has finer leaves, no boundary is unbalanced, which is the
+         * common case and much cheaper than computing the neighbors at all boundaries. */
         bool any_finer = false;
-        const int num_vertices = scheme->element_get_num_boundaries (tree_class, element, 0);
-        for (int ivertex = 0; ivertex < num_vertices && !any_finer; ivertex++) {
-          t8_forest_element_boundary_neighbors (forest_from, ltree_id, element, 0, ivertex, neighbors);
+        const int num_min_boundaries = scheme->element_get_num_boundaries (tree_class, element, min_bdy_dim);
+        for (int ibdy = 0; ibdy < num_min_boundaries && !any_finer; ibdy++) {
+          t8_forest_element_boundary_neighbors (forest_from, ltree_id, element, min_bdy_dim, ibdy, neighbors);
           for (size_t ineigh = 0; ineigh < neighbors->elem_count && !any_finer; ineigh++) {
             const t8_forest_boundary_neighbor_t *neighbor
               = (const t8_forest_boundary_neighbor_t *) sc_array_index (neighbors, ineigh);
