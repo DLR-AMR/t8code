@@ -2055,19 +2055,11 @@ t8_forest_element_leaf_index_in_tree (const t8_forest_t forest, const t8_element
   const t8_locidx_t search_result = t8_forest_bin_search_lower (elements, element_id, element_level);
   /* An element was found but it may not be the candidate element. 
    * To identify whether the element was found, we compare these two. */
-
-  // t8_debugf ("elem\n");
-  // scheme->element_debug_print (tree_class, element);
   if (search_result == -1) {
-    // t8_debugf (" not found\n");
     return -1;
   }
-  // t8_debugf (" potentially found at %i with potential match\n", search_result);
-
   const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
   T8_ASSERT (check_element != NULL);
-  // scheme->element_debug_print (tree_class, check_element);
-
   return scheme->element_is_equal (tree_class, element, check_element) ? search_result : -1;
 }
 
@@ -2470,18 +2462,20 @@ t8_forest_element_owners_at_boundary_recursion (t8_forest_t forest, t8_gloidx_t 
   scheme->element_destroy (eclass, 1, &first_desc);
   scheme->element_destroy (eclass, 1, &last_desc);
 
-  if (first_owner == last_owner) {
-    /* This element has a unique owner at the boundary, no recursion is necessary.
+  if (last_owner - first_owner <= 1) {
+    /* The owners at the boundary are first_owner and last_owner (there is no process in between), and both
+     * own a descendant at the boundary, so no recursion is necessary.
      * Since we traverse the children in SFC order, the owners are added in ascending order
      * and we only need to compare with the last entry. */
     const int last_owner_entry = owners->elem_count > 0 ? *(int *) sc_array_index (owners, owners->elem_count - 1) : -1;
     if (first_owner > last_owner_entry) {
       *(int *) sc_array_push (owners) = first_owner;
     }
+    if (last_owner != first_owner) {
+      *(int *) sc_array_push (owners) = last_owner;
+    }
     return;
   }
-  /* TODO: If first_owner and last_owner are consecutive non-empty ranks, both own leaves at the boundary
-   * and we could stop here. */
   T8_ASSERT (scheme->element_get_level (eclass, element) < t8_forest_get_maxlevel (forest));
   /* The element has different owners at the boundary, we continue with its children at the boundary. */
   const int num_children = scheme->element_get_num_boundary_children (eclass, element, bdy_dim, bdy_id);
@@ -2522,27 +2516,6 @@ t8_forest_element_owners_at_boundary (t8_forest_t forest, t8_gloidx_t gtreeid, c
   }
   t8_forest_element_owners_at_boundary_recursion (forest, gtreeid, element, eclass, bdy_dim, bdy_id, owners,
                                                   lower_bound, upper_bound);
-}
-
-void
-t8_forest_element_owners_at_boundary_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
-                                             t8_eclass_t eclass, int bdy_dim, int bdy_id, int *lower, int *upper)
-{
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  t8_element_t *first_desc, *last_desc;
-
-  if (*lower >= *upper) {
-    /* Either there is no owner or it is unique. */
-    return;
-  }
-  scheme->element_new (eclass, 1, &first_desc);
-  scheme->element_get_first_descendant_boundary (eclass, element, bdy_dim, bdy_id, first_desc, forest->maxlevel);
-  scheme->element_new (eclass, 1, &last_desc);
-  scheme->element_get_last_descendant_boundary (eclass, element, bdy_dim, bdy_id, last_desc, forest->maxlevel);
-  *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc, eclass, *lower, *upper, *lower, 1);
-  *upper = t8_forest_element_find_owner_ext (forest, gtreeid, last_desc, eclass, *lower, *upper, *upper, 1);
-  scheme->element_destroy (eclass, 1, &first_desc);
-  scheme->element_destroy (eclass, 1, &last_desc);
 }
 
 /** Empty an array but keep its memory (sc_array_resize to 0 frees it). */

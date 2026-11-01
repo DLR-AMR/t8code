@@ -434,22 +434,6 @@ void
 t8_forest_element_owners_at_boundary (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
                                       t8_eclass_t eclass, int bdy_dim, int bdy_id, sc_array_t *owners);
 
-/** Constant time algorithm to compute bounds for the owner processes of the descendants of an element
- * that touch a boundary, see \ref t8_forest_element_owners_at_boundary.
- * \param [in]     forest  The forest.
- * \param [in]     gtreeid The global id of the tree in which the element lies.
- * \param [in]     element The element.
- * \param [in]     eclass  The element class of the tree \a gtreeid.
- * \param [in]     bdy_dim The dimension of the boundary.
- * \param [in]     bdy_id  The boundary of \a element of dimension \a bdy_dim.
- * \param [in,out] lower   On input a known lower bound for the owner process, on output a (better) bound.
- * \param [in,out] upper   On input a known upper bound for the owner process, on output a (better) bound.
- * \note If on input \a lower >= \a upper, then the bounds are not changed.
- */
-void
-t8_forest_element_owners_at_boundary_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
-                                             t8_eclass_t eclass, int bdy_dim, int bdy_id, int *lower, int *upper);
-
 /** Find the owner processes of all descendants of an element that touch a boundary of the element with a
  * boundary of dimension at least \a min_dim. Unlike \ref t8_forest_element_owners_at_boundary, this includes
  * descendants that touch the boundary in a part that is not a boundary of the element, e.g. at the midpoint of

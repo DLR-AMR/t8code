@@ -338,7 +338,8 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
         return T8_ECLASS_TRIANGLE;
       }
       else {
-        if (face == 4)  // TODO: Check
+        /* Face 4 is the square base of the pyramid. */
+        if (face == 4)
           return T8_ECLASS_QUAD;
         else
           return T8_ECLASS_TRIANGLE;
@@ -974,7 +975,8 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     const t8_element_coord coord_offset = element_get_len (el->level) - element_get_len (level);
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      last_descendant->type = el->type; /**TODO: Check if this is always true! */
+      /* The last child at a face has the type of its parent (checked by t8_gtest_face_descendant). */
+      last_descendant->type = el->type;
     }
 
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
