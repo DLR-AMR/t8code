@@ -1606,97 +1606,6 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   static constexpr int
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) noexcept
   {
-    /** alternate implementation: 
-     *  compute type ints
-     *  find first positions, in which the one of the types/coords of elem 1 
-     *  is greater (smaller) than the corresponding value in elem2
-     *  if no such position exists, elems equal
-     *  if positions equal, find out which inequality occurs earlier
-     *  earlier position determines order
-     */
-#if 0
-    t8_standalone<TEclass> *el1 = (t8_standalone<TEclass> *)elem1;
-    t8_standalone<TEclass> *el2 = (t8_standalone<TEclass> *)elem2;
-
-#if T8_ENABLE_DEBUG
-    // t8_debugf("---------------\n");
-    // t8_debugf("compare elements:\n");
-    // element_debug_print(elem1);
-    // t8_debugf("and:\n");
-    // element_debug_print(elem2);
-#endif
-    t8_element_coord greater = 0;
-    t8_element_coord smaller = 0;
-    for(int idim = 0; idim< T8_ELEMENT_DIM[TEclass]; idim++){
-      greater |= el1->coords[idim] & (~el2->coords[idim]);     
-      smaller |= (~el1->coords[idim]) & el2->coords[idim];
-      // t8_debugf("idim: %i, greater: %i, smaller: %i\n", idim, greater, smaller);
-    }
-    std::array<t8_element_coord,T8_ELEMENT_NUM_EQUATIONS[TEclass]> type_ints1;
-    std::array<t8_element_coord,T8_ELEMENT_NUM_EQUATIONS[TEclass]> type_ints2;
-    for(int itype = 0; itype< T8_ELEMENT_NUM_EQUATIONS[TEclass]; itype++){
-      type_ints1[itype] = determine_type_int(el1,itype);      
-      type_ints2[itype] = determine_type_int(el2,itype);      
-      // t8_debugf("itype: %i, type_ints1: %i, type_ints2: %i\n", itype, type_ints1, type_ints2);
-      greater |= type_ints1[itype] & (~type_ints2[itype]);     
-      smaller |= (~type_ints1[itype]) & type_ints2[itype];
-      // t8_debugf("greater: %i, smaller: %i\n", greater, smaller);
-    }
-    int greater_idx=number_of_leading_zeros(greater);
-    int smaller_idx=number_of_leading_zeros(smaller);
-
-    // t8_debugf("greater: %i, smaller: %i, gr_idx: %i, sm_idx: %i\n", greater, smaller, greater_idx, smaller_idx);
-    if (greater_idx > smaller_idx) {
-      // t8_debugf("idx_comp: elem1 < elem2\n");
-      return -1;
-    }
-    if (greater_idx < smaller_idx) {
-      // t8_debugf("idx_comp: elem1 > elem2\n");
-      return 1;
-    }
-    T8_ASSERT(greater_idx==smaller_idx);
-    if(greater_idx == get_maxlevel()){
-      // t8_debugf("level determines order: %i\n",el1->level < el2->level ? -1 : el1->level > el2->level);
-      return el1->level < el2->level ? -1 : el1->level > el2->level;
-    }
-    // t8_debugf("find out which ineq occurs first\n");    
-    //find out which inequality occurs first in the position
-    // go backwards!
-    int shift = get_maxlevel() - greater_idx - 1;
-    for(int idim = T8_ELEMENT_DIM[TEclass]-1; idim>=0; idim--){
-      int el1_val = el1->coords[idim] & (1<<shift);
-      int el2_val = el2->coords[idim] & (1<<shift);
-      
-      if (el1_val < el2_val) {
-        // t8_debugf("idim %i cmp: elem1 < elem2\n", idim);
-        return -1;
-      }
-      if (el1_val > el2_val) {
-        // t8_debugf("idim %i cmp: elem1 > elem2\n", idim);
-        return  1;
-      }
-    }
-
-    for(int itype = T8_ELEMENT_NUM_EQUATIONS[TEclass]-1; itype>=0; itype--){
-      int el1_val = type_ints1[itype] & (1<<shift);
-      int el2_val = type_ints2[itype] & (1<<shift);
-      
-      if (el1_val < el2_val){ 
-        // t8_debugf("itype %i cmp: elem1 > elem2\n", itype);
-        return -1;
-      }
-      if (el1_val > el2_val){ 
-        // t8_debugf("itype %i cmp: elem1 > elem2\n", itype);
-        return  1;
-      }
-    }
-
-      
-    SC_ABORTF("Not reachable, greater_idx and smaller_idx were equal but not maxlevel,"
-              "therefore one type or coord must be unequal");
-
-
-#endif
     T8_ASSERT (element_is_valid (elem1));
     T8_ASSERT (element_is_valid (elem2));
 
@@ -2933,6 +2842,73 @@ friend class class_test_equal;
 
     return T8_ELEMENT_MAXLEVEL[TEclass] - num_of_active_bits_used;
   }
+  /** Compare two elements by the bits of their coordinates and type ints: find the coarsest level at which the
+   * coordinates or types of the elements differ, and at this level compare the coordinates from the highest dimension
+   * down, then the type bits from the highest down. If they do not differ at any level, the coarser element is
+   * smaller.
+   * \param [in] elem1  The first element.
+   * \param [in] elem2  The second element.
+   * \return       negative if elem1 < elem2, zero if elem1 equals elem2
+   *               and positive if elem1 > elem2.
+   */
+  static int
+  element_compare_type_int (const t8_element_t *elem1, const t8_element_t *elem2) noexcept
+  {
+    t8_standalone<TEclass> *el1 = (t8_standalone<TEclass> *) elem1;
+    t8_standalone<TEclass> *el2 = (t8_standalone<TEclass> *) elem2;
+
+    t8_element_coord greater = 0;
+    t8_element_coord smaller = 0;
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      greater |= el1->coords[idim] & (~el2->coords[idim]);
+      smaller |= (~el1->coords[idim]) & el2->coords[idim];
+    }
+    std::array<t8_element_coord, T8_ELEMENT_NUM_EQUATIONS[TEclass]> type_ints1;
+    std::array<t8_element_coord, T8_ELEMENT_NUM_EQUATIONS[TEclass]> type_ints2;
+    for (int itype = 0; itype < T8_ELEMENT_NUM_EQUATIONS[TEclass]; itype++) {
+      type_ints1[itype] = determine_type_int (el1, itype);
+      type_ints2[itype] = determine_type_int (el2, itype);
+      greater |= type_ints1[itype] & (~type_ints2[itype]);
+      smaller |= (~type_ints1[itype]) & type_ints2[itype];
+    }
+    const int greater_idx = number_of_leading_zeros (greater);
+    const int smaller_idx = number_of_leading_zeros (smaller);
+
+    if (greater_idx > smaller_idx) {
+      return -1;
+    }
+    if (greater_idx < smaller_idx) {
+      return 1;
+    }
+    if (greater_idx == get_maxlevel ()) {
+      return el1->level < el2->level ? -1 : el1->level > el2->level;
+    }
+    /* Find out which inequality occurs first at this position, going backwards. */
+    const int shift = get_maxlevel () - greater_idx - 1;
+    for (int idim = T8_ELEMENT_DIM[TEclass] - 1; idim >= 0; idim--) {
+      const int el1_val = el1->coords[idim] & (1 << shift);
+      const int el2_val = el2->coords[idim] & (1 << shift);
+      if (el1_val < el2_val) {
+        return -1;
+      }
+      if (el1_val > el2_val) {
+        return 1;
+      }
+    }
+    for (int itype = T8_ELEMENT_NUM_EQUATIONS[TEclass] - 1; itype >= 0; itype--) {
+      const int el1_val = type_ints1[itype] & (1 << shift);
+      const int el2_val = type_ints2[itype] & (1 << shift);
+      if (el1_val < el2_val) {
+        return -1;
+      }
+      if (el1_val > el2_val) {
+        return 1;
+      }
+    }
+    SC_ABORTF ("Not reachable, greater_idx and smaller_idx were equal but not maxlevel, "
+               "therefore one type or coord must be unequal");
+  }
+
   static constexpr int
   determine_type_int (t8_standalone<TEclass> *el, int itype) noexcept
   {
