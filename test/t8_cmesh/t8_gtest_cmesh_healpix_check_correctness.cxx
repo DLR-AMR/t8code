@@ -105,7 +105,7 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
       ref_coords.push_back (eta);
     }
   }
-  const size_t num_coords = test_samples.size () * test_samples.size ();
+  const int num_coords = test_samples.size () * test_samples.size ();
 
   // Loop through all t8code layers and faces
   for (int layer = 0; layer < 3; ++layer) {
@@ -120,15 +120,15 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
       const int healpix_face = (2 - layer) * 4 + face;
 
       // Output buffers
-      std::array<double,num_coords * 3> t8_out;
+      std::array<double, num_coords * 3> t8_out;
 
       // Call the batch evaluation method provided
       geom.t8_geom_evaluate (nullptr, gtreeid, ref_coords.data (), num_coords, t8_out.data ());
 
       // Validate each point in the batch against xyf2loc reference
-      for (size_t i = 0; i < num_coords; ++i) {
-        const double xi = ref_coords[i * 2 + 0];
-        const double eta = ref_coords[i * 2 + 1];
+      for (int coord_index = 0; coord_index < num_coords; coord_index++) {
+        const double xi = ref_coords[coord_index * 2 + 0];
+        const double eta = ref_coords[coord_index * 2 + 1];
 
         // Clamped values used inside t8_geom_evaluate
         const double xi_clamped = std::clamp (xi, 1e-10, 1.0 - 1e-10);
@@ -143,7 +143,7 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
         const double ref_y = ref_sin_theta * std::sin (ref_loc.phi);
         const double ref_z = ref_loc.z;
 
-        const size_t idx3d = i * 3;
+        const size_t idx3d = coord_index * 3;
 
         // Allow a slightly relaxed tolerance near the poles where sin(theta) ~ 0
         const double adaptive_tol = (std::abs (ref_z) > 0.99) ? T8_PRECISION_SQRT_EPS : (4.0 * T8_PRECISION_EPS);
