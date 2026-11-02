@@ -20,9 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_forest_adapt.hxx 
- * Definition of a C++ class for the adaptation routine to provide a flexible way of implementing
- * different kinds of adaptation strategies.
+/** \file t8_forest_adapt.hxx
+ * CRTP base of the adaptation routine. The base drives the loop over all trees and elements of the source forest
+ * and delegates every decision that differs between forest variants (complete forests, forests with holes,
+ * subelements) to hooks, which a derived adaptor can hide to change the behavior.
  */
 
 #ifndef T8_FOREST_ADAPT_HXX
@@ -30,534 +31,335 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_scheme.hxx>
 #include <t8_forest/t8_forest_types.h>
+#include <t8_schemes/t8_scheme.hxx>
+#include <t8_data/t8_containers.h>
 
-#include <concepts>
-#include <functional>
-#include <type_traits>
+#include <array>
 
-/**
- * Namespace for adaptation related classes and functions.
- */
+/** The actions an adapt callback \ref t8_forest_adapt_t can request for an element.
+ * Return values greater than \ref t8_adapt_action::refine request a special refinement
+ * (e.g. a subelement type) and are handled by \ref t8_adaptor::refine_special. */
+enum struct t8_adapt_action : int {
+  remove = -2,  /**< Remove the element. */
+  coarsen = -1, /**< Coarsen the family into its parent. */
+  keep = 0,     /**< Keep the element unchanged. */
+  refine = 1    /**< Refine the element into its children. */
+};
 
-namespace t8_adapt
+/** The state of the tree that is currently adapted. */
+struct t8_adapt_tree_context
 {
-/** The action to be taken on an element during adaptation. 
-   * COARSEN: The element should be coarsened.
-   * KEEP: The element should remain as is.
-   * REFINE: The element should be refined.
-   * Can be extended (e.g., for special refinement types).
-  */
-class action {
- public:
-  static const int COARSEN = -1; /**< Coarsen the element */
-  static const int KEEP = 0;     /**< Keep the element unchanged */
-  static const int REFINE = 1;   /**< Refine the element */
-
-  /**
-   * Default constructor: KEEP action.
-   * \note implicit conversion from int to action.
-   */
-  action (): value (KEEP)
-  {
-  }
-  /** Constructor from int value.
-   * \param [in] v The integer value representing the action.
-   * \note implicit conversion from int to action.
-   */
-  action (int v): value (v)
-  {
-  }
-
-  /** Conversion operator to int.
-   * \return The integer value representing the action.
-   * \note implicit conversion from action to int.
-   */
-  operator int () const
-  {
-    return value;
-  }
-
-  /**
-   * Comparison operators with int and action.
-   * \param [in] other The other value to compare with.
-   * \return True if the values are equal, false otherwise.
-   */
-  bool
-  operator== (int other) const
-  {
-    return value == other;
-  }
-
-  /** Inequality operator with int.
-   * \param [in] other The other value to compare with.
-   * \return True if the values are not equal, false otherwise.
-   */
-  bool
-  operator!= (int other) const
-  {
-    return value != other;
-  }
-
-  /** Equality operator with another action.
-   * \param [in] other The other action to compare with.
-   * \return True if the values are equal, false otherwise.
-   */
-  bool
-  operator== (const action &other) const
-  {
-    return value == other.value;
-  }
-
-  /** Inequality operator with another action.
-   * \param [in] other The other action to compare with.
-   * \return True if the values are not equal, false otherwise.
-   */
-  bool
-  operator!= (const action &other) const
-  {
-    return value != other.value;
-  }
-
-  /**
-   * Assignment operator from int.
-   * \param [in] v The integer value representing the action to assign.
-   * \return A reference to this action after assignment.
-   * \note implicit conversion from int to action.  
-   */
-  action &
-  operator= (int v)
-  {
-    value = v;
-    return *this;
-  }
-
- private:
-  int value;
+  const t8_locidx_t ltree_id;    /**< The local id of the tree. */
+  const t8_eclass_t tree_class;  /**< The eclass of the tree. */
+  const t8_scheme *const scheme; /**< The scheme of the forest. */
+  /** The leaf elements of the tree in the source forest. They are not modified, the pointer is only mutable
+   * since the adapt callback \ref t8_forest_adapt_t takes mutable elements. */
+  t8_element_array_t *const elements_from;
+  t8_element_array_t *const elements;  /**< The leaf elements of the tree in the new forest. */
+  const t8_locidx_t num_elements_from; /**< The number of elements in \a elements_from. */
+  t8_locidx_t el_considered;           /**< The index of the current element in \a elements_from. */
 };
 
-/** Callback function type for element adaptation. 
- * \param [in] forest        The forest containing the element.
- * \param [in] ltreeid       The local tree ID of the tree containing the element.
- * \param [in] lelement_id   The local element ID of the element to be adapted.
- * \param [in] element       The element to be adapted.
- * \param [in] scheme        The scheme used for the element.
- * \param [in] tree_class    The eclass of the tree containing the element.
- * \return                   The adaptation action to be taken on the element.
-*/
-using element_callback
-  = std::function<action (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_locidx_t lelement_id,
-                          const t8_element_t *element, const t8_scheme *scheme, const t8_eclass_t tree_class)>;
-
-/** Callback function type for batched element adaptation. 
- * \param [in] forest        The forest containing the elements.
- * \param [in] ltreeid       The local tree ID of the tree containing the elements.
- * \param [in] element       The array of elements to be adapted.
- * \param [in] scheme        The scheme used for the elements.
- * \param [in] tree_class    The eclass of the tree containing the elements.
- * \param [out] actions      The vector to store the adaptation actions for the elements.
-*/
-using batched_element_callback
-  = std::function<void (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_array_t *element,
-                        const t8_scheme *scheme, const t8_eclass_t tree_class, std::vector<action> &actions)>;
-
-/**
- * Concept that detects whether a type TType provides a member function
- * with the signature compatible with:
- *   object.collect_actions(const t8_forest_t, std::vector<action>&, element_callback)
- * returning void.
- *
- * \tparam TType
- *   Type under test. The concept is satisfied when an object `object` of type TType can be
- *   used in an expression
- *     object.collect_actions(forest_from, actions, callback)
- *   where:
- *     - forest_from is of type const t8_forest_t,
- *     - actions is of type std::vector<action>&,
- *     - callback is of type element_callback,
- *   and the expression is well-formed and yields void.
- */
-template <typename TType>
-concept has_element_callback_collect
-  = requires (TType object, const t8_forest_t forest_from, std::vector<action> &actions, element_callback callback) {
-      {
-        object.collect_actions (forest_from, actions, callback)
-      } -> std::same_as<void>;
-    };
-
-/** Concept that detects whether a type TType provides a member function
- * with the signature compatible with:
- *   object.collect_actions(const t8_forest_t, std::vector<action>&, batched_element_callback)
- * returning void.
- * \tparam TType
- *   Type under test. The concept is satisfied when an object `object` of type TType can be
- *   used in an expression
- *     object.collect_actions(forest_from, actions, callback)
- *   where:
- *     - forest_from is of type const t8_forest_t,
- *     - actions is of type std::vector<action>&,
- *     - callback is of type batched_element_callback,
- *   and the expression is well-formed and yields void.
- */
-template <typename TType>
-concept has_batched_callback_collect = requires (TType object, const t8_forest_t forest_from,
-                                                 std::vector<action> &actions, batched_element_callback callback) {
-  {
-    object.collect_actions (forest_from, actions, callback)
-  } -> std::same_as<void>;
+/** The elements passed to the adapt callback: either a family or a single element. */
+struct t8_adapt_family
+{
+  /** The elements of the family. Only the first \a num_elements entries are defined. */
+  std::array<t8_element_t *, T8_ECLASS_MAX_CHILDREN> elements;
+  int num_elements; /**< The number of defined entries in \a elements. */
+  bool is_family;   /**< True if \a elements form a family, false if \a elements is a single element. */
 };
 
-/** Concept that detects whether a type TType provides a member function
- * with the signature compatible with either:
- *   object.collect_actions(const t8_forest_t, std::vector<action>&, element_callback)
- * or
- *   object.collect_actions(const t8_forest_t, std::vector<action>&, batched_element_callback)
- * returning void.
- * \tparam TType
- *   Type under test. The concept is satisfied when an object `object` of type T can be
- *   used in an expression
- *     object.collect_actions(forest_from, actions, callback)
- *   where:
- *     - forest_from is of type const t8_forest_t,
- *     - actions is of type std::vector<action>&,
- *     - callback is of type element_callback or batched_element_callback,
- *   and the expression is well-formed and yields void.
+/** CRTP base of all adaptors. \ref adapt runs the fixed control flow and calls the hooks of \a TDerived.
+ * The base implements every hook for complete forests. A derived adaptor hides a hook by declaring a member
+ * function with the same name and signature, the base then calls the derived version without virtual dispatch.
+ * \tparam TDerived The derived adaptor.
  */
-template <typename TType>
-concept actions_collectable = has_element_callback_collect<TType> || has_batched_callback_collect<TType>;
-
-/** Concept that detects whether a type TType provides a member function
- * with the signature compatible with:
- *   object.family_check(const t8_element_array_t*, const t8_locidx_t, const t8_scheme*, const t8_eclass_t)
- * returning bool.
- * \tparam TType
- *   Type under test. The concept is satisfied when an object `object` of type TType can be
- *   used in an expression
- *     object.family_check(tree_elements_from, offset, scheme, tree_class)
- *   where:
- *     - tree_elements_from is of type const t8_element_array_t*,
- *     - offset is of type const t8_locidx_t,
- *     - scheme is of type const t8_scheme*,
- *     - tree_class is of type const t8_eclass_t,
- *   and the expression is well-formed and yields a type convertible to bool.
- */
-template <typename TType>
-concept family_checkable = requires (TType object, const t8_element_array_t *tree_elements_from,
-                                     const t8_locidx_t offset, const t8_scheme *scheme, const t8_eclass_t tree_class) {
-  {
-    object.family_check (tree_elements_from, offset, scheme, tree_class)
-  } -> std::convertible_to<bool>;
-};
-
-/** Concept that detects whether a type TType provides a member function
- * with the signature compatible with:
- *  object.element_manipulator(t8_element_array_t*, const t8_element_array_t*, const t8_scheme*,
- *                           const t8_eclass_t, const t8_locidx_t, const t8_locidx_t,
- *                          t8_locidx_t&, const std::vector<action>&, const bool)
- * returning void.
- * \tparam TType
- *   Type under test. The concept is satisfied when an object `object` of type TType can be
- *   used in an expression
- *     object.element_manipulator(elements, elements_from, scheme, tree_class, el_considered, el_offset,
- *                               el_inserted, actions, is_family)
- *   where:
- *     - elements is of type t8_element_array_t*,
- *     - elements_from is of type const t8_element_array_t*,
- *     - scheme is of type const t8_scheme*,
- *     - tree_class is of type const t8_eclass_t,
- *     - el_considered is of type const t8_locidx_t,
- *     - el_offset is of type const t8_locidx_t,
- *     - el_inserted is of type t8_locidx_t&,
- *     - actions is of type const std::vector<action>&,
- *     - is_family is of type const bool,
- *   and the expression is well-formed and yields void.
- */
-template <typename TType>
-concept element_manipulatable = requires (
-  TType object, t8_element_array_t *elements, const t8_element_array_t *const elements_from, const t8_scheme *scheme,
-  const t8_eclass_t tree_class, const t8_locidx_t el_considered, const t8_locidx_t el_offset, t8_locidx_t &el_inserted,
-  const std::vector<action> &action, const bool is_family) {
-  {
-    object.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted,
-                                action, is_family)
-  } -> std::same_as<void>;
-};
-
-/**
-   * Policy-based adaptor that drives element-wise adaptation of a target forest from a source forest.
-   *
-   * This class coordinates the process of collecting adaptation actions from a source forest and applying
-   * element-level manipulations to a target forest. It is implemented as a policy-composition class template
-   * and privately inherits the provided policy types:
-   *  - TCollect: provides collect_actions(forest_from, actions, callback) to produce actions.
-   *  - TFamily:  provides family_check(...) to identify family/grouped elements (siblings).
-   *  - TManipulate: provides element_manipulator(...) to perform /coarsening/refinement or general element manipulation logic.
-   *
-   * Template parameters
-   * \tparam TCollect    A type satisfying actions_collectable: must expose collect_actions.
-   * \tparam TFamily     A type satisfying family_checkable: must expose family_check to detect families.
-   * \tparam TManipulate A type satisfying element_manipulatable: must expose element_manipulator.
-   * \tparam TRecursive  A boolean flag (default false) that can be used by policies to enable recursive adaptation logic.
-   *
-   * Overview
-   * The adaptor holds references to a "target" forest and a "source" forest (forest and forest_from). On construction it
-   * retains references (increments reference counts) for any non-null forest handles; on destruction it releases them.
-   * The adapt() method:
-   *  - Asserts valid state and optionally starts profiling.
-   *  - Uses the TCollect policy to populate actions for each element in the source forest.
-   *  - Iterates over local trees of the source forest, and for each tree:
-   *      - Retrieves corresponding tree data from both source and target forests.
-   *      - Accesses the source tree's leaf element array and the number of source elements.
-   *      - For each considered source element (taking element siblings/families into account), uses the TFamily
-   *        policy to determine whether the current elements form a family, reads the precomputed adapt action for
-   *        the element, and calls the TManipulate policy to update the target tree's element array accordingly.
-   *      - Maintains per-tree and global offsets so that actions are applied using a linear index across
-   *        all source elements.
-   *
-   * Ownership and lifetime
-   * - The adaptor stores raw t8_forest_t handles for both forest and forest_from. When constructed it will call
-   *   t8_forest_ref on non-null inputs and t8_forest_unref on destruction. Callers should treat the adaptor as
-   *   owning an additional reference to the provided forest handles for the lifetime of the adaptor.
-   *
-   * Public interface
-   * - adaptor(forest, forest_from, callback_in)
-   *     - Constructs an adaptor for adapting `forest` from `forest_from` using `callback_in` to decide actions.
-   *     - Preconditions: `callback_in` must be valid; `forest` is asserted non-null.
-   *     - Increments reference counts for non-null forest handles.
-   *
-   * - ~adaptor()
-   *     - Releases retained references to the forests.
-   *
-   * - void adapt()
-   *     - Performs the full adaptation: collects actions via TCollect, then visits source elements and applies
-   *       element-level manipulations via TManipulate. Updates per-tree element offsets in the target forest.
-   *     - If profiling is enabled, profile_adaptation() is invoked to start timing.
-   *
-   * - using callback_type = std::conditional_t<has_element_callback_collect<TCollect>, element_callback, batched_element_callback>
-   *     - Alias describing the type of callback expected by the collect policy. The stored member `callback` uses
-   *       this alias so the adaptor can support either single-element or batched callbacks depending on TCollect.
-   *
-   * Protected / private helpers
-   * - inline void profile_adaptation_start()
-   *     - Starts adaptation timing by writing into forest->profile->adapt_runtime using the MPI wall-time helper.
-   *     - Assumes a non-null profiling structure on the forest.
-   * - inline void profile_adaptation_end()
-   *    - Ends adaptation timing by computing the elapsed time since profile_adaptation_start and accumulating it
-   *      into forest->profile->adapt_runtime.
-   * - void recursive_adapt(...)
-   *    - A helper function that can be used when TRecursive is true to perform recursive adaptation logic. It takes parameters describing the current element being considered,
-   *      the source and target element arrays, the scheme and tree class, the current offset and count of inserted elements, the precomputed actions, and whether the current element is part of a family. 
-   *      It manages the recursive insertion of child elements via a depth-first traversal, applying the TManipulate policy at each level and using the callback to determine actions for child elements. 
-   *      This function is only enabled when TRecursive is true and TCollect uses a non-batched element_callback.
-   *
-   * Data members
-   * - t8_forest_t forest
-   *     - The target forest that will be modified by adaptation operations.
-   * - t8_forest_t forest_from
-   *     - The source forest from which adaptation decisions are derived.
-   * - std::vector<action> actions
-   *     - Linear array of adaptation actions for each element in the source forest. Populated by the TCollect policy.
-   * - callback_type callback
-   *     - The callback provided by the caller; forwarded to the collect policy.
-   * - bool profiling
-   *     - When true, the adaptor calls profile_adaptation() before starting adaptation.
-   *
-   * Notes and implementation considerations
-   * - The adaptor is designed to separate responsibilities: collection of adapt decisions, detection of sibling/family
-   *   groupings, and the low-level manipulation of element arrays are all delegated to policy types. This allows
-   *   different collection and manipulation strategies to be plugged in without changing the control flow.
-   * - The adaptor relies on the forest and tree data structures exposing stable array indexing via t8_element_array_* APIs.
+template <typename TDerived>
+struct t8_adaptor
+{
+  /** Constructor.
+   * \param [in] forest_in The forest to be built by adapting its \a set_from forest. Its trees have to be
+   *                       initialized without elements, see \ref t8_forest_copy_trees.
    */
-template <actions_collectable TCollect, family_checkable TFamily, element_manipulatable TManipulate,
-          bool TRecursive = false>
-class adaptor: private TCollect, private TFamily, private TManipulate {
- public:
-  /** The type of callback used for collecting adaptation actions. */
-  using callback_type
-    = std::conditional_t<has_element_callback_collect<TCollect>, element_callback, batched_element_callback>;
-
-  /** Constructor for basic_adaptation class.
-   * \param [in] forest            The target forest to be adapted.
-   * \param [in] forest_from       The source forest to adapt from.
-   * \param [in] callback_in       The callback function to determine adaptation actions for elements.
-   * \param [in] profiling_in      Flag to indicate if profiling should be enabled during adaptation.
-   *
-   * \note The constructor increments reference counts for non-null forest handles, and the destructor will release them.
-   */
-  adaptor (t8_forest_t forest, t8_forest_t forest_from, callback_type callback_in, bool profiling_in = false)
-    : callback (callback_in), forest (forest), forest_from (forest_from), profiling (profiling_in)
+  explicit t8_adaptor (t8_forest_t forest_in): forest (forest_in), forest_from (forest_in->set_from)
   {
     T8_ASSERT (forest != nullptr);
-    T8_ASSERT (callback);
-    if (forest_from != nullptr) {
-      t8_forest_ref (forest_from);
-    }
-    T8_ASSERT (forest != nullptr);
-    if (forest != nullptr) {
-      t8_forest_ref (forest);
-    }
+    T8_ASSERT (forest_from != nullptr);
+    T8_ASSERT (forest->set_adapt_fn != nullptr);
   }
 
-  /** Destructor for adaptor class. */
-  ~adaptor ()
-  {
-    if (forest_from != nullptr) {
-      t8_forest_unref (&forest_from);
-    }
-    if (forest != nullptr) {
-      t8_forest_unref (&forest);
-    }
-  }
-
-  /** Perform the adaptation process on the forest. */
+  /** Build the elements of the new forest by adapting the elements of the source forest. */
   void
   adapt ()
   {
-    T8_ASSERT (forest != nullptr);
-    if (profiling) {
-      profile_adaptation_start ();
+    /* if profiling is enabled, measure runtime */
+    if (forest->profile != nullptr) {
+      forest->profile->adapt_runtime = -sc_MPI_Wtime ();
+      /* DO NOT DELETE THE FOLLOWING line.
+       * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
+       * runtimes were computed to 0.
+       * Only delete the line, if you know what you are doing. */
+      t8_global_productionf ("Start adapt %f %f\n", sc_MPI_Wtime (), forest->profile->adapt_runtime);
     }
-    T8_ASSERT (forest_from != nullptr);
+    t8_global_productionf ("Into t8_forest_adapt from %lld total elements\n",
+                           (long long) forest_from->global_num_leaf_elements);
 
-    TCollect::collect_actions (forest_from, actions, callback);
+    T8_ASSERT (forest_from->incomplete_trees != -1);
+    T8_ASSERT (forest->incomplete_trees == -1);
+    T8_ASSERT (forest->trees->elem_count == forest_from->trees->elem_count);
 
-    const t8_locidx_t num_trees = t8_forest_get_num_local_trees (forest_from);
-    /* Get the scheme used by the forest */
     const t8_scheme *scheme = t8_forest_get_scheme (forest_from);
-
+    const t8_locidx_t num_trees = t8_forest_get_num_local_trees (forest);
+    /* The number of elements in the new forest in all trees before the current one. */
+    t8_locidx_t el_offset = 0;
+    forest->local_num_leaf_elements = 0;
     for (t8_locidx_t ltree_id = 0; ltree_id < num_trees; ltree_id++) {
-      /* Offset per tree in the source forest */
-      t8_locidx_t el_offset = 0;
-      /* get the trees from both forests. */
-      t8_tree_t tree = t8_forest_get_tree (forest, ltree_id);
+      const t8_tree_t tree = t8_forest_get_tree (forest, ltree_id);
       const t8_tree_t tree_from = t8_forest_get_tree (forest_from, ltree_id);
-      /* get the leaf arrays from both forests */
-      t8_element_array_t *elements = &tree->leaf_elements;
-      const t8_element_array_t *tree_elements_from = &tree_from->leaf_elements;
-      /* Get the number of elements in the source tree */
-      const t8_locidx_t num_el_from = (t8_locidx_t) t8_element_array_get_count (tree_elements_from);
+      const t8_locidx_t num_el_from = (t8_locidx_t) t8_element_array_get_count (&tree_from->leaf_elements);
       T8_ASSERT (num_el_from == t8_forest_get_tree_num_leaf_elements (forest_from, ltree_id));
-      const t8_eclass_t tree_class = tree_from->eclass;
-      /* Continue only if tree_from is not empty */
-      if (num_el_from > 0) {
-        /* index of the elements in source tree */
-        t8_locidx_t el_considered = 0;
-        while (el_considered < num_el_from) {
-          t8_locidx_t el_inserted = 0;
-          const bool is_family = TFamily::family_check (tree_elements_from, el_considered, scheme, tree_class);
-          if constexpr (TRecursive) {
-            t8_debugf ("[D] recursive adapt: tree %d, element %d, is_family %d\n", ltree_id, el_considered, is_family);
-            recursive_adapt (elements, tree_elements_from, scheme, tree_class, ltree_id, el_considered, el_offset,
-                             el_inserted, actions, is_family);
-          }
-          else {
-            t8_debugf ("[D] non-recursive adapt: tree %d, element %d, is_family %d\n", ltree_id, el_considered,
-                       is_family);
-            /* manipulator step*/
-            TManipulate::element_manipulator (elements, tree_elements_from, scheme, tree_class, el_considered,
-                                              el_offset, el_inserted, actions, is_family);
-          }
-          t8_debugf ("[D] adapt: tree %d, element %d, inserted %d\n", ltree_id, el_considered, el_inserted);
-          el_considered++;
-          el_offset += el_inserted;
-          forest->local_num_leaf_elements += el_inserted;
-        }
+      /* Elements cannot be inserted into an empty tree, so there is nothing to adapt. */
+      if (num_el_from == 0) {
+        continue;
       }
+      T8_ASSERT (t8_element_array_get_count (&tree->leaf_elements) == 0);
+      t8_adapt_tree_context context {
+        ltree_id, tree->eclass, scheme, &tree_from->leaf_elements, &tree->leaf_elements, num_el_from, 0
+      };
+      while (context.el_considered < num_el_from) {
+        adapt_family (context);
+      }
+
+      const t8_locidx_t el_inserted = (t8_locidx_t) t8_element_array_get_count (&tree->leaf_elements);
+      /* It is not supported to delete all elements from a tree. In this case, we abort. */
+      SC_CHECK_ABORTF (el_inserted != 0,
+                       "ERROR: All elements of tree %i were removed. Removing all elements of a tree "
+                       "is currently not supported. See also https://github.com/DLR-AMR/t8code/issues/1137.",
+                       ltree_id);
       tree->elements_offset = el_offset;
+      el_offset += el_inserted;
+      forest->local_num_leaf_elements += el_inserted;
+      /* Release the memory that is not needed anymore. */
+      t8_element_array_resize (&tree->leaf_elements, el_inserted);
     }
-    if (profiling) {
-      profile_adaptation_end ();
+
+    t8_forest_comm_global_num_leaf_elements (forest);
+    derived ().finalize ();
+
+    t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n",
+                           (long long) forest->global_num_leaf_elements);
+    /* if profiling is enabled, measure runtime */
+    if (forest->profile != nullptr) {
+      forest->profile->adapt_runtime += sc_MPI_Wtime ();
+      /* DO NOT DELETE THE FOLLOWING line.
+       * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
+       * runtimes were computed to 0.
+       * Only delete the line, if you know what you are doing. */
+      t8_global_productionf ("End adapt %f %f\n", sc_MPI_Wtime (), forest->profile->adapt_runtime);
     }
   }
 
-  callback_type callback; /**< The callback function to determine adaptation actions. */
- private:
-  /* WARNING: Currently only available with iterative callback*/
+  /** Collect the element at \a context.el_considered and, if they form a family, its siblings.
+   * \param [in] context The current tree.
+   * \return The family starting at \a context.el_considered, or this element alone.
+   */
+  t8_adapt_family
+  get_family (const t8_adapt_tree_context &context)
+  {
+    t8_adapt_family family;
+    const t8_element_t *first = t8_element_array_index_locidx (context.elements_from, context.el_considered);
+    const int num_siblings = context.scheme->element_get_num_siblings (context.tree_class, first);
+    T8_ASSERT (num_siblings <= T8_ECLASS_MAX_CHILDREN);
+    /* The number of consecutive elements whose child ids are 0, 1, ..., num_collected - 1. */
+    int num_collected = 0;
+    for (; num_collected < num_siblings && context.el_considered + num_collected < context.num_elements_from;
+         num_collected++) {
+      family.elements[num_collected]
+        = t8_element_array_index_locidx_mutable (context.elements_from, context.el_considered + num_collected);
+      /* Quick check: a family has the child ids 0, 1, ..., num_siblings - 1. This is not sufficient, therefore
+       * we check with elements_are_family below. */
+      if (context.scheme->element_get_child_id (context.tree_class, family.elements[num_collected]) != num_collected) {
+        break;
+      }
+    }
+    family.is_family = num_collected == num_siblings
+                       && context.scheme->elements_are_family (context.tree_class, family.elements.data ());
+    family.num_elements = family.is_family ? num_siblings : 1;
+    return family;
+  }
+
+  /** Ask the adapt callback of the forest what to do with \a family.
+   * \param [in] context The current tree.
+   * \param [in] family  The elements to pass to the callback.
+   * \return The return value of the callback, see \ref t8_forest_adapt_t.
+   */
+  int
+  query (const t8_adapt_tree_context &context, t8_adapt_family &family)
+  {
+    return forest->set_adapt_fn (forest, forest_from, context.ltree_id, context.tree_class, context.el_considered,
+                                 context.scheme, family.is_family, family.num_elements, family.elements.data ());
+  }
+
+  /** Insert the children of the first element of \a family into the new tree.
+   * \param [in, out] context The current tree.
+   * \param [in]      family  The elements passed to the callback.
+   * \return The number of consumed source elements.
+   */
+  t8_locidx_t
+  refine (t8_adapt_tree_context &context, const t8_adapt_family &family)
+  {
+    const int num_children = context.scheme->element_get_num_children (context.tree_class, family.elements[0]);
+    (void) t8_element_array_push_count (context.elements, num_children);
+    context.scheme->element_get_children (context.tree_class, family.elements[0], num_children,
+                                          last_elements (context, num_children).data ());
+    return 1;
+  }
+
+  /** Replace \a family by its parent in the new tree.
+   * \param [in, out] context The current tree.
+   * \param [in]      family  The family to coarsen.
+   * \return The number of consumed source elements.
+   */
+  t8_locidx_t
+  coarsen (t8_adapt_tree_context &context, const t8_adapt_family &family)
+  {
+    T8_ASSERT (family.is_family);
+    T8_ASSERT (context.scheme->element_get_level (context.tree_class, family.elements[0]) > 0);
+    t8_element_t *parent = t8_element_array_push (context.elements);
+    context.scheme->element_get_parent (context.tree_class, family.elements[0], parent);
+    return family.num_elements;
+  }
+
+  /** Copy the first element of \a family into the new tree.
+   * \param [in, out] context The current tree.
+   * \param [in]      family  The elements passed to the callback.
+   * \return The number of consumed source elements.
+   */
+  t8_locidx_t
+  keep (t8_adapt_tree_context &context, const t8_adapt_family &family)
+  {
+    t8_element_t *element = t8_element_array_push (context.elements);
+    context.scheme->element_copy (context.tree_class, family.elements[0], element);
+    return 1;
+  }
+
+  /** Drop the first element of \a family from the new tree.
+   * \param [in, out] context The current tree.
+   * \param [in]      family  The elements passed to the callback.
+   * \return The number of consumed source elements.
+   */
+  t8_locidx_t
+  remove ([[maybe_unused]] t8_adapt_tree_context &context, [[maybe_unused]] const t8_adapt_family &family)
+  {
+    element_removed = true;
+    return 1;
+  }
+
+  /** Handle a callback return value greater than \ref t8_adapt_action::refine.
+   * The base does not support any special refinement.
+   * \param [in, out] context The current tree.
+   * \param [in]      family  The elements passed to the callback.
+   * \param [in]      type    The return value of the callback minus one.
+   * \return The number of consumed source elements.
+   */
+  t8_locidx_t
+  refine_special ([[maybe_unused]] t8_adapt_tree_context &context, [[maybe_unused]] const t8_adapt_family &family,
+                  const int type)
+  {
+    SC_ABORTF ("The adapt callback returned %i, which is not supported by this forest.", type + 1);
+    return 0;
+  }
+
+  /** Called after all trees are adapted and the global number of elements is known.
+   * Determines whether the new forest has incomplete trees.
+   */
   void
-  recursive_adapt (t8_element_array_t *elements, const t8_element_array_t *elements_from, const t8_scheme *scheme,
-                   const t8_eclass_t tree_class, const t8_locidx_t ltree_id, const t8_locidx_t el_considered,
-                   const t8_locidx_t el_offset, t8_locidx_t &el_inserted, const std::vector<action> &actions,
-                   const bool is_family)
-    requires (TRecursive && has_element_callback_collect<TCollect>)
+  finalize ()
   {
-    const size_t element_size = scheme->get_element_size (tree_class);
-    t8_locidx_t recursively_inserted = 0;
-    TManipulate::element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset,
-                                      recursively_inserted, actions, is_family);
-    t8_debugf ("[D] recursive adapt: tree %d, element %d, inserted %d\n", ltree_id, el_considered,
-               recursively_inserted);
-    t8_element_array_t *children = t8_element_array_new (scheme, tree_class);
-    /* add all elements from el_offset to el_offset + recursively_inserted */
-    for (t8_locidx_t i = 0; i < recursively_inserted; ++i) {
-      t8_debugf ("[D] push child element %d\n", el_offset + i);
-      t8_element_t *child = t8_element_array_push (children);
-      child = t8_element_array_index_locidx_mutable (elements, el_offset + i);
-      memcpy ((void *) child, (void *) t8_element_array_index_locidx (elements_from, el_offset + el_considered),
-              element_size);
+    /* If the old forest already contained incomplete trees, the new one does too. */
+    if (forest_from->incomplete_trees) {
+      T8_ASSERT (forest_from->incomplete_trees == 1);
+      forest->incomplete_trees = 1;
+      return;
     }
-    std::vector<action> child_actions;
-    while (t8_element_array_get_count (children) > 0) {
-      const int next_child = t8_element_array_get_count (children) - 1;
-      const t8_element_t *child = t8_element_array_index_locidx (children, next_child);
-      t8_debugf ("[D] recursive adapt: tree %d, child element %d\n", ltree_id, next_child);
-      /** TODO: next_child is currently the wrong linear id of child */
-      child_actions.push_back (callback (forest_from, ltree_id, next_child, child, scheme, tree_class));
-      const int level = scheme->element_get_level (tree_class, child);
-      if (child_actions[next_child + 1] != action::COARSEN && level < forest->maxlevel) {
-        t8_debugf ("[D] adapt action: %d\n", int (child_actions[next_child + 1]));
-        t8_locidx_t inserted = recursively_inserted;
-        TManipulate::element_manipulator (elements, children, scheme, tree_class, next_child, el_offset,
-                                          recursively_inserted, child_actions, false);
-        inserted = recursively_inserted - inserted;
-        t8_element_array_pop (children);
-        child_actions.pop_back ();
-        /* push children */
-        if (child_actions[next_child + 1] == action::REFINE) {
-          t8_element_array_push_count (children, inserted);
-          const t8_locidx_t children_count = t8_element_array_get_count (children);
-          t8_debugf ("[D] children_count: %d, inserted: %d\n", children_count, inserted);
-          for (t8_locidx_t i = children_count - 1; i >= children_count - inserted; --i) {
-            t8_element_t *new_child = t8_element_array_index_locidx_mutable (children, i);
-            memcpy ((void *) new_child, (void *) t8_element_array_index_locidx (elements, el_offset + i), element_size);
-          }
-        }
-      }
-      else {
-        t8_element_array_pop (children);
-        child_actions.pop_back ();
-      }
+    /* Inform the other processes whether elements were removed locally. */
+    const int local_removed = element_removed;
+    int incomplete_trees;
+    const int mpiret = sc_MPI_Allreduce (&local_removed, &incomplete_trees, 1, sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
+    SC_CHECK_MPI (mpiret);
+    T8_ASSERT (incomplete_trees == 1 || incomplete_trees == 0);
+    forest->incomplete_trees = incomplete_trees;
+  }
+
+ protected:
+  /** Get pointers to the last \a count elements of the new tree.
+   * \param [in] context The current tree.
+   * \param [in] count   The number of elements.
+   * \return The pointers to the last \a count elements, the other entries are undefined.
+   */
+  static std::array<t8_element_t *, T8_ECLASS_MAX_CHILDREN>
+  last_elements (const t8_adapt_tree_context &context, const int count)
+  {
+    T8_ASSERT (count <= T8_ECLASS_MAX_CHILDREN);
+    std::array<t8_element_t *, T8_ECLASS_MAX_CHILDREN> last;
+    const t8_locidx_t first = (t8_locidx_t) t8_element_array_get_count (context.elements) - count;
+    for (int ielement = 0; ielement < count; ielement++) {
+      last[ielement] = t8_element_array_index_locidx_mutable (context.elements, first + ielement);
+    }
+    return last;
+  }
+
+  t8_forest_t forest;           /**< The forest under construction. */
+  t8_forest_t forest_from;      /**< The forest that is adapted. */
+  bool element_removed = false; /**< True if an element was removed on this process, false otherwise. */
+
+ private:
+  /** Query the callback for the element at \a context.el_considered and apply the requested action.
+   * \param [in, out] context The current tree, \a context.el_considered is advanced past the consumed elements.
+   */
+  void
+  adapt_family (t8_adapt_tree_context &context)
+  {
+    t8_adapt_family family = derived ().get_family (context);
+    T8_ASSERT (family.num_elements > 0);
+    int refine_value = derived ().query (context, family);
+    T8_ASSERT (family.is_family || refine_value != static_cast<int> (t8_adapt_action::coarsen));
+    if (refine_value > 0
+        && (context.scheme->element_get_level (context.tree_class, family.elements[0]) >= forest->maxlevel
+            || !context.scheme->element_is_refinable (context.tree_class, family.elements[0]))) {
+      /* Only refine an element if it does not exceed the maximum level and if it is refinable */
+      refine_value = static_cast<int> (t8_adapt_action::keep);
     }
 
-    el_inserted += recursively_inserted;
-    t8_debugf ("[D] recursive adapt: tree %d, element %d, total inserted %d\n", ltree_id, el_considered, el_inserted);
+    if (refine_value > static_cast<int> (t8_adapt_action::refine)) {
+      context.el_considered += derived ().refine_special (context, family, refine_value - 1);
+      return;
+    }
+    switch (static_cast<t8_adapt_action> (refine_value)) {
+    case t8_adapt_action::refine:
+      context.el_considered += derived ().refine (context, family);
+      break;
+    case t8_adapt_action::coarsen:
+      context.el_considered += derived ().coarsen (context, family);
+      break;
+    case t8_adapt_action::keep:
+      context.el_considered += derived ().keep (context, family);
+      break;
+    case t8_adapt_action::remove:
+      context.el_considered += derived ().remove (context, family);
+      break;
+    default:
+      SC_ABORTF ("The adapt callback returned the invalid value %i.", refine_value);
+    }
   }
 
-  /**
-   * Profile the adaptation process.
-   */
-  inline void
-  profile_adaptation_start ()
+  /** \return This object as the derived adaptor. */
+  TDerived &
+  derived ()
   {
-    T8_ASSERT (forest->profile != nullptr);
-    forest->profile->adapt_runtime = -sc_MPI_Wtime ();
+    return static_cast<TDerived &> (*this);
   }
+};
 
-  /**
-   * End profiling the adaptation process.
-   */
-  inline void
-  profile_adaptation_end ()
-  {
-    T8_ASSERT (forest->profile != nullptr);
-    forest->profile->adapt_runtime += sc_MPI_Wtime ();
-  }
-
-  t8_forest_t forest;          /**< The target forest */
-  t8_forest_t forest_from;     /**< The source forest to adapt from. */
-  std::vector<action> actions; /**< The adaptation actions for each element in the source forest. */
-  bool profiling = false;      /**< Flag to indicate if profiling is enabled. */
-};                             // class adaptor
-
-};     // namespace t8_adapt
 #endif /* T8_FOREST_ADAPT_HXX */
