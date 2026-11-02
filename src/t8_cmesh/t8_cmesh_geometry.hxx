@@ -49,7 +49,7 @@ T8_EXTERN_C_END ();
 /**
  * Create and register a geometry with the coarse mesh. The coarse mesh takes the ownership of the geometry.
  * @tparam geometry_type
- * \param [in,out] cmesh The cmesh.
+ * \param [in,out] cmesh The cmesh. Must be initialized but not committed.
  * \param [in,out] args The constructor arguments of the geometry.
  * \return         A pointer to the geometry.
  */
@@ -57,7 +57,9 @@ template <typename geometry_type, typename... _args>
 inline geometry_type *
 t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
 {
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
+
   if (geometry_handler == nullptr) {
     /* The handler was not constructed, do it now. */
     geometry_handler = detail::t8_cmesh_add_geometry_handler (cmesh);

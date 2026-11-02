@@ -421,7 +421,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 #endif
 
 /** Register a geometry in the cmesh. The cmesh takes ownership of the geometry.
- * \param [in,out] cmesh        The cmesh.
+ * \param [in,out] cmesh        The cmesh. Must be initialized but not committed.
  * \param [in]     geometry     The geometry to register.
  *
  * If no geometry is registered and cmesh is modified from another cmesh then

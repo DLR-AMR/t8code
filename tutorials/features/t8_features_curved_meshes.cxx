@@ -35,14 +35,13 @@
  *   - Refine the mesh at different geometries.
  *  */
 
-#include <t8.h>                                        /* General t8code header, always include this. */
-#include <sc_options.h>                                /* CLI parser */
-#include <t8_cmesh/t8_cmesh.h>                         /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h> /* For the attribute keys.  */
-#include <t8_forest/t8_forest_general.h>               /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>                    /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>           /* geometrical information of the forest */
-#include <t8_schemes/t8_default/t8_default.hxx>        /* default refinement scheme. */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <sc_options.h>                         /* CLI parser */
+#include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>             /* save forest */
+#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
+#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* Linear geometry calculation of trees */
 #if T8_ENABLE_OCC
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx> /* Curved geometry calculation of trees */
@@ -114,9 +113,10 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
       const int element_dim = t8_eclass_to_dimension[tree_class];
       /* We retrieve the geometry information of the tree.
        * In the 3D case, we look for linked surfaces, but in 2D, we look for linked edges. */
-      const int attribute_key = element_dim == 3 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
-      const int *linked_geometries = (const int *) t8_cmesh_get_attribute (
-        t8_forest_get_cmesh (forest), t8_get_package_id (), attribute_key, cmesh_ltreeid);
+      const int geom_dim = element_dim == 3 ? 2 : 1;
+      const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest_from);
+      const int *linked_geometries = t8_geometry_cad::get_tree_geometries (cmesh, cmesh_ltreeid, geom_dim);
+
       /* If the tree face has a linked surface and it is in the list we refine it */
       for (int igeom = 0; igeom < adapt_data->n_geometries; ++igeom) {
         if (linked_geometries[tree_face] == adapt_data->geometries[igeom]
