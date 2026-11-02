@@ -27,7 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <gtest/gtest.h>
 #include <t8.h>
-#include <test/mesh_handle/t8_gtest_common.hxx>
+#include <mesh_handle/t8_gtest_common.hxx>
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competence_pack.hxx>

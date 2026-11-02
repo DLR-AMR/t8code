@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8.h>
-#include <test/t8_gtest_memory_macros.hxx>
+#include <t8_gtest_memory_macros.hxx>
 
 /* Check that MPI is configured consistently */
 #if (defined(T8_ENABLE_MPI) && defined(gtest_disable_mpi)) || (defined(T8_ENABLE_MPI) && defined(gtest_disable_mpi))
