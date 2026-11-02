@@ -149,7 +149,8 @@ write_line (const run_info &info, const char *backend, int type, long long eleme
 }
 
 void
-time_t8code (t8_cmesh_t cmesh, const run_info &info, sc_MPI_Comm comm)
+time_t8code (t8_cmesh_t cmesh, const run_info &info, sc_MPI_Comm comm, const t8_forest_balance_algorithm_t algorithm,
+             const char *backend)
 {
   /* the unbalanced, partitioned forest */
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), info.level, 0, comm);
@@ -169,6 +170,7 @@ time_t8code (t8_cmesh_t cmesh, const run_info &info, sc_MPI_Comm comm)
     t8_forest_init (&balanced);
     t8_forest_set_balance (balanced, unbalanced, 1);
     t8_forest_set_balance_type (balanced, t8_types[type]);
+    t8_forest_set_balance_algorithm (balanced, algorithm);
     t8_forest_set_ghost (balanced, 1, t8_types[type]);
     t8_forest_set_profiling (balanced, 1);
     sc_MPI_Barrier (comm);
@@ -189,7 +191,7 @@ time_t8code (t8_cmesh_t cmesh, const run_info &info, sc_MPI_Comm comm)
                              is_balanced);
       SC_CHECK_ABORT (is_balanced, "The forest is not balanced.");
     }
-    write_line (info, "t8code", type, elements, t8_forest_get_global_num_leaf_elements (balanced),
+    write_line (info, backend, type, elements, t8_forest_get_global_num_leaf_elements (balanced),
                 sum_over_procs (t8_forest_get_num_ghosts (balanced), comm), rounds, t_balance, t_ghost);
     t8_forest_unref (&balanced);
   }
@@ -248,7 +250,7 @@ main (int argc, char **argv)
   const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
   int help = 0, level, rlevel, repetitions, no_p4est = 0;
-  const char *eclass_arg, *csv_name;
+  const char *eclass_arg, *csv_name, *algorithms_arg;
   sc_options_t *opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &help, "Display a short help message.");
   sc_options_add_string (opt, 'e', "eclass", &eclass_arg, "hex",
@@ -260,6 +262,9 @@ main (int argc, char **argv)
   sc_options_add_switch (opt, 'c', "check", &check_balance,
                          "Check with t8_forest_is_balanced whether the forest is balanced before and after.");
   sc_options_add_string (opt, 'o', "csv", &csv_name, NULL, "Append the results to this CSV file.");
+  sc_options_add_string (opt, 'a', "algorithms", &algorithms_arg, "default",
+                         "Balance algorithms of t8code: default, ripple or onepass (comma separated list). The "
+                         "backend in the CSV file is t8code for the default, t8code-ripple or t8code-onepass.");
   const int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (help || parsed < 0) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
@@ -291,7 +296,24 @@ main (int argc, char **argv)
       for (int rep = 0; rep < repetitions; ++rep) {
         const run_info info = { eclass.c_str (), size, level, rlevel, rep, csv };
         tree_size = eclass == "hybrid" ? 0.5 : 1;
-        time_t8code (new_cmesh (eclass, comm), info, comm);
+        const std::string algorithms = algorithms_arg;
+        size_t algorithm_start = 0;
+        while (algorithm_start <= algorithms.size ()) {
+          const size_t algorithm_end = std::min (algorithms.find (',', algorithm_start), algorithms.size ());
+          const std::string algorithm = algorithms.substr (algorithm_start, algorithm_end - algorithm_start);
+          algorithm_start = algorithm_end + 1;
+          SC_CHECK_ABORT (algorithm == "default" || algorithm == "ripple" || algorithm == "onepass",
+                          "Unknown balance algorithm.");
+          if (algorithm == "default") {
+            time_t8code (new_cmesh (eclass, comm), info, comm, T8_BALANCE_DEFAULT, "t8code");
+          }
+          else if (algorithm == "ripple") {
+            time_t8code (new_cmesh (eclass, comm), info, comm, T8_BALANCE_RIPPLE, "t8code-ripple");
+          }
+          else {
+            time_t8code (new_cmesh (eclass, comm), info, comm, T8_BALANCE_ONE_PASS, "t8code-onepass");
+          }
+        }
         if (eclass == "hex" && !no_p4est) {
           time_p4est (info, comm);
         }
