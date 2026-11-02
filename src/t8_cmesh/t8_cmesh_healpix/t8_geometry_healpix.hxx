@@ -34,17 +34,28 @@ struct t8_geometry_healpix: public t8_geometry
   double sphere_radius;
 
  public:
-  /* Basic constructor that sets the dimension and the name. */
+  /**
+   * @brief Constructs a HEALPix geometry with the specified sphere radius.
+   *
+   * @param radius The radius of the sphere.
+   */
   t8_geometry_healpix (double radius): t8_geometry ("t8_geometry_healpix")
   {
     sphere_radius = radius;
   }
+  /**
+   * @brief Default constructor.
+   *
+   * Constructs a HEALPix geometry with a sphere radius of 1.
+   */
   t8_geometry_healpix (): t8_geometry ("t8_geometry_healpix")
   {
     sphere_radius = 1;
   }
 
-  /* The destructor. */
+  /**
+   * @brief Destructor.
+   */
   virtual ~t8_geometry_healpix ()
   {
   }
@@ -106,6 +117,3 @@ struct t8_geometry_healpix: public t8_geometry
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
-
-void
-t8_eval_geom_point (t8_gloidx_t layer, t8_gloidx_t face, double xi, double eta, double *out_coord);

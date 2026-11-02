@@ -36,6 +36,7 @@
  * @param[in]  eta       The reference coordinate in the second parametric direction (typically [0, 1]).
  * @param[out] out_coord Pointer to an array of size 3 where the resulting (x, y, z)
  *                       Cartesian coordinates will be stored.
+ * @param[in]  radius    The radius of the sphere
  */
 void
 t8_eval_geom_point (t8_gloidx_t layer, t8_gloidx_t face, double xi, double eta, double *out_coord, double radius)
