@@ -166,6 +166,7 @@ typedef enum {
   T8_MPI_FOREST_ROUTE,                  /**< Used for routing items along the splitters of a forest's partition. */
   T8_MPI_PARTITION_OFFSETS,             /**< Used for sending the first element of a rank in a weighted partition. */
   T8_MPI_PARTITION_NEXT,                /**< Used for sending the first element of a rank to the previous rank. */
+  T8_MPI_FOREST_TOUCHING,               /**< Used for sending neighbors of cover elements to touching ranks. */
   T8_MPI_PARTITION_DATA,                /**< Used for partitioning data of a forest's elements. */
   T8_MPI_TAG_LAST                       /**< Dummy last MPI tag. */
 } t8_MPI_tag_t;

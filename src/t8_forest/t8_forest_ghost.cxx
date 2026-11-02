@@ -37,6 +37,9 @@
 #include <sc_statistics.h>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include "t8_eclass.h"
+#include <algorithm>
+#include <tuple>
+#include <vector>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -499,7 +502,6 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
   sc_array_t *remote_array;
   size_t index, element_count;
   int *remote_process_entry;
-  int level, copy_level = 0;
 
   /* Get the tree's element class and the scheme */
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
@@ -559,19 +561,11 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
     }
   }
 #endif
-  elem_copy = NULL;
-  level = scheme->element_get_level (tree_class, elem);
+  /* Check if the element was not contained in the array, i.e. if it is not the last one (with the same index in the
+   * tree). If so, we add a copy of elem to the array. Otherwise, we do nothing. */
   element_count = t8_element_array_get_count (&remote_tree->elements);
-  if (element_count > 0) {
-    elem_copy = t8_element_array_index_locidx_mutable (&remote_tree->elements, element_count - 1);
-    copy_level = scheme->element_get_level (tree_class, elem_copy);
-  }
-  /* Check if the element was not contained in the array.
-   * If so, we add a copy of elem to the array.
-   * Otherwise, we do nothing. */
-  if (elem_copy == NULL || level != copy_level
-      || scheme->element_get_linear_id (tree_class, elem_copy, copy_level)
-           != scheme->element_get_linear_id (tree_class, elem, level)) {
+  if (element_count == 0
+      || *(t8_locidx_t *) sc_array_index (&remote_tree->element_indices, element_count - 1) != element_index) {
     /* Add the element */
     elem_copy = t8_element_array_push (&remote_tree->elements);
     scheme->element_copy (tree_class, elem, elem_copy);
@@ -896,6 +890,83 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 #if T8_ENABLE_DEBUG
 #endif
 }
+
+/** Fill the remote ghosts of a ghost structure with the local leaves that touch the parts of other ranks.
+ * \param [in,out] forest  The forest.
+ * \param [in,out] ghost   The forest's ghost structure.
+ * \param [in] mirrors     The local leaves with the ranks they touch, sorted by rank, tree and index.
+ */
+static void
+t8_forest_ghost_fill_remote_mirrors (t8_forest_t forest, t8_forest_ghost_t ghost,
+                                     const std::vector<t8_forest_mirror> &mirrors)
+{
+  for (const t8_forest_mirror &mirror : mirrors) {
+    t8_ghost_add_remote (forest, ghost, mirror.rank, mirror.ltreeid,
+                         t8_forest_get_leaf_element_in_tree (forest, mirror.ltreeid, mirror.index), mirror.index);
+  }
+  if (forest->profile != NULL) {
+    forest->profile->ghosts_remotes = ghost->remote_processes->elem_count;
+  }
+}
+
+#if T8_ENABLE_DEBUG
+/** The remote elements of a ghost structure.
+ * \param [in] ghost    A ghost structure with remote elements.
+ * \param [out] remotes The remote elements as (rank, global tree, index in the tree), sorted.
+ */
+static void
+t8_forest_ghost_remote_list (const t8_forest_ghost_t ghost,
+                             std::vector<std::tuple<int, t8_gloidx_t, t8_locidx_t>> &remotes)
+{
+  remotes.clear ();
+  for (size_t iremote = 0; iremote < ghost->remote_ghosts->a.elem_count; iremote++) {
+    t8_ghost_remote_t *remote = (t8_ghost_remote_t *) sc_array_index (&ghost->remote_ghosts->a, iremote);
+    for (size_t itree = 0; itree < remote->remote_trees.elem_count; itree++) {
+      t8_ghost_remote_tree_t *tree = (t8_ghost_remote_tree_t *) sc_array_index (&remote->remote_trees, itree);
+      for (size_t ielem = 0; ielem < tree->element_indices.elem_count; ielem++) {
+        remotes.emplace_back (remote->remote_rank, tree->global_id,
+                              *(const t8_locidx_t *) sc_array_index (&tree->element_indices, ielem));
+      }
+    }
+  }
+  std::sort (remotes.begin (), remotes.end ());
+}
+
+/** Check that the top-down search finds the same remote elements as a ghost structure.
+ * \param [in,out] forest  A forest with touching ranks, whose ghost structure is \a ghost.
+ * \param [in] ghost       The ghost structure of \a forest with the remote elements.
+ * \return True if the search finds the same remote elements.
+ */
+static bool
+t8_forest_ghost_check_remotes_with_search (t8_forest_t forest, const t8_forest_ghost_t ghost)
+{
+  T8_ASSERT (forest->ghosts == ghost);
+  t8_forest_ghost_t ghost_search;
+  t8_forest_ghost_init (&ghost_search, forest->ghost_type);
+  forest->ghosts = ghost_search;
+  t8_forest_ghost_fill_remote_v3 (forest);
+  forest->ghosts = ghost;
+  std::vector<std::tuple<int, t8_gloidx_t, t8_locidx_t>> remotes, remotes_search;
+  t8_forest_ghost_remote_list (ghost, remotes);
+  t8_forest_ghost_remote_list (ghost_search, remotes_search);
+  t8_forest_ghost_unref (&ghost_search);
+  if (remotes != remotes_search) {
+    t8_errorf ("The ghost layer has %zu remote elements, the top-down search %zu\n", remotes.size (),
+               remotes_search.size ());
+    for (size_t i = 0; i < std::min (remotes.size (), remotes_search.size ()); i++) {
+      if (remotes[i] != remotes_search[i]) {
+        t8_errorf ("First difference at %zu: rank %i tree %lli index %i, search rank %i tree %lli index %i\n", i,
+                   std::get<0> (remotes[i]), (long long) std::get<1> (remotes[i]), std::get<2> (remotes[i]),
+                   std::get<0> (remotes_search[i]), (long long) std::get<1> (remotes_search[i]),
+                   std::get<2> (remotes_search[i]));
+        break;
+      }
+    }
+    return false;
+  }
+  return true;
+}
+#endif
 
 /** 
  * Fill the remote ghosts of a ghost structure.
@@ -1633,6 +1704,9 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
  *
  * version 3 with top-down search
  * for unbalanced_version = -1
+ *
+ * version 4 with the leaves touching the neighbors of the cover elements of the other ranks
+ * (\ref t8_forest_touching_ranks_mirrors) for unbalanced_version = 2
  */
 void
 t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
@@ -1663,9 +1737,17 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
   }
 
+  std::vector<t8_forest_mirror> mirrors;
   if (forest->ghost_type != T8_GHOST_NONE) {
-    /* The owners of the leaves touching a local leaf are the ranks touching this rank */
-    t8_forest_touching_ranks_require (forest, t8_forest_ghost_min_boundary_dim (forest->ghost_type, forest->dimension));
+    const int min_dim = t8_forest_ghost_min_boundary_dim (forest->ghost_type, forest->dimension);
+    if (unbalanced_version == 2) {
+      /* The local leaves touching the parts of other ranks, from the neighbors of the cover elements of all ranks */
+      t8_forest_touching_ranks_mirrors (forest, min_dim, mirrors);
+    }
+    else {
+      /* The owners of the leaves touching a local leaf are the ranks touching this rank */
+      t8_forest_touching_ranks_require (forest, min_dim);
+    }
   }
 
   if (t8_forest_get_local_num_leaf_elements (forest) > 0) {
@@ -1681,7 +1763,11 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
     ghost = forest->ghosts;
 
-    if (unbalanced_version == -1) {
+    if (unbalanced_version == 2) {
+      t8_forest_ghost_fill_remote_mirrors (forest, ghost, mirrors);
+      T8_ASSERT (t8_forest_ghost_check_remotes_with_search (forest, ghost));
+    }
+    else if (unbalanced_version == -1) {
       t8_forest_ghost_fill_remote_v3 (forest);
     }
     else {
@@ -1750,6 +1836,14 @@ t8_forest_ghost_create_topdown (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   t8_forest_ghost_create_ext (forest, -1);
+}
+
+void
+t8_forest_ghost_create_touching (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  t8_forest_ghost_create_ext (forest, 2);
 }
 
 /** Return the array of remote ranks.

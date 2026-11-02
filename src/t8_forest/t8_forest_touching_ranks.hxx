@@ -38,6 +38,12 @@
  * The owner of a position in the range of this rank or of a touching rank is known. Between these ranges, only the
  * ranks in between are known as bounds for the owner. Every rank that owns a leaf touching a local leaf with dimension
  * at least min_dim touches this rank, so the owner searches of the ghost layer only need owners in known ranges.
+ *
+ * The same neighbors give the ghost layer (\ref t8_forest_touching_ranks_mirrors): a leaf of another rank touches the
+ * part of the sender if and only if it contains a neighbor or lies in one and touches its boundary shared with the
+ * cover element with dimension at least min_dim. So the receivers collect these leaves, which takes time proportional
+ * to their number times the depth, instead of searching the owners at all boundaries of all leaves near the
+ * boundary of the own part.
  */
 
 #ifndef T8_FOREST_TOUCHING_RANKS_HXX
@@ -65,6 +71,19 @@ struct t8_forest_touching_ranks
   std::vector<t8_forest_rank_range> ranges;
 };
 
+/** A local leaf that touches the part of another rank, so it is a ghost of that rank. */
+struct t8_forest_mirror
+{
+  int rank;            /**< The rank whose part the leaf touches. */
+  t8_locidx_t ltreeid; /**< The local tree of the leaf. */
+  t8_locidx_t index;   /**< The index of the leaf in its tree. */
+
+  /** Order by rank, tree and index. */
+  friend auto
+  operator<=> (const t8_forest_mirror &, const t8_forest_mirror &)
+    = default;
+};
+
 /** Compute the ranks whose part of a forest touches the part of this rank with dimension at least \a min_dim and
  * store them in the forest, replacing existing ones. Takes one \ref t8_forest_route.
  * \param [in,out] forest   A committed forest.
@@ -83,6 +102,19 @@ t8_forest_touching_ranks_compute (t8_forest_t forest, const int min_dim);
  */
 void
 t8_forest_touching_ranks_require (t8_forest_t forest, const int min_dim);
+
+/** The local leaves that touch the parts of other ranks with dimension at least \a min_dim, which are the remote
+ * elements of the ghost layer. As in \ref t8_forest_touching_ranks_compute, every rank sends the neighbors of its
+ * cover elements to the ranks that own a part of them, and these collect their leaves touching the boundary of the
+ * neighbor. If the forest has touching ranks for \a min_dim, the neighbors are sent directly to the touching ranks
+ * that own a part of them in one round. Otherwise they are routed, and the touching ranks are computed as well.
+ * \param [in,out] forest   A committed forest.
+ * \param [in]     min_dim  The minimal dimension of the contact, see \ref t8_forest_touching_ranks_compute.
+ * \param [out]    mirrors  The leaves with the ranks they touch, sorted by rank, tree and index, without duplicates.
+ * \note This function is collective.
+ */
+void
+t8_forest_touching_ranks_mirrors (t8_forest_t forest, const int min_dim, std::vector<t8_forest_mirror> &mirrors);
 
 /** Copy the touching ranks of a forest to a forest with the same partition.
  * \param [in,out] forest  A forest whose ranks own the same positions as those of \a from.

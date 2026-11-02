@@ -3443,9 +3443,9 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
   SC_CHECK_ABORT (
     do_ghost == 0 || ghost_type == T8_GHOST_FACES || ghost_type == T8_GHOST_EDGES || ghost_type == T8_GHOST_VERTICES,
     "Invalid ghost type.\n");
-  SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3, "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
-  SC_CHECK_ABORT (ghost_type == T8_GHOST_FACES || ghost_version == 3,
-                  "Edge and vertex ghosts are only supported in version 3.");
+  SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 4, "Invalid choice for ghost version. Choose 1, 2, 3 or 4.\n");
+  SC_CHECK_ABORT (ghost_type == T8_GHOST_FACES || ghost_version >= 3,
+                  "Edge and vertex ghosts are only supported in versions 3 and 4.");
 
   if (ghost_type == T8_GHOST_NONE) {
     /* none type disables ghost */
@@ -3463,8 +3463,8 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
 void
 t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type)
 {
-  /* Use ghost version 3, top-down search and for unbalanced forests. */
-  t8_forest_set_ghost_ext (forest, do_ghost, ghost_type, 3);
+  /* Use ghost version 4, the leaves touching the neighbors of the cover elements of the other ranks. */
+  t8_forest_set_ghost_ext (forest, do_ghost, ghost_type, 4);
 }
 
 void
@@ -3839,6 +3839,9 @@ t8_forest_commit (t8_forest_t forest)
         break;
       case 3:
         t8_forest_ghost_create_topdown (forest);
+        break;
+      case 4:
+        t8_forest_ghost_create_touching (forest);
         break;
       default:
         SC_ABORT ("Invalid choice of ghost algorithm");

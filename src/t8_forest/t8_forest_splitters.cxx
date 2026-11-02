@@ -235,14 +235,22 @@ void
 t8_forest_element_positions (const t8_forest_t forest, const t8_gloidx_t gtreeid, const t8_eclass_t eclass,
                              const t8_element_t *element, t8_forest_position *first, t8_forest_position *last)
 {
+  /* The linear id of an element at a finer level is the one of its first descendant (as in t8_forest_bin_search_lower),
+   * and its descendants at that level are consecutive. This avoids constructing the descendants, whose linear ids
+   * take a loop over all levels in some schemes. */
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_linearidx_t first_id = scheme->element_get_linear_id (eclass, element, forest->maxlevel);
+  *first = { gtreeid, first_id };
+  *last = { gtreeid, first_id + scheme->element_count_leaves (eclass, element, forest->maxlevel) - 1 };
+#if T8_ENABLE_DEBUG
   t8_element_t *desc;
   scheme->element_new (eclass, 1, &desc);
   scheme->element_get_first_descendant (eclass, element, desc, forest->maxlevel);
-  *first = { gtreeid, scheme->element_get_linear_id (eclass, desc, forest->maxlevel) };
+  T8_ASSERT (first->id == scheme->element_get_linear_id (eclass, desc, forest->maxlevel));
   scheme->element_get_last_descendant (eclass, element, desc, forest->maxlevel);
-  *last = { gtreeid, scheme->element_get_linear_id (eclass, desc, forest->maxlevel) };
+  T8_ASSERT (last->id == scheme->element_get_linear_id (eclass, desc, forest->maxlevel));
   scheme->element_destroy (eclass, 1, &desc);
+#endif
 }
 
 int

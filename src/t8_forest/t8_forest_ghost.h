@@ -214,6 +214,15 @@ t8_forest_ghost_create_balanced_only (t8_forest_t forest);
 void
 t8_forest_ghost_create_topdown (t8_forest_t forest);
 
+/** Create one layer of ghost elements for a forest from the leaves touching the neighbors of the cover elements of the
+ * other ranks, see \ref t8_forest_touching_ranks_mirrors. Works for unbalanced forests and, for edges and vertices,
+ * schemes with boundaries (standalone).
+ * \param [in,out]    forest     The forest.
+ * \a forest must be committed before calling this function.
+ */
+void
+t8_forest_ghost_create_touching (t8_forest_t forest);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_GHOST_H */

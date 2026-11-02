@@ -27,8 +27,12 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <set>
 #include <utility>
+
+/** The linear id of a leaf that is not computed yet, larger than all linear ids at the maxlevel. */
+#define T8_FOREST_LEAF_ID_UNKNOWN std::numeric_limits<t8_linearidx_t>::max ()
 
 /** A neighbor of a cover element, routed to the ranks that own a part of it. */
 struct t8_forest_touching_query
@@ -163,8 +167,119 @@ t8_forest_part_touches_boundary (const t8_forest_t forest, const t8_gloidx_t gtr
   return touches;
 }
 
-void
-t8_forest_touching_ranks_compute (t8_forest_t forest, const int min_dim)
+/** Append the leaves of this rank that touch a boundary of an element with dimension at least min_dim: the leaf that
+ * contains the element, or the leaves inside it whose intersection with the boundary has dimension at least min_dim.
+ * The latter are found recursively over the children touching the boundary (the children at the face if only faces
+ * are considered).
+ * \param [in] forest   A committed forest.
+ * \param [in] ltreeid  The local tree of \a element.
+ * \param [in] eclass   The eclass of the tree.
+ * \param [in] element  An element of the tree.
+ * \param [in] bdy_dim  The dimension of the boundary of \a element.
+ * \param [in] bdy_id   The id of the boundary.
+ * \param [in] min_dim  The minimal dimension of the contact, faces only if it is the dimension of the tree minus one.
+ * \param [in] begin    The index of the first leaf of the tree that may intersect \a element.
+ * \param [in] end      The index after the last leaf of the tree that may intersect \a element.
+ * \param [in,out] leaf_ids  For each leaf of the tree, the linear id of its first descendant at the maxlevel, or
+ *                           T8_FOREST_LEAF_ID_UNKNOWN until it is needed.
+ * \param [in,out] leaves  The indices of the leaves in the tree are appended.
+ */
+static void
+t8_forest_leaves_touching_boundary (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_eclass_t eclass,
+                                    const t8_element_t *element, const int bdy_dim, const int bdy_id, const int min_dim,
+                                    const t8_locidx_t begin, const t8_locidx_t end,
+                                    std::vector<t8_linearidx_t> &leaf_ids, std::vector<t8_locidx_t> &leaves)
+{
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_element_array_t *tree_leaves = t8_forest_tree_get_leaf_elements (forest, ltreeid);
+  const int maxlevel = forest->maxlevel;
+  /* The linear id of the first descendant of a leaf. The binary searches of all neighbors share their first steps. */
+  const auto leaf_id = [&] (const t8_locidx_t ileaf) {
+    if (leaf_ids[ileaf] == T8_FOREST_LEAF_ID_UNKNOWN) {
+      leaf_ids[ileaf]
+        = scheme->element_get_linear_id (eclass, t8_element_array_index_locidx (tree_leaves, ileaf), maxlevel);
+    }
+    return leaf_ids[ileaf];
+  };
+  /* The first leaf in [lo, end) whose first descendant comes after id, or after or at id if inclusive is false */
+  const auto search = [&] (t8_locidx_t lo, const t8_linearidx_t id, const bool inclusive) {
+    t8_locidx_t hi = end;
+    while (lo < hi) {
+      const t8_locidx_t mid = lo + (hi - lo) / 2;
+      const t8_linearidx_t mid_id = leaf_id (mid);
+      if (mid_id < id || (inclusive && mid_id == id)) {
+        lo = mid + 1;
+      }
+      else {
+        hi = mid;
+      }
+    }
+    return lo;
+  };
+  t8_forest_position first, last;
+  t8_forest_element_positions (forest, t8_forest_global_tree_id (forest, ltreeid), eclass, element, &first, &last);
+  const int level = scheme->element_get_level (eclass, element);
+
+  /* The leaves in [inside_begin, inside_end) start in the element */
+  const t8_locidx_t inside_begin = search (begin, first.id, false);
+  const t8_locidx_t inside_end = search (inside_begin, last.id, true);
+  if (inside_begin == inside_end) {
+    /* No leaf starts in the element, the one before may contain it */
+    if (inside_begin > begin) {
+      const t8_element_t *leaf = t8_element_array_index_locidx (tree_leaves, inside_begin - 1);
+      const int leaf_level = scheme->element_get_level (eclass, leaf);
+      if (leaf_level < level
+          && scheme->element_get_linear_id (eclass, leaf, leaf_level)
+               == scheme->element_get_linear_id (eclass, element, leaf_level)) {
+        leaves.push_back (inside_begin - 1);
+      }
+    }
+    return;
+  }
+  if (scheme->element_get_level (eclass, t8_element_array_index_locidx (tree_leaves, inside_begin)) <= level) {
+    /* The leaf starts with the element and is not finer, so it contains it */
+    leaves.push_back (inside_begin);
+    return;
+  }
+  /* The leaves in the element are finer, continue with the children touching the boundary */
+  if (min_dim == t8_eclass_to_dimension[eclass] - 1) {
+    const int num_children = scheme->element_get_num_face_children (eclass, element, bdy_id);
+    std::vector<t8_element_t *> children (num_children);
+    scheme->element_new (eclass, num_children, children.data ());
+    scheme->element_get_children_at_face (eclass, element, bdy_id, children.data (), num_children, NULL);
+    for (int ichild = 0; ichild < num_children; ichild++) {
+      const int child_face = scheme->element_face_get_child_face (eclass, element, bdy_id, ichild);
+      t8_forest_leaves_touching_boundary (forest, ltreeid, eclass, children[ichild], bdy_dim, child_face, min_dim,
+                                          inside_begin, inside_end, leaf_ids, leaves);
+    }
+    scheme->element_destroy (eclass, num_children, children.data ());
+  }
+  else {
+    const int num_children = scheme->element_get_num_boundary_touching_children (eclass, element, bdy_dim, bdy_id);
+    std::vector<t8_element_t *> children (num_children);
+    std::vector<int> child_bdy_dims (num_children), child_bdy_ids (num_children);
+    scheme->element_new (eclass, num_children, children.data ());
+    scheme->element_get_children_touching_boundary (eclass, element, bdy_dim, bdy_id, children.data (), num_children,
+                                                    child_bdy_dims.data (), child_bdy_ids.data ());
+    for (int ichild = 0; ichild < num_children; ichild++) {
+      if (child_bdy_dims[ichild] >= min_dim) {
+        t8_forest_leaves_touching_boundary (forest, ltreeid, eclass, children[ichild], child_bdy_dims[ichild],
+                                            child_bdy_ids[ichild], min_dim, inside_begin, inside_end, leaf_ids, leaves);
+      }
+    }
+    scheme->element_destroy (eclass, num_children, children.data ());
+  }
+}
+
+/** The neighbors of the cover elements of this rank at their boundaries of dimension at least min_dim that do not lie
+ * in the own range, without duplicates.
+ * \param [in] forest   A committed forest.
+ * \param [in] min_dim  The minimal dimension of the contact.
+ * \return The neighbors.
+ * \note This function is collective, since it builds the boundary connectivity of the coarse mesh if needed.
+ */
+static std::vector<t8_forest_touching_query>
+t8_forest_touching_queries (t8_forest_t forest, const int min_dim)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_forest_splitters &splitters = t8_forest_get_splitters (forest);
@@ -236,22 +351,26 @@ t8_forest_touching_ranks_compute (t8_forest_t forest, const int min_dim)
   /* Cover elements of the same level may share a neighbor at the same boundary of it */
   std::sort (queries.begin (), queries.end ());
   queries.erase (std::unique (queries.begin (), queries.end ()), queries.end ());
+  return queries;
+}
 
-  /* Route each neighbor to the ranks that own a part of it */
-  t8_forest_route (forest, queries, [] (const t8_forest_touching_query &query, const t8_forest_bisection &level) {
-    return t8_forest_route_halves_positions (level, query.first, query.last, false);
-  });
-
-  /* The senders whose cover element shares a boundary with the part of this rank are the touching ranks */
-  t8_forest_touching_ranks_destroy (forest);
-  t8_forest_touching_ranks *touching = forest->touching_ranks = new t8_forest_touching_ranks;
-  touching->min_dim = min_dim;
-  if (splitters.has_elements) {
-    touching->ranges.push_back ({ forest->mpirank, splitters.first_position, splitters.next_position });
-  }
-  std::set<int> touching_sources;
+/** Collect the local leaves touching the boundaries of received neighbors of the cover elements of other ranks.
+ * \param [in] forest   A committed forest.
+ * \param [in] queries  The neighbors received by this rank, each owned in part by this rank.
+ * \param [in] min_dim  The minimal dimension of the contact.
+ * \param [in] touches  Called as touches (query) for each query of another rank whose boundary a local leaf touches.
+ * \param [in,out] mirrors  If not NULL, the leaves touching the boundary of each query are appended.
+ */
+template <typename TTouches>
+static void
+t8_forest_touching_queries_answer (const t8_forest_t forest, const std::vector<t8_forest_touching_query> &queries,
+                                   const int min_dim, TTouches &&touches, std::vector<t8_forest_mirror> *mirrors)
+{
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  std::vector<t8_locidx_t> leaves;
+  std::vector<std::vector<t8_linearidx_t>> leaf_ids (t8_forest_get_num_local_trees (forest));
   for (const t8_forest_touching_query &query : queries) {
-    if (query.source == forest->mpirank || touching_sources.count (query.source) > 0) {
+    if (query.source == forest->mpirank) {
       continue;
     }
     const t8_locidx_t ltreeid = query.first.gtreeid - forest->first_local_tree;
@@ -260,15 +379,173 @@ t8_forest_touching_ranks_compute (t8_forest_t forest, const int min_dim)
     t8_element_t *neigh;
     scheme->element_new (eclass, 1, &neigh);
     scheme->element_set_linear_id (eclass, neigh, query.level, query.id);
-    if (t8_forest_part_touches_boundary (forest, query.first.gtreeid, eclass, neigh, query.bdy_dim, query.bdy_id,
-                                         min_dim)) {
-      touching->ranges.push_back ({ query.source, query.source_first, query.source_next });
-      touching_sources.insert (query.source);
+    const t8_locidx_t num_leaves = t8_forest_get_tree_num_leaf_elements (forest, ltreeid);
+    if (leaf_ids[ltreeid].empty ()) {
+      leaf_ids[ltreeid].assign (num_leaves, T8_FOREST_LEAF_ID_UNKNOWN);
     }
+    leaves.clear ();
+    t8_forest_leaves_touching_boundary (forest, ltreeid, eclass, neigh, query.bdy_dim, query.bdy_id, min_dim, 0,
+                                        num_leaves, leaf_ids[ltreeid], leaves);
+    /* The leaves touch the boundary if and only if the part does */
+    T8_ASSERT (leaves.empty ()
+               != t8_forest_part_touches_boundary (forest, query.first.gtreeid, eclass, neigh, query.bdy_dim,
+                                                   query.bdy_id, min_dim));
     scheme->element_destroy (eclass, 1, &neigh);
+    if (!leaves.empty ()) {
+      touches (query);
+      if (mirrors != NULL) {
+        for (const t8_locidx_t ileaf : leaves) {
+          mirrors->push_back ({ query.source, ltreeid, ileaf });
+        }
+      }
+    }
+  }
+}
+
+/** Compute the touching ranks from the neighbors routed to this rank, and optionally the mirrors.
+ * \param [in,out] forest   A committed forest. Its touching ranks are replaced.
+ * \param [in] min_dim      The minimal dimension of the contact.
+ * \param [in] queries      The neighbors of the cover elements of all ranks that this rank owns a part of.
+ * \param [in,out] mirrors  If not NULL, the local leaves touching the parts of other ranks are appended.
+ */
+static void
+t8_forest_touching_ranks_from_queries (t8_forest_t forest, const int min_dim,
+                                       const std::vector<t8_forest_touching_query> &queries,
+                                       std::vector<t8_forest_mirror> *mirrors)
+{
+  const t8_forest_splitters &splitters = t8_forest_get_splitters (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  t8_forest_touching_ranks_destroy (forest);
+  t8_forest_touching_ranks *touching = forest->touching_ranks = new t8_forest_touching_ranks;
+  touching->min_dim = min_dim;
+  if (splitters.has_elements) {
+    touching->ranges.push_back ({ forest->mpirank, splitters.first_position, splitters.next_position });
+  }
+  /* The senders whose cover element shares a boundary with the part of this rank are the touching ranks */
+  std::set<int> touching_sources;
+  const auto add_source = [&] (const t8_forest_touching_query &query) {
+    if (touching_sources.insert (query.source).second) {
+      touching->ranges.push_back ({ query.source, query.source_first, query.source_next });
+    }
+  };
+  if (mirrors != NULL) {
+    t8_forest_touching_queries_answer (forest, queries, min_dim, add_source, mirrors);
+  }
+  else {
+    for (const t8_forest_touching_query &query : queries) {
+      if (query.source == forest->mpirank || touching_sources.count (query.source) > 0) {
+        continue;
+      }
+      const t8_locidx_t ltreeid = query.first.gtreeid - forest->first_local_tree;
+      T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest));
+      const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
+      t8_element_t *neigh;
+      scheme->element_new (eclass, 1, &neigh);
+      scheme->element_set_linear_id (eclass, neigh, query.level, query.id);
+      if (t8_forest_part_touches_boundary (forest, query.first.gtreeid, eclass, neigh, query.bdy_dim, query.bdy_id,
+                                           min_dim)) {
+        add_source (query);
+      }
+      scheme->element_destroy (eclass, 1, &neigh);
+    }
   }
   std::sort (touching->ranges.begin (), touching->ranges.end (),
              [] (const t8_forest_rank_range &a, const t8_forest_rank_range &b) { return a.rank < b.rank; });
+}
+
+/** Route the neighbors of the cover elements to the ranks that own a part of them.
+ * \param [in] forest       A committed forest with splitters.
+ * \param [in,out] queries  On input the neighbors of this rank, on output those routed to this rank.
+ * \note This function is collective.
+ */
+static void
+t8_forest_touching_queries_route (const t8_forest_t forest, std::vector<t8_forest_touching_query> &queries)
+{
+  t8_forest_route (forest, queries, [] (const t8_forest_touching_query &query, const t8_forest_bisection &level) {
+    return t8_forest_route_halves_positions (level, query.first, query.last, false);
+  });
+}
+
+/** Send the neighbors of the cover elements to the touching ranks that own a part of them, in one round: every rank
+ * sends one message to each touching rank and receives one from each.
+ * \param [in] forest       A committed forest with touching ranks.
+ * \param [in,out] queries  On input the neighbors of this rank, on output those sent to this rank.
+ * \note This function is collective.
+ */
+static void
+t8_forest_touching_queries_send (const t8_forest_t forest, std::vector<t8_forest_touching_query> &queries)
+{
+  T8_ASSERT (forest->touching_ranks != NULL);
+  const std::vector<t8_forest_rank_range> &ranges = forest->touching_ranks->ranges;
+  std::vector<std::vector<t8_forest_touching_query>> send (ranges.size ());
+  for (const t8_forest_touching_query &query : queries) {
+    for (size_t irange = 0; irange < ranges.size (); irange++) {
+      if (ranges[irange].rank != forest->mpirank && !(query.last < ranges[irange].first)
+          && query.first < ranges[irange].next) {
+        send[irange].push_back (query);
+      }
+    }
+  }
+  std::vector<sc_MPI_Request> requests;
+  requests.reserve (ranges.size ());
+  int mpiret;
+  for (size_t irange = 0; irange < ranges.size (); irange++) {
+    if (ranges[irange].rank != forest->mpirank) {
+      requests.push_back (sc_MPI_REQUEST_NULL);
+      mpiret
+        = sc_MPI_Isend (send[irange].data (), send[irange].size () * sizeof (t8_forest_touching_query), sc_MPI_BYTE,
+                        ranges[irange].rank, T8_MPI_FOREST_TOUCHING, forest->mpicomm, &requests.back ());
+      SC_CHECK_MPI (mpiret);
+    }
+  }
+  queries.clear ();
+  for (const t8_forest_rank_range &range : ranges) {
+    if (range.rank == forest->mpirank) {
+      continue;
+    }
+    sc_MPI_Status status;
+    mpiret = sc_MPI_Probe (range.rank, T8_MPI_FOREST_TOUCHING, forest->mpicomm, &status);
+    SC_CHECK_MPI (mpiret);
+    int bytes;
+    mpiret = sc_MPI_Get_count (&status, sc_MPI_BYTE, &bytes);
+    SC_CHECK_MPI (mpiret);
+    T8_ASSERT (bytes % sizeof (t8_forest_touching_query) == 0);
+    const size_t num_queries = queries.size ();
+    queries.resize (num_queries + bytes / sizeof (t8_forest_touching_query));
+    mpiret = sc_MPI_Recv (queries.data () + num_queries, bytes, sc_MPI_BYTE, range.rank, T8_MPI_FOREST_TOUCHING,
+                          forest->mpicomm, sc_MPI_STATUS_IGNORE);
+    SC_CHECK_MPI (mpiret);
+  }
+  mpiret = sc_MPI_Waitall (requests.size (), requests.data (), sc_MPI_STATUSES_IGNORE);
+  SC_CHECK_MPI (mpiret);
+}
+
+void
+t8_forest_touching_ranks_compute (t8_forest_t forest, const int min_dim)
+{
+  std::vector<t8_forest_touching_query> queries = t8_forest_touching_queries (forest, min_dim);
+  t8_forest_touching_queries_route (forest, queries);
+  t8_forest_touching_ranks_from_queries (forest, min_dim, queries, NULL);
+}
+
+void
+t8_forest_touching_ranks_mirrors (t8_forest_t forest, const int min_dim, std::vector<t8_forest_mirror> &mirrors)
+{
+  mirrors.clear ();
+  std::vector<t8_forest_touching_query> queries = t8_forest_touching_queries (forest, min_dim);
+  if (forest->touching_ranks != NULL && forest->touching_ranks->min_dim <= min_dim) {
+    /* Only touching ranks can own leaves touching the neighbors */
+    t8_forest_touching_queries_send (forest, queries);
+    t8_forest_touching_queries_answer (
+      forest, queries, min_dim, [] (const t8_forest_touching_query &) {}, &mirrors);
+  }
+  else {
+    t8_forest_touching_queries_route (forest, queries);
+    t8_forest_touching_ranks_from_queries (forest, min_dim, queries, &mirrors);
+  }
+  /* A leaf can touch several neighbors of the cover elements of a rank */
+  std::sort (mirrors.begin (), mirrors.end ());
+  mirrors.erase (std::unique (mirrors.begin (), mirrors.end ()), mirrors.end ());
 }
 
 void

@@ -594,7 +594,8 @@ t8_forest_balance_ripple (t8_forest_t forest, int repartition)
       t8_forest_ghost_unref (&forest->set_from->ghosts);
     }
     forest->set_from->ghost_type = forest->balance_type;
-    t8_forest_ghost_create_topdown (forest->set_from);
+    /* The same algorithm as for the ghost layers of the later rounds (the default of t8_forest_set_ghost) */
+    t8_forest_ghost_create_touching (forest->set_from);
   }
 
   while (!done_global) {
