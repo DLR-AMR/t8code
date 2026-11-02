@@ -173,7 +173,7 @@ t8_default_scheme_vertex::element_get_ancestor_id ([[maybe_unused]] const t8_ele
 }
 
 int
-t8_default_scheme_vertex::elements_are_family (t8_element_t *const *fam) const
+t8_default_scheme_vertex::elements_are_family (const t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   for (int i = 0; i < T8_DVERTEX_CHILDREN; i++) {

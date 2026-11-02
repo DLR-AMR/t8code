@@ -68,7 +68,7 @@ main (int argc, char **argv)
   // Initialize the sc library, has to happen before we initialize t8code.
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   // Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels.
-  t8_init (SC_LP_ESSENTIAL);
+  t8_init (SC_LP_PRODUCTION);
 
   // We will use MPI_COMM_WORLD as a communicator.
   comm = sc_MPI_COMM_WORLD;
@@ -93,7 +93,8 @@ main (int argc, char **argv)
   }
   else {
     // Read in the msh file.
-    cmesh = t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, dim, 0, use_cad);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_from_msh_file (&cmesh, fileprefix, 0, sc_MPI_COMM_WORLD, dim, 0, use_cad);
 
     // Construct a forest from the cmesh.
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);

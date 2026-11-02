@@ -21,7 +21,7 @@
 */
 
 /** \file t8_scheme_builder.hxx
- * This file defines a scheme builder, which buildy schemes by adding 
+ * This file defines a scheme builder, which builds schemes by adding
  * element class schemes to a scheme.
  */
 
@@ -39,7 +39,7 @@ struct t8_scheme_builder
   t8_scheme_builder (): scheme (new t8_scheme) {};
   ~t8_scheme_builder () {};
 
-  /** Datatype for scheme variable, storing a variant of 
+  /** Datatype for scheme variable, storing a variant of
    * all scheme types. \see t8_scheme::scheme_var
   */
   using scheme_var = t8_scheme::scheme_var;

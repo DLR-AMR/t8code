@@ -35,7 +35,7 @@ T8_EXTERN_C_BEGIN ();
 /**
  * A call-back function used by \ref t8_forest_init_search for searching elements. Is called on an element and the
  * search criterion should be checked on that element. Return true if the search criterion is met, false otherwise.
- * 
+ *
  * \param[in] forest              the forest
  * \param[in] ltreeid             the local tree id of the current tree in the cmesh.
  * \param[in] element             the element for which the search criterion is checked
@@ -54,7 +54,7 @@ typedef int (*t8_search_element_callback_c_wrapper) (t8_forest_t forest, const t
  * executing queries. Is called on an element and all queries are checked on that element. All positive
  * queries are passed further down to the children of the element up to leaf elements of the tree.
  * The results of the check are stored in \a query_matches.
- * 
+ *
  * \param[in] forest              the forest
  * \param[in] ltreeid             the local tree id of the current tree in the cmesh.
  * \param[in] element             the element for which the search criterion is checked
@@ -73,7 +73,7 @@ typedef int (*t8_search_queries_callback_c_wrapper) (t8_forest_t forest, const t
  * executing batched queries. Is called on an element and all queries are checked on that element. All positive
  * queries are passed further down to the children of the element up to leaf elements of the tree.
  * The results of the check are stored in \a query_matches.
- * 
+ *
  * \param[in] forest              the forest
  * \param[in] ltreeid             the local tree id of the current tree in the cmesh.
  * \param[in] element             the element for which the search criterion is checked

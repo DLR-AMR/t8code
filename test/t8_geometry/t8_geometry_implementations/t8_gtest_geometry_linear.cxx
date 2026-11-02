@@ -24,17 +24,17 @@
  * This file contains tests for the linear geometry of t8code.
  */
 
-#include <test/t8_gtest_macros.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_macros.hxx>
+#include <t8_gtest_custom_assertion.hxx>
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
-#include <t8_element.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_element/t8_element.h>
+#include <t8_vector/t8_vec.hxx>
 
 struct geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>>
 {
@@ -114,7 +114,7 @@ TEST_P (geometry_test, cmesh_geometry)
 
   /* Create random points in [0,1]^d and check if they are mapped correctly. */
 
-  t8_3D_point point_mapped;
+  t8_3D_vec point_mapped;
   const t8_geometry_c *cmesh_geom;
 
   /* Double check that the geometry is the linear axis aligned geometry. */
@@ -125,7 +125,7 @@ TEST_P (geometry_test, cmesh_geometry)
 
   srand (seed);
   for (int ipoint = 0; ipoint < T8_NUM_SAMPLE_POINTS; ++ipoint) {
-    t8_3D_point point ({ 0.0, 0.0, 0.0 });
+    t8_3D_vec point ({ 0.0, 0.0, 0.0 });
     /* Compute random coordinates in [0,1].
      * These are seen as reference coordinates in the single
      * cmesh tree. Our geometry will map them into the physical
@@ -168,7 +168,22 @@ INSTANTIATE_TEST_SUITE_P (
   print_test);
 
 #if T8_ENABLE_DEBUG
-TEST (test_geometry_linear, incompatible_geometry)
+
+/* NOTE: THE FOLLOWING TEST IS DISABLED
+ *
+ * The test uses a now fixed security risk that allowed t8_cmesh_register_geometry of a cmesh
+ * to be called after commit.
+ * The test needed to do so, since it checks whether a specific geometry fails
+ * the t8_cmesh_validate_geometry test.
+ * However, this test is also executed and asserted in cmesh_commit. If the geometry is set before
+ * commit, then the code aborts during commit.
+ *
+ * We leave the code in here for later generations of developers who might have a
+ * solution to test if t8_cmesh_validate_geometry returns false while setting
+ * the geometry before commit.
+ * This might be solvable with Death Tests from GoogleTest (checking that t8_cmesh_commit aborts).
+ * */
+TEST (test_geometry_linear, DISABLED_incompatible_geometry)
 {
   t8_cmesh_t cmesh;
 

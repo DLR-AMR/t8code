@@ -26,7 +26,7 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 /** In this test, we are given a forest with 3 global trees.
  * We adapt the forest so that all 6 compositions of empty
@@ -46,8 +46,10 @@ struct DISABLED_global_tree: public testing::TestWithParam<std::tuple<t8_eclass,
   {
     eclass = std::get<0> (GetParam ());
     testcase = std::get<1> (GetParam ());
-    forest = t8_forest_new_uniform (t8_cmesh_new_bigmesh (eclass, 3, sc_MPI_COMM_WORLD), t8_scheme_new_default (), 0, 0,
-                                    sc_MPI_COMM_WORLD);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_bigmesh (cmesh, eclass, 3, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override

@@ -38,15 +38,16 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
                 OUTPUT_STRIP_TRAILING_WHITESPACE )
 
     # To reuse the version in other CMakeLists.
-    else()
+else()
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/version.txt")
         file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version.txt" VERSION_CONTENT)
         # Extract the version number 
-        string(REGEX MATCH "Version ([0-9])\.([0-9]+)\.([0-9]+)" VERSION_MATCH "${VERSION_CONTENT}" )
+        string(REGEX MATCH "Version ([0-9])\.([0-9]+)\.([0-9]+)-([0-9]+(\.[0-9]+)*)" VERSION_MATCH "${VERSION_CONTENT}" )
         if (VERSION_MATCH)
             # The version number will be in ${CMAKE_MATCH_1}
             set(T8CODE_VERSION_NUMBERS "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
-            set(T8CODE_VERSION_RAW "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
+            set(T8CODE_VERSION_RAW "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}-${CMAKE_MATCH_4}")
+            set(T8CODE_VERSION_POINT "${CMAKE_MATCH_4}")
             message(STATUS "Extracted Version: ${T8CODE_VERSION_NUMBERS}")
         else()
             message(WARNING "Version number not found in version.txt")

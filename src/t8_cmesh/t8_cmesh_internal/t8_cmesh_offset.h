@@ -21,11 +21,8 @@
 */
 
 /** \file t8_cmesh_offset.h
- *
- * In this file we collect function that deal with
+ * In this file we collect functions that deal with
  * the cmesh partition offset.
- *
- * TODO: document this file
  */
 
 #ifndef T8_CMESH_OFFSET_H
@@ -141,7 +138,7 @@ t8_offset_any_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t
 
 /** Find any process that has a given tree as local tree.
  * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.
- * \param [in] start_proc    The mpirank to start the search with. 
+ * \param [in] start_proc    The mpirank to start the search with.
  * \param [in] gtree      The global id of a tree.
  * \param [in] offset     The partition to be considered.
  * \return                An MPI rank that has \a gtree as a local tree.
@@ -280,9 +277,9 @@ t8_offset_range_send (int start, int end, int mpirank, const t8_gloidx_t *offset
 
 /**
  * Print the offsets of a partition.
- * 
+ *
  * This function prints the offsets of a partition in a debug message.
- * 
+ *
  * \param [in] offset  The offsets to print.
  * \param [in] comm    The MPI communicator to use for printing.
  */

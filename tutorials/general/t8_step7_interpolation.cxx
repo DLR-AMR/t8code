@@ -28,12 +28,12 @@
 
 #include <iostream>
 #include <t8.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h> /* geometrical information of the forest */
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_io.h>
@@ -41,7 +41,7 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* The data that we want to store for each element. 
+/* The data that we want to store for each element.
 In this tutorial we will store the distance to the centroid in the data.
 You can store more than one element here (see for example tutorial - step 5). */
 struct t8_step7_element_data_t
@@ -54,7 +54,7 @@ struct t8_step7_element_data_t
  * adaptation callback. */
 struct t8_step7_adapt_data
 {
-  t8_3D_point midpoint;             /* The midpoint of our sphere. */
+  t8_3D_vec midpoint;               /* The midpoint of our sphere. */
   double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
   double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
   sc_array_t *element_data;
@@ -83,7 +83,7 @@ t8_element_get_value (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielemen
   return *((t8_step7_element_data_t *) t8_sc_array_index_locidx ((adapt_data->element_data), ielement));
 }
 
-/** The adaptation callback function. 
+/** The adaptation callback function.
  * The function is the same as the one in step 3, but with the type t8_step7_adapt_data instead of t8_step3_adapt_data.
  * This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
@@ -95,7 +95,7 @@ t8_element_get_value (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielemen
  *   return > 0 -> The first element should get refined.
  *   return = 0 -> The first element should not get refined.
  *   return < 0 -> The whole family should get coarsened.
- *  
+ *
  * \param [in] forest       The current forest that is in construction.
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
@@ -115,7 +115,7 @@ t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
-  t8_3D_point centroid; /* Will hold the element midpoint. */
+  t8_3D_vec centroid; /* Will hold the element midpoint. */
   /* In t8_step3_adapt_forest we pass a t8_step3_adapt_data pointer as user data to the
    * t8_forest_new_adapt function. This pointer is stored as the used data of the new forest
    * and we can now access it with t8_forest_get_user_data (forest). */
@@ -156,7 +156,7 @@ t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
  * \param [in] forest_from      Forest that should be adapted
  * \param [in] adapt_fn         Function that defines how to adapt the forest - Callback function
  * \param [in] do_partition     If non-zero the new_forest should partition the existing forest. As the second parameter
-                                is set to NULL, a previously (or later) set forest will be taken 
+                                is set to NULL, a previously (or later) set forest will be taken
                                 (\ref t8_forest_set_adapt, \ref t8_forest_set_balance).
  * \param [in] recursive        If non-zero adaptation is recursive, thus if an element is adapted the children
  *                              or parents are plugged into the callback again recursively until the forest does not
@@ -191,7 +191,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, [[maybe_un
  * \param [in] forest_old        non adapted forest
  * \param [in, out] forest_new   adapted forest with interpolated user data for element(s)
  * \param [in] which_tree        tree_id of the analyzed element
- * \param [in] tree_class        The eclass of the tree 
+ * \param [in] tree_class        The eclass of the tree
  * \param [in] scheme            Scheme of the forest
  * \param [in] refine            ==0 - do nothing, == -1 - coarsen, == 1 - refine
  * \param [in] num_outgoing      number of the elements not refined forest
@@ -234,7 +234,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   t8_forest_set_user_data (forest_new, adapt_data_new);
 }
 
-/** Write the forest and the data corresponding to the forest in a vtu file. 
+/** Write the forest and the data corresponding to the forest in a vtu file.
  *
  * \param [in] forest           Forest that should written in the vtu file
  * \param [in] data             Data corresponding to the forest
@@ -259,7 +259,7 @@ t8_write_vtu (t8_forest_t forest, struct t8_step7_adapt_data *data, const char *
   }
 
   /* To write user-defined data, we need to extend the output function t8_forest_vtk_write_file
-   * from t8_forest_vtk.h. Despite writing user data, it also offers more control over which 
+   * from t8_forest_vtk.h. Despite writing user data, it also offers more control over which
    * properties of the forest to write. */
   int write_treeid = 1;
   int write_mpirank = 1;
@@ -271,8 +271,8 @@ t8_write_vtu (t8_forest_t forest, struct t8_step7_adapt_data *data, const char *
   T8_FREE (element_data);
 }
 
-/* In this function the interpolation is described. As a first step a 
- * hypercubic cmesh and then a forest is created. 
+/* In this function the interpolation is described. As a first step a
+ * hypercubic cmesh and then a forest is created.
  * We create a data array with the distance to the centroid of each cell.
  * The forest is adapted and the data array is interpolated corresponding to
  * the adapted forest.
@@ -285,12 +285,14 @@ t8_interpolation ()
   t8_forest_t forest_adapt;
   t8_step7_element_data_t *elem_data;
   t8_step7_adapt_data *data;
-  t8_3D_point centroid;
-  const t8_3D_point midpoint ({ 0.5, 0.5, 1 });
+  t8_3D_vec centroid;
+  const t8_3D_vec midpoint ({ 0.5, 0.5, 1 });
   const t8_scheme *scheme = t8_scheme_new_default ();
 
   /* Construct a cmesh */
-  t8_cmesh_t cmesh = t8_cmesh_new_from_class (T8_ECLASS_HEX, sc_MPI_COMM_WORLD);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_from_class (cmesh, T8_ECLASS_HEX, sc_MPI_COMM_WORLD);
 
   /* Construct a forest with one tree */
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
@@ -303,7 +305,7 @@ t8_interpolation ()
 
   const t8_locidx_t num_trees = t8_forest_get_num_local_trees (forest);
   /* Loop over all trees. The index of the data array is independent of the tree
-   * index. Thus, we set the index of the tree index to zero and add one in each 
+   * index. Thus, we set the index of the tree index to zero and add one in each
    * loop step of the inner loop.
    */
   int itree;

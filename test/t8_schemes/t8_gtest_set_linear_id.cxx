@@ -21,15 +21,15 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
-#include <test/t8_gtest_schemes.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_gtest_schemes.hxx>
+#include <t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_macros.hxx>
 #include "t8_gtest_bfs_base.hxx"
 
-/** In this test we iterate through all elements. 
+/** In this test we iterate through all elements.
  * On every level we check if the element is equal to the element we get when setting it from the linear id.
- * The id_counter is then increased to match the id of the next leaf. After we have reached the last element on a level, 
+ * The id_counter is then increased to match the id of the next leaf. After we have reached the last element on a level,
  * we increase the level and reset the id_counter to 0.
  */
 struct class_test_set_linear_id: public TestBFS

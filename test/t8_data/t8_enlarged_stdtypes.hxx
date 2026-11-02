@@ -21,30 +21,32 @@
 */
 
 /**
- * \file t8_enlarged_stdtypes.hxx 
- * 
+ * \file t8_enlarged_stdtypes.hxx
+ *
  * This file provides a templated class for testing single data items.
- * 
+ *
  */
 
 #ifndef T8_ENLARGED_STDTYPES_HXX
 #define T8_ENLARGED_STDTYPES_HXX
 
-#include <test/t8_data/t8_data_handler_specs.hxx>
+#include <t8_data/t8_data_handler_specs.hxx>
 #include <t8_data/t8_data_handler.hxx>
 
 /**
  * pseudo_types for testing
- * 
  */
-enum pseudo_types { T8_ENLARGED_INT = 0, T8_ENLARGED_DOUBLE = 1 };
+enum pseudo_types {
+  T8_ENLARGED_INT = 0,   /**< Pseudo data type representing an enlarged int. */
+  T8_ENLARGED_DOUBLE = 1 /**< Pseudo data type representing an enlarged double. */
+};
 
 /**
- * A template specialisation for handling single enlarged ints (int plus an additional int, this 
+ * A template specialisation for handling single enlarged ints (int plus an additional int, this
  * data-type is meant for testing).
- * 
+ *
  * This class implements methods for packing, unpacking, and determining the size of single data items.
- * 
+ *
  */
 template <>
 struct t8_data_handler<enlarged_data<int>>
@@ -52,8 +54,8 @@ struct t8_data_handler<enlarged_data<int>>
  public:
   /**
    * Returns the size of an enlarged_int.
-   * 
-   * \param[in] data The data to compute the size of. 
+   *
+   * \param[in] item The data item to compute the size of.
    * \param[in] comm The MPI communicator used for communication.
    * \return An integer representing the size of the data.
    */
@@ -68,7 +70,7 @@ struct t8_data_handler<enlarged_data<int>>
 
   /**
    * Packs an enlarged_int into a buffer for communication.
-   * 
+   *
    * \param[in] data The data to be packed.
    * \param[in] pos The current position in the buffer where the data should be packed.
    * \param[in, out] buffer The buffer where the data will be packed.
@@ -87,7 +89,7 @@ struct t8_data_handler<enlarged_data<int>>
 
   /**
    * Unpacks an enlarged_int from a buffer.
-   * 
+   *
    * \param[in] buffer A pointer to the buffer containing the packed data.
    * \param[in] num_bytes The number of bytes in the buffer.
    * \param[in] pos A reference to an integer representing the current position in the buffer.
@@ -106,9 +108,9 @@ struct t8_data_handler<enlarged_data<int>>
 
   /**
    * Returns the type of the data handler.
-   * 
+   *
    * This function returns the type of the data handler.
-   * 
+   *
    * \return An integer representing the type.
    */
   constexpr t8_data_handler_type
@@ -120,11 +122,11 @@ struct t8_data_handler<enlarged_data<int>>
 
 /**
  * t8_data_handler
- * A template specialization for handling single enlarged doubles (double plus an additional int, this 
+ * A template specialization for handling single enlarged doubles (double plus an additional int, this
  * data-type is meant for testing).
- * 
+ *
  * This class implements methods for packing, unpacking, and determining the size of single data items.
- * 
+ *
  */
 template <>
 struct t8_data_handler<enlarged_data<double>>
@@ -132,8 +134,8 @@ struct t8_data_handler<enlarged_data<double>>
  public:
   /**
    * Returns the size of an enlarged_double.
-   * 
-   * \param[in] data The data to compute the size of. 
+   *
+   * \param[in] item The data item to compute the size of.
    * \param[in] comm The MPI communicator used for communication.
    * \return An integer representing the size of the data.
    */
@@ -151,7 +153,7 @@ struct t8_data_handler<enlarged_data<double>>
 
   /**
    * Packs an enlarged_double into a buffer for communication.
-   * 
+   *
    * \param[in] data The data to be packed.
    * \param[in] pos The current position in the buffer where the data should be packed.
    * \param[in, out] buffer The buffer where the data will be packed.
@@ -170,7 +172,7 @@ struct t8_data_handler<enlarged_data<double>>
 
   /**
    * Unpacks an enlarged_double from a buffer.
-   * 
+   *
    * \param[in] buffer A pointer to the buffer containing the packed data.
    * \param[in] num_bytes The number of bytes in the buffer.
    * \param[in] pos A reference to an integer representing the current position in the buffer.
@@ -189,9 +191,9 @@ struct t8_data_handler<enlarged_data<double>>
 
   /**
    * Returns the type of the data handler.
-   * 
+   *
    * This function returns the type of the data handler.
-   * 
+   *
    * \return An integer representing the type.
    */
   constexpr t8_data_handler_type

@@ -50,7 +50,7 @@ t8_read_msh_file_vtk (t8_cmesh_t cmesh, const char *prefix)
 
 /* Given a cmesh and a file prefix, partition the cmesh uniformly
  * and write vtk files for the partitioned mesh.
- * The original cmesh is unreffed in this function. */
+ * The original cmesh is dereferenced in this function. */
 static t8_cmesh_t
 t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
 {
@@ -84,7 +84,8 @@ t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim, int
   /* If the master argument is positive, then we read the cmesh
    * only on the master rank and is directly partitioned. */
   partitioned_read = master >= 0;
-  cmesh = t8_cmesh_from_msh_file ((char *) prefix, partitioned_read, sc_MPI_COMM_WORLD, dim, master, 0);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_from_msh_file (&cmesh, (char *) prefix, partitioned_read, sc_MPI_COMM_WORLD, dim, master, 0);
   if (cmesh != NULL) {
     t8_global_productionf ("Successfully constructed cmesh from %s.msh file.\n", prefix);
     t8_global_productionf ("cmesh is of dimension %i and has %lli elements.\n", dim,
@@ -124,7 +125,7 @@ main (int argc, char *argv[])
 
   if (sreturn >= BUFSIZ) {
     /* The help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated help message to '%s'\n", help);
   }

@@ -21,10 +21,10 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
-#include <test/t8_gtest_schemes.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_gtest_schemes.hxx>
+#include <t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
 struct class_test_equal: public TestDFS
@@ -45,7 +45,7 @@ struct class_test_equal: public TestDFS
         const int equal = scheme->element_is_equal (eclass, child1, child2);
         /* The children must be equal if and only if their indices are equal. */
         EXPECT_EQ (equal, ichild1 == ichild2);
-        /* t8_element_equal should compute the same as t8_element_compare, 
+        /* t8_element_equal should compute the same as t8_element_compare,
          * when we only check if compare has 0 as result. */
         const int compare_equal = !scheme->element_compare (eclass, child1, child2);
         EXPECT_EQ (equal, compare_equal);

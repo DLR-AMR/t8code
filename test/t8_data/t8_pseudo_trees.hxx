@@ -20,9 +20,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/**
- * /file t8_pseudo_trees.hxx
- * 
+/** \file t8_pseudo_trees.hxx
  * This file provides a pseudo tree structure for testing purposes.
  */
 
@@ -31,34 +29,32 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 #include <vector>
-#include <test/t8_data/t8_data_handler_specs.hxx>
+#include <t8_data/t8_data_handler_specs.hxx>
 #include <t8_data/t8_vector_handler.hxx>
 #include <memory>
 
 /**
  * Represents a pseudo tree structure containing topological and tree data.
- * 
+ *
  * \note This class is used for testing purposes only.
- * 
- * The pseudo_tree class encapsulates two main data members:
- * - `topo_data`: A vector of integers representing topological data.
- * - `tree_data`: A vector of pointers to t8_abstract_data_handler objects, representing tree data.
  */
 struct pseudo_tree
 {
  public:
-  std::vector<int> topo_data;
-  std::vector<std::shared_ptr<t8_abstract_vector_handler>> tree_data;
+  std::vector<int> topo_data; /**< A vector of integers representing topological data. */
+  std::vector<std::shared_ptr<t8_abstract_vector_handler>>
+    tree_data; /**< A vector of pointers to t8_abstract_data_handler objects, representing tree data. */
 };
 
+/** Data handler for for the \ref pseudo_tree structure. */
 template <>
 struct t8_data_handler<pseudo_tree>
 {
  public:
   /**
    * Returns the size of a pseudo_tree.
-   * 
-   * \param[in] item The data to compute the size of. 
+   *
+   * \param[in] item The data to compute the size of.
    * \param[in] comm The MPI communicator used for communication.
    * \return An integer representing the size of the data.
    */
@@ -84,7 +80,7 @@ struct t8_data_handler<pseudo_tree>
 
   /**
    * Packs a pseudo_tree into a buffer for communication.
-   * 
+   *
    * \param[in] data The data to be packed.
    * \param[in] pos The current position in the buffer where the data should be packed.
    * \param[in, out] buffer The buffer where the data will be packed.
@@ -118,7 +114,7 @@ struct t8_data_handler<pseudo_tree>
 
   /**
    * Unpacks a pseudo_tree from a buffer.
-   * 
+   *
    * \param[in] buffer A pointer to the buffer containing the packed data.
    * \param[in] num_bytes The number of bytes in the buffer.
    * \param[in] pos A reference to an integer representing the current position in the buffer.
@@ -173,9 +169,9 @@ struct t8_data_handler<pseudo_tree>
 
   /**
    * Returns the type of the data handler.
-   * 
+   *
    * This function returns the type of the data handler.
-   * 
+   *
    * \return An integer representing the type.
    */
   constexpr t8_data_handler_type

@@ -22,7 +22,7 @@
 
 /**
  * \file t8_data_handler.hxx
- * 
+ *
  * This file provides a templated class for handling single data items.
  */
 
@@ -34,7 +34,7 @@
 
 /**
  * Check if type is referring to a type that is already handled internally.
- * 
+ *
  * \param[in] type A type of data
  * \return True if the type is handled internally, false otherwise
  */
@@ -61,14 +61,14 @@ struct t8_data_handler
  public:
   /**
    * Construct a t8_data_handler.
-   * 
+   *
    */
   t8_data_handler () {};
 
-  /** 
+  /**
    * Returns the size of the data.
-   * 
-   * \param[in] data The data to compute the size of. 
+   *
+   * \param[in] data The data to compute the size of.
    * \param[in] comm The MPI communicator used for communication.
    * \return An integer representing the size of the data.
    */

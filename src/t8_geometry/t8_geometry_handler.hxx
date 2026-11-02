@@ -34,6 +34,12 @@
 #include <string>
 #include <unordered_map>
 
+// Soft protection against misusage.
+// We need to expose the geometry handler interface, but we do not want users to manipulate it
+// if they do not know what they do. Thus, we use the "detail" namespace as a psychological protection.
+namespace detail
+{
+
 /**
  * Handles the geometries of a \ref t8_cmesh.
  * Each tree can be assigned a geometry in this handler. The geometries
@@ -273,6 +279,26 @@ struct t8_geometry_handler
     }
   }
 
+  /**
+   * Return an iterator to the beginning of the geometry handler.
+   * \return An iterator to the first geometry.
+   */
+  auto
+  begin ()
+  {
+    return registered_geometries.begin ();
+  }
+
+  /**
+   * Return an iterator to the end of the geometry handler.
+   * \return An iterator to the element following the last geometry.
+   */
+  auto
+  end ()
+  {
+    return registered_geometries.end ();
+  }
+
  private:
   /**
    * Add a geometry to the geometry handler.
@@ -318,5 +344,7 @@ struct t8_geometry_handler
   /** The reference count of the geometry handler. TODO: Replace by shared_ptr when cmesh becomes a class. */
   t8_refcount_t rc;
 };
+
+}  // Namespace detail
 
 #endif /* !T8_GEOMETRY_HANDLER_HXX */

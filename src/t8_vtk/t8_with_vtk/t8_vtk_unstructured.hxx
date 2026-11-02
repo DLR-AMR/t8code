@@ -26,7 +26,7 @@
 /**
  * \file t8_vtk_unstructured.hxx
  * This file contains all helper-functions needed to read a vtkUnstructuredGrid
- * from a file using the vtk-library. 
+ * from a file using the vtk-library.
  */
 
 #include <t8.h>
@@ -36,8 +36,8 @@
 
 /**
  * Given a filename to a file containing an vtkUnstructured Grid, read
- * the file using the vtk-library. 
- * 
+ * the file using the vtk-library.
+ *
  * \param[in] filename  The name of the file
  * \param[in, out] grid On input a vtkSmartPointer, that will hold the grid described in
  *                      \a filename.

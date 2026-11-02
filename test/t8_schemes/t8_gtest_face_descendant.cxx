@@ -21,10 +21,10 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
-#include <test/t8_gtest_schemes.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_gtest_schemes.hxx>
+#include <t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
 /* compute the first/last descendant by iteratively taking the first/last child at each level*/
@@ -64,8 +64,8 @@ struct class_descendant: public TestDFS
   void
   check_element () override
   {
-    /* Check the linear first and last descendants of an element along all faces. 
-     * For the test the descendants are computed manually by t8_test_manual_first_last_face_descendant and 
+    /* Check the linear first and last descendants of an element along all faces.
+     * For the test the descendants are computed manually by t8_test_manual_first_last_face_descendant and
      * by the scheme implementation t8_element_first_descendant for the first descendants over the levels.
      */
 

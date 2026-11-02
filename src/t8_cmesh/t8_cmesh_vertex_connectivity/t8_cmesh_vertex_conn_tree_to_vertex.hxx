@@ -129,7 +129,7 @@ struct t8_cmesh_vertex_conn_tree_to_vertex
   inline const std::span<const t8_gloidx_t>
   get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree) const
   {
-    T8_ASSERT (t8_cmesh_is_committed (cmesh));
+    T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
     /* Get num tree_vertices to create a view */
     const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, local_tree);
@@ -154,7 +154,7 @@ struct t8_cmesh_vertex_conn_tree_to_vertex
   t8_gloidx_t
   get_global_vertex (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex) const
   {
-    T8_ASSERT (t8_cmesh_is_committed (cmesh));
+    T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
     /* Verify that local_tree_vertex is in fact a local vertex of the tree */
     /* Note: We only perform this check in debugging mode.

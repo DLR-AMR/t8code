@@ -21,10 +21,10 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
-#include <test/t8_gtest_schemes.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_gtest_schemes.hxx>
+#include <t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_macros.hxx>
 
 /* This program tests the descendant function of an element. */
 
@@ -65,7 +65,7 @@ struct class_schemes_descendant: public testing::TestWithParam<std::tuple<int, t
 };
 
 /* Test recursively if the first and last descendant of an element is
- * computed correctly. Only the descendant of elem->level + 1 is tested. 
+ * computed correctly. Only the descendant of elem->level + 1 is tested.
  */
 static void
 t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, const t8_scheme *scheme,
@@ -93,7 +93,7 @@ t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
 }
 
 /* Test, if the first descendant of an element is computed correctly over a range
- * of levels. 
+ * of levels.
  */
 static void
 t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, const t8_scheme *scheme,

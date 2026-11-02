@@ -57,7 +57,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8
  *  The point is given in reference coordinates inside the element and gets
  *  converted to reference coordinates inside the tree. After that, the point
  *  is converted to global coordinates inside the domain. If needed, the element
- *  is stretched by the given stretch factors (the resulting mesh is then 
+ *  is stretched by the given stretch factors (the resulting mesh is then
  *  no longer non-overlapping).
  * \param [in]      forest            The forest.
  * \param [in]      ltreeid           The forest local id of the tree in which the element is.
@@ -103,6 +103,20 @@ t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, cons
  */
 void
 t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, double *coordinates);
+
+/** Compute the coordinates of the centroid of an element by its corner coordinates.
+ * This treats every element as a linear element. The centroid is the mean of all the corner coordinates.
+ * \warning This function omits if an element is curved. So for linear elements it produces the same results as
+ * \ref t8_forest_element_centroid. For curved elements the curvature is ignored.
+ * \param [in]      forest     The forest.
+ * \param [in]      ltreeid    The forest local id of the tree in which the element is.
+ * \param [in]      element    The element.
+ * \param [out]     coordinates On input an allocated array to store 3 doubles, on output
+ *                             the x, y and z coordinates of the centroid.
+ */
+void
+t8_forest_element_linear_centroid (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                                   double *coordinates);
 
 /** Compute the diameter of an element if a geometry for this tree is registered in the forest's cmesh.
  * This is only an approximation.
@@ -167,6 +181,18 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const 
 void
 t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
                                double normal[3]);
+
+/** Compute whether a given face of a given leaf in a forest lies at the domain boundary.
+ * This includes inner boundaries if the forest has deleted elements.
+ * \param [in]      forest    The forest.
+ * \param [in]      local_tree A local tree of \a forest.
+ * \param [in]      leaf      A leaf element of \a local_tree in \a forest.
+ * \param [in]      face      The face number of a face of \a leaf to check.
+ * \return True (non-zero) if face \a face of \a leaf lies at the domain boundary.
+*/
+int
+t8_forest_leaf_is_boundary (const t8_forest_t forest, const t8_locidx_t local_tree, const t8_element_t *leaf,
+                            const int face);
 
 T8_EXTERN_C_END ();
 

@@ -33,32 +33,35 @@
 
 /**
  * Callback function used in \see t8_forest_iterate_faces.
- * 
+ *
  * \param[in] forest          The forest.
  * \param[in] ltreeid         Local index of the tree containing the \a element.
  * \param[in] element         The considered element.
  * \param[in] face            The integer index of the considered face of \a element.
+ * \param[in] is_leaf         True if and only if the currently considered element is a leaf element.
+ * \param[in] leaf_elements   The array of leaf elements that are descendants of \a element. Sorted by linear index.
+ * \param[in] tree_leaf_index Tree-local index of the first leaf.
  * \param[in] user_data       Some user-defined data, as void pointer.
- * \param[in] tree_leaf_index Tree-local index the first leaf.
- * 
+ *
  * \return Nonzero if the element may touch the face and the top-down search shall be continued, zero otherwise.
  */
 typedef int (*t8_forest_iterate_face_fn) (const t8_forest_t forest, const t8_locidx_t ltreeid,
-                                          const t8_element_t *element, const int face, void *user_data,
-                                          const t8_locidx_t tree_leaf_index);
+                                          const t8_element_t *element, const int face, const int is_leaf,
+                                          const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
+                                          void *user_data);
 
 /**
- * A call-back function used by \ref t8_forest_search describing a search-criterion. Is called on an element and the 
- * search criterion should be checked on that element. Return true if the search criterion is met, false otherwise.  
+ * A call-back function used by \ref t8_forest_search describing a search-criterion. Is called on an element and the
+ * search criterion should be checked on that element. Return true if the search criterion is met, false otherwise.
  *
  * \param[in] forest              the forest
  * \param[in] ltreeid             the local tree id of the current tree
  * \param[in] element             the element for which the search criterion is checked.
  * \param[in] is_leaf             true if and only if \a element is a leaf element
- * \param[in] leaf_elements       the leaf elements in \a forest that are descendants of \a element (or the element 
+ * \param[in] leaf_elements       the leaf elements in \a forest that are descendants of \a element (or the element
  *                                itself if \a is_leaf is true)
  * \param[in] tree_leaf_index     the local index of the first leaf in \a leaf_elements
- * \returns                       non-zero if the search criterion is met, zero otherwise. 
+ * \returns                       non-zero if the search criterion is met, zero otherwise.
  */
 typedef int (*t8_forest_search_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                                     const int is_leaf, const t8_element_array_t *leaf_elements,
@@ -67,23 +70,23 @@ typedef int (*t8_forest_search_fn) (t8_forest_t forest, const t8_locidx_t ltreei
 /**
  * A call-back function used by \ref t8_forest_search for queries. Is called on an element and all queries are checked
  * on that element. All positive queries are passed further down to the children of the element up to leaf elements of
- * the tree. The results of the check are stored in \a query_matches. 
- * 
+ * the tree. The results of the check are stored in \a query_matches.
+ *
  * \param[in] forest              the forest
  * \param[in] ltreeid             the local tree id of the current tree
  * \param[in] element             the element for which the queries are executed
  * \param[in] is_leaf             true if and only if \a element is a leaf element
- * \param[in] leaf_elements       the leaf elements in \a forest that are descendants of \a element (or the element 
+ * \param[in] leaf_elements       the leaf elements in \a forest that are descendants of \a element (or the element
  *                                itself if \a is_leaf is true)
  * \param[in] tree_leaf_index     the local index of the first leaf in \a leaf_elements
  * \param[in] queries             An array of queries that are checked by the function
  * \param[in] query_indices       An array of size_t entries, where each entry is an index of a query in \a queries.
- * \param[in, out] query_matches  An array of length \a num_active_queries. 
- *                                If the element is not a leave must be set to true or false at the i-th index for 
- *                                each query, specifying whether the element 'matches' the query of the i-th query 
- *                                index or not. When the element is a leaf we can return before all entries are set. 
- * \param[in] num_active_queries  The number of currently active queries (equals the number of entries of 
- *                                \a query_matches and entries of \a query_indices). 
+ * \param[in, out] query_matches  An array of length \a num_active_queries.
+ *                                If the element is not a leave must be set to true or false at the i-th index for
+ *                                each query, specifying whether the element 'matches' the query of the i-th query
+ *                                index or not. When the element is a leaf we can return before all entries are set.
+ * \param[in] num_active_queries  The number of currently active queries (equals the number of entries of
+ *                                \a query_matches and entries of \a query_indices).
  */
 typedef void (*t8_forest_query_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                                     const int is_leaf, const t8_element_array_t *leaf_elements,
@@ -137,12 +140,12 @@ T8_EXTERN_C_BEGIN ();
 /** Split an array of elements according to the children of a given element E.
  *  In other words for each child C of E, find
  *  the index i, j, such that all descendants of C are
- *  elements[i], ..., elements[j-1]. 
- * 
+ *  elements[i], ..., elements[j-1].
+ *
  * \param [in] element       An element.
  * \param [in] leaf_elements An array of leaf elements of \a element. Thus, all
  *                           elements must be descendants. Sorted by linear index.
- * \param [in,out] offsets   On input an allocated array of \a num_children_of_E + 1 entries.  
+ * \param [in,out] offsets   On input an allocated array of \a num_children_of_E + 1 entries.
  *                           On output entry i indicates the position in \a leaf_elements
  *                           where the descandents of the i-th child of E start.
  */
@@ -150,6 +153,9 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *leaf_elements, size_t *offsets);
 
+// TODO: Test this function. Uniform mesh test. Refine always same corner, know that neighbors follow geometric series: See https://github.com/DLR-AMR/t8code/issues/2264
+// TODO (maybe): user data should be a template parameter in the long run
+// TODO (maybe): adapt to search interface
 /**
  * Iterate over all leaves of an element that touch a given face of the element.
  * Callback is called in each recursive step with element as input.
@@ -157,29 +163,32 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
  * the index of the leaf in the leaves of the tree. If it is negative, it is
  * - (index + 1)
  * Top-down iteration and callback is called on each intermediate level.
- * If it returns false, the current element is not traversed further 
- * 
+ * If it returns false, the current element is not traversed further
+ *
  * \param[in] forest                    A committed forest.
  * \param[in] ltreeid                   Local index of the tree containing the \a element.
  * \param[in] element                   The considered element.
  * \param[in] face                      The integer index of the considered face of \a element.
  * \param[in] leaf_elements             The array of leaf elements that are descendants of \a element. Sorted by linear index.
- * \param[in] user_data                 The user data passed to the \a callback function.
- * \param[in] tree_lindex_of_first_leaf Tree-local index of the first leaf.
+ * \param[in] tree_lindex_of_first_leaf Index of the first leaf of \a element in the tree's leaves.
+ *                                       The corresponding leaf does not necessarily lie on the face of \a element.
+ *                                      \note \a tree_lindex_of_first_leaf is not an index in \a leaf_elements. \a leaf_elements may only be a part of the tree's leaves.
  * \param[in] callback                  The callback function.
+ * \param[in] user_data                 The user data passed to the \a callback function.
  */
 void
 t8_forest_iterate_faces (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                         const int face, const t8_element_array_t *leaf_elements, void *user_data,
-                         const t8_locidx_t tree_lindex_of_first_leaf, const t8_forest_iterate_face_fn callback);
+                         const int face, const t8_element_array_t *const leaf_elements,
+                         const t8_locidx_t tree_lindex_of_first_leaf, const t8_forest_iterate_face_fn callback,
+                         void *user_data);
 
-/** 
+/**
  * Perform a top-down search of the forest, executing a callback on each
  * intermediate element. The search will enter each tree at least once.
  * If the callback returns false for an element, its descendants
  * are not further searched.
  * To pass user data to the search_fn function use \ref t8_forest_set_user_data.
- *  
+ *
  * \param[in] forest    The forest.
  * \param[in] search_fn The callback function describing the search criterion.
  * \param[in] query_fn  The query function.

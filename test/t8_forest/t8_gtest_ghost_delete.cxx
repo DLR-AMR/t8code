@@ -21,14 +21,14 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <test/t8_gtest_schemes.hxx>
+#include <t8_gtest_schemes.hxx>
 
 /* This test is executed on a subcommunicator of exactly 2 procs, because it demonstrates a configuration that is currently not working. See https://github.com/DLR-AMR/t8code/issues/825.
  * A partitioned square of uniform refinement level 1 is adapted once, where only the lower half is refined.
@@ -85,7 +85,8 @@ struct DISABLED_forest_ghost_exchange_holes: public testing::TestWithParam<int>
       const int scheme_id = GetParam ();
       scheme = create_from_scheme_id (scheme_id);
       /* Construct a cmesh */
-      cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 0);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_QUAD, comm, 0, 0, 0);
     }
     else {
       T8_ASSERT (rank >= 2);

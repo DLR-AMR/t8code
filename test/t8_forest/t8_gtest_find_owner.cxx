@@ -21,8 +21,8 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
-#include <test/t8_gtest_schemes.hxx>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_gtest_schemes.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
@@ -32,7 +32,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 struct forest_find_owner: public testing::TestWithParam<std::tuple<int, t8_eclass>>
 {
@@ -44,7 +44,8 @@ struct forest_find_owner: public testing::TestWithParam<std::tuple<int, t8_eclas
     scheme = create_from_scheme_id (scheme_id);
     tree_class = std::get<1> (GetParam ());
     /* Construct a coarse mesh of one tree */
-    cmesh = t8_cmesh_new_from_class (tree_class, sc_MPI_COMM_WORLD);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, tree_class, sc_MPI_COMM_WORLD);
   }
   t8_eclass_t tree_class;
   t8_cmesh_t cmesh;

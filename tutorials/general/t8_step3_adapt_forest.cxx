@@ -57,7 +57,7 @@
 #include <t8_forest/t8_forest_io.h>             /* save forest */
 #include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
-#include <t8_types/t8_vec.h>                    /* Basic operations on 3D vectors. */
+#include <t8_vector/t8_vec.h>                   /* Basic operations on 3D vectors. */
 #include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -210,7 +210,8 @@ t8_step3_main (int argc, char **argv)
    */
 
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_hybrid (cmesh, comm, 0);
   t8_global_productionf (" [step3] Created coarse mesh.\n");
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 

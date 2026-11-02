@@ -20,9 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/**  \file t8_forest_search.hxx 
+/**  \file t8_forest_search.hxx
  * A C++ interface for the search functionality. The user can define search and query callbacks
- * to perform the search and query operations on the forest. Implementation details regarding the 
+ * to perform the search and query operations on the forest. Implementation details regarding the
  * callback handling are given by https://stackoverflow.com/questions/2298242/callback-functions-in-c
  * We decided for option 4, using std::function together with templates.
 */
@@ -228,7 +228,7 @@ struct t8_search_base
 
   /**   Perform the search.
    *
-   * This function performs the search in the forest. 
+   * This function performs the search in the forest.
    */
   void
   do_search ();
@@ -257,16 +257,16 @@ struct t8_search_base
    *
    * \param[in] ltreeid The local tree ID of the tree to be searched.
    * \param[in] element The element to be searched.
-   * \param[in] ts The element class scheme.
+   * \param[in] scheme The element class scheme.
    * \param[in] leaf_elements The array of leaf elements.
    * \param[in] tree_lindex_of_first_leaf The index of the first leaf in the tree.
    */
   void
-  search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *ts,
+  search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *scheme,
                     t8_element_array_t *leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf);
 
   /**  Checks if the search should stop due to empty queries.
-   * 
+   *
    */
   virtual bool
   stop_due_to_queries ()
@@ -291,10 +291,10 @@ struct t8_search_base
     = 0;
 
   /**  Checks queries during the search.
-   * 
+   *
    * This function is called to check queries during the search.
    * It passes the arguments to the callback function provided by the user.
-   * 
+   *
    * \param[in] new_active_queries A vector of indices of active queries.
    * \param[in] ltreeid The local tree ID of the current element.
    * \param[in] element A pointer to the current element being processed.
@@ -308,10 +308,10 @@ struct t8_search_base
     = 0;
 
   /**
-   *   Function the gives the user the opportunity to update the queries after 
+   *   Function the gives the user the opportunity to update the queries after
    *         each step in the recursion.
    *
-   * \param old_query_indices 
+   * \param old_query_indices
    */
   virtual void
   update_queries (std::vector<size_t> &old_query_indices)
@@ -444,11 +444,11 @@ struct t8_search: public t8_search_base
   t8_search_element_callback<Udata> element_callback;
 };
 
-/** 
+/**
  *  A class that performs a search in a forest with queries.
  * Uses a filter-view to filter out the active queries. It is recommended to use this version of the search
- * if the number of queries is small or if the queries do not need any further computations to be evaluated. 
- * 
+ * if the number of queries is small or if the queries do not need any further computations to be evaluated.
+ *
  * \tparam Query_T The type of queries
  * \tparam Udata The type of the user data, defaults to void.
 */
@@ -558,11 +558,11 @@ struct t8_search_with_queries: public t8_search<Udata>
 
 /**
  * A class that performs a search in a forest with batched queries.
- * 
- * All active queries are passed to the callback function, which processes them in a batch. It is recommended to 
+ *
+ * All active queries are passed to the callback function, which processes them in a batch. It is recommended to
  * use this version of the searcch if further computations have to be done to evaluate the queries. That way these
  * precomputations are not done for every call to the callback again and only have to be evaluated once per call.
- * 
+ *
  * \tparam Query_T The type of queries
  * \tparam Udata The type of the user data, defaults to void.
  */
@@ -794,7 +794,7 @@ struct t8_partition_search_base
 
 /**
  * A class that performs a search in the partition of a forest and supports the usage of user data.
- * \tparam Udata 
+ * \tparam Udata
  */
 template <typename Udata = void>
 struct t8_partition_search: public t8_partition_search_base
@@ -805,7 +805,7 @@ struct t8_partition_search: public t8_partition_search_base
   * This constructor initializes a t8_partition_search object with the given element callback,
   * forest, and user data. If the forest is not null, it increments the reference count
   * of the forest and asserts that the forest is committed.
-  * 
+  *
   * \param[in] element_callback A callback function of type t8_partition_search_element_callback<Udata>.
   * \param[in] forest A pointer to a t8_forest_t object. Defaults to nullptr.
   * \param[in] user_data A pointer to a Udata object. Defaults to nullptr.
@@ -921,7 +921,7 @@ struct t8_partition_search_with_queries: public t8_partition_search<Udata>
    * This constructor initializes a t8_partition_search_with_queries object with the given
    * element callback, queries callback, forest, and user data. If the forest is not null, it increments
    * the reference count of the forest and asserts that the forest is committed.
-   * 
+   *
    * \param[in] element_callback A callback function of type t8_partition_search_element_callback<Udata>.
    * \param[in] queries_callback A callback function of type t8_partition_search_query_callback<Query_T, Udata>.
    * \param[in] queries A reference to a vector of Query_T objects.
@@ -1042,7 +1042,7 @@ struct t8_partition_search_with_batched_queries: public t8_partition_search<Udat
   * This constructor initializes a t8_partition_search_with_batched_queries object with the given
   * element callback, queries callback, forest, and user data. If the forest is not null, it increments
   * the reference count of the forest and asserts that the forest is committed.
-  * 
+  *
   * \param[in] element_callback A callback function of type t8_partition_search_element_callback<Udata>.
   * \param[in] queries_callback A callback function of type t8_partition_search_batched_queries_callback<Query_T, Udata>.
   * \param[in] queries A reference to a vector of Query_T objects.

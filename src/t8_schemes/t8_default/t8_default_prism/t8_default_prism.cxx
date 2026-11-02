@@ -22,11 +22,11 @@
 
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
-#include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
+#include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 #include <t8_schemes/t8_scheme.hxx>
 
-typedef t8_dprism_t t8_default_prism_t;
+using t8_default_prism_t = t8_dprism_t;
 
 T8_EXTERN_C_BEGIN ();
 
@@ -244,14 +244,14 @@ t8_default_scheme_prism::element_extrude_face (const t8_element_t *face, t8_elem
   t8_dprism_extrude_face (face, elem, root_face);
   T8_ASSERT (element_is_valid (elem));
   /* For the quad-faces of prisms it holds that only the corner-children touch the faces of the parent and
-   * their face-numbers coincide. 
+   * their face-numbers coincide.
    * for the triangular-faces (bottom and top) the faces always have the same number and we can return the
    * root face-number as well. */
   return root_face;
 }
 
 int
-t8_default_scheme_prism::elements_are_family (t8_element_t *const *fam) const
+t8_default_scheme_prism::elements_are_family (const t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   for (int i = 0; i < T8_DPRISM_CHILDREN; i++) {

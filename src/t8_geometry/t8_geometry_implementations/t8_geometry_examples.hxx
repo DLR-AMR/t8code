@@ -55,7 +55,7 @@ struct t8_geometry_quadrangulated_disk: public t8_geometry_with_vertices
    *      |_1__/|
    *      | 0 |2|
    *      |___|_|
-   *      
+   *
    *
    * The central quad (id = 0) is mapped as is, while the outer edges of
    * other four quads are stretched onto a circle with a radius determined by

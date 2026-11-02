@@ -38,23 +38,22 @@
  *
  * (3.) Next, we test a non-uniform weight function. As an example, we defined the
  *      weight function such that an element's weight is simply its global element id.
- *      This allows to "manually" compute the expected element offsets to then compare 
+ *      This allows to "manually" compute the expected element offsets to then compare
  *      them.
  */
 
 // testing
 #include <gtest/gtest.h>
-#include <test/t8_gtest_schemes.hxx>
-#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
-#include <test/t8_gtest_macros.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_schemes.hxx>
+#include <t8_cmesh_generator/t8_cmesh_example_sets.hxx>
+#include <t8_gtest_macros.hxx>
+#include <t8_gtest_custom_assertion.hxx>
 
 // t8code
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_partition.h>
-#include <t8_forest/t8_forest_types.h>
 
 /**
  * Test class for validating t8code's weighted partitioning. See file description for details on the testing strategy.
@@ -179,8 +178,8 @@ TEST_P (t8_test_weighted_partitioning_test, test_weighted_partitioning)
   // --------------------------------------
 
   // Preparation: MPI variables and global number of leaf elements.
-  const int mpirank = base_forest->mpirank;
-  const int mpisize = base_forest->mpisize;
+  const int mpirank = t8_forest_get_mpirank (base_forest);
+  const int mpisize = t8_forest_get_mpisize (base_forest);
   const t8_gloidx_t num_global_leaves = t8_forest_get_global_num_leaf_elements (base_forest);
 
   // Total sum of the weights for this case (Gauss sum formula for num_global_leaves - 1)
@@ -198,7 +197,8 @@ TEST_P (t8_test_weighted_partitioning_test, test_weighted_partitioning)
     sum += ielem;
 
     // If we are above ideal bound for current process, add offset to vector and go to next rank.
-    if (sum > total_weight_sum * (on_rank + 1) / mpisize) {
+    // Note: The while loop is required to handle empty processes.
+    while (sum > total_weight_sum * (on_rank + 1) / mpisize) {
       on_rank++;
       std::fill (element_offsets.begin () + on_rank, element_offsets.end (), ielem);
       t8_global_productionf ("Computed offset for rank %i: %li \n", on_rank, element_offsets[on_rank]);

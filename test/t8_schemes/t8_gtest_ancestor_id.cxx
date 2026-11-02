@@ -23,15 +23,15 @@
 /** \file t8_gtest_ancestor_id.cxx
  * This test checks that the ancestor id of an element at level elem.level is the same
  * as the child id of the element. This traverses up the tree and checks if the ancestor id
- * at elem.level - 1, -2, ... is the same as the child id of the parent, grandparent and so on. 
+ * at elem.level - 1, -2, ... is the same as the child id of the parent, grandparent and so on.
  */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_custom_assertion.hxx>
 #include "t8_gtest_dfs_base.hxx"
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 struct class_ancestor_id: public TestDFS
 {
