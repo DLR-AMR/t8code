@@ -33,6 +33,24 @@
 #include <t8_data/t8_containers.h>
 #include <t8_forest/t8_forest_adapt/t8_forest_standard_adapt.hxx>
 
+/** Adapt \a forest with the serial or the recursive variant of \a TAdaptor, as set in \a forest.
+ * \tparam TAdaptor The adaptor, templated on whether it adapts recursively.
+ * \param [in, out] forest The forest under construction.
+ */
+template <template <bool> typename TAdaptor>
+static void
+t8_forest_adapt_with (t8_forest_t forest)
+{
+  if (forest->set_adapt_recursive) {
+    TAdaptor<true> adaptor (forest);
+    adaptor.adapt ();
+  }
+  else {
+    TAdaptor<false> adaptor (forest);
+    adaptor.adapt ();
+  }
+}
+
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
@@ -724,17 +742,14 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->set_adapt_recursive != -1);
   const t8_forest_t forest_from = forest->set_from;
 
-  if (forest_from->incomplete_trees || t8_scheme_has_subelement_scheme (t8_forest_get_scheme (forest_from))) {
+  if (t8_scheme_has_subelement_scheme (t8_forest_get_scheme (forest_from))) {
     t8_forest_adapt_legacy (forest);
-    return;
   }
-  if (forest->set_adapt_recursive) {
-    t8_standard_adaptor<true> adaptor (forest);
-    adaptor.adapt ();
+  else if (forest_from->incomplete_trees) {
+    t8_forest_adapt_with<t8_incomplete_adaptor> (forest);
   }
   else {
-    t8_standard_adaptor<false> adaptor (forest);
-    adaptor.adapt ();
+    t8_forest_adapt_with<t8_standard_adaptor> (forest);
   }
 }
 
