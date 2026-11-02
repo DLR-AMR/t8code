@@ -30,6 +30,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_touching_ranks.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_data/t8_containers.h>
@@ -1678,6 +1679,10 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     /* Create global first desc array if not done already */
     create_gfirst_desc_array = 1;
     t8_forest_partition_create_first_desc (forest);
+  }
+  if (forest->ghost_type != T8_GHOST_NONE) {
+    /* The owners of the leaves touching a local leaf are the ranks touching this rank */
+    t8_forest_touching_ranks_require (forest, t8_forest_ghost_min_boundary_dim (forest->ghost_type, forest->dimension));
   }
 
   if (t8_forest_get_local_num_leaf_elements (forest) > 0) {

@@ -139,8 +139,12 @@ typedef struct t8_forest
                                           Since this is memory consuming we only construct it when needed.
                                           This array follows the same logic as \a tree_offsets in \a t8_cmesh_t */
 
-  struct t8_forest_splitters *splitters; /**< The partition as seen by this process, in O(log P) memory.
+  struct t8_forest_splitters *splitters;           /**< The partition as seen by this process, in O(log P) memory.
                                               Computed when the forest is committed, \see t8_forest_splitters.hxx */
+  struct t8_forest_touching_ranks *touching_ranks; /**< If not NULL, the ranks whose part touches the part of this
+                                              process, with the positions they own. Computed for the ghost layer and
+                                              inherited by forests with the same partition,
+                                              \see t8_forest_touching_ranks.hxx */
 
   t8_locidx_t local_num_leaf_elements;  /**< Number of leaf elements on this processor. */
   t8_gloidx_t global_num_leaf_elements; /**< Number of leaf elements on all processors. */
