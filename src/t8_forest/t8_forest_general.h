@@ -46,6 +46,16 @@ typedef enum {
   T8_GHOST_VERTICES  /**< Consider all vertex (codimension 3) and edge and face neighbors. */
 } t8_ghost_type_t;
 
+/** The algorithm of balance, see \ref t8_forest_set_balance_algorithm. */
+typedef enum {
+  T8_BALANCE_DEFAULT = 0, /**< One pass if the coarse mesh is replicated, ripple otherwise. */
+  T8_BALANCE_RIPPLE,      /**< Refine the elements next to leaves two levels finer and exchange the ghost layer,
+                               until no rank refines an element. */
+  T8_BALANCE_ONE_PASS     /**< Each rank computes the elements that its leaves force to be refined in the whole
+                               forest and sends those in other ranks' parts to their owners, in one routing pass.
+                               Needs a replicated coarse mesh. */
+} t8_forest_balance_algorithm_t;
+
 /** This typedef is needed as a helper construct to
  * properly be able to define a function that returns
  * a pointer to a void fun(void) function. \see t8_forest_get_user_function.
@@ -377,6 +387,18 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
  */
 void
 t8_forest_set_balance_type (t8_forest_t forest, t8_ghost_type_t balance_type);
+
+/** Set the algorithm of balance. Both algorithms give the same forest.
+ * With \ref T8_BALANCE_ONE_PASS, each rank computes the elements that its leaves force to be refined: the strict
+ * ancestors of its leaves, the parents of these elements, and the elements touching an element of this set one level
+ * finer (as \ref t8_forest_set_balance_type), in all trees. Since each rule derives an element from a single other
+ * one, the elements that balance refines are the union of these sets over all ranks. Each rank sends the finest of
+ * its elements that lie in the part of another rank to their owner, and every rank refines its leaves accordingly.
+ * \param [in, out] forest     The forest.
+ * \param [in]      algorithm  The algorithm, \ref T8_BALANCE_DEFAULT unless set.
+ */
+void
+t8_forest_set_balance_algorithm (t8_forest_t forest, t8_forest_balance_algorithm_t algorithm);
 
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.

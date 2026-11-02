@@ -3537,6 +3537,15 @@ t8_forest_set_balance_type (t8_forest_t forest, t8_ghost_type_t balance_type)
 }
 
 void
+t8_forest_set_balance_algorithm (t8_forest_t forest, t8_forest_balance_algorithm_t algorithm)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  SC_CHECK_ABORT (algorithm == T8_BALANCE_DEFAULT || algorithm == T8_BALANCE_RIPPLE || algorithm == T8_BALANCE_ONE_PASS,
+                  "Invalid balance algorithm.\n");
+  forest->balance_algorithm = algorithm;
+}
+
+void
 t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_repartition)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));

@@ -105,6 +105,8 @@ typedef struct t8_forest
                                              repartitioning, \see t8_forest_balance */
   t8_ghost_type_t balance_type;   /**< The neighbors whose level may differ by at most one in balance, see
                                              \ref t8_forest_set_balance_type. Default T8_GHOST_FACES. */
+  int balance_algorithm;          /**< The \ref t8_forest_balance_algorithm_t of balance, see
+                                             \ref t8_forest_set_balance_algorithm. Default T8_BALANCE_DEFAULT. */
   int do_ghost;                   /**< If True, a ghost layer will be created when the forest is committed. */
   t8_ghost_type_t ghost_type;     /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   int ghost_algorithm;            /**< Controls the algorithm used for ghost. 1 = balanced only. 2 = also unbalanced

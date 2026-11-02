@@ -740,6 +740,18 @@ TEST_P (forest_ghost_balance_boundaries, balance)
   EXPECT_TRUE (is_balanced_brute_force (balanced));
   EXPECT_TRUE (t8_forest_is_balanced (balanced));
 
+  /* The ripple algorithm gives the same forest as the default (one pass with a replicated coarse mesh) */
+  t8_forest_ref (unbalanced);
+  t8_forest_t ripple_balanced;
+  t8_forest_init (&ripple_balanced);
+  t8_forest_set_balance (ripple_balanced, unbalanced, 0);
+  t8_forest_set_balance_type (ripple_balanced, type);
+  t8_forest_set_balance_algorithm (ripple_balanced, T8_BALANCE_RIPPLE);
+  t8_forest_commit (ripple_balanced);
+  EXPECT_EQ (t8_forest_get_global_num_leaf_elements (ripple_balanced),
+             t8_forest_get_global_num_leaf_elements (balanced));
+  t8_forest_unref (&ripple_balanced);
+
   if (type != T8_GHOST_FACES) {
     /* Balancing more neighbors refines at least as much as face balance */
     t8_forest_ref (unbalanced);

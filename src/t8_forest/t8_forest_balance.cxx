@@ -32,9 +32,271 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
+#include <t8_forest/t8_forest_splitters.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh.hxx>
+#include <algorithm>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
+
+/** An element of any tree at a level known from the context: its global tree and its linear id at that level. */
+struct t8_balance_key
+{
+  t8_gloidx_t gtreeid; /**< The global id of the tree. */
+  t8_linearidx_t id;   /**< The linear id of the element at its level. */
+
+  /** Equal tree and linear id. */
+  bool
+  operator== (const t8_balance_key &other) const
+  {
+    return gtreeid == other.gtreeid && id == other.id;
+  }
+};
+
+/** A hash of \ref t8_balance_key */
+struct t8_balance_key_hash
+{
+  /** Combine the hashes of the tree and the linear id. */
+  size_t
+  operator() (const t8_balance_key &key) const
+  {
+    return std::hash<t8_linearidx_t> () (key.id) ^ (std::hash<t8_gloidx_t> () (key.gtreeid) * 0x9e3779b97f4a7c15ULL);
+  }
+};
+
+/** For each level, the elements that balance refines, each with whether one of its children is refined as well. */
+using t8_balance_refined_t = std::vector<std::unordered_map<t8_balance_key, bool, t8_balance_key_hash>>;
+
+/** For each level, the elements that balance refines. */
+using t8_balance_refine_t = std::vector<std::unordered_set<t8_balance_key, t8_balance_key_hash>>;
+
+/** A refined element in the part of another rank, routed to its owner. */
+struct t8_balance_item
+{
+  t8_forest_position first; /**< The position of the first descendant of the element. */
+  t8_forest_position last;  /**< The position of the last descendant of the element. */
+  t8_linearidx_t id;        /**< The linear id of the element at its level. */
+  int level;                /**< The level of the element. */
+};
+
+/** The elements that the leaves of this rank force balance to refine, in all trees: the strict ancestors of the
+ * leaves, the parents of refined elements, and the elements touching a refined element of the next finer level with
+ * a boundary of dimension at least \a min_dim. These are the parents of its neighbors at the boundaries of dimension
+ * at least \a min_dim. The levels are processed from the finest to the coarsest.
+ *
+ * Performance (benchmarks/t8_time_ghost_balance, spherical shell): face balance is 8 to 58 times faster than the
+ * ripple and faster than p4est on 4 and 8 ranks, but edge and vertex balance are 1.5 to 4 times slower than p4est on
+ * 8 ranks and 7 to 10 times on one rank. The neighbors at all boundaries of every refined element are computed, also
+ * for the internal nodes deep inside the part of this rank, which cannot add new elements. Ideas to speed this up:
+ * - Apply the touching rule per parent instead of per refined child: a level-k element touches a refined child f of
+ *   p with dimension at least min_dim if and only if it is a neighbor of p at a boundary of p that f touches with
+ *   this dimension (element_get_children_touching_boundary). This computes the neighbors once per family instead
+ *   of once per refined child, and no parents of neighbors.
+ * - Skip the boundaries of a refined element that do not lie in the boundary of its parent: all neighbors there are
+ *   siblings, whose parent is added as the parent of the element.
+ * - Inside the own range, the internal nodes of the input forest are refined anyway, so new elements only arise
+ *   next to input leaves at least two levels coarser (the seeds of p4est's balance). Find them by locating the leaf
+ *   that contains the first descendant of a neighbor (binary search in the leaf array), instead of inserting the
+ *   parents of all neighbors of all internal nodes into the hash sets.
+ * - Reuse element buffers and a boundary scratch instead of element_new/destroy per element and neighbor, and use
+ *   element_get_boundary_neighbors_inside directly for boundaries that do not touch the root boundary.
+ * \param [in] forest   A committed forest with a replicated coarse mesh.
+ * \param [in] min_dim  The minimal dimension of the boundaries of balance, only faces if it is the dimension minus one.
+ * \return For each level, the refined elements, each with whether one of its children is refined.
+ */
+static t8_balance_refined_t
+t8_forest_balance_closure (t8_forest_t forest, const int min_dim)
+{
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+  const int dim = forest->dimension;
+  const bool faces_only = min_dim == dim - 1;
+
+  /* The parents of the leaves, their ancestors follow as parents of refined elements */
+  t8_balance_refined_t refined (1);
+  for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
+    const t8_eclass_t eclass = t8_forest_get_tree_class (forest, itree);
+    const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, itree);
+    t8_element_t *parent;
+    scheme->element_new (eclass, 1, &parent);
+    const t8_locidx_t num_leaves = t8_forest_get_tree_num_leaf_elements (forest, itree);
+    for (t8_locidx_t ileaf = 0; ileaf < num_leaves; ileaf++) {
+      const t8_element_t *leaf = t8_forest_get_leaf_element_in_tree (forest, itree, ileaf);
+      const int level = scheme->element_get_level (eclass, leaf);
+      if (level == 0) {
+        continue;
+      }
+      if (level > (int) refined.size ()) {
+        refined.resize (level);
+      }
+      scheme->element_get_parent (eclass, leaf, parent);
+      refined[level - 1].emplace (t8_balance_key { gtreeid, scheme->element_get_linear_id (eclass, parent, level - 1) },
+                                  false);
+    }
+    scheme->element_destroy (eclass, 1, &parent);
+  }
+
+  /* From the finest level to the coarsest, add the parents of the refined elements and of their neighbors */
+  sc_array_t neighbors;
+  sc_array_init (&neighbors, sizeof (t8_forest_boundary_neighbor_t));
+  for (int level = (int) refined.size () - 1; level >= 1; level--) {
+    for (const auto &[key, has_refined_child] : refined[level]) {
+      const t8_locidx_t lctreeid = t8_cmesh_get_local_id (cmesh, key.gtreeid);
+      const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, lctreeid);
+      t8_element_t *element, *parent;
+      scheme->element_new (eclass, 1, &element);
+      scheme->element_new (eclass, 1, &parent);
+      scheme->element_set_linear_id (eclass, element, level, key.id);
+      scheme->element_get_parent (eclass, element, parent);
+      refined[level - 1][{ key.gtreeid, scheme->element_get_linear_id (eclass, parent, level - 1) }] = true;
+      /* The elements of the coarser level that touch the element */
+      const auto add_parent_of
+        = [&] (const t8_gloidx_t neigh_gtreeid, const t8_eclass_t neigh_eclass, const t8_element_t *neigh) {
+            t8_element_t *neigh_parent;
+            scheme->element_new (neigh_eclass, 1, &neigh_parent);
+            scheme->element_get_parent (neigh_eclass, neigh, neigh_parent);
+            refined[level - 1].emplace (
+              t8_balance_key { neigh_gtreeid, scheme->element_get_linear_id (neigh_eclass, neigh_parent, level - 1) },
+              false);
+            scheme->element_destroy (neigh_eclass, 1, &neigh_parent);
+          };
+      if (faces_only) {
+        const int num_faces = scheme->element_get_num_faces (eclass, element);
+        for (int face = 0; face < num_faces; face++) {
+          const t8_eclass_t neigh_eclass
+            = t8_forest_element_neighbor_eclass_cmesh (forest, lctreeid, eclass, element, face);
+          t8_element_t *neigh;
+          scheme->element_new (neigh_eclass, 1, &neigh);
+          int dual_face;
+          const t8_gloidx_t neigh_gtreeid = t8_forest_element_face_neighbor_cmesh (
+            forest, lctreeid, key.gtreeid, eclass, element, neigh, neigh_eclass, face, &dual_face);
+          if (neigh_gtreeid >= 0) {
+            add_parent_of (neigh_gtreeid, neigh_eclass, neigh);
+          }
+          scheme->element_destroy (neigh_eclass, 1, &neigh);
+        }
+      }
+      else {
+        for (int bdy_dim = min_dim; bdy_dim < dim; bdy_dim++) {
+          const int num_boundaries = scheme->element_get_num_boundaries (eclass, element, bdy_dim);
+          for (int bdy_id = 0; bdy_id < num_boundaries; bdy_id++) {
+            t8_forest_element_boundary_neighbors_cmesh (forest, lctreeid, key.gtreeid, eclass, element, bdy_dim, bdy_id,
+                                                        &neighbors);
+            for (size_t ineigh = 0; ineigh < neighbors.elem_count; ineigh++) {
+              const t8_forest_boundary_neighbor_t *neighbor
+                = (const t8_forest_boundary_neighbor_t *) sc_array_index (&neighbors, ineigh);
+              add_parent_of (neighbor->gtreeid, neighbor->eclass, neighbor->neigh);
+            }
+            t8_forest_boundary_neighbors_clear (forest, &neighbors);
+          }
+        }
+      }
+      scheme->element_destroy (eclass, 1, &element);
+      scheme->element_destroy (eclass, 1, &parent);
+    }
+  }
+  sc_array_reset (&neighbors);
+  return refined;
+}
+
+/** Keep only the routed elements without a descendant among them, sorted by position.
+ * \param [in,out] items  The routed elements.
+ */
+static void
+t8_forest_balance_merge_items (std::vector<t8_balance_item> &items)
+{
+  /* Sort by position, the coarser element first at equal positions, and remove duplicates */
+  std::sort (items.begin (), items.end (), [] (const t8_balance_item &a, const t8_balance_item &b) {
+    return a.first < b.first || (a.first == b.first && a.level < b.level);
+  });
+  items.erase (std::unique (items.begin (), items.end (),
+                            [] (const t8_balance_item &a, const t8_balance_item &b) {
+                              return a.first == b.first && a.level == b.level;
+                            }),
+               items.end ());
+  /* The descendants of an element follow it directly, so it has one if the next element starts inside it */
+  std::vector<bool> keep (items.size ());
+  for (size_t i = 0; i < items.size (); i++) {
+    keep[i] = !(i + 1 < items.size () && items[i + 1].first <= items[i].last);
+  }
+  size_t num_kept = 0;
+  for (size_t i = 0; i < items.size (); i++) {
+    if (keep[i]) {
+      items[num_kept++] = items[i];
+    }
+  }
+  items.resize (num_kept);
+}
+
+/** Adapt callback of the one pass balance: refine the elements in the set of the forest's t8code_data. */
+static int
+t8_forest_balance_one_pass_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id,
+                                  const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                                  const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                                  [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+{
+  const t8_balance_refine_t *refine = (const t8_balance_refine_t *) forest->t8code_data;
+  const int level = scheme->element_get_level (tree_class, elements[0]);
+  if (level >= (int) refine->size ()) {
+    return 0;
+  }
+  const t8_balance_key key = { t8_forest_global_tree_id (forest_from, ltree_id),
+                               scheme->element_get_linear_id (tree_class, elements[0], level) };
+  return (*refine)[level].count (key) > 0;
+}
+
+#if T8_ENABLE_DEBUG
+/** Whether two forests with the same partition have the same leaves. */
+static bool
+t8_forest_balance_same_leaves (t8_forest_t forest_a, t8_forest_t forest_b)
+{
+  const t8_scheme *scheme = t8_forest_get_scheme (forest_a);
+  if (t8_forest_get_num_local_trees (forest_a) != t8_forest_get_num_local_trees (forest_b)) {
+    t8_errorf ("Balance differs in the number of trees: %i, ripple %i\n", t8_forest_get_num_local_trees (forest_a),
+               t8_forest_get_num_local_trees (forest_b));
+    return false;
+  }
+  for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest_a); itree++) {
+    const t8_locidx_t num_leaves = t8_forest_get_tree_num_leaf_elements (forest_a, itree);
+    if (num_leaves != t8_forest_get_tree_num_leaf_elements (forest_b, itree)) {
+      t8_errorf ("Balance differs in the number of leaves of tree %lli: %i, ripple %i\n",
+                 (long long) t8_forest_global_tree_id (forest_a, itree), num_leaves,
+                 t8_forest_get_tree_num_leaf_elements (forest_b, itree));
+      const t8_eclass_t eclass = t8_forest_get_tree_class (forest_a, itree);
+      const t8_locidx_t num_common = SC_MIN (num_leaves, t8_forest_get_tree_num_leaf_elements (forest_b, itree));
+      for (t8_locidx_t ileaf = 0; ileaf < num_common; ileaf++) {
+        const t8_element_t *leaf_a = t8_forest_get_leaf_element_in_tree (forest_a, itree, ileaf);
+        const t8_element_t *leaf_b = t8_forest_get_leaf_element_in_tree (forest_b, itree, ileaf);
+        if (!scheme->element_is_equal (eclass, leaf_a, leaf_b)) {
+          const int level_a = scheme->element_get_level (eclass, leaf_a);
+          const int level_b = scheme->element_get_level (eclass, leaf_b);
+          t8_errorf ("First difference at leaf %i: level %i id %llu, ripple level %i id %llu\n", ileaf, level_a,
+                     (unsigned long long) scheme->element_get_linear_id (eclass, leaf_a, level_a), level_b,
+                     (unsigned long long) scheme->element_get_linear_id (eclass, leaf_b, level_b));
+          break;
+        }
+      }
+      return false;
+    }
+    const t8_eclass_t eclass = t8_forest_get_tree_class (forest_a, itree);
+    for (t8_locidx_t ileaf = 0; ileaf < num_leaves; ileaf++) {
+      const t8_element_t *leaf_a = t8_forest_get_leaf_element_in_tree (forest_a, itree, ileaf);
+      const t8_element_t *leaf_b = t8_forest_get_leaf_element_in_tree (forest_b, itree, ileaf);
+      if (!scheme->element_is_equal (eclass, leaf_a, leaf_b)) {
+        const int level_a = scheme->element_get_level (eclass, leaf_a);
+        const int level_b = scheme->element_get_level (eclass, leaf_b);
+        t8_errorf ("Balance differs in tree %lli at leaf %i: level %i id %llu, ripple level %i id %llu\n",
+                   (long long) t8_forest_global_tree_id (forest_a, itree), ileaf, level_a,
+                   (unsigned long long) scheme->element_get_linear_id (eclass, leaf_a, level_a), level_b,
+                   (unsigned long long) scheme->element_get_linear_id (eclass, leaf_b, level_b));
+        return false;
+      }
+    }
+  }
+  return true;
+}
+#endif
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -279,8 +541,9 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
   sc_MPI_Allreduce (&local_max_level, &forest->maxlevel_existing, 1, sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
 }
 
-void
-t8_forest_balance (t8_forest_t forest, int repartition)
+/** Balance a forest with \ref T8_BALANCE_RIPPLE. */
+static void
+t8_forest_balance_ripple (t8_forest_t forest, int repartition)
 {
   t8_forest_t forest_temp, forest_from, forest_partition;
   int done = 0, done_global = 0;
@@ -487,6 +750,160 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     if (repartition) {
       T8_FREE (partition_stats);
     }
+  }
+}
+
+/** Balance a forest with \ref T8_BALANCE_ONE_PASS. */
+static void
+t8_forest_balance_one_pass (t8_forest_t forest, int repartition)
+{
+  t8_forest_t forest_from = forest->set_from;
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest_from);
+  SC_CHECK_ABORT (!t8_cmesh_is_partitioned (cmesh), "Balance in one pass needs a replicated coarse mesh.\n");
+  t8_global_productionf ("Into t8_forest_balance (one pass) with %lli global elements.\n",
+                         (long long) t8_forest_get_global_num_leaf_elements (forest_from));
+  t8_log_indent_push ();
+  if (forest->profile != NULL) {
+    forest->profile->balance_runtime = -sc_MPI_Wtime ();
+  }
+
+  /* The elements that the leaves of this rank force to be refined, in all trees */
+  const int dim = forest_from->dimension;
+  const int min_dim = forest->balance_type == T8_GHOST_FACES   ? SC_MAX (dim - 1, 0)
+                      : forest->balance_type == T8_GHOST_EDGES ? SC_MAX (dim - 2, 0)
+                                                               : 0;
+  if (min_dim < dim - 1) {
+    /* The neighbors across tree boundaries need the vertex and edge connectivity of the trees */
+    t8_cmesh_build_boundary_connectivity (cmesh, forest_from->mpicomm);
+  }
+  const t8_balance_refined_t refined = t8_forest_balance_closure (forest_from, min_dim);
+
+  /* Those in the part of this rank are refined here. Of those in the parts of other ranks, the ones without a refined
+   * child are sent to their owners. Elements in several parts contain leaves of several ranks and are refined anyway. */
+  const t8_forest_splitters &splitters = t8_forest_get_splitters (forest_from);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest_from);
+  t8_balance_refine_t refine (refined.size ());
+  std::vector<t8_balance_item> items;
+  for (int level = 0; level < (int) refined.size (); level++) {
+    for (const auto &[key, has_refined_child] : refined[level]) {
+      const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, t8_cmesh_get_local_id (cmesh, key.gtreeid));
+      t8_element_t *element;
+      scheme->element_new (eclass, 1, &element);
+      scheme->element_set_linear_id (eclass, element, level, key.id);
+      t8_balance_item item;
+      t8_forest_element_positions (forest_from, key.gtreeid, eclass, element, &item.first, &item.last);
+      scheme->element_destroy (eclass, 1, &element);
+      if (splitters.has_elements && splitters.first_position <= item.first && item.last < splitters.next_position) {
+        refine[level].insert (key);
+      }
+      else if (!has_refined_child
+               && (!splitters.has_elements || item.last < splitters.first_position
+                   || !(item.first < splitters.next_position))) {
+        item.id = key.id;
+        item.level = level;
+        items.push_back (item);
+      }
+    }
+  }
+  t8_forest_route (
+    forest_from, items,
+    [] (const t8_balance_item &item, const t8_forest_bisection &level) {
+      return t8_forest_route_halves_positions (level, item.first, item.last, true);
+    },
+    t8_forest_balance_merge_items);
+
+  /* The received elements and their ancestors are refined as well */
+  for (const t8_balance_item &item : items) {
+    const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, t8_cmesh_get_local_id (cmesh, item.first.gtreeid));
+    if (item.level >= (int) refine.size ()) {
+      refine.resize (item.level + 1);
+    }
+    t8_element_t *element, *parent;
+    scheme->element_new (eclass, 1, &element);
+    scheme->element_new (eclass, 1, &parent);
+    scheme->element_set_linear_id (eclass, element, item.level, item.id);
+    for (int level = item.level; level >= 0; level--) {
+      if (!refine[level]
+             .insert ({ item.first.gtreeid, scheme->element_get_linear_id (eclass, element, level) })
+             .second) {
+        break;
+      }
+      if (level > 0) {
+        scheme->element_get_parent (eclass, element, parent);
+        scheme->element_copy (eclass, parent, element);
+      }
+    }
+    scheme->element_destroy (eclass, 1, &element);
+    scheme->element_destroy (eclass, 1, &parent);
+  }
+
+  /* Refine the leaves recursively */
+  t8_forest_t forest_temp;
+  t8_forest_init (&forest_temp);
+  t8_forest_ref (forest_from);
+  t8_forest_set_adapt (forest_temp, forest_from, t8_forest_balance_one_pass_adapt, 1);
+  forest_temp->t8code_data = &refine;
+  forest_temp->balance_type = forest->balance_type;
+  if (forest->profile != NULL) {
+    t8_forest_set_profiling (forest_temp, 1);
+  }
+  t8_forest_commit (forest_temp);
+#if T8_ENABLE_DEBUG
+  {
+    /* The ripple algorithm gives the same leaves */
+    t8_forest_t forest_ripple;
+    t8_forest_init (&forest_ripple);
+    t8_forest_set_balance_type (forest_ripple, forest->balance_type);
+    t8_forest_set_balance_algorithm (forest_ripple, T8_BALANCE_RIPPLE);
+    t8_forest_ref (forest_from);
+    t8_forest_set_balance (forest_ripple, forest_from, 1);
+    t8_forest_commit (forest_ripple);
+    T8_ASSERT (t8_forest_balance_same_leaves (forest_temp, forest_ripple));
+    t8_forest_unref (&forest_ripple);
+  }
+#endif
+
+  if (repartition) {
+    t8_forest_t forest_partition;
+    t8_forest_init (&forest_partition);
+    t8_forest_set_partition (forest_partition, forest_temp, 0);
+    if (forest->profile != NULL) {
+      t8_forest_set_profiling (forest_partition, 1);
+    }
+    t8_forest_commit (forest_partition);
+    forest_temp = forest_partition;
+  }
+  /* Copy the trees and elements to forest */
+  t8_forest_copy_trees (forest, forest_temp, 1);
+  if (forest->cmesh != forest_temp->cmesh) {
+    /* Repartitioning the forest also repartitioned a partitioned cmesh, which has to match the trees */
+    t8_cmesh_ref (forest_temp->cmesh);
+    t8_cmesh_unref (&forest->cmesh);
+    forest->cmesh = forest_temp->cmesh;
+  }
+  t8_log_indent_pop ();
+  t8_global_productionf ("Done t8_forest_balance (one pass) with %lli global elements.\n",
+                         (long long) t8_forest_get_global_num_leaf_elements (forest_temp));
+  t8_forest_unref (&forest_temp);
+  if (forest->profile != NULL) {
+    forest->profile->balance_runtime += sc_MPI_Wtime ();
+    forest->profile->balance_rounds = 1;
+  }
+}
+
+void
+t8_forest_balance (t8_forest_t forest, int repartition)
+{
+  t8_forest_balance_algorithm_t algorithm = (t8_forest_balance_algorithm_t) forest->balance_algorithm;
+  if (algorithm == T8_BALANCE_DEFAULT) {
+    algorithm
+      = t8_cmesh_is_partitioned (t8_forest_get_cmesh (forest->set_from)) ? T8_BALANCE_RIPPLE : T8_BALANCE_ONE_PASS;
+  }
+  if (algorithm == T8_BALANCE_ONE_PASS) {
+    t8_forest_balance_one_pass (forest, repartition);
+  }
+  else {
+    t8_forest_balance_ripple (forest, repartition);
   }
 }
 
