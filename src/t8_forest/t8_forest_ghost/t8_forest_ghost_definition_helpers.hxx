@@ -30,31 +30,6 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 
-/** The information stored for the ghost trees */
-typedef struct
-{
-  t8_gloidx_t global_id;       /**< global id of the tree */
-  t8_locidx_t element_offset;  /**< The count of all ghost elements in all smaller ghost trees */
-  t8_element_array_t elements; /**< The ghost elements of that tree */
-  t8_eclass_t eclass;          /**< The trees element class */
-} t8_ghost_tree_t;
-
-/** The data structure stored in the global_tree_to_ghost_tree hash table. */
-typedef struct
-{
-  t8_gloidx_t global_id; /**< global tree id */
-  size_t index;          /**< the index of that global tree in the ghost_trees array. */
-} t8_ghost_gtree_hash_t;
-
-/** The data structure stored in the process_offsets array. */
-typedef struct
-{
-  int mpirank;              /**< rank of the process */
-  t8_locidx_t ghost_offset; /**< The number of ghost elements for all previous ranks */
-  size_t tree_index;        /**< index of first ghost tree of this process in ghost_trees */
-  size_t first_element;     /**< the index of the first element in the elements array of the ghost tree. */
-} t8_ghost_process_hash_t;
-
 /** The information for a remote process, what data we have to send to them. */
 typedef struct
 {
