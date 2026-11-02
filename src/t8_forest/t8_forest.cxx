@@ -31,6 +31,7 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
+#include <t8_forest/t8_forest_splitters.hxx>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
@@ -3839,6 +3840,9 @@ t8_forest_commit (t8_forest_t forest)
     /* Compute global first desc array */
     t8_forest_partition_create_first_desc (forest);
   }
+  /* The partition as seen by this process, in O(log P) memory */
+  t8_forest_splitters_compute (forest);
+  T8_ASSERT (t8_forest_splitters_match_offsets (forest));
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
@@ -4763,6 +4767,7 @@ t8_forest_reset (t8_forest_t *pforest)
   if (forest->tree_offsets != NULL) {
     t8_shmem_array_destroy (&forest->tree_offsets);
   }
+  t8_forest_splitters_destroy (forest);
   if (forest->profile != NULL) {
     T8_FREE (forest->profile);
   }
