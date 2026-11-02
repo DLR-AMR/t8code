@@ -1466,14 +1466,19 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
 t8_eclass_t
 t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, int face)
 {
+  return t8_forest_element_neighbor_eclass_cmesh (forest, t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid),
+                                                  t8_forest_get_tree_class (forest, ltreeid), elem, face);
+}
+
+t8_eclass_t
+t8_forest_element_neighbor_eclass_cmesh (t8_forest_t forest, t8_locidx_t lctreeid, t8_eclass_t tree_class,
+                                         const t8_element_t *elem, int face)
+{
   t8_ctree_t coarse_tree;
   int tree_face;
   t8_locidx_t lcoarse_neighbor;
   t8_cmesh_t cmesh;
 
-  /* Get a pointer to the tree to read its element class */
-  const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
-  const t8_eclass_t tree_class = tree->eclass;
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   if (!scheme->element_is_root_boundary (tree_class, elem, face)) {
     /* The neighbor element is inside the current tree. */
@@ -1487,7 +1492,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
     cmesh = t8_forest_get_cmesh (forest);
     /* Get the coarse tree corresponding to tree */
-    coarse_tree = t8_forest_get_coarse_tree (forest, ltreeid);
+    coarse_tree = t8_cmesh_trees_get_tree (cmesh->trees, lctreeid);
     /* Get the (coarse) local id of the tree neighbor */
     lcoarse_neighbor = t8_cmesh_trees_get_face_neighbor (coarse_tree, tree_face);
     T8_ASSERT (0 <= lcoarse_neighbor);
@@ -1507,20 +1512,27 @@ t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
                                  t8_eclass_t neigh_eclass, int face, int *neigh_face)
 {
-  /* Get a pointer to the tree to read its element class */
-  const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
-  const t8_eclass_t eclass = tree->eclass;
+  return t8_forest_element_face_neighbor_cmesh (
+    forest, t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid), t8_forest_global_tree_id (forest, ltreeid),
+    t8_forest_get_tree_class (forest, ltreeid), elem, neigh, neigh_eclass, face, neigh_face);
+}
+
+t8_gloidx_t
+t8_forest_element_face_neighbor_cmesh (t8_forest_t forest, t8_locidx_t lctree_id, t8_gloidx_t gtreeid,
+                                       t8_eclass_t eclass, const t8_element_t *elem, t8_element_t *neigh,
+                                       t8_eclass_t neigh_eclass, int face, int *neigh_face)
+{
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   if (neigh_eclass == eclass && scheme->element_get_face_neighbor_inside (eclass, elem, neigh, face, neigh_face)) {
     /* The neighbor was constructed and is inside the current tree. */
-    return ltreeid + t8_forest_get_first_local_tree_id (forest);
+    return gtreeid;
   }
   else {
     /* The neighbor does not lie inside the current tree. The content of neigh is undefined right now. */
     t8_eclass_t neigh_eclass;
     t8_element_t *face_element;
     t8_cmesh_t cmesh;
-    t8_locidx_t lctree_id, lcneigh_id;
+    t8_locidx_t lcneigh_id;
     t8_locidx_t *face_neighbor;
     t8_gloidx_t global_neigh_id;
     t8_cghost_t ghost;
@@ -1533,8 +1545,6 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
     /* Get the scheme associated to the element class of the boundary element. */
     /* Compute the face of elem_tree at which the face connection is. */
     tree_face = scheme->element_get_tree_face (eclass, elem, face);
-    /* compute coarse tree id */
-    lctree_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
     if (t8_cmesh_tree_face_is_boundary (cmesh, lctree_id, tree_face)) {
       /* This face is a domain boundary. We do not need to continue */
       return -1;
@@ -2655,8 +2665,17 @@ void
 t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int bdy_dim,
                                       int bdy_id, sc_array_t *neighbors)
 {
+  t8_forest_element_boundary_neighbors_cmesh (
+    forest, t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid), t8_forest_global_tree_id (forest, ltreeid),
+    t8_forest_get_tree_class (forest, ltreeid), element, bdy_dim, bdy_id, neighbors);
+}
+
+void
+t8_forest_element_boundary_neighbors_cmesh (t8_forest_t forest, t8_locidx_t cmesh_ltreeid, t8_gloidx_t gtreeid,
+                                            t8_eclass_t eclass, const t8_element_t *element, int bdy_dim, int bdy_id,
+                                            sc_array_t *neighbors)
+{
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
   T8_ASSERT (neighbors->elem_size == sizeof (t8_forest_boundary_neighbor_t));
   t8_forest_array_clear (neighbors);
 
@@ -2668,8 +2687,8 @@ t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, c
   scheme->element_new (eclass, max_neighbors, neighs.data ());
   const int num_inside = scheme->element_get_boundary_neighbors_inside (eclass, element, bdy_dim, bdy_id,
                                                                         neighs.data (), neigh_bdy_ids.data ());
-  t8_forest_append_boundary_neighbors (scheme, t8_forest_global_tree_id (forest, ltreeid), eclass, num_inside,
-                                       max_neighbors, neighs.data (), neigh_bdy_ids.data (), neighbors);
+  t8_forest_append_boundary_neighbors (scheme, gtreeid, eclass, num_inside, max_neighbors, neighs.data (),
+                                       neigh_bdy_ids.data (), neighbors);
 
   /* The neighbors in the trees at the root boundary that contains the boundary of element */
   int root_dim, root_id;
@@ -2678,7 +2697,6 @@ t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, c
     return;
   }
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-  const t8_locidx_t cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
   for (const auto &tree_neighbor : t8_cmesh_get_boundary_neighbors (cmesh, cmesh_ltreeid, root_dim, root_id)) {
     const t8_eclass_t neigh_eclass = tree_neighbor.eclass;
     max_neighbors = scheme->get_max_num_boundary_neighbors (neigh_eclass);

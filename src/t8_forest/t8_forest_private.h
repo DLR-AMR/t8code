@@ -513,6 +513,51 @@ void
 t8_forest_element_boundary_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int bdy_dim,
                                       int bdy_id, sc_array_t *neighbors);
 
+/** \ref t8_forest_element_boundary_neighbors of an element in any tree of the coarse mesh, which need not be a local
+ * tree of the forest.
+ * \param [in]     forest         The forest.
+ * \param [in]     cmesh_ltreeid  The local id of the tree in the coarse mesh of \a forest.
+ * \param [in]     gtreeid        The global id of the tree.
+ * \param [in]     eclass         The eclass of the tree.
+ * \param [in]     element        The element.
+ * \param [in]     bdy_dim        The dimension of the boundary.
+ * \param [in]     bdy_id         The boundary of \a element of dimension \a bdy_dim.
+ * \param [in,out] neighbors      An initialized array of \ref t8_forest_boundary_neighbor_t, filled with the neighbors.
+ */
+void
+t8_forest_element_boundary_neighbors_cmesh (t8_forest_t forest, t8_locidx_t cmesh_ltreeid, t8_gloidx_t gtreeid,
+                                            t8_eclass_t eclass, const t8_element_t *element, int bdy_dim, int bdy_id,
+                                            sc_array_t *neighbors);
+
+/** \ref t8_forest_element_neighbor_eclass of an element in any tree of the coarse mesh.
+ * \param [in] forest      The forest.
+ * \param [in] lctreeid    The local id of the tree in the coarse mesh of \a forest.
+ * \param [in] tree_class  The eclass of the tree.
+ * \param [in] elem        The element.
+ * \param [in] face        A face of \a elem.
+ * \return The eclass of the face neighbor of \a elem across \a face.
+ */
+t8_eclass_t
+t8_forest_element_neighbor_eclass_cmesh (t8_forest_t forest, t8_locidx_t lctreeid, t8_eclass_t tree_class,
+                                         const t8_element_t *elem, int face);
+
+/** \ref t8_forest_element_face_neighbor of an element in any tree of the coarse mesh.
+ * \param [in] forest        The forest.
+ * \param [in] lctree_id     The local id of the tree in the coarse mesh of \a forest.
+ * \param [in] gtreeid       The global id of the tree.
+ * \param [in] eclass        The eclass of the tree.
+ * \param [in] elem          The element.
+ * \param [in,out] neigh     Allocated with the scheme of \a neigh_eclass, set to the face neighbor.
+ * \param [in] neigh_eclass  The eclass of the face neighbor, \ref t8_forest_element_neighbor_eclass_cmesh.
+ * \param [in] face          A face of \a elem.
+ * \param [out] neigh_face   The face of \a neigh at \a face of \a elem.
+ * \return The global id of the tree of the face neighbor, or -1 at the domain boundary.
+ */
+t8_gloidx_t
+t8_forest_element_face_neighbor_cmesh (t8_forest_t forest, t8_locidx_t lctree_id, t8_gloidx_t gtreeid,
+                                       t8_eclass_t eclass, const t8_element_t *elem, t8_element_t *neigh,
+                                       t8_eclass_t neigh_eclass, int face, int *neigh_face);
+
 /** Free the neighbors computed by \ref t8_forest_element_boundary_neighbors and reset the array.
  * \param [in]     forest    The forest.
  * \param [in,out] neighbors The neighbors.
