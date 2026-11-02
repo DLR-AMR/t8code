@@ -63,6 +63,10 @@ TEST_P (forest_find_owner, find_multiple_owners)
   /* Build a uniform forest */
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  /* The owners of elements that do not touch this rank need the offsets of all processes */
+  t8_forest_partition_create_offsets (forest);
+  t8_forest_partition_create_tree_offsets (forest);
+  t8_forest_partition_create_first_desc (forest);
   /* Construct the root element */
   scheme->element_new (tree_class, 1, &root_element);
   scheme->element_set_linear_id (tree_class, root_element, 0, 0);

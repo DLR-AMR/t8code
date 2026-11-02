@@ -146,11 +146,27 @@ t8_test_receives (const std::vector<int> &owners, const int rank, const bool uni
                 : std::find (owners.begin (), owners.end (), rank) != owners.end ();
 }
 
+/* The offsets of all processes, which forests only compute on request, as reference */
+static void
+t8_test_create_offsets (t8_forest_t forest)
+{
+  if (forest->element_offsets == NULL) {
+    t8_forest_partition_create_offsets (forest);
+  }
+  if (forest->tree_offsets == NULL) {
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  if (forest->global_first_desc == NULL) {
+    t8_forest_partition_create_first_desc (forest);
+  }
+}
+
 /* Check the splitters of a forest and route elements of all levels up to max_item_level and ranges of global element
  * indices along them */
 static void
 t8_test_splitters_and_route (const t8_forest_t forest, const int max_item_level)
 {
+  t8_test_create_offsets (forest);
   ASSERT_TRUE (t8_forest_splitters_match_offsets (forest));
   const sc_MPI_Comm comm = t8_forest_get_mpicomm (forest);
   const int rank = forest->mpirank, size = forest->mpisize;

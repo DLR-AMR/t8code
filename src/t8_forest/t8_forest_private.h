@@ -217,33 +217,6 @@ t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_lineari
 t8_locidx_t
 t8_forest_bin_search_lower_compare (const t8_element_array_t *elements, t8_element_t *element);
 
-/** Find the owner process of a given element, deprecated version.
- * Use t8_forest_element_find_owner instead.
- * \param [in]     forest  The forest.
- * \param [in]     gtreeid The global id of the tree in which the element lies.
- * \param [in]     element The element to look for.
- * \param [in]     eclass  The element class of the tree \a gtreeid.
- * \param [in,out] all_owners_of_tree If not NULL, a sc_array of integers.
- *                         If the element count is zero then on output all owners
- *                         of the tree are stored.
- *                         If the element count is non-zero then it is assumed to
- *                         be filled with all owners of the tree.
- * \return                 The mpirank of the process that owns \a element.
- * \note The element must exist in the forest.
- * \note \a forest must be committed before calling this function.
- */
-/* TODO: This finds the owner of the first descendant of element.
- *       We call this in owners_at_face where element is a descendant,
- *       add a flag that is true is element is a descendant, such that the
- *       first desc must not be created */
-/* TODO: ext  version with parameters: lower_bound, upper_bound, is_desc/is_leaf
- *       is it really needed to construct the tree owners? Cant we just use the global
- *       offset array?
- */
-int
-t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_element_t *element, t8_eclass_t eclass,
-                                  sc_array_t *all_owners_of_tree);
-
 /** Find the owner process of a given element, if bounds for the owner process are known.
  * \param [in]    forest  The forest.
  * \param [in]    gtreeid The global id of the tree in which the element lies.

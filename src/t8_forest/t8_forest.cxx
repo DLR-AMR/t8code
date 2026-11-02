@@ -2076,7 +2076,7 @@ t8_forest_element_leaf_index_in_tree (const t8_forest_t forest, const t8_element
 }
 
 /* Check if an element is owned by a specific rank, with the offset arrays of all processes */
-static int
+[[maybe_unused]] static int
 t8_forest_element_check_owner_offsets (t8_forest_t forest, t8_element_t *element, t8_gloidx_t gtreeid,
                                        t8_eclass_t eclass, int rank, int element_is_desc)
 {
@@ -2145,54 +2145,6 @@ t8_forest_element_check_owner_offsets (t8_forest_t forest, t8_element_t *element
   return 0;
 }
 
-/**
- * The data that we use as key in the binary owner search.
- * It contains the linear id of the element that we look for and
- * a pointer to the forest, we also store the index of the biggest owner process.
- */
-struct find_owner_data_t
-{
-  t8_linearidx_t linear_id; /**< The linear id of the element we look for. */
-  t8_forest_t forest;       /**< Pointer to the forest. */
-  int last_owner;           /**< Index of the owner process with the highest index. */
-};
-
-static int
-t8_forest_element_find_owner_compare (const void *find_owner_data, const void *process)
-{
-  const struct find_owner_data_t *data = (const struct find_owner_data_t *) find_owner_data;
-  t8_linearidx_t linear_id = data->linear_id;
-  t8_forest_t forest = data->forest;
-  int proc = *(int *) process;
-  t8_linearidx_t proc_first_desc_id;
-  t8_linearidx_t next_proc_first_desc_id;
-
-  T8_ASSERT (0 <= proc && proc < forest->mpisize);
-  /* Get the id of the first element on this process. */
-  proc_first_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, (size_t) proc);
-
-  if (proc == data->last_owner) {
-    /* If we are the last process owning the element's tree, then
-     * we have either found the element or have to look further left. */
-    return proc_first_desc_id <= linear_id ? 0 : -1;
-  }
-  else {
-    T8_ASSERT (proc < data->last_owner);
-    if (proc_first_desc_id > linear_id) {
-      /* We have to look further left */
-      return -1;
-    }
-    /* Get the linear id of the first element on the next process. */
-    next_proc_first_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, (size_t) proc + 1);
-    if (next_proc_first_desc_id <= linear_id) {
-      /* We have to look further right */
-      return 1;
-    }
-    /* We have found the owner process */
-    return 0;
-  }
-}
-
 /* Find the owner of an element with the offset arrays of all processes, see t8_forest_element_find_owner_ext */
 static int
 t8_forest_element_find_owner_offsets (t8_forest_t forest, t8_gloidx_t gtreeid, t8_element_t *element,
@@ -2213,6 +2165,10 @@ t8_forest_element_find_owner_offsets (t8_forest_t forest, t8_gloidx_t gtreeid, t
   T8_ASSERT (element != NULL);
   T8_ASSERT (0 <= lower_bound && lower_bound <= upper_bound && upper_bound < forest->mpisize);
   T8_ASSERT (lower_bound <= guess && guess <= upper_bound);
+  SC_CHECK_ABORT (forest->element_offsets != NULL && forest->tree_offsets != NULL && forest->global_first_desc != NULL,
+                  "The owners of elements are known for the neighbors of local elements after creating the ghost "
+                  "layer, or for all elements after t8_forest_partition_create_offsets, _tree_offsets and "
+                  "_first_desc.\n");
 
   /* If the upper and lower bound only leave one process left, we can immediately
    * return this process as the owner */
@@ -2341,8 +2297,10 @@ t8_forest_element_find_owner_offsets (t8_forest_t forest, t8_gloidx_t gtreeid, t
   return guess;
 }
 
-/* Bounds for the owner of a descendant at the maxlevel from the touching ranks of the forest, which must exist:
- * the owner if the descendant lies in the range of this rank or of a touching rank, otherwise the ranks in between. */
+/* Bounds for the owner of a descendant at the maxlevel. The owner is known if the descendant lies in the range of
+ * this rank, in the range of a touching rank (if the forest has touching ranks, e.g. after creating a ghost layer), or
+ * anywhere if the forest has the offsets of all processes (t8_forest_partition_create_offsets and the other two).
+ * Otherwise, the bounds are the ranks between the known ranges around the descendant. */
 static void
 t8_forest_desc_owner_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *desc, t8_eclass_t eclass,
                              int *lower, int *upper)
@@ -2350,19 +2308,48 @@ t8_forest_desc_owner_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_e
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   T8_ASSERT (scheme->element_get_level (eclass, desc) == forest->maxlevel);
   const t8_forest_position position = { gtreeid, scheme->element_get_linear_id (eclass, desc, forest->maxlevel) };
-  t8_forest_touching_ranks_owner_bounds (forest, position, lower, upper);
+  const bool has_offsets
+    = forest->element_offsets != NULL && forest->tree_offsets != NULL && forest->global_first_desc != NULL;
+  if (forest->touching_ranks != NULL) {
+    t8_forest_touching_ranks_owner_bounds (forest, position, lower, upper);
 #if T8_ENABLE_DEBUG
-  /* As long as the offsets of all processes exist, check that the bounds contain the owner */
-  const int owner = t8_forest_element_find_owner_offsets (forest, gtreeid, (t8_element_t *) desc, eclass, 0,
-                                                          forest->mpisize - 1, (forest->mpisize - 1) / 2, 1);
-  T8_ASSERT (*lower <= owner && owner <= *upper);
+    if (has_offsets) {
+      /* Check that the bounds contain the owner */
+      const int owner = t8_forest_element_find_owner_offsets (forest, gtreeid, (t8_element_t *) desc, eclass, 0,
+                                                              forest->mpisize - 1, (forest->mpisize - 1) / 2, 1);
+      T8_ASSERT (*lower <= owner && owner <= *upper);
+    }
 #endif
+    return;
+  }
+  if (has_offsets) {
+    *lower = *upper = t8_forest_element_find_owner_offsets (forest, gtreeid, (t8_element_t *) desc, eclass, 0,
+                                                            forest->mpisize - 1, (forest->mpisize - 1) / 2, 1);
+    return;
+  }
+  /* Only the range of this rank is known */
+  const t8_forest_splitters &splitters = t8_forest_get_splitters (forest);
+  if (!splitters.has_elements) {
+    *lower = 0;
+    *upper = forest->mpisize - 1;
+  }
+  else if (position < splitters.first_position) {
+    *lower = 0;
+    *upper = forest->mpirank - 1;
+  }
+  else if (position < splitters.next_position) {
+    *lower = *upper = forest->mpirank;
+  }
+  else {
+    *lower = forest->mpirank + 1;
+    *upper = forest->mpisize - 1;
+  }
 }
 
 /* Bounds for the owner of the first descendant of an element, see t8_forest_desc_owner_bounds */
 static void
-t8_forest_element_owner_bounds_touching (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
-                                         t8_eclass_t eclass, int element_is_desc, int *lower, int *upper)
+t8_forest_element_owner_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
+                                t8_eclass_t eclass, int element_is_desc, int *lower, int *upper)
 {
   if (element_is_desc) {
     t8_forest_desc_owner_bounds (forest, gtreeid, element, eclass, lower, upper);
@@ -2380,27 +2367,22 @@ int
 t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_gloidx_t gtreeid, t8_eclass_t eclass,
                                int rank, int element_is_desc)
 {
-  if (forest->touching_ranks == NULL) {
-    return t8_forest_element_check_owner_offsets (forest, element, gtreeid, eclass, rank, element_is_desc);
-  }
-  /* Between the touching ranks, the owner is not known and the check is inconclusive */
+  /* The check is exact for this rank. For other ranks, it is inconclusive if their range is not known. */
   int lower, upper;
-  t8_forest_element_owner_bounds_touching (forest, gtreeid, element, eclass, element_is_desc, &lower, &upper);
+  t8_forest_element_owner_bounds (forest, gtreeid, element, eclass, element_is_desc, &lower, &upper);
   return lower <= rank && rank <= upper;
 }
 
 int
 t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_element_t *element, t8_eclass_t eclass,
-                                  int lower_bound, int upper_bound, int guess, int element_is_desc)
+                                  [[maybe_unused]] int lower_bound, [[maybe_unused]] int upper_bound,
+                                  [[maybe_unused]] int guess, int element_is_desc)
 {
-  if (forest->touching_ranks == NULL) {
-    return t8_forest_element_find_owner_offsets (forest, gtreeid, element, eclass, lower_bound, upper_bound, guess,
-                                                 element_is_desc);
-  }
-  /* The owners of elements touching a local leaf touch this rank */
   int lower, upper;
-  t8_forest_element_owner_bounds_touching (forest, gtreeid, element, eclass, element_is_desc, &lower, &upper);
-  SC_CHECK_ABORT (lower == upper, "The owner of an element that does not touch this rank is not known");
+  t8_forest_element_owner_bounds (forest, gtreeid, element, eclass, element_is_desc, &lower, &upper);
+  SC_CHECK_ABORT (lower == upper, "The owner of an element is only known if it touches this rank and the forest has "
+                                  "a ghost layer, or after t8_forest_partition_create_offsets and the other two.\n");
+  T8_ASSERT (lower_bound <= lower && lower <= upper_bound);
   return lower;
 }
 
@@ -2409,105 +2391,6 @@ t8_forest_element_find_owner (t8_forest_t forest, t8_gloidx_t gtreeid, t8_elemen
 {
   return t8_forest_element_find_owner_ext (forest, gtreeid, element, eclass, 0, forest->mpisize - 1,
                                            (forest->mpisize - 1) / 2, 0);
-}
-
-/* This is a deprecated version of the element_find_owner algorithm which
- * searches for the owners of the coarse tree first */
-int
-t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_element_t *element, t8_eclass_t eclass,
-                                  sc_array_t *all_owners_of_tree)
-{
-  sc_array_t *owners_of_tree, owners_of_tree_wo_first;
-  int proc, proc_next;
-  t8_linearidx_t element_desc_lin_id;
-  t8_element_t *element_first_desc;
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  ssize_t proc_index;
-  struct find_owner_data_t find_owner_data;
-
-  if (forest->tree_offsets == NULL) {
-    /* If the offset of global tree ids is not created, create it now.
-     * Once created, we do not delete it in this function, since we expect
-     * multiple calls to find_owner in a row.
-     */
-    t8_forest_partition_create_tree_offsets (forest);
-  }
-  if (forest->global_first_desc == NULL) {
-    /* If the offset of first global ids is not created, create it now.
-     * Once created, we do not delete it in this function, since we expect
-     * multiple calls to find_owner in a row.
-     */
-    t8_forest_partition_create_first_desc (forest);
-  }
-
-  /* In owners_of_tree we will store all processes that have elements of the
-   * tree gtreeid. */
-  if (all_owners_of_tree == NULL) {
-    owners_of_tree = sc_array_new (sizeof (int));
-  }
-  else {
-    owners_of_tree = all_owners_of_tree;
-  }
-  if (owners_of_tree->elem_count == 0) {
-    /* Compute the owners and store them (sorted) in owners_of_tree */
-    /* TODO: This is only useful, if cmesh is partitioned */
-    /* TODO: Isnt it better to only store the first and the last owner? */
-    t8_offset_all_owners_of_tree (forest->mpisize, gtreeid, t8_shmem_array_get_gloidx_array (forest->tree_offsets),
-                                  owners_of_tree);
-  }
-  /* Compute the first descendant of the element */
-  scheme->element_new (eclass, 1, &element_first_desc);
-  scheme->element_get_first_descendant (eclass, element, element_first_desc, forest->maxlevel);
-  /* Compute the linear of the first descendant */
-  element_desc_lin_id = scheme->element_get_linear_id (eclass, element_first_desc, forest->maxlevel);
-
-  /* The first owner of the tree may not have the tree as its first tree and
-   * thus its first_descendant entry may not relate to this tree.
-   * We thus check by hand if this process owns the element and exclude it from the array. */
-  proc = *(int *) sc_array_index (owners_of_tree, 0);
-  if (owners_of_tree->elem_count == 1) {
-    /* There is only this proc as possible owner. */
-    scheme->element_destroy (eclass, 1, &element_first_desc);
-    if (all_owners_of_tree == NULL) {
-      sc_array_destroy (owners_of_tree);
-    }
-    return proc;
-  }
-  else {
-    /* Get the next owning process. Its first descendant is in fact an element of the tree.
-     * If it is bigger than the descendant we look for, then proc is the owning process of element. */
-    proc_next = *(int *) sc_array_index (owners_of_tree, 1);
-    if (*(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, (size_t) proc_next)
-        > element_desc_lin_id) {
-      scheme->element_destroy (eclass, 1, &element_first_desc);
-      if (all_owners_of_tree == NULL) {
-        sc_array_destroy (owners_of_tree);
-      }
-      return proc;
-    }
-  }
-  /* Exclude the first process from the array. */
-  sc_array_init_view (&owners_of_tree_wo_first, owners_of_tree, 1, owners_of_tree->elem_count - 1);
-  /* We binary search in the owners array for the process that owns the element. */
-  find_owner_data.forest = forest;
-  find_owner_data.last_owner
-    = *(int *) sc_array_index (&owners_of_tree_wo_first, owners_of_tree_wo_first.elem_count - 1);
-  find_owner_data.linear_id = element_desc_lin_id;
-
-  proc_index = sc_array_bsearch (&owners_of_tree_wo_first, &find_owner_data, t8_forest_element_find_owner_compare);
-  if (0 > proc_index || proc_index >= forest->mpisize) {
-    /* The element was not found */
-    SC_ABORT ("Try to find an element that does not exist in the forest.\n");
-    return -1;
-  }
-  /* Get the process and return it. */
-  proc = *(int *) sc_array_index_ssize_t (&owners_of_tree_wo_first, proc_index);
-  /* clean-up */
-  scheme->element_destroy (eclass, 1, &element_first_desc);
-  if (all_owners_of_tree == NULL) {
-    sc_array_destroy (owners_of_tree);
-  }
-  return proc;
 }
 
 /* Recursively find all owners of descendants of an element that touch a boundary with a boundary of the
@@ -3137,29 +3020,13 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const 
   scheme->element_get_first_descendant (eclass, element, first_desc, forest->maxlevel);
   scheme->element_get_last_descendant (eclass, element, last_desc, forest->maxlevel);
 
-  const int rank = forest->mpirank;
-  if (forest->touching_ranks != NULL) {
-    /* The owners of the descendants are known in the ranges of the touching ranks, between them we get bounds */
-    int first_lower, first_upper, last_lower, last_upper;
-    t8_forest_desc_owner_bounds (forest, gtreeid, first_desc, eclass, &first_lower, &first_upper);
-    t8_forest_desc_owner_bounds (forest, gtreeid, last_desc, eclass, &last_lower, &last_upper);
-    *lower = SC_MAX (*lower, first_lower);
-    *upper = SC_MIN (*upper, last_upper);
-    T8_ASSERT (*lower <= *upper);
-  }
-  /* Most elements whose owners are asked for are local (e.g. the neighbors of
-   * local elements in the ghost search): if both descendants are on this rank,
-   * it is the unique owner, without a binary search over all ranks. */
-  else if (*lower <= rank && rank <= *upper
-           && t8_forest_element_check_owner (forest, first_desc, gtreeid, eclass, rank, 1)
-           && t8_forest_element_check_owner (forest, last_desc, gtreeid, eclass, rank, 1)) {
-    *lower = *upper = rank;
-  }
-  else {
-    /* Compute their owners as bounds for all of element's owners */
-    *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc, eclass, *lower, *upper, *lower, 1);
-    *upper = t8_forest_element_find_owner_ext (forest, gtreeid, last_desc, eclass, *lower, *upper, *upper, 1);
-  }
+  /* The bounds for the owners of the first and last descendant bound the owners of the element */
+  int first_lower, first_upper, last_lower, last_upper;
+  t8_forest_desc_owner_bounds (forest, gtreeid, first_desc, eclass, &first_lower, &first_upper);
+  t8_forest_desc_owner_bounds (forest, gtreeid, last_desc, eclass, &last_lower, &last_upper);
+  *lower = SC_MAX (*lower, first_lower);
+  *upper = SC_MIN (*upper, last_upper);
+  T8_ASSERT (*lower <= *upper);
   if (!use_scratch) {
     scheme->element_destroy (eclass, 1, &first_desc);
     scheme->element_destroy (eclass, 1, &last_desc);
@@ -3186,20 +3053,13 @@ t8_forest_element_owners_at_face_bounds (t8_forest_t forest, t8_gloidx_t gtreeid
   scheme->element_new (eclass, 1, &last_face_desc);
   scheme->element_get_last_descendant_face (eclass, element, face, last_face_desc, forest->maxlevel);
 
-  if (forest->touching_ranks != NULL) {
-    /* The owners of the descendants are known in the ranges of the touching ranks, between them we get bounds */
-    int first_lower, first_upper, last_lower, last_upper;
-    t8_forest_desc_owner_bounds (forest, gtreeid, first_face_desc, eclass, &first_lower, &first_upper);
-    t8_forest_desc_owner_bounds (forest, gtreeid, last_face_desc, eclass, &last_lower, &last_upper);
-    *lower = SC_MAX (*lower, first_lower);
-    *upper = SC_MIN (*upper, last_upper);
-    T8_ASSERT (*lower <= *upper);
-  }
-  else {
-    /* owner of first and last descendants */
-    *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_face_desc, eclass, *lower, *upper, *lower, 1);
-    *upper = t8_forest_element_find_owner_ext (forest, gtreeid, last_face_desc, eclass, *lower, *upper, *upper, 1);
-  }
+  /* The bounds for the owners of the first and last descendant at the face bound the owners at the face */
+  int first_lower, first_upper, last_lower, last_upper;
+  t8_forest_desc_owner_bounds (forest, gtreeid, first_face_desc, eclass, &first_lower, &first_upper);
+  t8_forest_desc_owner_bounds (forest, gtreeid, last_face_desc, eclass, &last_lower, &last_upper);
+  *lower = SC_MAX (*lower, first_lower);
+  *upper = SC_MIN (*upper, last_upper);
+  T8_ASSERT (*lower <= *upper);
   scheme->element_destroy (eclass, 1, &first_face_desc);
   scheme->element_destroy (eclass, 1, &last_face_desc);
 }
@@ -3947,21 +3807,10 @@ t8_forest_commit (t8_forest_t forest)
              (long) forest->local_num_leaf_elements, (long long) forest->global_num_leaf_elements,
              (long long) forest->first_local_tree, (long long) forest->last_local_tree);
 
-  if (forest->tree_offsets == NULL) {
-    /* Compute the tree offset array */
-    t8_forest_partition_create_tree_offsets (forest);
-  }
-  if (forest->element_offsets == NULL) {
-    /* Compute element offsets */
-    t8_forest_partition_create_offsets (forest);
-  }
-  if (forest->global_first_desc == NULL) {
-    /* Compute global first desc array */
-    t8_forest_partition_create_first_desc (forest);
-  }
-  /* The partition as seen by this process, in O(log P) memory */
+  /* The partition as seen by this process, in O(log P) memory. The offsets of all processes (O(P) memory) are only
+   * computed on request, see t8_forest_partition_create_offsets, and checked against the splitters in debug mode. */
   t8_forest_splitters_compute (forest);
-  T8_ASSERT (t8_forest_splitters_match_offsets (forest));
+  T8_ASSERT (t8_forest_splitters_check_with_offsets (forest));
   T8_ASSERT (forest->touching_ranks == NULL || t8_forest_touching_ranks_match_splitters (forest));
 
   if (forest->profile != NULL) {
@@ -4328,10 +4177,7 @@ t8_forest_get_first_local_leaf_element_id (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  if (forest->element_offsets != NULL) {
-    return t8_shmem_array_get_gloidx (forest->element_offsets, forest->mpirank);
-  }
-  return -1;
+  return t8_forest_get_splitters (forest).first_element;
 }
 
 const t8_scheme *

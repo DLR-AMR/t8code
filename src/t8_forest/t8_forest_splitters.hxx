@@ -125,6 +125,15 @@ t8_forest_get_splitters (const t8_forest_t forest);
 int
 t8_forest_splitters_match_offsets (const t8_forest_t forest);
 
+/** Check the splitters of a forest against the element offsets, first descendants and tree offsets of all processes,
+ * which are computed for the check if the forest does not have them (and freed again).
+ * \param [in,out] forest  A committed forest with splitters.
+ * \return True if the splitters match the offset arrays.
+ * \note This function is collective.
+ */
+int
+t8_forest_splitters_check_with_offsets (t8_forest_t forest);
+
 /** The positions of the first and last descendant of an element at the maxlevel of the forest. The positions of all
  * descendants of the element lie between them.
  * \param [in] forest   A committed forest.

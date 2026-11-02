@@ -23,6 +23,7 @@
 #include <t8_forest/t8_forest_splitters.hxx>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
+#include <t8_forest/t8_forest_partition.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -200,6 +201,34 @@ t8_forest_splitters_match_offsets (const t8_forest_t forest)
     (rank < mid ? hi : lo) = mid;
   }
   return match && ilevel == splitters.levels.size ();
+}
+
+int
+t8_forest_splitters_check_with_offsets (t8_forest_t forest)
+{
+  const bool create_tree_offsets = forest->tree_offsets == NULL;
+  const bool create_element_offsets = forest->element_offsets == NULL;
+  const bool create_first_desc = forest->global_first_desc == NULL;
+  if (create_tree_offsets) {
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  if (create_element_offsets) {
+    t8_forest_partition_create_offsets (forest);
+  }
+  if (create_first_desc) {
+    t8_forest_partition_create_first_desc (forest);
+  }
+  const int match = t8_forest_splitters_match_offsets (forest);
+  if (create_tree_offsets) {
+    t8_shmem_array_destroy (&forest->tree_offsets);
+  }
+  if (create_element_offsets) {
+    t8_shmem_array_destroy (&forest->element_offsets);
+  }
+  if (create_first_desc) {
+    t8_shmem_array_destroy (&forest->global_first_desc);
+  }
+  return match;
 }
 
 void

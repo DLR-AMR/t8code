@@ -81,6 +81,16 @@ t8_test_allgather_pairs (const std::vector<std::pair<int, int>> &local, sc_MPI_C
 static void
 t8_test_check_touching_ranks (const t8_forest_t forest, const int min_dim)
 {
+  /* The offsets of all processes, which forests only compute on request, as reference */
+  if (forest->element_offsets == NULL) {
+    t8_forest_partition_create_offsets (forest);
+  }
+  if (forest->tree_offsets == NULL) {
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  if (forest->global_first_desc == NULL) {
+    t8_forest_partition_create_first_desc (forest);
+  }
   ASSERT_NE (forest->touching_ranks, nullptr);
   EXPECT_EQ (forest->touching_ranks->min_dim, min_dim);
   const int rank = forest->mpirank, size = forest->mpisize;

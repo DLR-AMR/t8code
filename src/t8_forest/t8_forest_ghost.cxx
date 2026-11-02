@@ -1640,8 +1640,6 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
   t8_forest_ghost_t ghost = NULL;
   t8_ghost_mpi_send_info_t *send_info;
   sc_MPI_Request *requests;
-  int create_tree_array = 0, create_gfirst_desc_array = 0;
-  int create_element_array = 0;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -1665,21 +1663,6 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
   }
 
-  if (forest->element_offsets == NULL) {
-    /* create element offset array if not done already */
-    create_element_array = 1;
-    t8_forest_partition_create_offsets (forest);
-  }
-  if (forest->tree_offsets == NULL) {
-    /* Create tree offset array if not done already */
-    create_tree_array = 1;
-    t8_forest_partition_create_tree_offsets (forest);
-  }
-  if (forest->global_first_desc == NULL) {
-    /* Create global first desc array if not done already */
-    create_gfirst_desc_array = 1;
-    t8_forest_partition_create_first_desc (forest);
-  }
   if (forest->ghost_type != T8_GHOST_NONE) {
     /* The owners of the leaves touching a local leaf are the ranks touching this rank */
     t8_forest_touching_ranks_require (forest, t8_forest_ghost_min_boundary_dim (forest->ghost_type, forest->dimension));
@@ -1733,19 +1716,6 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
     t8_global_productionf ("End ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
-  }
-
-  if (create_element_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->element_offsets);
-  }
-  if (create_tree_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->tree_offsets);
-  }
-  if (create_gfirst_desc_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->global_first_desc);
   }
 
   t8_productionf ("Done t8_forest_ghost with %i local elements and %i"
