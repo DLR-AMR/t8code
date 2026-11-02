@@ -32,7 +32,8 @@
 #include <t8_forest/t8_forest_adapt/t8_forest_standard_adapt.hxx>
 #include <t8_forest/t8_forest_adapt/t8_forest_subelement_adapt.hxx>
 
-/** Adapt \a forest with the serial or the recursive variant of \a TAdaptor, as set in \a forest.
+/** Adapt \a forest with the variant of \a TAdaptor that fits the adapt settings of \a forest: batched, serial or
+ * recursive.
  * \tparam TAdaptor The adaptor, templated on whether it adapts recursively and on the callback policy.
  * \param [in, out] forest The forest under construction.
  */
@@ -40,7 +41,13 @@ template <template <bool, typename> typename TAdaptor>
 static void
 t8_forest_adapt_with (t8_forest_t forest)
 {
-  if (forest->set_adapt_recursive) {
+  if (forest->set_adapt_batched_fn != nullptr) {
+    SC_CHECK_ABORT (!forest->set_adapt_recursive,
+                    "Recursive adaptation is not supported with a batched adapt callback.");
+    TAdaptor<false, t8_adapt_batched_callback> adaptor (forest);
+    adaptor.adapt ();
+  }
+  else if (forest->set_adapt_recursive) {
     TAdaptor<true, t8_adapt_element_callback> adaptor (forest);
     adaptor.adapt ();
   }

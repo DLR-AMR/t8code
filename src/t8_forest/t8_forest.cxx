@@ -3117,6 +3117,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 
   /* Overwrite any previous setting */
   forest->set_adapt_fn = nullptr;
+  forest->set_adapt_batched_fn = nullptr;
   forest->set_adapt_recursive = -1;
   forest->set_balance = -1;
   forest->set_for_coarsening = -1;
@@ -3289,8 +3290,14 @@ t8_forest_get_ghost_definition (const t8_forest_t forest)
   return forest->ghost_definition;
 }
 
-void
-t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_t adapt_fn, const int recursive)
+/** Set the source forest and the recursion flag for adaptation and add ADAPT to the from_method.
+ * Shared by \ref t8_forest_set_adapt and \ref t8_forest_set_adapt_batched, which set the adapt function.
+ * \param [in,out] forest   The forest
+ * \param [in] set_from     The source forest, or NULL to use a previously (or later) set forest.
+ * \param [in] recursive    Nonzero if adaptation is recursive.
+ */
+static void
+t8_forest_set_adapt_from (t8_forest_t forest, const t8_forest_t set_from, const int recursive)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -3299,9 +3306,9 @@ t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_a
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme == NULL);
   T8_ASSERT (forest->set_adapt_fn == NULL);
+  T8_ASSERT (forest->set_adapt_batched_fn == NULL);
   T8_ASSERT (forest->set_adapt_recursive == -1);
 
-  forest->set_adapt_fn = adapt_fn;
   forest->set_adapt_recursive = recursive != 0;
 
   if (set_from != nullptr) {
@@ -3318,6 +3325,20 @@ t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_a
   else {
     forest->from_method |= T8_FOREST_FROM_ADAPT;
   }
+}
+
+void
+t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_t adapt_fn, const int recursive)
+{
+  t8_forest_set_adapt_from (forest, set_from, recursive);
+  forest->set_adapt_fn = adapt_fn;
+}
+
+void
+t8_forest_set_adapt_batched (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_batched_t adapt_fn)
+{
+  t8_forest_set_adapt_from (forest, set_from, 0);
+  forest->set_adapt_batched_fn = adapt_fn;
 }
 
 void
@@ -3515,7 +3536,10 @@ t8_forest_commit (t8_forest_t forest)
 
     /* T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY); */
     if (forest->from_method & T8_FOREST_FROM_ADAPT) {
-      SC_CHECK_ABORT (forest->set_adapt_fn != nullptr, "No adapt function specified");
+      SC_CHECK_ABORT (forest->set_adapt_fn != nullptr || forest->set_adapt_batched_fn != nullptr,
+                      "No adapt function specified");
+      SC_CHECK_ABORT (forest->set_adapt_fn == nullptr || forest->set_adapt_batched_fn == nullptr,
+                      "Only one of an adapt function and a batched adapt function may be specified");
       forest->from_method -= T8_FOREST_FROM_ADAPT;
       if (forest->from_method > 0) {
         /* The forest should also be partitioned/balanced.
@@ -3528,7 +3552,12 @@ t8_forest_commit (t8_forest_t forest)
         /* set user data of forest to forest_adapt */
         t8_forest_set_user_data (forest_adapt, t8_forest_get_user_data (forest));
         /* Construct an intermediate, adapted forest */
-        t8_forest_set_adapt (forest_adapt, forest->set_from, forest->set_adapt_fn, forest->set_adapt_recursive);
+        if (forest->set_adapt_batched_fn != nullptr) {
+          t8_forest_set_adapt_batched (forest_adapt, forest->set_from, forest->set_adapt_batched_fn);
+        }
+        else {
+          t8_forest_set_adapt (forest_adapt, forest->set_from, forest->set_adapt_fn, forest->set_adapt_recursive);
+        }
         /* Set profiling if enabled */
         t8_forest_set_profiling (forest_adapt, forest->profile != nullptr);
         t8_forest_commit (forest_adapt);

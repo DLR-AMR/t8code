@@ -35,6 +35,7 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_data/t8_containers.h>
 
+#include <algorithm>
 #include <array>
 #include <vector>
 
@@ -112,6 +113,60 @@ struct t8_adapt_element_callback
     return forest->set_adapt_fn (forest, forest_from, context.ltree_id, context.tree_class, context.el_considered,
                                  context.scheme, family.is_family, family.num_elements, family.elements.data ());
   }
+};
+
+/** Callback policy of \ref t8_adaptor that asks the batched adapt callback \ref t8_forest_adapt_batched_t of the
+ * forest once per tree and answers the queries for the elements and families of the tree from its result.
+ * \note The actions refer to the elements of the source forest, so this policy cannot be used for recursive
+ *       adaptation.
+ */
+struct t8_adapt_batched_callback
+{
+  /** Constructor.
+   * \param [in] forest The forest under construction. Its batched adapt callback has to be set.
+   */
+  explicit t8_adapt_batched_callback ([[maybe_unused]] const t8_forest_t forest)
+  {
+    T8_ASSERT (forest->set_adapt_batched_fn != nullptr);
+  }
+
+  /** Call the batched adapt callback for all elements of the tree.
+   * \param [in] forest      The forest under construction.
+   * \param [in] forest_from The forest that is adapted.
+   * \param [in] context     The tree that is adapted next.
+   */
+  void
+  begin_tree (const t8_forest_t forest, const t8_forest_t forest_from, const t8_adapt_tree_context &context)
+  {
+    actions.assign ((size_t) context.num_elements_from, static_cast<int> (t8_adapt_action::keep));
+    forest->set_adapt_batched_fn (forest, forest_from, context.ltree_id, context.tree_class, context.scheme,
+                                  context.elements_from, actions.data ());
+  }
+
+  /** Get the action for \a family from the actions of the tree. A family is coarsened if all its members are
+   * marked for coarsening. Otherwise, a coarsening mark of the first element is treated as keep.
+   * \param [in] forest      The forest under construction.
+   * \param [in] forest_from The forest that is adapted.
+   * \param [in] context     The current tree.
+   * \param [in] family      The elements starting at \a context.el_considered.
+   * \return The adapt action, see \ref t8_forest_adapt_t.
+   */
+  int
+  query ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_forest_t forest_from,
+         const t8_adapt_tree_context &context, const t8_adapt_family &family) const
+  {
+    T8_ASSERT (context.el_considered + family.num_elements <= (t8_locidx_t) actions.size ());
+    const int coarsen = static_cast<int> (t8_adapt_action::coarsen);
+    const auto first = actions.begin () + context.el_considered;
+    if (family.is_family && std::all_of (first, first + family.num_elements, [coarsen] (const int action) {
+          return action == coarsen;
+        })) {
+      return coarsen;
+    }
+    return *first == coarsen ? static_cast<int> (t8_adapt_action::keep) : *first;
+  }
+
+  std::vector<int> actions; /**< The actions of the elements of the current tree, as set by the callback. */
 };
 
 /** CRTP base of all adaptors. \ref adapt runs the fixed control flow and calls the hooks of \a TDerived.

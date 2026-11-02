@@ -116,6 +116,28 @@ typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t
                                   const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *scheme,
                                   const int is_family, const int num_elements, t8_element_t *elements[]);
 
+/** Callback function prototype to decide for refining and coarsening of all elements of a tree at once.
+ * It is called once for each local tree of \a forest_from, see \ref t8_forest_set_adapt_batched.
+ * \param [in] forest       The forest to which the new elements belong.
+ * \param [in] forest_from  The forest that is adapted.
+ * \param [in] which_tree   The local tree containing \a elements.
+ * \param [in] tree_class   The eclass of \a which_tree.
+ * \param [in] scheme       The scheme of the forest.
+ * \param [in] elements     The leaf elements of \a which_tree in \a forest_from. The local index of element \a i
+ *                          in \a forest_from is the element offset of the tree plus \a i.
+ * \param [out] actions     One entry for each element of \a elements, initialized with 0. Set entry \a i to
+ *                          1 if element \a i should be refined,
+ *                          -1 if element \a i should be coarsened. A family is only coarsened if all its members
+ *                             are set to -1, otherwise -1 is treated as 0.
+ *                          -2 if element \a i should be removed,
+ *                          0 else.
+ *                          Values greater than 1 are only allowed for subelement schemes, see
+ *                          \ref t8_forest_adapt_t.
+ */
+typedef void (*t8_forest_adapt_batched_t) (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                                           const t8_eclass_t tree_class, const t8_scheme_c *scheme,
+                                           const t8_element_array_t *elements, int *actions);
+
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
  * Currently it is mandatory to either call the functions \see t8_forest_set_mpicomm,
@@ -274,6 +296,24 @@ t8_forest_get_set_from (const t8_forest_t forest);
 /* TODO: make recursive flag to int specifying the number of recursions? */
 void
 t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_t adapt_fn, const int recursive);
+
+/** Set a source forest with a batched adapt function to be adapted on committing.
+ * In contrast to \ref t8_forest_set_adapt, \a adapt_fn is called once per local tree and decides for all elements
+ * of the tree at once. The adaptation is not recursive.
+ * Ownership of \b set_from is handled as in \ref t8_forest_set_adapt.
+ * \param [in,out] forest   The forest
+ * \param [in] set_from     The source forest from which \b forest will be adapted.
+ *                          We take ownership. This can be prevented by
+ *                          referencing \b set_from.
+ *                          If NULL, a previously (or later) set forest will
+ *                          be taken (\ref t8_forest_set_partition, \ref t8_forest_set_balance).
+ * \param [in] adapt_fn     The batched adapt function used on committing.
+ * \note This setting can be combined with \ref t8_forest_set_partition and \ref
+ * t8_forest_set_balance, as \ref t8_forest_set_adapt.
+ * \note This setting may not be combined with \ref t8_forest_set_adapt or \ref t8_forest_set_copy.
+ */
+void
+t8_forest_set_adapt_batched (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_batched_t adapt_fn);
 
 /** Set the user data of a forest. This can i.e. be used to pass user defined
  * arguments to the adapt routine.

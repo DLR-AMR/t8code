@@ -97,13 +97,16 @@ typedef struct t8_forest
   t8_forest_from_t from_method;   /**< Method to derive from \b set_from. */
   t8_forest_adapt_t set_adapt_fn; /**< refinement and coarsen function. Called when \b from_method
                                              is set to T8_FOREST_FROM_ADAPT. */
-  int set_adapt_recursive;        /**< Flag to decide whether coarsen and refine
+  /** Batched refinement and coarsen function. Used instead of \a set_adapt_fn if not NULL,
+   * see \ref t8_forest_set_adapt_batched. */
+  t8_forest_adapt_batched_t set_adapt_batched_fn;
+  int set_adapt_recursive; /**< Flag to decide whether coarsen and refine
                                                 are carried out recursive */
-  int set_balance;                /**< Flag to decide whether to forest will be balance in \ref t8_forest_commit.
+  int set_balance;         /**< Flag to decide whether to forest will be balance in \ref t8_forest_commit.
                                              See \ref t8_forest_set_balance.
                                              If 0, no balance. If 1 balance with repartitioning, if 2 balance without
                                              repartitioning, \see t8_forest_balance */
-  int do_ghost;                   /**< If True, a ghost layer will be created when the forest is committed. */
+  int do_ghost;            /**< If True, a ghost layer will be created when the forest is committed. */
   t8_forest_ghost_definition_c *ghost_definition; /**< The definition of the ghost layer. */
   void *user_data;                                /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
   void (*user_function) (); /**< Pointer for arbitrary user function. \see t8_forest_set_user_function. */
