@@ -36,6 +36,7 @@
 #include <t8_data/t8_containers.h>
 
 #include <array>
+#include <vector>
 
 /** The actions an adapt callback \ref t8_forest_adapt_t can request for an element.
  * Return values greater than \ref t8_adapt_action::refine request a special refinement
@@ -59,6 +60,9 @@ struct t8_adapt_tree_context
   t8_element_array_t *const elements;  /**< The leaf elements of the tree in the new forest. */
   const t8_locidx_t num_elements_from; /**< The number of elements in \a elements_from. */
   t8_locidx_t el_considered;           /**< The index of the current element in \a elements_from. */
+  /** The index of the first element in \a elements that may be coarsened recursively.
+   * Elements before it stem from a recursive refinement and must not be coarsened again. */
+  t8_locidx_t el_coarsen;
 };
 
 /** The elements passed to the adapt callback: either a family or a single element. */
@@ -73,9 +77,11 @@ struct t8_adapt_family
 /** CRTP base of all adaptors. \ref adapt runs the fixed control flow and calls the hooks of \a TDerived.
  * The base implements every hook for complete forests. A derived adaptor hides a hook by declaring a member
  * function with the same name and signature, the base then calls the derived version without virtual dispatch.
- * \tparam TDerived The derived adaptor.
+ * \tparam TDerived   The derived adaptor.
+ * \tparam TRecursive If true, newly created elements are passed to the callback again and refined or coarsened
+ *                    recursively, see \ref t8_forest_set_adapt.
  */
-template <typename TDerived>
+template <typename TDerived, bool TRecursive>
 struct t8_adaptor
 {
   /** Constructor.
@@ -125,10 +131,13 @@ struct t8_adaptor
       }
       T8_ASSERT (t8_element_array_get_count (&tree->leaf_elements) == 0);
       t8_adapt_tree_context context {
-        ltree_id, tree->eclass, scheme, &tree_from->leaf_elements, &tree->leaf_elements, num_el_from, 0
+        ltree_id, tree->eclass, scheme, &tree_from->leaf_elements, &tree->leaf_elements, num_el_from, 0, 0
       };
       while (context.el_considered < num_el_from) {
         adapt_family (context);
+      }
+      if constexpr (TRecursive) {
+        destroy_refine_buffer (context);
       }
 
       const t8_locidx_t el_inserted = (t8_locidx_t) t8_element_array_get_count (&tree->leaf_elements);
@@ -167,26 +176,19 @@ struct t8_adaptor
   t8_adapt_family
   get_family (const t8_adapt_tree_context &context)
   {
-    t8_adapt_family family;
-    const t8_element_t *first = t8_element_array_index_locidx (context.elements_from, context.el_considered);
-    const int num_siblings = context.scheme->element_get_num_siblings (context.tree_class, first);
-    T8_ASSERT (num_siblings <= T8_ECLASS_MAX_CHILDREN);
-    /* The number of consecutive elements whose child ids are 0, 1, ..., num_collected - 1. */
-    int num_collected = 0;
-    for (; num_collected < num_siblings && context.el_considered + num_collected < context.num_elements_from;
-         num_collected++) {
-      family.elements[num_collected]
-        = t8_element_array_index_locidx_mutable (context.elements_from, context.el_considered + num_collected);
-      /* Quick check: a family has the child ids 0, 1, ..., num_siblings - 1. This is not sufficient, therefore
-       * we check with elements_are_family below. */
-      if (context.scheme->element_get_child_id (context.tree_class, family.elements[num_collected]) != num_collected) {
-        break;
-      }
-    }
-    family.is_family = num_collected == num_siblings
-                       && context.scheme->elements_are_family (context.tree_class, family.elements.data ());
-    family.num_elements = family.is_family ? num_siblings : 1;
-    return family;
+    return collect_family (context, context.elements_from, context.el_considered, context.num_elements_from);
+  }
+
+  /** Collect the elements of the new tree from \a first to its end for recursive coarsening.
+   * \param [in] context The current tree.
+   * \param [in] first   The index of the first possible family member in \a context.elements.
+   * \return The family starting at \a first, or this element alone.
+   */
+  t8_adapt_family
+  get_new_family (const t8_adapt_tree_context &context, const t8_locidx_t first)
+  {
+    return collect_family (context, context.elements, first,
+                           (t8_locidx_t) t8_element_array_get_count (context.elements));
   }
 
   /** Ask the adapt callback of the forest what to do with \a family.
@@ -209,6 +211,11 @@ struct t8_adaptor
   t8_locidx_t
   refine (t8_adapt_tree_context &context, const t8_adapt_family &family)
   {
+    if constexpr (TRecursive) {
+      refine_recursive (context, family.elements[0]);
+      context.el_coarsen = (t8_locidx_t) t8_element_array_get_count (context.elements);
+      return 1;
+    }
     const int num_children = context.scheme->element_get_num_children (context.tree_class, family.elements[0]);
     (void) t8_element_array_push_count (context.elements, num_children);
     context.scheme->element_get_children (context.tree_class, family.elements[0], num_children,
@@ -228,6 +235,9 @@ struct t8_adaptor
     T8_ASSERT (context.scheme->element_get_level (context.tree_class, family.elements[0]) > 0);
     t8_element_t *parent = t8_element_array_push (context.elements);
     context.scheme->element_get_parent (context.tree_class, family.elements[0], parent);
+    if constexpr (TRecursive) {
+      coarsen_recursive (context);
+    }
     return family.num_elements;
   }
 
@@ -241,6 +251,9 @@ struct t8_adaptor
   {
     t8_element_t *element = t8_element_array_push (context.elements);
     context.scheme->element_copy (context.tree_class, family.elements[0], element);
+    if constexpr (TRecursive) {
+      coarsen_recursive (context);
+    }
     return 1;
   }
 
@@ -310,9 +323,189 @@ struct t8_adaptor
     return last;
   }
 
+  /** Collect the element at \a first in \a array and, if they form a family, its siblings.
+   * \param [in] context The current tree.
+   * \param [in] array   Either \a context.elements_from or \a context.elements.
+   * \param [in] first   The index of the first possible family member in \a array.
+   * \param [in] end     The number of elements in \a array that may be part of the family.
+   * \return The family starting at \a first, or this element alone.
+   */
+  static t8_adapt_family
+  collect_family (const t8_adapt_tree_context &context, t8_element_array_t *array, const t8_locidx_t first,
+                  const t8_locidx_t end)
+  {
+    t8_adapt_family family;
+    const int num_siblings
+      = context.scheme->element_get_num_siblings (context.tree_class, t8_element_array_index_locidx (array, first));
+    T8_ASSERT (num_siblings <= T8_ECLASS_MAX_CHILDREN);
+    /* The number of consecutive elements whose child ids are 0, 1, ..., num_collected - 1. */
+    int num_collected = 0;
+    for (; num_collected < num_siblings && first + num_collected < end; num_collected++) {
+      family.elements[num_collected] = t8_element_array_index_locidx_mutable (array, first + num_collected);
+      /* Quick check: a family has the child ids 0, 1, ..., num_siblings - 1. This is not sufficient, therefore
+       * we check with elements_are_family below. */
+      if (context.scheme->element_get_child_id (context.tree_class, family.elements[num_collected]) != num_collected) {
+        break;
+      }
+    }
+    family.is_family = num_collected == num_siblings
+                       && context.scheme->elements_are_family (context.tree_class, family.elements.data ());
+    family.num_elements = family.is_family ? num_siblings : 1;
+    return family;
+  }
+
+  /** Refine \a parent and pass each child to the callback, which may refine it further.
+   * The resulting leaves are appended to the new tree in SFC order.
+   * \param [in, out] context The current tree.
+   * \param [in]      parent  The element to refine. Its level is smaller than the maximum level of the forest.
+   */
+  void
+  refine_recursive (t8_adapt_tree_context &context, const t8_element_t *parent)
+    requires (TRecursive)
+  {
+    const int child_level = context.scheme->element_get_level (context.tree_class, parent) + 1;
+    T8_ASSERT (child_level <= forest->maxlevel);
+    const int max_children = context.scheme->get_max_num_children (context.tree_class);
+    if (refine_buffer.empty ()) {
+      refine_buffer.resize ((size_t) (forest->maxlevel + 1) * max_children);
+      context.scheme->element_new (context.tree_class, (int) refine_buffer.size (), refine_buffer.data ());
+    }
+    /* The children of all elements of one level share a block of the buffer, since we refine depth first. */
+    t8_element_t **children = refine_buffer.data () + (size_t) child_level * max_children;
+    const int num_children = context.scheme->element_get_num_children (context.tree_class, parent);
+    context.scheme->element_get_children (context.tree_class, parent, num_children, children);
+
+    for (int ichild = 0; ichild < num_children; ichild++) {
+      t8_adapt_family child { { children[ichild] }, 1, false };
+      const int refine_value = derived ().query (context, child);
+      T8_ASSERT (refine_value != static_cast<int> (t8_adapt_action::coarsen));
+      if (refine_value == static_cast<int> (t8_adapt_action::refine) && child_level < forest->maxlevel
+          && context.scheme->element_is_refinable (context.tree_class, children[ichild])) {
+        refine_recursive (context, children[ichild]);
+      }
+      else if (refine_value == static_cast<int> (t8_adapt_action::remove)) {
+        element_removed = true;
+      }
+      else {
+        t8_element_t *element = t8_element_array_push (context.elements);
+        context.scheme->element_copy (context.tree_class, children[ichild], element);
+      }
+    }
+  }
+
+  /** Free the buffer used by \ref refine_recursive, since the next tree may have a different eclass.
+   * \param [in] context The tree that was adapted.
+   */
+  void
+  destroy_refine_buffer (const t8_adapt_tree_context &context)
+    requires (TRecursive)
+  {
+    if (!refine_buffer.empty ()) {
+      context.scheme->element_destroy (context.tree_class, (int) refine_buffer.size (), refine_buffer.data ());
+      refine_buffer.clear ();
+    }
+  }
+
+  /** If the last element of the new tree is the last member of a family, pass the family to the callback and
+   * coarsen it if requested. Repeat with the resulting parent.
+   * \param [in, out] context The current tree.
+   */
+  void
+  coarsen_recursive (t8_adapt_tree_context &context)
+    requires (TRecursive)
+  {
+    t8_locidx_t first = find_family_start (context, (t8_locidx_t) t8_element_array_get_count (context.elements) - 1);
+    while (first >= context.el_coarsen) {
+      t8_adapt_family family = derived ().get_new_family (context, first);
+      if (!family.is_family || derived ().query (context, family) != static_cast<int> (t8_adapt_action::coarsen)) {
+        return;
+      }
+      T8_ASSERT (context.scheme->element_get_level (context.tree_class, family.elements[0]) > 0);
+      context.scheme->element_get_parent (context.tree_class, family.elements[0], family.elements[0]);
+      /* The parent replaces the family. */
+      t8_element_array_resize (context.elements, first + 1);
+      first = find_family_start (context, first);
+    }
+  }
+
+  /** Find the first member of the family whose last member is at \a last in the new tree.
+   * \param [in] context The current tree.
+   * \param [in] last    The index of an element in \a context.elements.
+   * \return The index of the first family member, or a negative value if the element at \a last is not the
+   *         last member of a family that can be coarsened.
+   */
+  t8_locidx_t
+  find_family_start (const t8_adapt_tree_context &context, const t8_locidx_t last)
+    requires (TRecursive)
+  {
+    const t8_scheme *scheme = context.scheme;
+    const t8_eclass_t tree_class = context.tree_class;
+    const t8_locidx_t num_elements = (t8_locidx_t) t8_element_array_get_count (context.elements);
+    T8_ASSERT (0 <= last && last < num_elements);
+    const t8_element_t *element = t8_element_array_index_locidx (context.elements, last);
+    const int level = scheme->element_get_level (tree_class, element);
+    const int num_siblings = scheme->element_get_num_siblings (tree_class, element);
+    const int child_id = scheme->element_get_child_id (tree_class, element);
+    /* Elements whose family consists of only one element (vertices) and elements of level 0 cannot be coarsened.
+     * Otherwise, the element has to be the last member of its family. */
+    if (!(child_id > 0 && child_id == num_siblings - 1) || level == 0) {
+      return -1;
+    }
+
+    t8_element_t *parent;
+    t8_element_t *parent_compare;
+    scheme->element_new (tree_class, 1, &parent);
+    scheme->element_new (tree_class, 1, &parent_compare);
+    scheme->element_get_parent (tree_class, element, parent);
+
+    /* Loop backward over all possible family members until we hit an element that is not part of the family
+     * or we have reached the maximum number of members. */
+    t8_locidx_t iback = 1;
+    t8_locidx_t first = last;
+    const t8_element_t *element_compare = nullptr;
+    for (; iback < num_siblings && iback < num_elements; iback++) {
+      element_compare = t8_element_array_index_locidx (context.elements, last - iback);
+      /* Comparing the levels first may avoid the more expensive comparison of the parents. */
+      if (scheme->element_get_level (tree_class, element_compare) != level) {
+        break;
+      }
+      scheme->element_get_parent (tree_class, element_compare, parent_compare);
+      if (!scheme->element_is_equal (tree_class, parent, parent_compare)) {
+        break;
+      }
+      first = last - iback;
+    }
+
+    /* If we found fewer elements than a family has, the element before them may be a descendant of the parent.
+     * Then coarsening would overlap it. */
+    if (iback < num_siblings && iback < num_elements
+        && scheme->element_get_level (tree_class, element_compare) > level) {
+      scheme->element_get_nca (tree_class, element, element_compare, parent_compare);
+      T8_ASSERT (scheme->element_get_level (tree_class, parent_compare) <= level - 1);
+      if (scheme->element_get_level (tree_class, parent_compare) == level - 1) {
+        first = -1;
+      }
+    }
+    scheme->element_destroy (tree_class, 1, &parent);
+    scheme->element_destroy (tree_class, 1, &parent_compare);
+
+#if T8_ENABLE_MPI
+    /* The first element on process rank must have child_id 0, otherwise other family members could be on
+     * process rank - 1. */
+    if (first == 0 && forest->mpirank > 0
+        && scheme->element_get_child_id (tree_class, t8_element_array_index_locidx (context.elements, 0)) > 0) {
+      return -1;
+    }
+#endif
+    return first;
+  }
+
   t8_forest_t forest;           /**< The forest under construction. */
   t8_forest_t forest_from;      /**< The forest that is adapted. */
   bool element_removed = false; /**< True if an element was removed on this process, false otherwise. */
+  /** The elements used by \ref refine_recursive, one block of the maximum number of children per level.
+   * Empty if no element of the current tree was refined recursively. */
+  std::vector<t8_element_t *> refine_buffer;
 
  private:
   /** Query the callback for the element at \a context.el_considered and apply the requested action.

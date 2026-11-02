@@ -724,13 +724,18 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->set_adapt_recursive != -1);
   const t8_forest_t forest_from = forest->set_from;
 
-  if (!forest->set_adapt_recursive && !forest_from->incomplete_trees
-      && !t8_scheme_has_subelement_scheme (t8_forest_get_scheme (forest_from))) {
-    t8_standard_adaptor adaptor (forest);
-    adaptor.adapt ();
+  if (forest_from->incomplete_trees || t8_scheme_has_subelement_scheme (t8_forest_get_scheme (forest_from))) {
+    t8_forest_adapt_legacy (forest);
     return;
   }
-  t8_forest_adapt_legacy (forest);
+  if (forest->set_adapt_recursive) {
+    t8_standard_adaptor<true> adaptor (forest);
+    adaptor.adapt ();
+  }
+  else {
+    t8_standard_adaptor<false> adaptor (forest);
+    adaptor.adapt ();
+  }
 }
 
 T8_EXTERN_C_END ();

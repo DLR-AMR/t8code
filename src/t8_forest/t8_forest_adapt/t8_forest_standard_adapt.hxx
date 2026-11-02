@@ -29,10 +29,13 @@
 
 #include <t8_forest/t8_forest_adapt/t8_forest_adapt.hxx>
 
-/** Adaptor for a source forest without holes and without subelements. It uses all hooks of \ref t8_adaptor. */
-struct t8_standard_adaptor: t8_adaptor<t8_standard_adaptor>
+/** Adaptor for a source forest without holes and without subelements. It uses all hooks of \ref t8_adaptor.
+ * \tparam TRecursive If true, adapt recursively, see \ref t8_adaptor.
+ */
+template <bool TRecursive>
+struct t8_standard_adaptor: t8_adaptor<t8_standard_adaptor<TRecursive>, TRecursive>
 {
-  using t8_adaptor::t8_adaptor;
+  using t8_adaptor<t8_standard_adaptor, TRecursive>::t8_adaptor;
 };
 
 #endif /* T8_FOREST_STANDARD_ADAPT_HXX */
