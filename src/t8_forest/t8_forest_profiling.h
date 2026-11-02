@@ -28,6 +28,7 @@
 #define T8_FOREST_PROFILING_H
 
 #include <sc_statistics.h>
+#include <t8_forest/t8_forest_general.h>
 T8_EXTERN_C_BEGIN ();
 
 /** Enable or disable profiling for a forest. If profiling is enabled, runtimes

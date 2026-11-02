@@ -31,12 +31,14 @@
 
 #include <t8.h>
 #include <sc_functions.h>
-#include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <t8_eclass/t8_eclass.h>
 #include "t8_subelement_traits.hxx"
 #include <utility>
 #include <algorithm>
+
+/* Forward declaration, since only used as pointer here. Do not include t8_scheme.hxx, since it includes this file. */
+struct t8_scheme;
 
 /** Scheme for the common functionality of all subelements.
  * Subelements are discarded before the next adaptation cycle and do not have children.
