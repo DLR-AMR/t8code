@@ -23,382 +23,208 @@
 /**
  * \file t8_forest_partition_for_coarsening.cxx
  * This file contains the main implementations of t8code's partition-for-coarsening feature.
-*/
+ *
+ * A first element of a rank in the new partition (a cut) splits a family if elements of the family lie on both sides
+ * of it, and is then moved behind the family. The rank owning the element at the cut in the old partition decides
+ * this. It knows its own elements and gets the families at the borders of the ranks within T8_ECLASS_MAX_CHILDREN - 1
+ * elements: each rank routes its first family to the ranks with elements below it and its last family to the ranks
+ * with elements above it, together with the cuts to the owners of their elements (\ref t8_forest_route).
+ */
 
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
-#include <t8_forest/t8_forest_pfc_message.hxx>
 #include <t8_forest/t8_forest_pfc_helper.hxx>
-#include <t8_data/t8_shmem.h>
+#include <t8_forest/t8_forest_splitters.hxx>
 #include <t8_element.h>
 #include <t8_forest/t8_forest_partition_for_coarsening.h>
 #include <t8_eclass.h>
+#include <t8_schemes/t8_scheme.hxx>
 #include <vector>
 #include <algorithm>
 
-/** Return the process owner of the given (global) element_id.
- *
- * \param[in]   partition   the current partitioning, given as array of element offsets.
- * \param[in]   mpisize     the number of MPI ranks
- * \param[in]   element_id  the global index of the element considered
- *
- * \return The ID of the process owning the given element.
- **/
-constexpr t8_procidx_t
-proc_owner (const t8_gloidx_t *partition, const t8_procidx_t mpisize, const t8_gloidx_t element_id)
+/** The kinds of \ref t8_forest_pfc_item. */
+enum t8_forest_pfc_item_kind {
+  T8_FOREST_PFC_BORDER, /**< The family of the first or last element of a rank. */
+  T8_FOREST_PFC_CUT     /**< The first element of a rank in the new partition. */
+};
+
+/** An item routed to correct the cuts: the family at a border of a rank, sent to the ranks with elements within
+ * T8_ECLASS_MAX_CHILDREN - 1 elements below its first or above its last element, or a cut, sent to the rank owning
+ * the element at the cut. */
+struct t8_forest_pfc_item
 {
-  // Due to the pointer arithmetics, this may look more complicated than it is:
-  // ----
-  // (1.) The upper_bound returns a pointer to the first entry in partition that is bigger than element_id.
-  // (2.) Subtracting 1 gives the pointer to the previous entry in partition, i.e., the entry corresponding
-  //      to the process holding the considered element.
-  // (3.) Subtracting the pointer partition gives the number of entries that would fit in between the two
-  //      memory addresses, i.e., it translates the entry's memory address into its array index, i.e., the
-  //      the process id.
-  return (std::upper_bound (partition, partition + mpisize, element_id) - 1) - partition;
-}
+  t8_gloidx_t first;        /**< The first global element index the item is routed to. */
+  t8_gloidx_t last;         /**< The last global element index the item is routed to. */
+  t8_gloidx_t gtreeid;      /**< For a border, the global tree of the border element. */
+  t8_linearidx_t parent_id; /**< For a border, the linear id of the parent of the border element. */
+  int parent_level;         /**< For a border, the level of the parent, -1 if the border element is a root. */
+  int num_siblings;         /**< For a border, the number of siblings of the border element on its rank, counted
+                                 from the border element inwards, the border element included. */
+  int source;               /**< The rank of the border, or the rank whose first element is the cut. */
+  int kind;                 /**< A \ref t8_forest_pfc_item_kind. */
+};
 
-/**
- * Determine the range of processes that may potentially hold siblings of any process-local element.
- *
- * To do so, the range of relevant elements is computed first, essentially by extending the local
- * element range in both directions by max_num_siblings minus one.
- * With that, the corrdesponding processes are simple to find.
- *
- * \param[in]   partition_old     partition of the source forest (as C-style array)
- * \param[in]   rank              MPI rank of the current process
- * \param[in]   mpisize           MPI size of the current communicator
- * \param[out]  proc_range_begin  Id of the process holding the first relevant element.
- * \param[out]  proc_range_end    Id of the process after the last one holding a relevant element.
-*/
-void
-get_relevant_process_range (const t8_gloidx_t *partition_old, const t8_procidx_t rank, const t8_procidx_t mpisize,
-                            t8_procidx_t &proc_range_begin, t8_procidx_t &proc_range_end)
+/** The family of the first or last element of this rank.
+ * \param [in] forest_from    The forest with the old partition.
+ * \param [in] gelement_id    The global index of the first or last local element.
+ * \param [in] towards_upper  If true, the siblings are counted towards higher indices (for the first element).
+ * \return The item, without the global element indices it is routed to.
+ */
+static t8_forest_pfc_item
+t8_forest_pfc_border (const t8_forest_t forest_from, const t8_gloidx_t gelement_id, const bool towards_upper)
 {
-
-  // Get maximum number of siblings.
-  const int max_num_siblings = T8_ECLASS_MAX_CHILDREN;
-
-  // Get range of elements that are relevant to find all families of the process-local elements.
-  // We have to consider all elements that may potentially be siblings of local elements.
-  //    (Note: The SC_MAX and SC_MIN commands are only relevant for the first and last process.)
-  const t8_gloidx_t relevant_eles_begin = SC_MAX (0, partition_old[rank] - (max_num_siblings - 1));
-  const t8_gloidx_t relevant_eles_end
-    = SC_MIN (partition_old[mpisize], partition_old[rank + 1] + (max_num_siblings - 1));
-
-  // Get the process range holding these elements.
-  proc_range_begin = proc_owner (partition_old, mpisize, relevant_eles_begin);
-  proc_range_end = proc_owner (partition_old, mpisize, relevant_eles_end - 1) + 1;
-
-  // Sanity checks
-  T8_ASSERT (0 <= proc_range_begin);
-  T8_ASSERT (proc_range_begin <= proc_range_end);
-  T8_ASSERT (proc_range_end <= mpisize);
-}
-
-/**
- * Send PFC messages to all relevant processes and obtain the associated requests.
- *
- * It is important to understand that we compute the PFC corrections before the new partition
- * is applied. Consequently, all PFC procedures are based on the old partition of the source
- * forest \a forest_from, so the partition offsets we correct in general do not match
- * those of \a forest_from.
- * This in particular means that it does not suffice to only receive from one direction, e.g.,
- * from all processes of lower rank and then only check the lower process borders, see comment
- * in description of \ref t8_forest_pfc_family_range_around_border_anchor.
- *
- * \param[in]   forest_from    the old forest (forest->set_from of the new partitioned forest)
- * \param[out]  requests  the MPI requests as std::vector
- *                          on input:  empty
- *                          on output: contains the send requests
-*/
-template <typename MessageType>
-static void
-t8_forest_pfc_send_loop_range (const t8_forest_t forest_from, std::vector<sc_MPI_Request> &requests)
-{
-  // Assertions: The forest must be committed and the request vector empty.
-  T8_ASSERT (t8_forest_is_committed (forest_from));
-  T8_ASSERT (requests.size () == 0);
-
-  // Get current offset vector of forest.
-  const t8_gloidx_t *partition_old = t8_shmem_array_get_gloidx_array (forest_from->element_offsets);
-
-  // Get range of elements that may potentially be a sibling of a process-local element.
-  t8_procidx_t begin;
-  t8_procidx_t end;
-  get_relevant_process_range (partition_old, forest_from->mpirank, forest_from->mpisize, begin, end);
-
-  // Loop over processes of relevant process range to send data if required.
-  for (t8_procidx_t iproc = begin; iproc < end; iproc++) {
-
-    // Skip empty processes and the own rank.
-    if (partition_old[iproc] >= partition_old[iproc + 1] || iproc == forest_from->mpirank)
-      continue;
-
-    // Construct and fill message of type MessageType (see t8_forest_pfc_message).
-    MessageType message (forest_from->scheme, iproc, forest_from->mpicomm);
-    message.fill (forest_from);
-
-    // Send the message (and obtain the associated requests).
-    sc_MPI_Request request;
-    message.mpi_Isend (forest_from, request);
-
-    // Add to requests array
-    requests.push_back (std::move (request));
-  }
-}
-
-/**
- *  Determine the messages to be received.
- *
- * It is important to understand that we compute the PFC corrections before the new partition
- * is applied. Consequently, all PFC procedures are based on the old partition of the source
- * forest \a forest_from, so the partition offsets we correct in general do not match
- * those of \a forest_from.
- * This in particular means that it does not suffice to only receive from one direction, e.g.,
- * from all processes of lower rank and then only check the lower process borders, see comment
- * in description of \ref t8_forest_pfc_family_range_around_border_anchor.
- *
- * \tparam MessageType  The type of the message. So far, always \ref t8_forest_pfc_message.
- *
- * \param[in]   forest_from   the old forest (forest->set_from of the new partitioned forest)
- * \param[out]  messages      the MPI messages
-*/
-template <typename MessageType>
-static void
-t8_forest_pfc_recv_loop_range (const t8_forest_t forest_from, std::vector<MessageType> &messages)
-{
-  // Assertions: forest must be committed and messages empty.
-  T8_ASSERT (t8_forest_is_committed (forest_from));
-  T8_ASSERT (messages.size () == 0);
-
-  // Get current offset vector of forest.
-  const t8_gloidx_t *partition_old = t8_shmem_array_get_gloidx_array (forest_from->element_offsets);
-
-  // Get range of elements that may potentially be a sibling of a process-local element.
-  t8_procidx_t begin;
-  t8_procidx_t end;
-  get_relevant_process_range (partition_old, forest_from->mpirank, forest_from->mpisize, begin, end);
-
-  // Loop over process range to receive messages.
-  for (t8_procidx_t iproc = begin; iproc < end; iproc++) {
-
-    // Skip empty partitions and the own rank.
-    if (partition_old[iproc] >= partition_old[iproc + 1] || iproc == forest_from->mpirank)
-      continue;
-
-    // Receive message.
-    MessageType message (forest_from->scheme, iproc, forest_from->mpicomm);
-    t8_debugf ("receive message from %i\n", message.iproc);
-    int buf_size;
-    char *recv_buf;
-    message.mpi_Recv (recv_buf, buf_size);
-
-    // Unpack message
-    int position = 0;
-    message.unpack (recv_buf, buf_size, &position);
-    T8_ASSERT (position == buf_size);
-    T8_FREE (recv_buf);
-
-    // Push to messages
-    messages.push_back (std::move (message));
-  }
-}
-
-/**
- * Determine whether a full family would be split by a process boundary in the new partitioning.
- *
- * It is important to note that we run this check for the new partition which is not applied yet.
- * Therefore, this function is based on the old partition of the source forest \a forest_from,
- * meaning the \a border_element_id we check will in general not be at a process boundary of
- * \a forest_from.
- * The \a messages received from other processes contain all elements that may potentially form
- * a family with those held by this process p in \a forest_from 's partitioning.
- * With this set of elements, we can identify all siblings of \a border_element_id and check whether
- * they form a full family. Note that even if they do not, we pass back the range of sibgling elements
- * via the output arguments \a family_begin and \a family_end.
- *
- * Note that we can see here why the two-directional communication, i.e., sending to / receiving
- * from processes with both higher and lower rank, is the simplest way to over cover all cases up to the
- * extreme ones, i.e., \a border_element_id being
- *    (a) the first local element of \a forest_from and the last sibling of a full family, or
- *    (b) the last local element of \a forest_from and the first sibling of a full family.
- * A one-directional communication pattern would be possible, but would require to double the message sizes
- * and make this function less convenient as we would have to check \a boder_element_id s not part
- * of our element range in \b forest_from.
- *
- * \param[in]   forest_from         the old forest (forest->set_from of the new partitioned forest)
- * \param[in]   border_element_id   the global ID of the new partitioning's border element we run the check for
- * \param[in]   messages            the PFC messages received from other processes
- * \param[out]  family_begin        the global element ID of the family's first member
- * \param[out]  family_end          the global element ID of the family's last member
- *
- * \return True (i.e., nonzero) if and only if a full family is found across the process borders.
- *
- * \anchor t8_forest_pfc_family_range_around_border_anchor.
-*/
-static int
-t8_forest_pfc_family_range_around_border (const t8_forest_t forest_from, const t8_gloidx_t border_element_id,
-                                          const std::vector<t8_forest_pfc_message> &messages, t8_gloidx_t &family_begin,
-                                          t8_gloidx_t &family_end)
-{
-  // From the element with global ID border_element_id, determine
-  // - the global tree ID
-  // - the tree
-  // - the element's index within the tree
-  // - the element itself
-  t8_gloidx_t gtree_id;
+  t8_gloidx_t gtreeid;
   t8_tree_t tree;
   t8_locidx_t index_in_tree;
   t8_element_t *element;
-  t8_forest_pfc_helper_index_in_tree_from_globalid (forest_from, border_element_id, gtree_id, tree, index_in_tree,
-                                                    element);
-
-  // Get scheme and eclass from forest and tree.
+  t8_forest_pfc_helper_index_in_tree_from_globalid (forest_from, gelement_id, gtreeid, tree, index_in_tree, element);
   const t8_scheme_c *scheme = t8_forest_get_scheme (forest_from);
   const t8_eclass_t eclass = tree->eclass;
-
-  // If the element is the root, return false because the root does not have any parent or siblings.
-  if (scheme->element_get_level (eclass, element) == 0) {
-    family_begin = border_element_id;
-    family_end = border_element_id;
-    return false;
+  t8_forest_pfc_item item = {};
+  item.gtreeid = gtreeid;
+  item.source = forest_from->mpirank;
+  item.kind = T8_FOREST_PFC_BORDER;
+  const int level = scheme->element_get_level (eclass, element);
+  if (level == 0) {
+    /* A root has no siblings */
+    item.parent_level = -1;
+    return item;
   }
-
-  // Allocate and determine parent element.
   t8_element_t *parent;
-  t8_element_new (scheme, eclass, 1, &parent);
+  scheme->element_new (eclass, 1, &parent);
   scheme->element_get_parent (eclass, element, parent);
-
-  // Get global ID of first (process-)local element
-  const t8_gloidx_t first_tree_element
-    = t8_forest_get_first_local_leaf_element_id (forest_from) + tree->elements_offset;
-
-  // Determine range of global IDs forming the family of first_tree_element, by calling the helper function
-  // t8_forest_pfc_extreme_local_sibling twice, i.e., searching in the direction of in- and decreasing indices.
-  // Note: The end iterator is one behind the last family member.
-  family_begin = first_tree_element + t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, -1);
-  family_end = first_tree_element + t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, +1) + 1;
-
-  // Check if other processes have the same parent as the current family, so we need to adjust our range.
-  for (t8_procidx_t imessage = 0; imessage < (t8_procidx_t) messages.size (); imessage++) {
-    t8_debugf ("process message from %i\n", messages[imessage].iproc);
-
-    // On the same tree we can use our scheme to compare, because we know that the eclasses are equal.
-    if (messages[imessage].itree == gtree_id
-        && scheme->element_is_equal (eclass, parent, messages[imessage].get_parent ())) {
-
-      // If parents are equal, extend lower or upper range border by num_siblings, depending on the send "direction",
-      // i.e., towards lower- or higher-rank processes.
-      if (messages[imessage].iproc < forest_from->mpirank) {
-        family_begin -= messages[imessage].num_siblings;
-      }
-      else {
-        family_end += messages[imessage].num_siblings;
-      }
-    }
+  item.parent_level = level - 1;
+  item.parent_id = scheme->element_get_linear_id (eclass, parent, level - 1);
+  scheme->element_destroy (eclass, 1, &parent);
+  if (towards_upper) {
+    item.num_siblings = t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, +1) - index_in_tree + 1;
   }
-
-  // Determine the parent's number of children.
-  const int num_children = scheme->element_get_num_children (eclass, parent);
-
-  // Deallocate parent element
-  t8_element_destroy (scheme, eclass, 1, &parent);
-
-  // Return true if the considered family contains all children of the parent.
-  return (family_end - family_begin == num_children);
+  else {
+    item.num_siblings = index_in_tree - t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, -1) + 1;
+  }
+  return item;
 }
 
-/** Compute the process-local corrections of the given partition.
- *
- * \param[in]   forest_from             the old forest (forest->set_from of the new partitioned forest)
- * \param[in]   partition_new_shmem     the current partitioning (without PFC correction) as shared-memory array
- * \param[in]   messages                the PFC messages received from other processes
- * \param[out]  corrected_local_offsets a std::vector of t8_gloidx_t>
- *                                      on input:  empty
- *                                      on output: containing the corrections to be applied to the local offsets to obtain the PFC partitioning
-*/
-static void
-t8_forest_pfc_correct_local_offsets (const t8_forest_t forest_from, const t8_shmem_array_t partition_new_shmem,
-                                     const std::vector<t8_forest_pfc_message> &messages,
-                                     std::vector<t8_gloidx_t> &corrected_local_offsets)
+/** The corrected cut: if a full family lies on both sides of the cut, the cut is moved behind the family.
+ * \param [in] forest_from  The forest with the old partition, which owns the element at \a cut.
+ * \param [in] cut          The global index of the first element of a rank in the new partition.
+ * \param [in] borders      The families at the borders of the ranks within T8_ECLASS_MAX_CHILDREN - 1 elements.
+ * \return The corrected cut.
+ */
+static t8_gloidx_t
+t8_forest_pfc_corrected_cut (const t8_forest_t forest_from, const t8_gloidx_t cut,
+                             const std::vector<t8_forest_pfc_item> &borders)
 {
-  T8_ASSERT (t8_forest_is_committed (forest_from));
+  t8_gloidx_t gtreeid;
+  t8_tree_t tree;
+  t8_locidx_t index_in_tree;
+  t8_element_t *element;
+  t8_forest_pfc_helper_index_in_tree_from_globalid (forest_from, cut, gtreeid, tree, index_in_tree, element);
+  const t8_scheme_c *scheme = t8_forest_get_scheme (forest_from);
+  const t8_eclass_t eclass = tree->eclass;
+  const int level = scheme->element_get_level (eclass, element);
+  if (level == 0) {
+    /* A root has no siblings */
+    return cut;
+  }
+  t8_element_t *parent;
+  scheme->element_new (eclass, 1, &parent);
+  scheme->element_get_parent (eclass, element, parent);
+  const t8_linearidx_t parent_id = scheme->element_get_linear_id (eclass, parent, level - 1);
+  const int num_children = scheme->element_get_num_children (eclass, parent);
+  scheme->element_destroy (eclass, 1, &parent);
 
-  // Get current partitioning as array of t8_gloidx_t.
-  const t8_gloidx_t *partition_new = t8_shmem_array_get_gloidx_array (partition_new_shmem);
-
-  // Get offsets of current and next process in old partitioning.
-  // (Note that here the next process is used solely to know the upper bounds.)
-  const t8_gloidx_t old_offset_this_process
-    = t8_shmem_array_get_gloidx (forest_from->element_offsets, forest_from->mpirank);
-  const t8_gloidx_t old_offset_next_process
-    = t8_shmem_array_get_gloidx (forest_from->element_offsets, forest_from->mpirank + 1);
-
-  // Determine where these offsets would end up in the new partitioning.
-  const t8_gloidx_t *min_local_element_pointer
-    = std::lower_bound (partition_new, partition_new + forest_from->mpisize, old_offset_this_process);
-  const t8_gloidx_t *next_min_local_element_pointer
-    = std::lower_bound (partition_new, partition_new + forest_from->mpisize, old_offset_next_process);
-
-  // Get the processes that will (without correction) get the elements the current process had in the old partitioning.
-  const t8_gloidx_t min_local_proc = min_local_element_pointer - partition_new;
-  const t8_gloidx_t next_min_local_proc = next_min_local_element_pointer - partition_new;
-
-  // Loop over this range of processes to adjust local borders.
-  for (t8_procidx_t border_rank = min_local_proc; border_rank < next_min_local_proc; border_rank++) {
-    t8_gloidx_t family_begin, family_end;
-
-    // Check if there is a full family split by the current border. If so, adjust border.
-    if (t8_forest_pfc_family_range_around_border (forest_from, partition_new[border_rank], messages, family_begin,
-                                                  family_end)) {
-      // Find process owning first family member.
-      const t8_procidx_t rank_family_begin = proc_owner (partition_new, forest_from->mpisize, family_begin);
-
-      // Push corrected local offset to vector: Depending on the split rank, to beginning or end of family.
-      const t8_gloidx_t new_offset = (border_rank <= rank_family_begin) ? family_begin : family_end;
-      corrected_local_offsets.push_back (new_offset);
-    }
-    else {
-      // No correction needed: Push current offset to vector.
-      const t8_gloidx_t new_offset = partition_new[border_rank];
-      corrected_local_offsets.push_back (new_offset);
+  /* The local siblings, extended by the siblings on the ranks below and above */
+  const t8_gloidx_t first_tree_element
+    = t8_forest_get_first_local_leaf_element_id (forest_from) + tree->elements_offset;
+  t8_gloidx_t family_begin = first_tree_element + t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, -1);
+  t8_gloidx_t family_end
+    = first_tree_element + t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, +1) + 1;
+  for (const t8_forest_pfc_item &border : borders) {
+    if (border.gtreeid == gtreeid && border.parent_level == level - 1 && border.parent_id == parent_id) {
+      if (border.source < forest_from->mpirank) {
+        family_begin -= border.num_siblings;
+      }
+      else {
+        family_end += border.num_siblings;
+      }
     }
   }
+  /* Move the cut behind a full family that starts before it */
+  return family_end - family_begin == num_children && family_begin < cut ? family_end : cut;
 }
 
 T8_EXTERN_C_BEGIN ();
-void
-t8_forest_pfc_correction_offsets (t8_forest_t forest)
+t8_gloidx_t
+t8_forest_pfc_correct_first (t8_forest_t forest, const t8_gloidx_t first)
 {
+  const t8_forest_t forest_from = forest->set_from; /* committed */
+  const t8_gloidx_t global_num_elements = forest_from->global_num_leaf_elements;
+  const t8_locidx_t num_local = forest_from->local_num_leaf_elements;
+  const t8_gloidx_t window = T8_ECLASS_MAX_CHILDREN - 1;
 
-  // Initialization.
-  const t8_forest_t forest_old = forest->set_from; /* committed */
-  const t8_shmem_array_t partition_new = forest->element_offsets;
-  std::vector<t8_gloidx_t> corrected_local_offsets;
-
-  // Nothing to be done for empty processes.
-  if (t8_forest_get_local_num_leaf_elements (forest_old) != 0) {
-
-    // Send requests to other processes.
-    std::vector<sc_MPI_Request> requests;
-    t8_forest_pfc_send_loop_range<t8_forest_pfc_message> (forest_old, requests);
-
-    // Receive messages from other processes.
-    std::vector<t8_forest_pfc_message> messages;
-    t8_forest_pfc_recv_loop_range<t8_forest_pfc_message> (forest_old, messages);
-
-    // Wait for Isend requests.
-    const int mpiret = sc_MPI_Waitall (requests.size (), requests.data (), sc_MPI_STATUSES_IGNORE);
-    SC_CHECK_MPI (mpiret);
-
-    // Compute process-local corrections to partitioning
-    t8_forest_pfc_correct_local_offsets (forest_old, partition_new, messages, corrected_local_offsets);
+  /* The families at the borders of this rank, routed to the ranks with elements within the window */
+  std::vector<t8_forest_pfc_item> items;
+  if (num_local > 0) {
+    const t8_gloidx_t old_first = t8_forest_get_first_local_leaf_element_id (forest_from);
+    const t8_gloidx_t old_last = old_first + num_local - 1;
+    if (old_first > 0) {
+      t8_forest_pfc_item item = t8_forest_pfc_border (forest_from, old_first, true);
+      item.first = SC_MAX (0, old_first - window);
+      item.last = old_first - 1;
+      items.push_back (item);
+    }
+    if (old_last < global_num_elements - 1) {
+      t8_forest_pfc_item item = t8_forest_pfc_border (forest_from, old_last, false);
+      item.first = old_last + 1;
+      item.last = SC_MIN (global_num_elements - 1, old_last + window);
+      items.push_back (item);
+    }
   }
+  /* The first element of this rank in the new partition, routed to its owner. The first rank starts at 0, which
+   * cannot split a family, and empty ranks at the end start behind the last element. */
+  const bool has_cut = forest->mpirank > 0 && first < global_num_elements;
+  if (has_cut) {
+    t8_forest_pfc_item item = {};
+    item.first = item.last = first;
+    item.source = forest->mpirank;
+    item.kind = T8_FOREST_PFC_CUT;
+    items.push_back (item);
+  }
+  t8_forest_route (forest_from, items, [] (const t8_forest_pfc_item &item, const t8_forest_bisection &level) {
+    return t8_forest_route_halves_elements (level, item.first, item.last, false);
+  });
 
-  // Allgatherv the corrected local offsets, resulting in the new partition.
-  t8_shmem_array_allgatherv (corrected_local_offsets.data (), corrected_local_offsets.size (), T8_MPI_GLOIDX,
-                             partition_new, T8_MPI_GLOIDX, forest->mpicomm);
+  /* Correct the cuts in the range of this rank and send them back */
+  std::vector<t8_forest_pfc_item> borders;
+  for (const t8_forest_pfc_item &item : items) {
+    if (item.kind == T8_FOREST_PFC_BORDER) {
+      borders.push_back (item);
+    }
+  }
+  std::vector<t8_gloidx_t> corrected;
+  corrected.reserve (items.size ());
+  std::vector<sc_MPI_Request> requests;
+  requests.reserve (items.size ());
+  for (const t8_forest_pfc_item &item : items) {
+    if (item.kind == T8_FOREST_PFC_CUT) {
+      corrected.push_back (t8_forest_pfc_corrected_cut (forest_from, item.first, borders));
+      requests.push_back (sc_MPI_REQUEST_NULL);
+      const int mpiret = sc_MPI_Isend (&corrected.back (), 1, T8_MPI_GLOIDX, item.source, T8_MPI_PFC_TAG,
+                                       forest->mpicomm, &requests.back ());
+      SC_CHECK_MPI (mpiret);
+    }
+  }
+  /* Every message answers the cut that a rank routed, so no message of another partition is received */
+  t8_gloidx_t result = first;
+  if (has_cut) {
+    const int mpiret = sc_MPI_Recv (&result, 1, T8_MPI_GLOIDX, sc_MPI_ANY_SOURCE, T8_MPI_PFC_TAG, forest->mpicomm,
+                                    sc_MPI_STATUS_IGNORE);
+    SC_CHECK_MPI (mpiret);
+  }
+  const int mpiret = sc_MPI_Waitall (requests.size (), requests.data (), sc_MPI_STATUSES_IGNORE);
+  SC_CHECK_MPI (mpiret);
+  return result;
 }
 T8_EXTERN_C_END ();

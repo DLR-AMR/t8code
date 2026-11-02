@@ -164,6 +164,9 @@ typedef enum {
   T8_MPI_CMESH_BOUNDARY_CONNECTIVITY,   /**< Used for the vertex and edge connectivity of partitioned cmeshes. */
   T8_MPI_FOREST_SPLITTERS,              /**< Used for computing the splitters of a forest's partition. */
   T8_MPI_FOREST_ROUTE,                  /**< Used for routing items along the splitters of a forest's partition. */
+  T8_MPI_PARTITION_OFFSETS,             /**< Used for sending the first element of a rank in a weighted partition. */
+  T8_MPI_PARTITION_NEXT,                /**< Used for sending the first element of a rank to the previous rank. */
+  T8_MPI_PARTITION_DATA,                /**< Used for partitioning data of a forest's elements. */
   T8_MPI_TAG_LAST                       /**< Dummy last MPI tag. */
 } t8_MPI_tag_t;
 

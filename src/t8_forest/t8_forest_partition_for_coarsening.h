@@ -33,19 +33,21 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** \brief Correct the partitioning if element families are split across process boundaries.
+/** \brief Correct the first element of this rank in the new partition if it splits an element family.
  *
  *  The default partitioning distributes the elements into equally-sized partitions. For coarsening, however,
  *  all elements of a family have to be on the same process in order to be coarsened into their parent element.
- *  This function corrects the partitioning such that no families are split across process boundaries.
- *  The price to be paid is a slight deviation from the optimal balance of elements among processors.
+ *  If a full family has elements on both sides of the first element of this rank, the first element is moved
+ *  behind the family. The price to be paid is a slight deviation from the optimal balance of elements among
+ *  processors.
  *
- * \param [in,out] forest   the forest. On input, it has been partitioned into equally-sized element partitions.
- *                                      On output, the partitioning has been adjusted such that no element families
- *                                      are split across the process boundaries.
+ * \param [in] forest   The forest to partition, with forest->set_from committed.
+ * \param [in] first    The global index of the first element of this rank in the new partition.
+ * \return The corrected global index of the first element of this rank.
+ * \note This function is collective.
 */
-void
-t8_forest_pfc_correction_offsets (t8_forest_t forest);
+t8_gloidx_t
+t8_forest_pfc_correct_first (t8_forest_t forest, const t8_gloidx_t first);
 
 T8_EXTERN_C_END ();
 #endif /* T8_FOREST_PFC_H */
