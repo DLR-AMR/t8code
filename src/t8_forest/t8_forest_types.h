@@ -36,6 +36,8 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
+#include <utility>
+#include <vector>
 
 typedef struct t8_profile t8_profile_t; /**< Defined below */
 
@@ -63,6 +65,48 @@ typedef int8_t t8_forest_from_t;
 
 /** The number of statistics collected by a profile struct. */
 #define T8_PROFILE_NUM_STATS 17
+
+/** The t8 tree datatype.
+ * A tree owns its leaf elements and its first and last descendant. It is move-only, such that
+ * this ownership is never duplicated.
+ * \note The elements and descendants are allocated by the scheme of \a leaf_elements. Hence, a tree
+ *       must be destroyed before this scheme is.
+ */
+struct t8_tree
+{
+  t8_element_array_t leaf_elements {}; /**< locally stored leaf elements */
+  t8_eclass_t eclass {};               /**< The element class of this tree */
+  t8_element_t *first_desc = nullptr;  /**< first local descendant, nullptr if not computed or the tree is empty */
+  t8_element_t *last_desc = nullptr;   /**< last local descendant, nullptr if not computed or the tree is empty */
+  t8_locidx_t elements_offset = 0;     /**< cumulative sum over earlier trees on this processor (locals only) */
+
+  /** Construct an empty tree. Its \a leaf_elements are not initialized. */
+  t8_tree () = default;
+
+  /** Move constructor. Takes over the elements and descendants of \a other, which is left without any.
+   * \param [in,out] other The tree to move from.
+   */
+  t8_tree (t8_tree &&other) noexcept
+    : leaf_elements (std::exchange (other.leaf_elements, {})), eclass (other.eclass),
+      first_desc (std::exchange (other.first_desc, nullptr)), last_desc (std::exchange (other.last_desc, nullptr)),
+      elements_offset (other.elements_offset)
+  {
+  }
+
+  /** Copying is forbidden, since the tree owns its elements. */
+  t8_tree (const t8_tree &) = delete;
+  /** Copying is forbidden, since the tree owns its elements. */
+  t8_tree &
+  operator= (const t8_tree &)
+    = delete;
+  /** Move assignment is not needed for storing trees in a std::vector. */
+  t8_tree &
+  operator= (t8_tree &&)
+    = delete;
+
+  /** Destructor. Frees the leaf elements and the first and last descendant. */
+  ~t8_tree ();
+};
 
 /** This structure is private to the implementation. */
 typedef struct t8_forest
@@ -119,7 +163,9 @@ typedef struct t8_forest
   t8_gloidx_t last_local_tree;        /**< The global index of the last local tree on this process.
                                              -1 if this processor is empty. */
   t8_gloidx_t global_num_trees;       /**< The total number of global trees. */
-  sc_array_t *trees;                  /**< The array of trees. */
+  std::vector<t8_tree> trees;         /**< The local trees. Since the forest is allocated with T8_ALLOC_ZERO,
+                                           it is constructed in \ref t8_forest_init and destroyed in
+                                           t8_forest_reset explicitly. */
   t8_forest_ghost_t ghosts;           /**< The ghost elements. NULL on all processes if no ghost layer was
                                                 constructed, otherwise set on all processes (possibly empty).
                                                 \see t8_forest_ghost.h */
@@ -143,19 +189,6 @@ typedef struct t8_forest
   sc_statinfo_t stats[T8_PROFILE_NUM_STATS]; /**< The SC profiling stats of the forest.*/
   int stats_computed; /**< Switch indicating whether the profiling stats have been compute (1) or not (0) */
 } t8_forest_struct_t;
-
-/** The t8 tree datatype */
-typedef struct t8_tree
-{
-  t8_element_array_t leaf_elements; /**< locally stored leaf elements */
-  t8_eclass_t eclass;               /**< The element class of this tree */
-  /* TODO: We will need the *_desc variables later for sure. */
-  t8_element_t *first_desc,    /**< first local descendant */
-    *last_desc;                /**< last local descendant */
-  t8_locidx_t elements_offset; /**< cumulative sum over earlier
-                                                  trees on this processor
-                                                  (locals only) */
-} t8_tree_struct_t;
 
 /** This struct is used to profile forest algorithms.
  * The forest struct stores a pointer to a profile struct, and if

@@ -85,10 +85,10 @@ t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_locidx_t num_points = 0;
 
-  for (t8_locidx_t itree = 0; itree < (t8_locidx_t) forest->trees->elem_count; itree++) {
+  for (t8_locidx_t itree = 0; itree < (t8_locidx_t) forest->trees.size (); itree++) {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the tree that stores the elements */
-    t8_tree_t tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, itree);
+    const t8_tree_t tree = t8_forest_get_tree (forest, itree);
     /* Get the scheme of the current tree */
     const size_t num_elements = t8_element_array_get_count (&tree->leaf_elements);
     for (t8_locidx_t ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {

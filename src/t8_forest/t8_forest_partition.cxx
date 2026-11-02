@@ -1143,13 +1143,13 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
     T8_ASSERT (tree_info->gtree_id >= forest->last_local_tree);
     if (tree_info->gtree_id > forest->last_local_tree) {
       /* We will insert a new tree in the forest */
-      tree = (t8_tree_t) sc_array_push (forest->trees);
+      tree = &forest->trees.emplace_back ();
       tree->eclass = tree_info->eclass;
       /* Calculate the element offset of the new tree */
       if (forest->last_local_tree >= forest->first_local_tree) {
         /* If there is a previous tree, we read it */
-        T8_ASSERT (forest->trees->elem_count >= 2); /* We added one tree and the current tree */
-        last_tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, forest->trees->elem_count - 2);
+        T8_ASSERT (forest->trees.size () >= 2); /* We added one tree and the current tree */
+        last_tree = &forest->trees[forest->trees.size () - 2];
         /* The element offset is the offset of the previous tree plus the number of elements in the previous tree */
         tree->elements_offset = last_tree->elements_offset + t8_forest_get_tree_leaf_element_count (last_tree);
       }
@@ -1375,8 +1375,8 @@ t8_forest_partition (t8_forest_t forest)
   t8_forest_partition_compute_new_offset (forest);
   t8_forest_partition_given (forest, 0, nullptr, nullptr);
 
-  T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest_from) == forest_from->trees->elem_count);
-  T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest) == forest->trees->elem_count);
+  T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest_from) == forest_from->trees.size ());
+  T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest) == forest->trees.size ());
 
   if (create_offset_from) {
     /* Delete the offset memory that we allocated */
