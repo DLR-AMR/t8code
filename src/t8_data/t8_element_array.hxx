@@ -35,6 +35,7 @@
 #include <compare>
 #include <cstddef>
 #include <iterator>
+#include <memory>
 #include <span>
 #include <type_traits>
 #include <utility>
@@ -78,6 +79,54 @@ t8_scheme_index_dispatch (const size_t scheme_index, TFunc &&func)
                                    std::make_index_sequence<std::variant_size_v<t8_scheme::scheme_var>> {});
 }
 
+/** An allocator that default-initializes instead of value-initializes elements that are constructed without
+ * arguments, e.g. by std::vector::resize.
+ * The element types are trivial, so default-initialization leaves new elements uninitialized, like the memory of
+ * an sc_array. Value-initialization would set every new element to zero, although \ref t8_element_array
+ * initializes new elements with \ref t8_scheme::element_init and many of them are overwritten right away, e.g. by
+ * a memcpy of received elements. This zeroing is a noticeable cost in adapt, which adds the elements one by one.
+ * \tparam T The element type.
+ */
+template <typename T>
+struct t8_default_init_allocator: public std::allocator<T>
+{
+  /** Rebind the allocator to another type, as required by the allocator requirements.
+   * \tparam U The other type.
+   */
+  template <typename U>
+  struct rebind
+  {
+    using other = t8_default_init_allocator<U>; /**< The allocator for \a U. */
+  };
+
+  using std::allocator<T>::allocator;
+
+  /** Default-initialize an element.
+   * \tparam U        The type of the element.
+   * \param [in] ptr  The memory of the element.
+   */
+  template <typename U>
+  void
+  construct (U *ptr) noexcept (std::is_nothrow_default_constructible_v<U>)
+  {
+    ::new (static_cast<void *> (ptr)) U;
+  }
+
+  /** Construct an element from arguments, e.g. a copy.
+   * \tparam U        The type of the element.
+   * \tparam TArgs    The types of the arguments.
+   * \param [in] ptr  The memory of the element.
+   * \param [in] args The arguments passed to the constructor of \a U.
+   */
+  template <typename U, typename... TArgs>
+  void
+  construct (U *ptr, TArgs &&...args)
+  {
+    std::allocator_traits<std::allocator<T>>::construct (static_cast<std::allocator<T> &> (*this), ptr,
+                                                         std::forward<TArgs> (args)...);
+  }
+};
+
 /** Declaration only. The specialization for std::variant below generates the variant of element vectors.
  * \tparam TSchemeVariant The variant of eclass schemes, i.e. \ref t8_scheme::scheme_var.
  */
@@ -92,7 +141,8 @@ template <typename... TEclassSchemes>
 struct t8_element_vectors_of<std::variant<TEclassSchemes...>>
 {
   /** The variant of the element vectors. */
-  using type = std::variant<std::vector<typename TEclassSchemes::element_type>...>;
+  using type = std::variant<std::vector<typename TEclassSchemes::element_type,
+                                        t8_default_init_allocator<typename TEclassSchemes::element_type>>...>;
 };
 
 /** A non-owning, read-only view of contiguous elements of one eclass scheme.
@@ -439,8 +489,10 @@ struct t8_element_array_view
  * at runtime, the array stores a variant of one std::vector per alternative of \ref t8_scheme::scheme_var.
  * Each element added to the array is initialized with \ref t8_scheme::element_init and each removed element is
  * deinitialized with \ref t8_scheme::element_deinit.
- * The data pointer, the number of elements and the element size are cached, so that accessing an element does not
- * need to visit the variant.
+ * Like an sc_array, the array manages its capacity itself: The vector is only the storage, its size is the
+ * capacity of the array, and the first \ref size of its entries are the elements. The data pointer and the
+ * capacity are cached, so that accessing, adding and removing elements does not need to visit the variant, unless
+ * the storage has to grow. This matters for adapt, which adds the elements one by one.
  */
 struct t8_element_array
 {
@@ -566,18 +618,34 @@ struct t8_element_array
   }
 
   /** Change the number of elements. New elements are initialized, removed elements are deinitialized.
+   * The memory of removed elements is kept for reuse.
    * \param [in] new_count The new number of elements.
+   * \note If the number of elements grows, this may invalidate all pointers to elements of the array.
    */
-  void
-  resize (const size_t new_count);
+  inline void
+  resize (const size_t new_count)
+  {
+    T8_ASSERT (scheme != nullptr);
+    const size_t old_count = num_elements;
+    if (new_count < old_count) {
+      scheme->element_deinit (tree_class, static_cast<int> (old_count - new_count), (*this)[new_count]);
+    }
+    if (new_count > capacity) {
+      grow (new_count);
+    }
+    num_elements = new_count;
+    if (new_count > old_count) {
+      scheme->element_init (tree_class, static_cast<int> (new_count - old_count), (*this)[old_count]);
+    }
+  }
 
-  /** Allocate memory for at least \a capacity elements, so that adding elements up to this number does not reallocate.
+  /** Allocate memory for at least \a new_capacity elements, so that adding elements up to this number does not reallocate.
    * The number of elements does not change.
-   * \param [in] capacity The number of elements to allocate memory for.
+   * \param [in] new_capacity The number of elements to allocate memory for.
    * \note This invalidates all pointers to elements of the array if the memory is reallocated.
    */
   void
-  reserve (const size_t capacity);
+  reserve (const size_t new_capacity);
 
   /** Append one initialized element.
    * \return A pointer to the new element.
@@ -629,8 +697,8 @@ struct t8_element_array
     return view ().find (element);
   }
 
-  /** Call \a func with the std::vector of the elements with their concrete element type.
-   * \tparam TFunc   A generic callable that takes a const std::vector<TElement> & for all element types.
+  /** Call \a func with a span of the elements with their concrete element type.
+   * \tparam TFunc   A generic callable that takes a std::span<const TElement> for all element types.
    * \param [in] func The callable.
    * \return          The return value of \a func.
    */
@@ -638,29 +706,53 @@ struct t8_element_array
   inline decltype (auto)
   visit (TFunc &&func) const
   {
-    return std::visit (std::forward<TFunc> (func), elements);
+    return std::visit (
+      [this, &func] (const auto &vector) -> decltype (auto) { return func (std::span (vector.data (), num_elements)); },
+      elements);
   }
 
  private:
-  /** Update the cached data pointer and number of elements after the element vector changed.
+  /** Enlarge the storage, at least to \a min_capacity elements and at least to double its capacity, so that
+   * adding elements one by one only reallocates logarithmically often.
+   * \param [in] min_capacity The minimal new capacity.
+   */
+  void
+  grow (const size_t min_capacity);
+
+  /** Update the cached data pointer and capacity after the element vector changed.
    *
-   * The array caches the data pointer and the number of elements of the vector in \ref elements, so that
-   * \ref size, \ref data and element access are plain member reads and pointer arithmetic instead of a visit of
-   * the variant. The cache is only valid as long as the vector is not changed: Changing the number of elements
-   * changes its size, and growing it may reallocate its memory, which moves all elements to a new address.
-   * Therefore, every member function that changes the vector, e.g. \ref resize, the constructors and the move
-   * assignment, must call this function afterwards. Otherwise, the array would report a wrong size or access
-   * freed memory.
+   * The array caches the data pointer and the capacity, i.e. the size of the vector in \ref elements, so that
+   * \ref data, element access, \ref resize and \ref push_back are plain member reads and pointer arithmetic instead
+   * of a visit of the variant. The cache is only valid as long as the vector is not changed: Changing its size may
+   * reallocate its memory, which moves all elements to a new address. Therefore, every member function that changes
+   * the vector, e.g. \ref grow, the constructors and the move assignment, must call this function afterwards.
+   * Otherwise, the array would access freed memory.
    */
   void
   update_cache ();
 
+  /** Update the cached data pointer and capacity from the given element vector.
+   * Member functions that visit \ref elements anyway call this inside their visit, which avoids a second visit
+   * of the variant.
+   * \tparam TVector The type of the element vector, an alternative of \ref element_vectors.
+   * \param [in] vector The element vector stored in \ref elements.
+   */
+  template <typename TVector>
+  inline void
+  update_cache (TVector &vector)
+  {
+    data_ptr = reinterpret_cast<t8_element_t *> (vector.data ());
+    capacity = vector.size ();
+  }
+
   const t8_scheme *scheme = nullptr;       /**< The scheme of the elements. nullptr for a default constructed array. */
   t8_eclass_t tree_class = T8_ECLASS_ZERO; /**< The tree class of the elements. */
-  element_vectors elements;                /**< The elements, stored with the element type of the eclass scheme. */
-  t8_element_t *data_ptr = nullptr;        /**< Cached pointer to the first element. */
-  size_t num_elements = 0;                 /**< Cached number of elements. */
-  size_t element_size = 0;                 /**< Cached size of an element in bytes. */
+  element_vectors elements; /**< The storage of the elements with the element type of the eclass scheme. Its first
+                                 \ref num_elements entries are the elements, the remaining entries are unused. */
+  t8_element_t *data_ptr = nullptr; /**< Cached pointer to the first element. */
+  size_t capacity = 0;              /**< Cached size of the vector in \ref elements, i.e. the capacity of the array. */
+  size_t num_elements = 0;          /**< The number of elements. At most \ref capacity. */
+  size_t element_size = 0;          /**< Cached size of an element in bytes. */
 };
 
 #endif /* !T8_ELEMENT_ARRAY_HXX */

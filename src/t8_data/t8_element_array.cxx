@@ -73,14 +73,23 @@ t8_element_array::t8_element_array (const t8_scheme *scheme, const t8_eclass_t t
 }
 
 t8_element_array::t8_element_array (const t8_element_array &other)
-  : scheme (other.scheme), tree_class (other.tree_class), elements (other.elements), element_size (other.element_size)
+  : scheme (other.scheme), tree_class (other.tree_class),
+    /* Copy only the elements and not the unused rest of the storage. */
+    elements (t8_scheme_index_dispatch (other.elements.index (),
+                                        [&other] (const auto index) {
+                                          const auto &vector = std::get<decltype (index)::value> (other.elements);
+                                          return element_vectors (std::in_place_index<decltype (index)::value>,
+                                                                  vector.begin (),
+                                                                  vector.begin () + other.num_elements);
+                                        })),
+    num_elements (other.num_elements), element_size (other.element_size)
 {
   update_cache ();
 }
 
 t8_element_array::t8_element_array (t8_element_array &&other) noexcept
   : scheme (other.scheme), tree_class (other.tree_class), elements (std::move (other.elements)),
-    element_size (other.element_size)
+    num_elements (std::exchange (other.num_elements, 0)), element_size (other.element_size)
 {
   /* The moved-from vector is empty. */
   update_cache ();
@@ -100,6 +109,7 @@ t8_element_array::operator= (t8_element_array &&other) noexcept
   tree_class = other.tree_class;
   element_size = other.element_size;
   elements = std::move (other.elements);
+  num_elements = std::exchange (other.num_elements, 0);
   /* The moved elements now belong to this array, so they are removed from other without deinitializing them. */
   std::visit ([] (auto &vector) { vector.clear (); }, other.elements);
   update_cache ();
@@ -115,36 +125,29 @@ t8_element_array::~t8_element_array ()
 }
 
 void
-t8_element_array::resize (const size_t new_count)
+t8_element_array::reserve (const size_t new_capacity)
 {
-  T8_ASSERT (scheme != nullptr);
-  const size_t old_count = num_elements;
-  if (new_count < old_count) {
-    scheme->element_deinit (tree_class, static_cast<int> (old_count - new_count), (*this)[new_count]);
+  if (new_capacity <= capacity) {
+    return;
   }
-  std::visit ([new_count] (auto &vector) { vector.resize (new_count); }, elements);
-  update_cache ();
-  if (new_count > old_count) {
-    scheme->element_init (tree_class, static_cast<int> (new_count - old_count), (*this)[old_count]);
-  }
+  std::visit (
+    [this, new_capacity] (auto &vector) {
+      vector.resize (new_capacity);
+      update_cache (vector);
+    },
+    elements);
 }
 
 void
-t8_element_array::reserve (const size_t capacity)
+t8_element_array::grow (const size_t min_capacity)
 {
-  std::visit ([capacity] (auto &vector) { vector.reserve (capacity); }, elements);
-  update_cache ();
+  reserve (std::max (min_capacity, 2 * capacity));
 }
 
 void
 t8_element_array::update_cache ()
 {
-  std::visit (
-    [this] (auto &vector) {
-      data_ptr = reinterpret_cast<t8_element_t *> (vector.data ());
-      num_elements = vector.size ();
-    },
-    elements);
+  std::visit ([this] (auto &vector) { update_cache (vector); }, elements);
 }
 
 /* #################### t8_element_array_view c interface #################### */

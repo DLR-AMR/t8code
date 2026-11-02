@@ -215,12 +215,17 @@ TEST_P (element_array, visit)
 {
   const t8_element_array array = create_uniform_array ();
 
-  const size_t vector_size = array.visit ([&] (const auto &vector) {
-    EXPECT_EQ (sizeof (typename std::decay_t<decltype (vector)>::value_type), array.get_element_size ());
-    EXPECT_EQ (static_cast<const void *> (vector.data ()), static_cast<const void *> (array.data ()));
-    return vector.size ();
+  const size_t array_span_size = array.visit ([&] (const auto span) {
+    EXPECT_EQ (sizeof (typename decltype (span)::element_type), array.get_element_size ());
+    EXPECT_EQ (static_cast<const void *> (span.data ()), static_cast<const void *> (array.data ()));
+    return span.size ();
   });
-  EXPECT_EQ (vector_size, array.size ());
+  EXPECT_EQ (array_span_size, array.size ());
+
+  /* The span contains only the elements and not the reserved but unused memory. */
+  t8_element_array reserved_array (array);
+  reserved_array.reserve (2 * array.size ());
+  EXPECT_EQ (reserved_array.visit ([] (const auto span) { return span.size (); }), array.size ());
 
   const size_t span_size = array.view ().visit ([&] (const auto span) {
     EXPECT_EQ (sizeof (typename decltype (span)::element_type), array.get_element_size ());
