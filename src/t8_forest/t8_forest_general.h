@@ -46,6 +46,11 @@ typedef enum {
   T8_GHOST_VERTICES  /**< Consider all vertex (codimension 3) and edge and face neighbors. */
 } t8_ghost_type_t;
 
+/** Defined since forests store their partition in O(log P) memory per process (t8_forest_splitters.hxx) instead of
+ * the offsets of all processes, can balance in one pass (\ref t8_forest_set_balance_algorithm) and create the ghost
+ * layer from the touching ranks (ghost version 4 of \ref t8_forest_set_ghost_ext). */
+#define T8_FOREST_LOG_PARTITION 1
+
 /** The algorithm of balance, see \ref t8_forest_set_balance_algorithm. */
 typedef enum {
   T8_BALANCE_DEFAULT = 0, /**< One pass if the coarse mesh is replicated, ripple otherwise. */

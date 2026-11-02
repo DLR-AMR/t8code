@@ -29,7 +29,9 @@
  * edges, vertices), the forest is balanced with this type and the ghost layer
  * of the same type is created. For hexahedra, the same is done with p4est
  * (p8est_balance and p8est_ghost_new with P8EST_CONNECT_FACE/EDGE/FULL) on the
- * same mesh, so that the element and ghost counts can be compared.
+ * same mesh, so that the element and ghost counts can be compared. With
+ * -G 3, t8code creates the ghost layer with the top-down search instead of
+ * the default version 4, and its backends get the suffix -search.
  *
  * One CSV line per run and balance type (appended to the file given with -o):
  * backend,eclass,procs,level,rlevel,rep,type,elements,balanced_elements,
@@ -64,6 +66,7 @@ const double shell_radius = 0.3;
 
 int max_level;
 int check_balance;
+int ghost_version;
 /* the side length of the trees (the hybrid cube consists of half cubes) */
 double tree_size = 1;
 
@@ -171,7 +174,7 @@ time_t8code (t8_cmesh_t cmesh, const run_info &info, sc_MPI_Comm comm, const t8_
     t8_forest_set_balance (balanced, unbalanced, 1);
     t8_forest_set_balance_type (balanced, t8_types[type]);
     t8_forest_set_balance_algorithm (balanced, algorithm);
-    t8_forest_set_ghost (balanced, 1, t8_types[type]);
+    t8_forest_set_ghost_ext (balanced, 1, t8_types[type], ghost_version);
     t8_forest_set_profiling (balanced, 1);
     sc_MPI_Barrier (comm);
     t8_forest_commit (balanced);
@@ -191,7 +194,8 @@ time_t8code (t8_cmesh_t cmesh, const run_info &info, sc_MPI_Comm comm, const t8_
                              is_balanced);
       SC_CHECK_ABORT (is_balanced, "The forest is not balanced.");
     }
-    write_line (info, backend, type, elements, t8_forest_get_global_num_leaf_elements (balanced),
+    const std::string backend_name = std::string (backend) + (ghost_version == 3 ? "-search" : "");
+    write_line (info, backend_name.c_str (), type, elements, t8_forest_get_global_num_leaf_elements (balanced),
                 sum_over_procs (t8_forest_get_num_ghosts (balanced), comm), rounds, t_balance, t_ghost);
     t8_forest_unref (&balanced);
   }
@@ -262,6 +266,9 @@ main (int argc, char **argv)
   sc_options_add_switch (opt, 'c', "check", &check_balance,
                          "Check with t8_forest_is_balanced whether the forest is balanced before and after.");
   sc_options_add_string (opt, 'o', "csv", &csv_name, NULL, "Append the results to this CSV file.");
+  sc_options_add_int (opt, 'G', "ghost-version", &ghost_version, 4,
+                      "Ghost algorithm of t8code, see t8_forest_set_ghost_ext: 4 (default) or 3 (top-down search, the "
+                      "backends get the suffix -search).");
   sc_options_add_string (opt, 'a', "algorithms", &algorithms_arg, "default",
                          "Balance algorithms of t8code: default, ripple or onepass (comma separated list). The "
                          "backend in the CSV file is t8code for the default, t8code-ripple or t8code-onepass.");
