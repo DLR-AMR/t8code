@@ -89,10 +89,7 @@ t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the tree that stores the elements */
     const t8_tree_t tree = t8_forest_get_tree (forest, itree);
-    /* Get the scheme of the current tree */
-    const size_t num_elements = t8_element_array_get_count (&tree->leaf_elements);
-    for (t8_locidx_t ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
-      const t8_element_t *elem = t8_element_array_index_locidx (&tree->leaf_elements, ielem);
+    for (const t8_element_t *elem : tree->leaf_elements.view ()) {
       num_points += scheme->element_get_num_corners (tree_class, elem);
     }
   }
@@ -103,10 +100,7 @@ t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
     for (t8_locidx_t itree = 0; itree < num_ghosts; itree++) {
       /* Get the element class of the ghost */
       const t8_eclass_t ghost_class = t8_forest_ghost_get_tree_class (forest, itree);
-      const t8_element_array_t *ghost_elem = t8_forest_ghost_get_tree_leaf_elements (forest, itree);
-      const size_t num_elements = t8_forest_ghost_tree_num_leaf_elements (forest, itree);
-      for (t8_locidx_t ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
-        const t8_element_t *elem = t8_element_array_index_locidx (ghost_elem, ielem);
+      for (const t8_element_t *elem : t8_forest_ghost_get_tree_leaf_elements (forest, itree).view ()) {
         num_points += scheme->element_get_num_corners (ghost_class, elem);
       }
     }
@@ -490,7 +484,7 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE *vtufile, const char *da
     tree = t8_forest_get_tree (forest, itree);
     /* Get the eclass scheme of the tree */
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    elems_in_tree = (t8_locidx_t) t8_element_array_get_count (&tree->leaf_elements);
+    elems_in_tree = (t8_locidx_t) tree->leaf_elements.size ();
     for (element_index = 0; element_index < elems_in_tree; element_index++) {
       /* Get a pointer to the element */
       element = t8_forest_get_leaf_element (forest, tree->elements_offset + element_index, nullptr);

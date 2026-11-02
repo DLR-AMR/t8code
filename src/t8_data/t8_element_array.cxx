@@ -130,6 +130,13 @@ t8_element_array::resize (const size_t new_count)
 }
 
 void
+t8_element_array::reserve (const size_t capacity)
+{
+  std::visit ([capacity] (auto &vector) { vector.reserve (capacity); }, elements);
+  update_cache ();
+}
+
+void
 t8_element_array::update_cache ()
 {
   std::visit (

@@ -29,7 +29,7 @@
 
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_element/t8_element.h>
-#include <t8_data/t8_containers.h>
+#include <t8_schemes/t8_scheme.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_types.h>
 
 /** Opaque pointer to a forest implementation. */
@@ -867,15 +867,6 @@ t8_forest_get_tree (const t8_forest_t forest, const t8_locidx_t ltree_id);
 double *
 t8_forest_get_tree_vertices (t8_forest_t forest, t8_locidx_t ltreeid);
 
-/** Return the array of leaf elements of a local tree in a forest.
- * \param [in]      forest      The forest.
- * \param [in]      ltree_id    The local id of a local tree of \a forest.
- * \return                      An array of t8_element_t * storing all leaf elements
- *                              of this tree.
- */
-t8_element_array_t *
-t8_forest_tree_get_leaf_elements (const t8_forest_t forest, const t8_locidx_t ltree_id);
-
 /** Return a cmesh associated to a forest.
  * \param [in]      forest      The forest.
  * \return          The cmesh associated to the forest.
@@ -1098,5 +1089,18 @@ void
 t8_forest_unref (t8_forest_t *pforest);
 
 T8_EXTERN_C_END ();
+
+#ifdef __cplusplus
+/* Defined in t8_data/t8_element_array.hxx, which must be included to access the elements. */
+struct t8_element_array;
+
+/** Return the array of leaf elements of a local tree in a forest.
+ * \param [in]      forest      The forest.
+ * \param [in]      ltree_id    The local id of a local tree of \a forest.
+ * \return                      The array storing all leaf elements of this tree.
+ */
+const t8_element_array &
+t8_forest_tree_get_leaf_elements (const t8_forest_t forest, const t8_locidx_t ltree_id);
+#endif
 
 #endif /* !T8_FOREST_GENERAL_H */

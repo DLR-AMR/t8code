@@ -112,6 +112,14 @@ TEST_P (element_array, resize_and_push_back)
   EXPECT_EQ (array.size (), 2u);
   array.clear ();
   EXPECT_TRUE (array.empty ());
+
+  /* Reserving memory does not add elements, and adding elements up to the reserved number does not reallocate. */
+  array.reserve (num_elements);
+  EXPECT_TRUE (array.empty ());
+  const t8_element_t *reserved_first = array.push_back ();
+  array.resize (num_elements);
+  EXPECT_EQ (array.size (), num_elements);
+  EXPECT_EQ (array.data (), reserved_first);
 }
 
 /* Copying an array copies its elements, moving an array transfers them. */

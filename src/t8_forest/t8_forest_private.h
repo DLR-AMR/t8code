@@ -181,24 +181,6 @@ t8_forest_get_tree_leaf_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
 t8_element_t *
 t8_forest_get_tree_leaf_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree);
 
-/** Return the array of leaf elements of a tree. Const version.
- * \param [in]  forest   The forest.
- * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
- * \return      Returns the array of leaf elements of the tree.
- * \a forest must be committed before calling this function.
- */
-const t8_element_array_t *
-t8_forest_get_tree_leaf_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
-
-/** Return the array of leaf elements of a tree. Mutable version.
- * \param [in]  forest   The forest.
- * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
- * \return      Returns the array of leaf elements of the tree.
- * \a forest must be committed before calling this function.
- */
-t8_element_array_t *
-t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
-
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
  * \param [in]     forest  The forest.

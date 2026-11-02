@@ -29,7 +29,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_data/t8_containers.h>
+#include <t8_data/t8_element_array.hxx>
 
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.hxx>
@@ -116,16 +116,7 @@ t8_forest_ghost_tree_num_leaf_elements (t8_forest_t forest, t8_locidx_t lghost_t
   T8_ASSERT (t8_forest_is_committed (forest));
 
   ghost_tree = t8_forest_ghost_get_tree (forest, lghost_tree);
-  return t8_element_array_get_count (&ghost_tree->elements);
-}
-
-t8_element_array_t *
-t8_forest_ghost_get_tree_leaf_elements (const t8_forest_t forest, const t8_locidx_t lghost_tree)
-{
-  T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (forest->ghosts != nullptr);
-
-  return &t8_forest_ghost_get_tree (forest, lghost_tree)->elements;
+  return ghost_tree->elements.size ();
 }
 
 t8_locidx_t
@@ -175,8 +166,8 @@ t8_forest_ghost_get_leaf_element (t8_forest_t forest, t8_locidx_t lghost_tree, t
 
   ghost_tree = t8_forest_ghost_get_tree (forest, lghost_tree);
   T8_ASSERT (0 <= lelement && lelement < t8_forest_ghost_tree_num_leaf_elements (forest, lghost_tree));
-  /* TODO: In future, make return type const (and offer additional mutable version) and call t8_element_array_index_locidx (the const version). */
-  return t8_element_array_index_locidx_mutable (&ghost_tree->elements, lelement);
+  /* TODO: In future, make return type const (and offer additional mutable version). */
+  return ghost_tree->elements[lelement];
 }
 
 int
@@ -338,7 +329,7 @@ t8_forest_ghost_exchange_fill_send_buffer (t8_forest_t forest, int remote, char 
     ltreeid = t8_forest_get_local_id (forest, remote_tree.global_id);
     /* Get a pointer to the forest tree */
     local_tree = t8_forest_get_tree (forest, ltreeid);
-    T8_ASSERT (remote_tree.element_indices.size () == t8_element_array_get_count (&remote_tree.elements));
+    T8_ASSERT (remote_tree.element_indices.size () == remote_tree.elements.size ());
     /* Get the index of each remote element in its local tree */
     for (const t8_locidx_t element_pos : remote_tree.element_indices) {
       /* element loop */
@@ -515,7 +506,7 @@ t8_forest_ghost_print (t8_forest_t forest)
       for (const t8_ghost_remote_tree &remote_tree : remote_found->remote_trees) {
         snprintf (remote_buffer + strlen (remote_buffer), BUFSIZ - strlen (remote_buffer),
                   "\t\t[id: %lli, class: %s, #elem: %li]\n", (long long) remote_tree.global_id,
-                  t8_eclass_to_string[remote_tree.eclass], (long) t8_element_array_get_count (&remote_tree.elements));
+                  t8_eclass_to_string[remote_tree.eclass], (long) remote_tree.elements.size ());
       }
 
       /* Investigate the elements that we received from this process */
@@ -584,3 +575,12 @@ t8_forest_ghost_destroy (t8_forest_ghost_t *pghost)
 }
 
 T8_EXTERN_C_END ();
+
+const t8_element_array &
+t8_forest_ghost_get_tree_leaf_elements (const t8_forest_t forest, const t8_locidx_t lghost_tree)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->ghosts != nullptr);
+
+  return t8_forest_ghost_get_tree (forest, lghost_tree)->elements;
+}

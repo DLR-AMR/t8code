@@ -119,8 +119,7 @@ t8_search_base::search_tree (const t8_locidx_t ltreeid)
 {
   const t8_eclass_t eclass = t8_forest_get_eclass (this->forest, ltreeid);
   const t8_scheme *ts = t8_forest_get_scheme (this->forest);
-  const t8_element_array_view leaf_elements
-    = t8_element_array_get_view (t8_forest_tree_get_leaf_elements (this->forest, ltreeid));
+  const t8_element_array_view leaf_elements = t8_forest_tree_get_leaf_elements (this->forest, ltreeid).view ();
 
   /* Get the first and last leaf of this tree */
   const t8_element_t *first_el = leaf_elements[0];

@@ -32,7 +32,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_data/t8_containers.h>
+#include <t8_data/t8_element_array.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
 
 typedef struct
@@ -91,12 +91,11 @@ t8_test_fiterate (t8_forest_t forest)
     const t8_locidx_t num_tree_elements = is_ghost ? t8_forest_ghost_tree_num_leaf_elements (forest, ghost_tree_id)
                                                    : t8_forest_get_tree_num_leaf_elements (forest, itree);
     // Get all leaf elements
-    const t8_element_array_t *leaf_elements = is_ghost ? t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id)
-                                                       : t8_forest_tree_get_leaf_elements (forest, itree);
+    const t8_element_array &leaf_elements = is_ghost ? t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id)
+                                                     : t8_forest_tree_get_leaf_elements (forest, itree);
     // Get the first and last element
-    const t8_element_t *first_el = (const t8_element_t *) t8_element_array_index_locidx (leaf_elements, 0);
-    const t8_element_t *last_el
-      = (const t8_element_t *) t8_element_array_index_locidx (leaf_elements, num_tree_elements - 1);
+    const t8_element_t *first_el = leaf_elements[0];
+    const t8_element_t *last_el = leaf_elements[num_tree_elements - 1];
 
     t8_element_t *nca;
     scheme->element_new (eclass, 1, &nca);
@@ -105,8 +104,7 @@ t8_test_fiterate (t8_forest_t forest)
     //
     for (int iface = 0; iface < scheme->element_get_num_faces (eclass, nca); iface++) {
       udata.count = 0;
-      t8_forest_iterate_faces (forest, itree, nca, iface, t8_element_array_get_view (leaf_elements), 0,
-                               t8_test_fiterate_callback, &udata);
+      t8_forest_iterate_faces (forest, itree, nca, iface, leaf_elements.view (), 0, t8_test_fiterate_callback, &udata);
       t8_debugf ("Leaf elements at face %i:\t%i\n", iface, udata.count);
     }
     scheme->element_destroy (eclass, 1, &nca);

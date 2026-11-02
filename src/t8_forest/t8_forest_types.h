@@ -32,7 +32,7 @@
 #include <t8_helper_functions/t8_refcount.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_element/t8_element.h>
-#include <t8_data/t8_containers.h>
+#include <t8_data/t8_element_array.hxx>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
@@ -75,20 +75,20 @@ typedef int8_t t8_forest_from_t;
  */
 struct t8_tree
 {
-  t8_element_array_t leaf_elements {}; /**< locally stored leaf elements */
-  t8_eclass_t eclass {};               /**< The element class of this tree */
-  t8_element_t *first_desc = nullptr;  /**< first local descendant, nullptr if not computed or the tree is empty */
-  t8_element_t *last_desc = nullptr;   /**< last local descendant, nullptr if not computed or the tree is empty */
-  t8_locidx_t elements_offset = 0;     /**< cumulative sum over earlier trees on this processor (locals only) */
+  t8_element_array leaf_elements;     /**< locally stored leaf elements */
+  t8_eclass_t eclass {};              /**< The element class of this tree */
+  t8_element_t *first_desc = nullptr; /**< first local descendant, nullptr if not computed or the tree is empty */
+  t8_element_t *last_desc = nullptr;  /**< last local descendant, nullptr if not computed or the tree is empty */
+  t8_locidx_t elements_offset = 0;    /**< cumulative sum over earlier trees on this processor (locals only) */
 
-  /** Construct an empty tree. Its \a leaf_elements are not initialized. */
+  /** Construct an empty tree without a scheme. */
   t8_tree () = default;
 
   /** Move constructor. Takes over the elements and descendants of \a other, which is left without any.
    * \param [in,out] other The tree to move from.
    */
   t8_tree (t8_tree &&other) noexcept
-    : leaf_elements (std::exchange (other.leaf_elements, {})), eclass (other.eclass),
+    : leaf_elements (std::move (other.leaf_elements)), eclass (other.eclass),
       first_desc (std::exchange (other.first_desc, nullptr)), last_desc (std::exchange (other.last_desc, nullptr)),
       elements_offset (other.elements_offset)
   {
@@ -105,7 +105,7 @@ struct t8_tree
   operator= (t8_tree &&)
     = delete;
 
-  /** Destructor. Frees the leaf elements and the first and last descendant. */
+  /** Destructor. Frees the first and last descendant. The leaf elements free themselves. */
   ~t8_tree ();
 };
 
@@ -231,7 +231,6 @@ typedef struct t8_profile
 } t8_profile_struct_t;
 
 /** The information stored for the ghost trees.
- * A ghost tree owns its elements. It is move-only, such that this ownership is never duplicated.
  * \note The elements are allocated by the scheme of \a elements. Hence, a ghost tree must be destroyed
  *       before this scheme is.
  */
@@ -239,40 +238,8 @@ struct t8_ghost_tree
 {
   t8_gloidx_t global_id = 0;      /**< global id of the tree */
   t8_locidx_t element_offset = 0; /**< The count of all ghost elements in all smaller ghost trees */
-  t8_element_array_t elements {}; /**< The ghost elements of that tree */
+  t8_element_array elements;      /**< The ghost elements of that tree */
   t8_eclass_t eclass {};          /**< The trees element class */
-
-  /** Construct an empty ghost tree. Its \a elements are not initialized. */
-  t8_ghost_tree () = default;
-
-  /** Move constructor. Takes over the elements of \a other, which is left without any.
-   * \param [in,out] other The ghost tree to move from.
-   */
-  t8_ghost_tree (t8_ghost_tree &&other) noexcept
-    : global_id (other.global_id), element_offset (other.element_offset), elements (std::exchange (other.elements, {})),
-      eclass (other.eclass)
-  {
-  }
-
-  /** Copying is forbidden, since the ghost tree owns its elements. */
-  t8_ghost_tree (const t8_ghost_tree &) = delete;
-  /** Copying is forbidden, since the ghost tree owns its elements. */
-  t8_ghost_tree &
-  operator= (const t8_ghost_tree &)
-    = delete;
-  /** Move assignment is not needed for storing ghost trees in a std::vector. */
-  t8_ghost_tree &
-  operator= (t8_ghost_tree &&)
-    = delete;
-
-  /** Destructor. Frees the elements. */
-  ~t8_ghost_tree ()
-  {
-    /* A ghost tree whose elements were never initialized (or that was moved from) owns nothing. */
-    if (elements.scheme != nullptr) {
-      t8_element_array_reset (&elements);
-    }
-  }
 };
 
 /**
@@ -280,49 +247,16 @@ struct t8_ghost_tree
  * \a mpirank. There is one such struct per (local tree, remote process) pair. They are stored, sorted by
  * local tree id, in the \a remote_trees vector of the corresponding \ref t8_ghost_remote. Will be sent to
  * the remote process during \ref t8_forest_ghost_definition::communicate_ghost_elements.
- * A remote tree owns its elements. It is move-only, such that this ownership is never duplicated.
  * \note The elements are allocated by the scheme of \a elements. Hence, a remote tree must be destroyed
  *       before this scheme is.
  */
 struct t8_ghost_remote_tree
 {
-  t8_gloidx_t global_id = 0;      /**< The global id of the (local) tree. */
-  int mpirank = 0;                /**< The rank of the remote process that has these elements as ghosts. */
-  t8_element_array_t elements {}; /**< Copies of the leaf elements that are ghosts on \a mpirank, in SFC order. */
+  t8_gloidx_t global_id = 0; /**< The global id of the (local) tree. */
+  int mpirank = 0;           /**< The rank of the remote process that has these elements as ghosts. */
+  t8_element_array elements; /**< Copies of the leaf elements that are ghosts on \a mpirank, in SFC order. */
   std::vector<t8_locidx_t> element_indices; /**< The tree-local index of each entry in \a elements. */
   t8_eclass_t eclass {};                    /**< The element class of the tree. */
-
-  /** Construct an empty remote tree. Its \a elements are not initialized. */
-  t8_ghost_remote_tree () = default;
-
-  /** Move constructor. Takes over the elements of \a other, which is left without any.
-   * \param [in,out] other The remote tree to move from.
-   */
-  t8_ghost_remote_tree (t8_ghost_remote_tree &&other) noexcept
-    : global_id (other.global_id), mpirank (other.mpirank), elements (std::exchange (other.elements, {})),
-      element_indices (std::move (other.element_indices)), eclass (other.eclass)
-  {
-  }
-
-  /** Copying is forbidden, since the remote tree owns its elements. */
-  t8_ghost_remote_tree (const t8_ghost_remote_tree &) = delete;
-  /** Copying is forbidden, since the remote tree owns its elements. */
-  t8_ghost_remote_tree &
-  operator= (const t8_ghost_remote_tree &)
-    = delete;
-  /** Move assignment is not needed for storing remote trees in a std::vector. */
-  t8_ghost_remote_tree &
-  operator= (t8_ghost_remote_tree &&)
-    = delete;
-
-  /** Destructor. Frees the elements. */
-  ~t8_ghost_remote_tree ()
-  {
-    /* A remote tree whose elements were never initialized (or that was moved from) owns nothing. */
-    if (elements.scheme != nullptr) {
-      t8_element_array_reset (&elements);
-    }
-  }
 };
 
 /**

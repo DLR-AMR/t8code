@@ -1085,19 +1085,18 @@ t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
 t8_tree::~t8_tree ()
 {
-  /* A tree whose leaf elements were never initialized (or that was moved from) owns nothing. */
-  if (leaf_elements.scheme == nullptr) {
+  /* A tree without a scheme (e.g. one that was moved from) has no descendants. */
+  const t8_scheme *scheme = leaf_elements.get_scheme ();
+  if (scheme == nullptr) {
     T8_ASSERT (first_desc == nullptr && last_desc == nullptr);
     return;
   }
-  const t8_scheme *scheme = t8_element_array_get_scheme (&leaf_elements);
   if (first_desc != nullptr) {
     scheme->element_destroy (eclass, 1, &first_desc);
   }
   if (last_desc != nullptr) {
     scheme->element_destroy (eclass, 1, &last_desc);
   }
-  t8_element_array_reset (&leaf_elements);
 }
 
 /* For each tree in a forest compute its first and last descendant */
@@ -1122,14 +1121,13 @@ t8_forest_compute_desc (t8_forest_t forest)
     /* get the eclass associated to tree */
     const t8_eclass_t tree_class = itree->eclass;
     /* get a pointer to the first element of itree */
-    const t8_element_t *first_element = t8_element_array_index_locidx (&itree->leaf_elements, 0);
+    const t8_element_t *first_element = itree->leaf_elements[0];
     /* get memory for the trees first descendant */
     scheme->element_new (tree_class, 1, &itree->first_desc);
     /* calculate the first descendant of the first element */
     scheme->element_get_first_descendant (tree_class, first_element, itree->first_desc, forest->maxlevel);
     /* get a pointer to the last element of itree */
-    const t8_locidx_t num_elements = t8_element_array_get_count (&itree->leaf_elements);
-    const t8_element_t *last_element = t8_element_array_index_locidx (&itree->leaf_elements, num_elements - 1);
+    const t8_element_t *last_element = itree->leaf_elements[itree->leaf_elements.size () - 1];
     /* get memory for the trees first descendant */
     scheme->element_new (tree_class, 1, &itree->last_desc);
     /* calculate the last descendant of the first element */
@@ -1149,7 +1147,6 @@ t8_forest_populate (t8_forest_t forest, const int irregular)
   t8_gloidx_t jt, first_ctree;
   t8_gloidx_t start, end, et;
   t8_element_t *element, *element_succ;
-  t8_element_array_t *telements;
   t8_gloidx_t cmesh_first_tree, cmesh_last_tree;
   int is_empty;
 
@@ -1201,7 +1198,6 @@ t8_forest_populate (t8_forest_t forest, const int irregular)
       tree.elements_offset = count_elements;
       const t8_scheme *scheme = forest->scheme;
       T8_ASSERT (scheme != NULL);
-      telements = &tree.leaf_elements;
       /* calculate first and last element on this tree */
       start = (jt == forest->first_local_tree) ? child_in_tree_begin : 0;
       end = (jt == forest->last_local_tree) ? child_in_tree_end
@@ -1209,12 +1205,12 @@ t8_forest_populate (t8_forest_t forest, const int irregular)
       num_tree_elements = end - start;
       T8_ASSERT (num_tree_elements > 0);
       /* Allocate elements for this processor. */
-      t8_element_array_init_size (telements, scheme, tree_class, num_tree_elements);
-      element = t8_element_array_index_locidx_mutable (telements, 0);
+      tree.leaf_elements = t8_element_array (scheme, tree_class, num_tree_elements);
+      element = tree.leaf_elements[0];
       scheme->element_set_linear_id (tree_class, element, forest->set_level, start);
       count_elements++;
       for (et = start + 1; et < end; et++, count_elements++) {
-        element_succ = t8_element_array_index_locidx_mutable (telements, et - start);
+        element_succ = tree.leaf_elements[et - start];
         T8_ASSERT (scheme->element_get_level (tree_class, element) == forest->set_level);
         scheme->element_construct_successor (tree_class, element, element_succ);
         /* TODO: process elements here */
@@ -1383,14 +1379,14 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     t8_tree &tree = forest->trees.emplace_back ();
     tree.eclass = fromtree.eclass;
     tree.elements_offset = fromtree.elements_offset;
-    const size_t num_tree_elements = t8_element_array_get_count (&fromtree.leaf_elements);
-    t8_element_array_init_size (&tree.leaf_elements, forest->scheme, tree.eclass, num_tree_elements);
+    T8_ASSERT (fromtree.leaf_elements.get_scheme () == forest->scheme);
     if (copy_elements) {
-      t8_element_array_copy (&tree.leaf_elements, &fromtree.leaf_elements);
+      tree.leaf_elements = t8_element_array (fromtree.leaf_elements);
     }
     else {
-      /* Keep the allocated memory, but no elements. */
-      t8_element_array_truncate (&tree.leaf_elements);
+      /* Allocate the memory for the elements of from, but no elements. */
+      tree.leaf_elements = t8_element_array (forest->scheme, tree.eclass);
+      tree.leaf_elements.reserve (fromtree.leaf_elements.size ());
     }
   }
   forest->first_local_tree = from->first_local_tree;
@@ -1784,11 +1780,9 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
     t8_debugf ("Adding local tree to search.\n");
     if (0 <= local_neighbor_tree) {
       // The neighbor tree is a local tree and hence there may be local neighbor elements.
-      const t8_element_array_t *tree_leaves = t8_forest_tree_get_leaf_elements (forest, local_neighbor_tree);
-      if (tree_leaves != nullptr) {
-        neighbor_leaf_array *leaf_array = new neighbor_leaf_array (t8_element_array_get_view (tree_leaves), false);
-        leaf_arrays.push_back (leaf_array);
-      }
+      neighbor_leaf_array *leaf_array
+        = new neighbor_leaf_array (t8_forest_tree_get_leaf_elements (forest, local_neighbor_tree).view (), false);
+      leaf_arrays.push_back (leaf_array);
     }
   }
 
@@ -1801,12 +1795,9 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
         // The neighbor tree is also a ghost tree and face neighbors of our element might
         // be ghost elements.
         // We add the ghost elements of that tree to our search array.
-        const t8_element_array_t *ghost_leaves
-          = t8_forest_ghost_get_tree_leaf_elements (forest, local_neighbor_ghost_treeid);
-        if (ghost_leaves != NULL) {
-          neighbor_leaf_array *leaf_array = new neighbor_leaf_array (t8_element_array_get_view (ghost_leaves), true);
-          leaf_arrays.push_back (leaf_array);
-        }
+        neighbor_leaf_array *leaf_array = new neighbor_leaf_array (
+          t8_forest_ghost_get_tree_leaf_elements (forest, local_neighbor_ghost_treeid).view (), true);
+        leaf_arrays.push_back (leaf_array);
       }
     }
   }
@@ -2201,14 +2192,12 @@ t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t
   /* We get the array of the tree's elements and then search in the array of elements for our
    * element candidate. */
   /* Get the array */
-  const t8_element_array_t *elements = check_ghost ? t8_forest_ghost_get_tree_leaf_elements (forest, local_tree)
-                                                   : t8_forest_tree_get_leaf_elements (forest, local_tree);
-
-  T8_ASSERT (elements != NULL);
+  const t8_element_array &elements = check_ghost ? t8_forest_ghost_get_tree_leaf_elements (forest, local_tree)
+                                                 : t8_forest_tree_get_leaf_elements (forest, local_tree);
 
   // Search for the element in the array, return true if it was found,
   // false if not.
-  return t8_element_array_find (elements, element) >= 0;
+  return elements.find (element) >= 0;
 }
 
 int
@@ -2932,13 +2921,13 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
   if (ltreeid >= 0) {
     /* The tree is a local tree */
     /* Get the elements */
-    const t8_element_array_t *elements = t8_forest_get_tree_leaf_element_array (forest, ltreeid);
+    const t8_element_array &elements = t8_forest_tree_get_leaf_elements (forest, ltreeid);
 
-    index = t8_forest_bin_search_lower (t8_element_array_get_view (elements), last_desc_id, forest->maxlevel);
+    index = t8_forest_bin_search_lower (elements.view (), last_desc_id, forest->maxlevel);
     if (index >= 0) {
       /* There exists an element in the array with id <= last_desc_id,
        * If also elem_id < id, then we found a true decsendant of element */
-      const t8_element_t *elem_found = t8_element_array_index_locidx (elements, index);
+      const t8_element_t *elem_found = elements[index];
       elem_id = scheme->element_get_linear_id (tree_class, elem_found, forest->maxlevel);
       level_found = scheme->element_get_level (tree_class, elem_found);
       if (scheme->element_get_linear_id (tree_class, element, forest->maxlevel) <= elem_id && level < level_found) {
@@ -2957,12 +2946,12 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
     ghost_treeid = t8_forest_ghost_get_ghost_treeid (forest, gtreeid);
     if (ghost_treeid >= 0) {
       /* The tree is a ghost tree */
-      const t8_element_array_t *elements = t8_forest_ghost_get_tree_leaf_elements (forest, ghost_treeid);
-      index = t8_forest_bin_search_lower (t8_element_array_get_view (elements), last_desc_id, forest->maxlevel);
+      const t8_element_array &elements = t8_forest_ghost_get_tree_leaf_elements (forest, ghost_treeid);
+      index = t8_forest_bin_search_lower (elements.view (), last_desc_id, forest->maxlevel);
       if (index >= 0) {
         /* There exists an element in the array with id <= last_desc_id,
          * If also elem_id < id, then we found a true decsendant of element */
-        const t8_element_t *elem_found = t8_element_array_index_int (elements, index);
+        const t8_element_t *elem_found = elements[index];
         elem_id = scheme->element_get_linear_id (tree_class, elem_found, forest->maxlevel);
         level_found = scheme->element_get_level (tree_class, elem_found);
         if (scheme->element_get_linear_id (tree_class, element, forest->maxlevel) <= elem_id && level < level_found) {
@@ -3844,15 +3833,6 @@ t8_forest_get_tree_vertices (t8_forest_t forest, t8_locidx_t ltreeid)
   return t8_cmesh_get_tree_vertices (forest->cmesh, t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid));
 }
 
-t8_element_array_t *
-t8_forest_tree_get_leaf_elements (const t8_forest_t forest, const t8_locidx_t ltree_id)
-{
-  T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (0 <= ltree_id && ltree_id < t8_forest_get_num_local_trees (forest));
-
-  return &t8_forest_get_tree (forest, ltree_id)->leaf_elements;
-}
-
 t8_cmesh_t
 t8_forest_get_cmesh (const t8_forest_t forest)
 {
@@ -3887,7 +3867,7 @@ t8_forest_get_leaf_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_loci
         /* We have to look further to the left */
         ltree_b = ltreedebug;
       }
-      else if (tree->elements_offset + (t8_locidx_t) t8_element_array_get_count (&tree->leaf_elements) > lelement_id) {
+      else if (tree->elements_offset + (t8_locidx_t) tree->leaf_elements.size () > lelement_id) {
         /* We have found the tree */
         ltree_a = ltree_b;
       }
@@ -3914,8 +3894,8 @@ t8_forest_get_leaf_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_loci
    * Or the element is not a local element. */
   const t8_tree_t tree = t8_forest_get_tree (forest, ltree);
   if (tree->elements_offset <= lelement_id
-      && lelement_id < tree->elements_offset + (t8_locidx_t) t8_element_array_get_count (&tree->leaf_elements)) {
-    return t8_element_array_index_locidx_mutable (&tree->leaf_elements, lelement_id - tree->elements_offset);
+      && lelement_id < tree->elements_offset + (t8_locidx_t) tree->leaf_elements.size ()) {
+    return tree->leaf_elements[lelement_id - tree->elements_offset];
   }
   /* The element was not found.
    * This case is covered by the first if and should therefore never happen. */
@@ -3950,9 +3930,9 @@ t8_forest_get_tree_leaf_element_count (t8_tree_t tree)
   t8_locidx_t element_count;
 
   T8_ASSERT (tree != NULL);
-  element_count = t8_element_array_get_count (&tree->leaf_elements);
+  element_count = tree->leaf_elements.size ();
   /* check for type conversion errors */
-  T8_ASSERT ((size_t) element_count == t8_element_array_get_count (&tree->leaf_elements));
+  T8_ASSERT ((size_t) element_count == tree->leaf_elements.size ());
   return element_count;
 }
 
@@ -4549,3 +4529,12 @@ t8_forest_unref (t8_forest_t *pforest)
 }
 
 T8_EXTERN_C_END ();
+
+const t8_element_array &
+t8_forest_tree_get_leaf_elements (const t8_forest_t forest, const t8_locidx_t ltree_id)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltree_id && ltree_id < t8_forest_get_num_local_trees (forest));
+
+  return t8_forest_get_tree (forest, ltree_id)->leaf_elements;
+}

@@ -57,7 +57,7 @@ t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid, int remote_r
   remote_tree->mpirank = remote_rank;
   remote_tree->eclass = t8_forest_get_eclass (forest, local_treeid);
   /* Initialize the array to store the element */
-  t8_element_array_init (&remote_tree->elements, scheme, tree_class);
+  remote_tree->elements = t8_element_array (scheme, tree_class);
 }
 
 void
@@ -103,9 +103,9 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
   {
     /* debugging assertion that the element is really not contained already */
     int ielem;
-    int elem_count = t8_element_array_get_count (&remote_tree->elements);
+    int elem_count = remote_tree->elements.size ();
     for (ielem = 0; ielem < elem_count - 1; ielem++) {
-      const t8_element_t *test_el = t8_element_array_index_int (&remote_tree->elements, ielem);
+      const t8_element_t *test_el = remote_tree->elements[ielem];
       SC_CHECK_ABORTF (!scheme->element_is_equal (tree_class, test_el, elem),
                        "Local element %i already in remote ghosts at pos %i\n", element_index, ielem);
     }
@@ -113,9 +113,9 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
 #endif
   elem_copy = nullptr;
   level = scheme->element_get_level (tree_class, elem);
-  element_count = t8_element_array_get_count (&remote_tree->elements);
+  element_count = remote_tree->elements.size ();
   if (element_count > 0) {
-    elem_copy = t8_element_array_index_locidx_mutable (&remote_tree->elements, element_count - 1);
+    elem_copy = remote_tree->elements[element_count - 1];
     copy_level = scheme->element_get_level (tree_class, elem_copy);
   }
   /* Check if the element was not contained in the array.
@@ -125,7 +125,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
       || scheme->element_get_linear_id (tree_class, elem_copy, copy_level)
            != scheme->element_get_linear_id (tree_class, elem, level)) {
     /* Add the element */
-    elem_copy = t8_element_array_push (&remote_tree->elements);
+    elem_copy = remote_tree->elements.push_back ();
     scheme->element_copy (tree_class, elem, elem_copy);
     /* Add the index of the element */
     remote_tree->element_indices.push_back (element_index);
@@ -205,8 +205,8 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
       /* add padding before the elements */
       current_send_info->num_bytes += T8_ADD_PADDING (current_send_info->num_bytes);
       /* The byte count of the elements */
-      element_size = t8_element_array_get_size (&remote_tree->elements);
-      element_count = t8_element_array_get_count (&remote_tree->elements);
+      element_size = remote_tree->elements.get_element_size ();
+      element_count = remote_tree->elements.size ();
       element_bytes = element_size * element_count;
       /* We will store the number of elements */
       current_send_info->num_bytes += sizeof (size_t);
@@ -242,15 +242,15 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
       bytes_written += sizeof (t8_eclass_t);
       bytes_written += T8_ADD_PADDING (bytes_written);
       /* Store the number of elements in the buffer */
-      element_count = t8_element_array_get_count (&remote_tree->elements);
+      element_count = remote_tree->elements.size ();
       memcpy (current_buffer + bytes_written, &element_count, sizeof (size_t));
       bytes_written += sizeof (size_t);
       bytes_written += T8_ADD_PADDING (bytes_written);
       /* The byte count of the elements */
-      element_size = t8_element_array_get_size (&remote_tree->elements);
+      element_size = remote_tree->elements.get_element_size ();
       element_bytes = element_size * element_count;
       /* Copy the elements into the send buffer */
-      memcpy (current_buffer + bytes_written, t8_element_array_get_data (&remote_tree->elements), element_bytes);
+      memcpy (current_buffer + bytes_written, remote_tree->elements.data (), element_bytes);
       bytes_written += element_bytes;
       /* add padding after the elements */
       bytes_written += T8_ADD_PADDING (bytes_written);
@@ -400,9 +400,9 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
       ghost_tree->global_id = global_id;
       ghost_tree->eclass = eclass;
       /* Initialize the element array */
-      t8_element_array_init_size (&ghost_tree->elements, scheme, eclass, num_elements);
+      ghost_tree->elements = t8_element_array (scheme, eclass, num_elements);
       /* pointer to where the elements are to be inserted */
-      element_insert = t8_element_array_get_data_mutable (&ghost_tree->elements);
+      element_insert = ghost_tree->elements.data ();
       /* Compute the element offset of this new tree by adding the offset
        * of the previous tree to the element count of the previous tree. */
       ghost_tree->element_offset = *current_element_offset;
@@ -413,14 +413,14 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
       ghost_tree = &ghost->ghost_trees[tree_index];
       T8_ASSERT (ghost_tree->eclass == eclass);
       T8_ASSERT (ghost_tree->global_id == global_id);
-      T8_ASSERT (ghost_tree->elements.tree_class == eclass);
+      T8_ASSERT (ghost_tree->elements.get_tree_class () == eclass);
 
-      old_elem_count = t8_element_array_get_count (&ghost_tree->elements);
+      old_elem_count = ghost_tree->elements.size ();
 
       /* Grow the elements array of the tree to fit the new elements */
-      t8_element_array_resize (&ghost_tree->elements, old_elem_count + num_elements);
+      ghost_tree->elements.resize (old_elem_count + num_elements);
       /* Get a pointer to where the new elements are to be inserted */
-      element_insert = t8_element_array_index_locidx_mutable (&ghost_tree->elements, old_elem_count);
+      element_insert = ghost_tree->elements[old_elem_count];
     }
 
     if (itree == 0) {

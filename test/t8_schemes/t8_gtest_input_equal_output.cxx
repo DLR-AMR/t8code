@@ -26,7 +26,6 @@
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
-#include <t8_data/t8_containers.h>
 
 /* The mainly tested function in this test is element_get_children_at_face. The function allows that the input elem is equal children[0] (output).
 Therefore the test checks if this is true and the input is not overridden in the loop or is overridden in the last iteration.

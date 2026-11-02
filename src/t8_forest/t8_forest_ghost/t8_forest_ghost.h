@@ -78,15 +78,6 @@ t8_forest_ghost_get_tree_element_offset (t8_forest_t forest, t8_locidx_t lghost_
 t8_locidx_t
 t8_forest_ghost_tree_num_leaf_elements (t8_forest_t forest, t8_locidx_t lghost_tree);
 
-/** Get a pointer to the ghost leaf element array of a ghost tree.
- * \param [in]  forest    The forest. Ghost layer must exist.
- * \param [in]  lghost_tree The ghost tree id of a ghost tree. 0 <= \a lghost_tree < num_ghost_trees
- * \return                A pointer to the array of ghost leaf elements of the tree.
- * \a forest must be committed before calling this function.
- */
-t8_element_array_t *
-t8_forest_ghost_get_tree_leaf_elements (const t8_forest_t forest, const t8_locidx_t lghost_tree);
-
 /** Given a global tree compute the ghost local tree id of it.
  * \param [in]  forest    The forest. Ghost layer must exist.
  * \param [in]  gtreeid   A global tree in \a forest.
@@ -216,5 +207,16 @@ int *
 t8_forest_ghost_get_remotes (t8_forest_t forest, int *num_remotes);
 
 T8_EXTERN_C_END ();
+
+#ifdef __cplusplus
+/** Return the array of ghost leaf elements of a ghost tree.
+ * \param [in]  forest    The forest. Ghost layer must exist.
+ * \param [in]  lghost_tree The ghost tree id of a ghost tree. 0 <= \a lghost_tree < num_ghost_trees
+ * \return                The array of ghost leaf elements of the tree.
+ * \a forest must be committed before calling this function.
+ */
+const t8_element_array &
+t8_forest_ghost_get_tree_leaf_elements (const t8_forest_t forest, const t8_locidx_t lghost_tree);
+#endif
 
 #endif /* !T8_FOREST_GHOST_H */

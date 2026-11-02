@@ -571,6 +571,14 @@ struct t8_element_array
   void
   resize (const size_t new_count);
 
+  /** Allocate memory for at least \a capacity elements, so that adding elements up to this number does not reallocate.
+   * The number of elements does not change.
+   * \param [in] capacity The number of elements to allocate memory for.
+   * \note This invalidates all pointers to elements of the array if the memory is reallocated.
+   */
+  void
+  reserve (const size_t capacity);
+
   /** Append one initialized element.
    * \return A pointer to the new element.
    * \note This invalidates all pointers to elements of the array.

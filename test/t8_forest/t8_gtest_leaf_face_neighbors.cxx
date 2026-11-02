@@ -153,16 +153,15 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
       const bool is_ghost = itree >= num_local_trees;
       const t8_locidx_t ghost_tree_id = itree - num_local_trees;
       /* Get the leaf element array */
-      const t8_element_array_t *leaf_elements = is_ghost
-                                                  ? t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id)
-                                                  : t8_forest_get_tree_leaf_element_array (forest, itree);
+      const t8_element_array &leaf_elements = is_ghost ? t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id)
+                                                       : t8_forest_tree_get_leaf_elements (forest, itree);
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
       const t8_scheme *scheme = t8_forest_get_scheme (forest);
-      const t8_locidx_t num_leaves = t8_element_array_get_count (leaf_elements);
+      const t8_locidx_t num_leaves = leaf_elements.size ();
       const t8_locidx_t cmesh_tree = t8_forest_ltreeid_to_cmesh_ltreeid (forest, itree);
       for (t8_locidx_t ileaf = 0; ileaf < num_leaves; ++ileaf, ++ielement_index) {
         // Iterate over each leaf element
-        const t8_element_t *element = t8_element_array_index_locidx (leaf_elements, ileaf);
+        const t8_element_t *element = leaf_elements[ileaf];
         const int num_faces = scheme->element_get_num_faces (tree_class, element);
         for (int iface = 0; iface < num_faces; ++iface) {
           // Iterate over all faces and compute the face neighbors
@@ -489,17 +488,17 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
     const bool is_ghost = itree >= num_local_trees;
     const t8_locidx_t ghost_tree_id = itree - num_local_trees;
     /* Get the leaf element array */
-    const t8_element_array_t *leaf_elements
-      = is_ghost ? t8_forest_ghost_get_tree_leaf_elements (adaptive_forest, ghost_tree_id)
-                 : t8_forest_get_tree_leaf_element_array (adaptive_forest, itree);
+    const t8_element_array &leaf_elements = is_ghost
+                                              ? t8_forest_ghost_get_tree_leaf_elements (adaptive_forest, ghost_tree_id)
+                                              : t8_forest_tree_get_leaf_elements (adaptive_forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (adaptive_forest, itree);
     const t8_scheme *scheme = t8_forest_get_scheme (adaptive_forest);
-    const t8_locidx_t num_leaves = t8_element_array_get_count (leaf_elements);
+    const t8_locidx_t num_leaves = leaf_elements.size ();
     int num_faces_with_2_neighbors = 0;
     int num_faces_with_1_neighbor = 0;
     for (t8_locidx_t ileaf = 0; ileaf < num_leaves; ++ileaf, ++ielement_index) {
       // Iterate over each leaf element
-      const t8_element_t *element = t8_element_array_index_locidx (leaf_elements, ileaf);
+      const t8_element_t *element = leaf_elements[ileaf];
       const int num_faces = scheme->element_get_num_faces (tree_class, element);
       for (int iface = 0; iface < num_faces; ++iface) {
         // Iterate over all faces and compute the face neighbors

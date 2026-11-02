@@ -192,7 +192,7 @@ t8_forest_partition_test_desc (t8_forest_t forest)
   for (ielem = 0; ielem < t8_forest_get_tree_leaf_element_count (tree); ielem++) {
     /* Iterate over elems, for each one create the first descendant and check
      * its linear id versus the linear id of first_desc. */
-    const t8_element_t *element = t8_element_array_index_locidx (&tree->leaf_elements, ielem);
+    const t8_element_t *element = tree->leaf_elements[ielem];
     scheme->element_get_first_descendant (tree_class, element, elem_desc, forest->maxlevel);
     level = scheme->element_get_level (tree_class, elem_desc);
     T8_ASSERT (level == scheme->element_get_level (tree_class, elem_desc));
@@ -707,7 +707,7 @@ t8_forest_partition_tree_first_last_el (t8_tree_t tree, t8_locidx_t tree_id, t8_
   else {
     *first_tree_el = 0;
   }
-  num_elements = t8_element_array_get_count (&tree->leaf_elements);
+  num_elements = tree->leaf_elements.size ();
   if (tree->elements_offset + num_elements > (size_t) last_element_send) {
     /* For the last tree, the last element we send is the overall
      * last element that we send */
@@ -773,7 +773,7 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from, char **send_buffer, in
     /* We now know how many elements this tree will send */
     num_elements_send = last_tree_element - first_tree_element + 1;
     T8_ASSERT (num_elements_send >= 0);
-    elem_size = t8_element_array_get_size (&tree->leaf_elements);
+    elem_size = tree->leaf_elements.get_element_size ();
     element_alloc += num_elements_send * elem_size;
     current_element += num_elements_send;
     num_trees_send++;
@@ -818,8 +818,8 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from, char **send_buffer, in
     tree_info_pos += sizeof (t8_forest_partition_tree_info_t);
     /* We can now fill the send buffer with all elements of that tree */
     if (num_elements_send > 0) {
-      const t8_element_t *pfirst_element = t8_element_array_index_locidx (&tree->leaf_elements, first_tree_element);
-      elem_size = t8_element_array_get_size (&tree->leaf_elements);
+      const t8_element_t *pfirst_element = tree->leaf_elements[first_tree_element];
+      elem_size = tree->leaf_elements.get_element_size ();
       memcpy (*send_buffer + element_pos, (const void *) pfirst_element, num_elements_send * elem_size);
       element_pos += num_elements_send * elem_size;
     }
@@ -1162,8 +1162,11 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
       element_size = scheme->get_element_size (tree->eclass);
       /* initialize the elements array and copy the elements from the receive buffer */
       T8_ASSERT (element_cursor + tree_info->num_elements * element_size <= (size_t) recv_bytes);
-      t8_element_array_init_copy (&tree->leaf_elements, scheme, tree->eclass,
-                                  (t8_element_t *) (recv_buffer + element_cursor), tree_info->num_elements);
+      tree->leaf_elements = t8_element_array (scheme, tree->eclass, tree_info->num_elements);
+      if (tree_info->num_elements > 0) {
+        memcpy ((void *) tree->leaf_elements.data (), recv_buffer + element_cursor,
+                tree_info->num_elements * element_size);
+      }
     }
     else {
       T8_ASSERT (itree == 0); /* This situation only happens for the first tree */
@@ -1177,13 +1180,12 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
       old_num_elements = t8_forest_get_tree_leaf_element_count (tree);
       new_num_elements = old_num_elements + tree_info->num_elements;
       /* Enlarge the elements array */
-      t8_element_array_resize (&tree->leaf_elements, new_num_elements);
+      tree->leaf_elements.resize (new_num_elements);
       if (tree_info->num_elements > 0) {
-        t8_element_t *first_new_element
-          = t8_element_array_index_locidx_mutable (&tree->leaf_elements, old_num_elements);
+        t8_element_t *first_new_element = tree->leaf_elements[old_num_elements];
         /* Get the size of an element of the tree */
         element_size = scheme->get_element_size (tree->eclass);
-        T8_ASSERT (element_size == t8_element_array_get_size (&tree->leaf_elements));
+        T8_ASSERT (element_size == tree->leaf_elements.get_element_size ());
         /* Copy the elements from the receive buffer to the elements array */
         memcpy ((void *) first_new_element, recv_buffer + element_cursor, tree_info->num_elements * element_size);
       }
