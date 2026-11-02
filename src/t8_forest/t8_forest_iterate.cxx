@@ -42,18 +42,29 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_view 
 
   /* The leaves are sorted, so the descendants of each child of element are stored contiguously and ordered by the
    * child id, which is the leaves' ancestor id at the level of the children. In other words for each child C of
-   * element, find the indices i, j such that all descendants of C are elements[i], ..., elements[j-1]. */
-  t8_element_array_view::iterator first_of_child = leaf_elements.begin ();
+   * element, find the indices i, j such that all descendants of C are elements[i], ..., elements[j-1].
+   * We binary search the first leaf of each child. Every probed leaf with child id c is an upper bound for the
+   * first leaf of all children up to c, so we store it in their offsets. This narrows the search range of the
+   * following children, as in sc_array_split. Until its search is finished, offsets[ichild] is an upper bound. */
+  const size_t num_leaves = leaf_elements.size ();
   offsets[0] = 0;
+  std::fill (offsets + 1, offsets + num_children + 1, num_leaves);
+  /** All leaves before this index are descendants of children with a smaller id than the currently searched child. */
+  size_t low = 0;
   for (int ichild = 1; ichild < num_children; ++ichild) {
-    first_of_child = std::partition_point (
-      first_of_child, leaf_elements.end (), [scheme, tree_class, child_level, ichild] (const t8_element_t *leaf) {
-        T8_ASSERT (child_level <= scheme->element_get_level (tree_class, leaf));
-        return scheme->element_get_ancestor_id (tree_class, leaf, child_level) < ichild;
-      });
-    offsets[ichild] = static_cast<size_t> (first_of_child - leaf_elements.begin ());
+    while (low < offsets[ichild]) {
+      const size_t guess = low + (offsets[ichild] - low) / 2;
+      T8_ASSERT (child_level <= scheme->element_get_level (tree_class, leaf_elements[guess]));
+      const int guess_child_id = scheme->element_get_ancestor_id (tree_class, leaf_elements[guess], child_level);
+      T8_ASSERT (0 <= guess_child_id && guess_child_id < num_children);
+      if (guess_child_id < ichild) {
+        low = guess + 1;
+      }
+      else {
+        std::fill (offsets + ichild, offsets + guess_child_id + 1, guess);
+      }
+    }
   }
-  offsets[num_children] = leaf_elements.size ();
 }
 
 void
