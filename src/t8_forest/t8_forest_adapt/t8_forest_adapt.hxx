@@ -74,25 +74,67 @@ struct t8_adapt_family
   bool is_family;   /**< True if \a elements form a family, false if \a elements is a single element. */
 };
 
+/** Callback policy of \ref t8_adaptor that asks the per-element adapt callback \ref t8_forest_adapt_t of the forest
+ * for each element or family.
+ */
+struct t8_adapt_element_callback
+{
+  /** Constructor.
+   * \param [in] forest The forest under construction. Its adapt callback has to be set.
+   */
+  explicit t8_adapt_element_callback ([[maybe_unused]] const t8_forest_t forest)
+  {
+    T8_ASSERT (forest->set_adapt_fn != nullptr);
+  }
+
+  /** Called before the elements of a tree are adapted. The per-element callback needs no preparation.
+   * \param [in] forest      The forest under construction.
+   * \param [in] forest_from The forest that is adapted.
+   * \param [in] context     The tree that is adapted next.
+   */
+  void
+  begin_tree ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_forest_t forest_from,
+              [[maybe_unused]] const t8_adapt_tree_context &context)
+  {
+  }
+
+  /** Ask the adapt callback of the forest what to do with \a family.
+   * \param [in] forest      The forest under construction.
+   * \param [in] forest_from The forest that is adapted.
+   * \param [in] context     The current tree.
+   * \param [in] family      The elements to pass to the callback.
+   * \return The return value of the callback, see \ref t8_forest_adapt_t.
+   */
+  int
+  query (const t8_forest_t forest, const t8_forest_t forest_from, const t8_adapt_tree_context &context,
+         t8_adapt_family &family)
+  {
+    return forest->set_adapt_fn (forest, forest_from, context.ltree_id, context.tree_class, context.el_considered,
+                                 context.scheme, family.is_family, family.num_elements, family.elements.data ());
+  }
+};
+
 /** CRTP base of all adaptors. \ref adapt runs the fixed control flow and calls the hooks of \a TDerived.
  * The base implements every hook for complete forests. A derived adaptor hides a hook by declaring a member
  * function with the same name and signature, the base then calls the derived version without virtual dispatch.
  * \tparam TDerived   The derived adaptor.
  * \tparam TRecursive If true, newly created elements are passed to the callback again and refined or coarsened
  *                    recursively, see \ref t8_forest_set_adapt.
+ * \tparam TCallback  The policy that asks the user callback for the adapt actions, e.g.
+ *                    \ref t8_adapt_element_callback.
  */
-template <typename TDerived, bool TRecursive>
+template <typename TDerived, bool TRecursive, typename TCallback>
 struct t8_adaptor
 {
   /** Constructor.
    * \param [in] forest_in The forest to be built by adapting its \a set_from forest. Its trees have to be
    *                       initialized without elements, see \ref t8_forest_copy_trees.
    */
-  explicit t8_adaptor (t8_forest_t forest_in): forest (forest_in), forest_from (forest_in->set_from)
+  explicit t8_adaptor (t8_forest_t forest_in)
+    : forest (forest_in), forest_from (forest_in->set_from), callback (forest_in)
   {
     T8_ASSERT (forest != nullptr);
     T8_ASSERT (forest_from != nullptr);
-    T8_ASSERT (forest->set_adapt_fn != nullptr);
   }
 
   /** Build the elements of the new forest by adapting the elements of the source forest. */
@@ -133,6 +175,7 @@ struct t8_adaptor
       t8_adapt_tree_context context {
         ltree_id, tree->eclass, scheme, &tree_from->leaf_elements, &tree->leaf_elements, num_el_from, 0, 0
       };
+      callback.begin_tree (forest, forest_from, context);
       while (context.el_considered < num_el_from) {
         adapt_family (context);
       }
@@ -191,16 +234,15 @@ struct t8_adaptor
                            (t8_locidx_t) t8_element_array_get_count (context.elements));
   }
 
-  /** Ask the adapt callback of the forest what to do with \a family.
+  /** Ask the callback policy what to do with \a family.
    * \param [in] context The current tree.
-   * \param [in] family  The elements to pass to the callback.
-   * \return The return value of the callback, see \ref t8_forest_adapt_t.
+   * \param [in] family  The elements to decide on.
+   * \return The adapt action, see \ref t8_forest_adapt_t.
    */
   int
   query (const t8_adapt_tree_context &context, t8_adapt_family &family)
   {
-    return forest->set_adapt_fn (forest, forest_from, context.ltree_id, context.tree_class, context.el_considered,
-                                 context.scheme, family.is_family, family.num_elements, family.elements.data ());
+    return callback.query (forest, forest_from, context, family);
   }
 
   /** Insert the children of the first element of \a family into the new tree.
@@ -502,6 +544,7 @@ struct t8_adaptor
 
   t8_forest_t forest;           /**< The forest under construction. */
   t8_forest_t forest_from;      /**< The forest that is adapted. */
+  TCallback callback;           /**< Asks the user callback for the adapt actions. */
   bool element_removed = false; /**< True if an element was removed on this process, false otherwise. */
   /** The elements used by \ref refine_recursive, one block of the maximum number of children per level.
    * Empty if no element of the current tree was refined recursively. */

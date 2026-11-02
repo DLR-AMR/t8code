@@ -33,19 +33,19 @@
 #include <t8_forest/t8_forest_adapt/t8_forest_subelement_adapt.hxx>
 
 /** Adapt \a forest with the serial or the recursive variant of \a TAdaptor, as set in \a forest.
- * \tparam TAdaptor The adaptor, templated on whether it adapts recursively.
+ * \tparam TAdaptor The adaptor, templated on whether it adapts recursively and on the callback policy.
  * \param [in, out] forest The forest under construction.
  */
-template <template <bool> typename TAdaptor>
+template <template <bool, typename> typename TAdaptor>
 static void
 t8_forest_adapt_with (t8_forest_t forest)
 {
   if (forest->set_adapt_recursive) {
-    TAdaptor<true> adaptor (forest);
+    TAdaptor<true, t8_adapt_element_callback> adaptor (forest);
     adaptor.adapt ();
   }
   else {
-    TAdaptor<false> adaptor (forest);
+    TAdaptor<false, t8_adapt_element_callback> adaptor (forest);
     adaptor.adapt ();
   }
 }

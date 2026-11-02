@@ -32,22 +32,24 @@
 
 /** Adaptor for a source forest without holes and without subelements. It uses all hooks of \ref t8_adaptor.
  * \tparam TRecursive If true, adapt recursively, see \ref t8_adaptor.
+ * \tparam TCallback  The callback policy, see \ref t8_adaptor.
  */
-template <bool TRecursive>
-struct t8_standard_adaptor: t8_adaptor<t8_standard_adaptor<TRecursive>, TRecursive>
+template <bool TRecursive, typename TCallback = t8_adapt_element_callback>
+struct t8_standard_adaptor: t8_adaptor<t8_standard_adaptor<TRecursive, TCallback>, TRecursive, TCallback>
 {
-  using t8_adaptor<t8_standard_adaptor, TRecursive>::t8_adaptor;
+  using t8_adaptor<t8_standard_adaptor, TRecursive, TCallback>::t8_adaptor;
 };
 
 /** Adaptor for a source forest with holes (incomplete trees) and without subelements.
  * Families may be incomplete, so they are detected with \ref t8_forest_is_incomplete_family and the callback
  * receives incomplete families as well.
  * \tparam TRecursive If true, adapt recursively, see \ref t8_adaptor.
+ * \tparam TCallback  The callback policy, see \ref t8_adaptor.
  */
-template <bool TRecursive>
-struct t8_incomplete_adaptor: t8_adaptor<t8_incomplete_adaptor<TRecursive>, TRecursive>
+template <bool TRecursive, typename TCallback = t8_adapt_element_callback>
+struct t8_incomplete_adaptor: t8_adaptor<t8_incomplete_adaptor<TRecursive, TCallback>, TRecursive, TCallback>
 {
-  using t8_adaptor<t8_incomplete_adaptor, TRecursive>::t8_adaptor;
+  using t8_adaptor<t8_incomplete_adaptor, TRecursive, TCallback>::t8_adaptor;
 
   /** Collect the (possibly incomplete) family starting at \a context.el_considered.
    * \see t8_adaptor::get_family

@@ -35,11 +35,12 @@
  * type return value minus one. The offset avoids a collision of subelement type one with regular refinement.
  * \tparam TRecursive If true, adapt recursively, see \ref t8_adaptor. Subelements are only created for elements
  *                    of the source forest, not for elements created by recursive refinement.
+ * \tparam TCallback  The callback policy, see \ref t8_adaptor.
  */
-template <bool TRecursive>
-struct t8_subelement_adaptor: t8_adaptor<t8_subelement_adaptor<TRecursive>, TRecursive>
+template <bool TRecursive, typename TCallback = t8_adapt_element_callback>
+struct t8_subelement_adaptor: t8_adaptor<t8_subelement_adaptor<TRecursive, TCallback>, TRecursive, TCallback>
 {
-  using t8_adaptor<t8_subelement_adaptor, TRecursive>::t8_adaptor;
+  using t8_adaptor<t8_subelement_adaptor, TRecursive, TCallback>::t8_adaptor;
 
   /** Replace the first element of \a family by its subelements of type \a type.
    * \see t8_adaptor::refine_special
