@@ -41,7 +41,7 @@
 void
 t8_eval_geom_point (t8_gloidx_t layer, t8_gloidx_t face, double xi, double eta, double *out_coord, double radius)
 {
-  const double offset_y = static_cast<double> (layer) - 1.0;
+  const double offset_y = 1.0 - static_cast<double> (layer);
   const double offset_x = 2.0 * face + ((layer + 1) % 2);
 
   const double dX = offset_x + (xi - eta);

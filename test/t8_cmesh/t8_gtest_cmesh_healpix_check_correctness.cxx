@@ -28,7 +28,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <numbers>
 
-/* We cross reference our implementation with this of
+/** \file We cross reference our implementation with this of
  * xyf2loc from the HEALPix Julia source code. We evaluate
  * both implementation and compare them to eachother.
  * if the evaluation is close enough then the test passes.
@@ -94,18 +94,20 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
   const int JRLL[12] = { 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4 };
   const int JPLL[12] = { 1, 3, 5, 7, 0, 2, 4, 6, 1, 3, 5, 7 };
 
-  std::array<double, 7> test_samples = { 0.0, 0.001, 0.25, 0.5, 0.75, 0.999, 1.0 };
+  constexpr std::array<double, 7> test_samples = { 0.0, 0.001, 0.25, 0.5, 0.75, 0.999, 1.0 };
   t8_geometry_healpix geom;
 
-  // Build a batch containing all combinations of test_samples for a single evaluation call
-  std::vector<double> ref_coords;
+  // Build a batch containing all combinations of test_samples for a single evaluation call using std::array
+  constexpr size_t num_samples = test_samples.size ();
+  constexpr int num_coords = num_samples * num_samples;
+  std::array<double, num_coords * 2> ref_coords;
+  size_t coord_idx = 0;
   for (double xi : test_samples) {
     for (double eta : test_samples) {
-      ref_coords.push_back (xi);
-      ref_coords.push_back (eta);
+      ref_coords[coord_idx++] = xi;
+      ref_coords[coord_idx++] = eta;
     }
   }
-  const int num_coords = test_samples.size () * test_samples.size ();
 
   // Loop through all t8code layers and faces
   for (int layer = 0; layer < 3; ++layer) {
@@ -117,7 +119,7 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
       // layer 0 (South) -> HEALPix faces 8..11
       // layer 1 (Equator) -> HEALPix faces 4..7
       // layer 2 (North) -> HEALPix faces 0..3
-      const int healpix_face = (2 - layer) * 4 + face;
+      const int healpix_face = layer * 4 + face;
 
       // Output buffers
       std::array<double, num_coords * 3> t8_out;

@@ -38,21 +38,21 @@ TEST (t8_geometry_healpix_test, test_all_trees_are_on_unit_sphere)
   std::mt19937 gen (rd ());
   std::uniform_real_distribution<double> dist (0.0, 1.0);
 
-  // A set of 2D reference coordinates within the element
-  std::vector<double> ref_coords = {
-    0.0, 0.0,                                // Corners
-    1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5,  // Center
-  };
+// A set of 2D reference coordinates within the element
 // in addition to the basic test cases generate random coordinates to test out implementation
 #if T8_TEST_LEVEL_INT >= 2
   const int num_gen_coords = 10;  // Test level basic
 #else
   const int num_gen_coords = 20;
 #endif
+  std::array<double, 10 + 2 * num_gen_coords> ref_coords = {
+    0.0, 0.0,                                // Corners
+    1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5,  // Center
+  };
 
-  for (int i = 0; i < num_gen_coords; i++) {
-    ref_coords.push_back (dist (gen));
-    ref_coords.push_back (dist (gen));
+  for (int coord_index = 0; coord_index < num_gen_coords; coord_index++) {
+    ref_coords[2 * coord_index + 10] = (dist (gen));
+    ref_coords[2 * coord_index + 11] = (dist (gen));
   }
 
   const size_t num_coords = ref_coords.size () / 2;
