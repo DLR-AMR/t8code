@@ -99,6 +99,17 @@ struct t8_adapt_element_callback
   {
   }
 
+  /** Whether the element at \a context.el_considered has to be checked for a family before \ref query.
+   * The per-element callback decides on whole families, so it always needs the family.
+   * \param [in] context The current tree.
+   * \return True.
+   */
+  static constexpr bool
+  needs_family ([[maybe_unused]] const t8_adapt_tree_context &context)
+  {
+    return true;
+  }
+
   /** Ask the adapt callback of the forest what to do with \a family.
    * \param [in] forest      The forest under construction.
    * \param [in] forest_from The forest that is adapted.
@@ -141,6 +152,18 @@ struct t8_adapt_batched_callback
     actions.assign ((size_t) context.num_elements_from, static_cast<int> (t8_adapt_action::keep));
     forest->set_adapt_batched_fn (forest, forest_from, context.ltree_id, context.tree_class, context.scheme,
                                   context.elements_from, actions.data ());
+  }
+
+  /** Whether the element at \a context.el_considered has to be checked for a family before \ref query.
+   * Only a family whose first member is marked for coarsening can be coarsened, all other actions apply to the
+   * first element alone. This avoids the expensive family check for most elements.
+   * \param [in] context The current tree.
+   * \return True if the element is marked for coarsening, false otherwise.
+   */
+  bool
+  needs_family (const t8_adapt_tree_context &context) const
+  {
+    return actions[context.el_considered] == static_cast<int> (t8_adapt_action::coarsen);
   }
 
   /** Get the action for \a family from the actions of the tree. A family is coarsened if all its members are
@@ -420,6 +443,20 @@ struct t8_adaptor
     return last;
   }
 
+  /** The element at \a context.el_considered alone, without checking for a family.
+   * \param [in] context The current tree.
+   * \return The element as a non-family.
+   */
+  static t8_adapt_family
+  single_element (const t8_adapt_tree_context &context)
+  {
+    t8_adapt_family family;
+    family.elements[0] = t8_element_array_index_locidx_mutable (context.elements_from, context.el_considered);
+    family.num_elements = 1;
+    family.is_family = false;
+    return family;
+  }
+
   /** Collect the element at \a first in \a array and, if they form a family, its siblings.
    * \param [in] context The current tree.
    * \param [in] array   Either \a context.elements_from or \a context.elements.
@@ -612,7 +649,8 @@ struct t8_adaptor
   void
   adapt_family (t8_adapt_tree_context &context)
   {
-    t8_adapt_family family = derived ().get_family (context);
+    t8_adapt_family family
+      = callback.needs_family (context) ? derived ().get_family (context) : single_element (context);
     T8_ASSERT (family.num_elements > 0);
     int refine_value = derived ().query (context, family);
     T8_ASSERT (family.is_family || refine_value != static_cast<int> (t8_adapt_action::coarsen));
