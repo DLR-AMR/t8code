@@ -82,19 +82,12 @@ struct t8_balance_item
 
 /** The elements that the leaves of this rank force balance to refine, in all trees: the strict ancestors of the
  * leaves, the parents of refined elements, and the elements touching a refined element of the next finer level with
- * a boundary of dimension at least \a min_dim. These are the parents of its neighbors at the boundaries of dimension
- * at least \a min_dim. The levels are processed from the finest to the coarsest.
+ * a boundary of dimension at least \a min_dim. The levels are processed from the finest to the coarsest.
  *
- * Performance (benchmarks/t8_time_ghost_balance, spherical shell): face balance is 8 to 58 times faster than the
- * ripple and faster than p4est on 4 and 8 ranks, but edge and vertex balance are 1.5 to 4 times slower than p4est on
- * 8 ranks and 7 to 10 times on one rank. The neighbors at all boundaries of every refined element are computed, also
- * for the internal nodes deep inside the part of this rank, which cannot add new elements. Ideas to speed this up:
- * - Apply the touching rule per parent instead of per refined child: a level-k element touches a refined child f of
- *   p with dimension at least min_dim if and only if it is a neighbor of p at a boundary of p that f touches with
- *   this dimension (element_get_children_touching_boundary). This computes the neighbors once per family instead
- *   of once per refined child, and no parents of neighbors.
- * - Skip the boundaries of a refined element that do not lie in the boundary of its parent: all neighbors there are
- *   siblings, whose parent is added as the parent of the element.
+ * Performance (benchmarks/t8_time_ghost_balance, spherical shell, hexahedra): balance is faster than p4est on 4 and 8
+ * ranks for faces, edges and vertices, and 2.5 to 3 times slower on one rank. On one rank, a quarter of the time goes
+ * to linear ids of the standalone scheme, which loop over the levels, and a sixth each to the neighbors and to the
+ * recursive adapt. Ideas to speed this up:
  * - Inside the own range, the internal nodes of the input forest are refined anyway, so new elements only arise
  *   next to input leaves at least two levels coarser (the seeds of p4est's balance). Find them by locating the leaf
  *   that contains the first descendant of a neighbor (binary search in the leaf array), instead of inserting the
@@ -137,63 +130,107 @@ t8_forest_balance_closure (t8_forest_t forest, const int min_dim)
     scheme->element_destroy (eclass, 1, &parent);
   }
 
-  /* From the finest level to the coarsest, add the parents of the refined elements and of their neighbors */
+  /* From the finest level to the coarsest, add the parents of the refined elements and the elements touching them.
+   * An element of the coarser level touches a refined child of p with dimension at least min_dim if and only if it is
+   * p or a neighbor of p at a boundary of p that the child touches with this dimension. So the neighbors are computed
+   * once per parent of refined elements, and only at its boundaries touched by a refined child. */
   sc_array_t neighbors;
   sc_array_init (&neighbors, sizeof (t8_forest_boundary_neighbor_t));
+  std::vector<t8_balance_key> touching;
+  std::vector<t8_element_t *> children;
+  std::vector<int> child_bdy_dims;
   for (int level = (int) refined.size () - 1; level >= 1; level--) {
+    /* The parents of the refined elements, which have a refined child */
     for (const auto &[key, has_refined_child] : refined[level]) {
-      const t8_locidx_t lctreeid = t8_cmesh_get_local_id (cmesh, key.gtreeid);
-      const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, lctreeid);
+      const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, t8_cmesh_get_local_id (cmesh, key.gtreeid));
       t8_element_t *element, *parent;
       scheme->element_new (eclass, 1, &element);
       scheme->element_new (eclass, 1, &parent);
       scheme->element_set_linear_id (eclass, element, level, key.id);
       scheme->element_get_parent (eclass, element, parent);
       refined[level - 1][{ key.gtreeid, scheme->element_get_linear_id (eclass, parent, level - 1) }] = true;
-      /* The elements of the coarser level that touch the element */
-      const auto add_parent_of
-        = [&] (const t8_gloidx_t neigh_gtreeid, const t8_eclass_t neigh_eclass, const t8_element_t *neigh) {
-            t8_element_t *neigh_parent;
-            scheme->element_new (neigh_eclass, 1, &neigh_parent);
-            scheme->element_get_parent (neigh_eclass, neigh, neigh_parent);
-            refined[level - 1].emplace (
-              t8_balance_key { neigh_gtreeid, scheme->element_get_linear_id (neigh_eclass, neigh_parent, level - 1) },
-              false);
-            scheme->element_destroy (neigh_eclass, 1, &neigh_parent);
-          };
+      scheme->element_destroy (eclass, 1, &element);
+      scheme->element_destroy (eclass, 1, &parent);
+    }
+    /* The neighbors of these parents at the boundaries touched by a refined child */
+    touching.clear ();
+    for (const auto &[key, has_refined_child] : refined[level - 1]) {
+      if (!has_refined_child) {
+        continue;
+      }
+      const t8_locidx_t lctreeid = t8_cmesh_get_local_id (cmesh, key.gtreeid);
+      const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, lctreeid);
+      t8_element_t *parent;
+      scheme->element_new (eclass, 1, &parent);
+      scheme->element_set_linear_id (eclass, parent, level - 1, key.id);
+      /* Whether one of the children is refined */
+      const auto any_refined = [&] (t8_element_t **children, const int num_children, const int *child_bdy_dims) {
+        for (int ichild = 0; ichild < num_children; ichild++) {
+          if ((child_bdy_dims == NULL || child_bdy_dims[ichild] >= min_dim)
+              && refined[level].count (
+                { key.gtreeid, scheme->element_get_linear_id (eclass, children[ichild], level) })) {
+            return true;
+          }
+        }
+        return false;
+      };
       if (faces_only) {
-        const int num_faces = scheme->element_get_num_faces (eclass, element);
+        const int num_faces = scheme->element_get_num_faces (eclass, parent);
         for (int face = 0; face < num_faces; face++) {
+          const int num_children = scheme->element_get_num_face_children (eclass, parent, face);
+          children.resize (num_children);
+          scheme->element_new (eclass, num_children, children.data ());
+          scheme->element_get_children_at_face (eclass, parent, face, children.data (), num_children, NULL);
+          const bool touched = any_refined (children.data (), num_children, NULL);
+          scheme->element_destroy (eclass, num_children, children.data ());
+          if (!touched) {
+            continue;
+          }
           const t8_eclass_t neigh_eclass
-            = t8_forest_element_neighbor_eclass_cmesh (forest, lctreeid, eclass, element, face);
+            = t8_forest_element_neighbor_eclass_cmesh (forest, lctreeid, eclass, parent, face);
           t8_element_t *neigh;
           scheme->element_new (neigh_eclass, 1, &neigh);
           int dual_face;
           const t8_gloidx_t neigh_gtreeid = t8_forest_element_face_neighbor_cmesh (
-            forest, lctreeid, key.gtreeid, eclass, element, neigh, neigh_eclass, face, &dual_face);
+            forest, lctreeid, key.gtreeid, eclass, parent, neigh, neigh_eclass, face, &dual_face);
           if (neigh_gtreeid >= 0) {
-            add_parent_of (neigh_gtreeid, neigh_eclass, neigh);
+            touching.push_back ({ neigh_gtreeid, scheme->element_get_linear_id (neigh_eclass, neigh, level - 1) });
           }
           scheme->element_destroy (neigh_eclass, 1, &neigh);
         }
       }
       else {
         for (int bdy_dim = min_dim; bdy_dim < dim; bdy_dim++) {
-          const int num_boundaries = scheme->element_get_num_boundaries (eclass, element, bdy_dim);
+          const int num_boundaries = scheme->element_get_num_boundaries (eclass, parent, bdy_dim);
           for (int bdy_id = 0; bdy_id < num_boundaries; bdy_id++) {
-            t8_forest_element_boundary_neighbors_cmesh (forest, lctreeid, key.gtreeid, eclass, element, bdy_dim, bdy_id,
+            const int num_children
+              = scheme->element_get_num_boundary_touching_children (eclass, parent, bdy_dim, bdy_id);
+            children.resize (num_children);
+            child_bdy_dims.resize (num_children);
+            scheme->element_new (eclass, num_children, children.data ());
+            scheme->element_get_children_touching_boundary (eclass, parent, bdy_dim, bdy_id, children.data (),
+                                                            num_children, child_bdy_dims.data (), NULL);
+            const bool touched = any_refined (children.data (), num_children, child_bdy_dims.data ());
+            scheme->element_destroy (eclass, num_children, children.data ());
+            if (!touched) {
+              continue;
+            }
+            t8_forest_element_boundary_neighbors_cmesh (forest, lctreeid, key.gtreeid, eclass, parent, bdy_dim, bdy_id,
                                                         &neighbors);
             for (size_t ineigh = 0; ineigh < neighbors.elem_count; ineigh++) {
               const t8_forest_boundary_neighbor_t *neighbor
                 = (const t8_forest_boundary_neighbor_t *) sc_array_index (&neighbors, ineigh);
-              add_parent_of (neighbor->gtreeid, neighbor->eclass, neighbor->neigh);
+              touching.push_back (
+                { neighbor->gtreeid, scheme->element_get_linear_id (neighbor->eclass, neighbor->neigh, level - 1) });
             }
             t8_forest_boundary_neighbors_clear (forest, &neighbors);
           }
         }
       }
-      scheme->element_destroy (eclass, 1, &element);
       scheme->element_destroy (eclass, 1, &parent);
+    }
+    for (const t8_balance_key &key : touching) {
+      refined[level - 1].emplace (key, false);
     }
   }
   sc_array_reset (&neighbors);
