@@ -56,13 +56,13 @@
  * This process repeats recursively and stops at those fine elements that are actually contained
  * in the forest (leaf elements).
  *
- * The search algorithm can be given an array of 'queries' and a query-callback.
- * These queries can be arbitrarily defined data. In our case this will be the array of particles.
+ * The search algorithm can be given a vector of 'queries' and a query-callback.
+ * These queries can be arbitrarily defined data. In our case this will be the vector of particles.
  * If queries and a query-callback are provided, then for each element first the search-callback
  * is called to decide whether or not to continue searching. If it returns true, the query-callback
- * will be called once for each active query object.
- * If the query object returns 0, this query object will get deactivated for this element and its
- * recursive children. The recursion stops when no queries are active anymore.
+ * will be called with all active query objects.
+ * If the query-callback does not mark a query object as a match, this query object will get deactivated
+ * for this element and its recursive children. The recursion stops when no queries are active anymore.
  *
  * It is probably best to illustrate this with an example. Let the following forest
  * with 2 quad trees be given.
@@ -107,21 +107,21 @@
  *
  */
 
-#include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>             /* save forest */
-#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
-#include <t8_vector/t8_vec.hxx>                 /* Basic operations on 3D vectors. */
-#include <t8_forest/t8_forest_iterate.h>        /* For the search algorithm. */
-#include <tutorials/general/t8_step3.h>         /* Example forest adaptation from step 3 */
+#include <t8.h>                                            /* General t8code header, always include this. */
+#include <t8_cmesh/t8_cmesh.h>                             /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>                    /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>                   /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>                        /* save forest */
+#include <t8_schemes/t8_default/t8_default.hxx>            /* default refinement scheme. */
+#include <t8_vector/t8_vec.hxx>                            /* Basic operations on 3D vectors. */
+#include <t8_forest/t8_forest_search/t8_forest_search.hxx> /* For the search algorithm. */
+#include <tutorials/general/t8_step3.h>                    /* Example forest adaptation from step 3 */
+#include <vector>
 
-/* Our search query, a particle together with a flag. */
+/* Our search query, a particle. */
 struct t8_tutorial_search_particle_t
 {
-  double coordinates[3];   /* The coordinates of our particle. */
-  int is_inside_partition; /* Will be set to true if the particles lies inside this process' parallel partition. */
+  double coordinates[3]; /* The coordinates of our particle. */
 };
 
 /* Additional user data that we process during search.
@@ -138,89 +138,77 @@ struct t8_tutorial_search_user_data_t
  * It will be called once per element and generally decides whether or not
  * to continue the search with the children of the element.
  * Since we will continue as long as there are particles left to consider,
- * we always return 1 here.
+ * we always return true here.
  * The search will then only stop when no queries are active (thus, no particles
  * could be in this element) or the element is a leaf element.
  *
  * We also increase a counter by one in order to count how many elements we
  * looked at during the search process.
  */
-static int
-t8_tutorial_search_callback (t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
-                             [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int is_leaf,
+static bool
+t8_tutorial_search_callback ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
+                             [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const bool is_leaf,
                              [[maybe_unused]] const t8_element_array_view &leaf_elements,
-                             [[maybe_unused]] const t8_locidx_t tree_leaf_index)
+                             [[maybe_unused]] const t8_locidx_t tree_leaf_index,
+                             t8_tutorial_search_user_data_t *user_data)
 {
-
-  /* Get a pointer to our user data and increase the counter of searched elements. */
-  t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
+  /* Increase the counter of searched elements. */
   T8_ASSERT (user_data != NULL);
   user_data->num_elements_searched++;
-  return 1;
+  return true;
 }
 
-/* The query callback. This will be called for each element once per active query
- * (= particle that may be inside this element).
- * The return value determines whether or not the query remains active for the children
- * of this element.
+/* The query callback. This will be called once for each element with all active queries
+ * (= particles that may be inside this element).
+ * For each active query, we set its entry in particle_matches to true if and only if it
+ * remains active for the children of this element.
  * In our example this is the case if the particle is inside the element.
  * The additional input parameter 'is_leaf' will be true if the given element is a leaf
  * element (= an actual element in our forest, not a 'virtual' element in the hierarchy).
  * If the element is a leaf and the particle is contained in it, then we will increase
  * a counter for this element by one.
- * These counters are provided in an sc_array as user data of the input forest.
+ * These counters are provided in an sc_array in the user data of the search.
  */
 static void
-t8_tutorial_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const int is_leaf, [[maybe_unused]] const t8_element_array_view &leaf_elements,
-                                   const t8_locidx_t tree_leaf_index, sc_array_t *queries, sc_array_t *query_indices,
-                                   int *query_matches, const size_t num_active_queries)
+t8_tutorial_search_query_callback (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                                   const bool is_leaf, [[maybe_unused]] const t8_element_array_view &leaf_elements,
+                                   const t8_locidx_t tree_leaf_index,
+                                   const std::vector<t8_tutorial_search_particle_t> &particles,
+                                   const std::vector<size_t> &active_particle_indices,
+                                   std::vector<bool> &particle_matches, t8_tutorial_search_user_data_t *user_data)
 {
-  /* Build an array of all particle-coords, necessary for t8_forest_element_point_batch_inside */
-  double *coords = T8_ALLOC (double, 3 * num_active_queries);
-  for (size_t particle_iter = 0; particle_iter < num_active_queries; particle_iter++) {
-    /* Get the query at the current query-index (particle_iter in this case). */
-    const size_t particle_id = *(size_t *) sc_array_index_int (query_indices, particle_iter);
-    /* Cast the query into a particle*/
-    t8_tutorial_search_particle_t *particle
-      = (t8_tutorial_search_particle_t *) sc_array_index ((sc_array_t *) queries, particle_id);
-    /* extract the coordinates of the particle struct */
-    coords[3 * particle_iter] = particle->coordinates[0];
-    coords[3 * particle_iter + 1] = particle->coordinates[1];
-    coords[3 * particle_iter + 2] = particle->coordinates[2];
+  const size_t num_active_particles = active_particle_indices.size ();
+  /* Build a vector of all active particle-coords, necessary for t8_forest_element_points_inside */
+  std::vector<double> coords;
+  coords.reserve (3 * num_active_particles);
+  for (const size_t particle_id : active_particle_indices) {
+    const t8_tutorial_search_particle_t &particle = particles[particle_id];
+    coords.insert (coords.end (), particle.coordinates, particle.coordinates + 3);
   }
   /* Numerical tolerance for the is inside element check. */
   const double tolerance = 1e-8;
-  /* Get the user data pointer that stores the number of particles per element
-   * and number of elements searched. */
-  t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
   /* Ensure user_data is present. */
   T8_ASSERT (user_data != NULL);
   sc_array *particles_per_element = user_data->particles_per_element;
   /* Ensure that the data is actually set. */
   T8_ASSERT (particles_per_element != NULL);
-  T8_ASSERT (queries != NULL);
 
-  /* Test whether the particles are inside this element. */
-  t8_forest_element_points_inside (forest, ltreeid, element, coords, num_active_queries, query_matches, tolerance);
-  T8_FREE (coords);
-  for (size_t matches_id = 0; matches_id < num_active_queries; matches_id++) {
-    if (query_matches[matches_id]) {
-      if (is_leaf) {
-        /* The particle is inside and this element is a leaf element.
-       * We mark the particle for being inside the partition and we increase
-       * the particles_per_element counter of this element. */
-        /* In order to find the index of the element inside the array, we compute the
+  /* Test whether the particles are inside this element.
+   * The i-th entry of is_inside belongs to the i-th active particle. */
+  std::vector<int> is_inside (num_active_particles);
+  t8_forest_element_points_inside (forest, ltreeid, element, coords.data (), num_active_particles, is_inside.data (),
+                                   tolerance);
+  for (size_t iactive = 0; iactive < num_active_particles; iactive++) {
+    /* particle_matches is indexed by the particle id, not by the position among the active particles. */
+    particle_matches[active_particle_indices[iactive]] = is_inside[iactive];
+    if (is_inside[iactive] && is_leaf) {
+      /* The particle is inside and this element is a leaf element.
+       * We increase the particles_per_element counter of this element. */
+      /* In order to find the index of the element inside the array, we compute the
        * index of the first element of this tree plus the index of the element within
        * the tree. */
-        t8_locidx_t element_index = t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
-        /* Get the correct particle_id */
-        size_t particle_id = *(size_t *) sc_array_index_int (query_indices, matches_id);
-        t8_tutorial_search_particle_t *particle
-          = (t8_tutorial_search_particle_t *) sc_array_index ((sc_array_t *) queries, particle_id);
-        particle->is_inside_partition = 1;
-        *(double *) t8_sc_array_index_locidx (particles_per_element, element_index) += 1;
-      }
+      const t8_locidx_t element_index = t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
+      *(double *) t8_sc_array_index_locidx (particles_per_element, element_index) += 1;
     }
   }
 }
@@ -245,7 +233,7 @@ t8_tutorial_search_vtk (t8_forest_t forest, sc_array *particles_per_element, con
 /* Perform the actual search and write the forest with the number of particles per element
  * to vtu files. */
 static void
-t8_tutorial_search_for_particles (t8_forest_t forest, sc_array *particles)
+t8_tutorial_search_for_particles (t8_forest_t forest, std::vector<t8_tutorial_search_particle_t> &particles)
 {
   sc_array particles_per_element;
   t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
@@ -255,7 +243,7 @@ t8_tutorial_search_for_particles (t8_forest_t forest, sc_array *particles)
   const char *prefix = "t8_search_for_particles";
   t8_tutorial_search_user_data_t user_data;
 
-  t8_global_productionf (" [search] Starting search for %zd particles.\n", particles->elem_count);
+  t8_global_productionf (" [search] Starting search for %zu particles.\n", particles.size ());
 
   /*
    * Init
@@ -269,20 +257,20 @@ t8_tutorial_search_for_particles (t8_forest_t forest, sc_array *particles)
   for (ielement = 0; ielement < num_local_elements; ++ielement) {
     *(double *) t8_sc_array_index_locidx (&particles_per_element, ielement) = 0;
   }
-  /* Initialize the user data with the particles per element array and 0 elements searched. */
+  /* Initialize the user data with the particles per element array and 0 elements searched.
+   * The search passes it to our callbacks. */
   user_data.particles_per_element = &particles_per_element;
   user_data.num_elements_searched = 0;
-  /* Store this user data as the user data of the forest such that we can
-   * access it in the search callbacks. */
-  t8_forest_set_user_data (forest, &user_data);
 
   /*
    * search
    */
 
-  /* Perform the search of the forest. The second argument is the search callback function,
-   * then the query callback function and the last argument is the array of queries. */
-  t8_forest_search (forest, t8_tutorial_search_callback, t8_tutorial_search_query_callback, particles);
+  /* Perform the search of the forest. The first argument is the search callback function,
+   * then the query callback function, the vector of queries, the forest and our user data. */
+  t8_search_with_batched_queries<t8_tutorial_search_particle_t, t8_tutorial_search_user_data_t> search (
+    t8_tutorial_search_callback, t8_tutorial_search_query_callback, particles, forest, &user_data);
+  search.do_search ();
   /*
    * Output
    */
@@ -306,13 +294,13 @@ t8_tutorial_search_for_particles (t8_forest_t forest, sc_array *particles)
   sc_array_reset (&particles_per_element);
 }
 
-/** Create an array of a given number of particles on the root process
+/** Create a vector of a given number of particles on the root process
  * and broadcast it to all other processes.
  * \param [in] num_particles  The number of particles to create.
  * \param [in] seed           The seed to be used for the random number generator.
  * \param [in] comm           MPI communicator to specify on which processes we create this array.
  */
-static sc_array *
+static std::vector<t8_tutorial_search_particle_t>
 t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed, sc_MPI_Comm comm)
 {
   /* Specify lower and upper bounds for the coordinates in each dimension. */
@@ -320,38 +308,30 @@ t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed, sc_
   double boundary_high[3] = { 0.8, 0.75, 0.9 };
   int mpirank;
   int mpiret;
-  sc_array *particles;
 
   /* Get the MPI rank. */
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  /* Create an array for num_particles many particles. */
-  particles = sc_array_new_count (sizeof (t8_tutorial_search_particle_t), num_particles);
+  /* Create a vector for num_particles many particles. */
+  std::vector<t8_tutorial_search_particle_t> particles (num_particles);
 
-  /* We build the array on rank 0 and broadcast it to the other ranks.
+  /* We build the vector on rank 0 and broadcast it to the other ranks.
    * This ensures that all ranks have the same randomly generated particles. */
   if (mpirank == 0) {
-    /* Rank 0 fills this array with random particles. */
-    size_t iparticle;
+    /* Rank 0 fills this vector with random particles. */
     srand (seed);
-    for (iparticle = 0; iparticle < num_particles; ++iparticle) {
-      int dim;
-      /* Get this particle's pointer. */
-      t8_tutorial_search_particle_t *particle
-        = (t8_tutorial_search_particle_t *) sc_array_index_int (particles, iparticle);
-      for (dim = 0; dim < 3; ++dim) {
+    for (t8_tutorial_search_particle_t &particle : particles) {
+      for (int dim = 0; dim < 3; ++dim) {
         /* Create a random value between boundary_low[dim] and boundary_high[dim] */
-        particle->coordinates[dim]
+        particle.coordinates[dim]
           = (double) rand () / RAND_MAX * (boundary_high[dim] - boundary_low[dim]) + boundary_low[dim];
-        /* Initialize the is_inside_partition flag. */
-        particle->is_inside_partition = 0;
       }
     }
   }
-  /* Broadcast this array to all other processes. */
+  /* Broadcast this vector to all other processes. */
   mpiret
-    = sc_MPI_Bcast (particles->array, sizeof (t8_tutorial_search_particle_t) * num_particles, sc_MPI_BYTE, 0, comm);
+    = sc_MPI_Bcast (particles.data (), sizeof (t8_tutorial_search_particle_t) * num_particles, sc_MPI_BYTE, 0, comm);
   SC_CHECK_MPI (mpiret);
 
   t8_global_productionf (
@@ -418,8 +398,8 @@ main (int argc, char **argv)
   t8_global_productionf (" [search] Created an adapted forest with hybrid elements on a unit cube geometry.\n");
   t8_step3_print_forest_information (forest);
 
-  /* Create an array with random particles. */
-  sc_array_t *particles = t8_tutorial_search_build_particles (num_particles, seed, comm);
+  /* Create a vector with random particles. */
+  std::vector<t8_tutorial_search_particle_t> particles = t8_tutorial_search_build_particles (num_particles, seed, comm);
 
   /*
    * Search for particles.
@@ -433,7 +413,6 @@ main (int argc, char **argv)
 
   /* Destroy the forest. */
   t8_forest_unref (&forest);
-  sc_array_destroy (particles);
 
   sc_finalize ();
 

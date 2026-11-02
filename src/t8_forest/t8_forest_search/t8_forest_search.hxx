@@ -374,7 +374,7 @@ struct t8_search: public t8_search_base
   /**
    * The user data associated with the object.
    */
-  Udata *user_data;
+  Udata *user_data = nullptr;
 
  private:
   /**
@@ -838,7 +838,7 @@ struct t8_partition_search: public t8_partition_search_base
   /**
    * A pointer to the user data associated with the object.
    */
-  Udata *user_data;
+  Udata *user_data = nullptr;
 
  private:
   /**

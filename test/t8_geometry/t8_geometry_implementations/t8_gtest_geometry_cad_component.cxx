@@ -47,14 +47,13 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_eclass/t8_eclass.h>
-#include <t8_forest/t8_forest_iterate.h>
+#include <t8_forest/t8_forest_search/t8_forest_search.hxx>
 #include <src/t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
 #include <t8_test_data_dir.h>
 
 #include <string>
 #include <array>
 #include <vector>
-#include <span>
 #include <numeric>
 #include <algorithm>
 
@@ -129,7 +128,7 @@ struct cell_search_query
 
 /**
  * The queries are the only thing we search for. So the search should always continue and we
- * return 1.
+ * return true.
  * \param [in] forest            The forest.
  * \param [in] ltreeid           The local tree id.
  * \param [in] element           The element.
@@ -137,15 +136,16 @@ struct cell_search_query
  * \param [in] leaf_elements     the leaf elements in \a forest that are descendants of \a element (or the element
  *                               itself if \a is_leaf is true)
  * \param[in] tree_leaf_index    the local index of the first leaf in \a leaf_elements
- * \return 1
+ * \param[in] user_data          Unused.
+ * \return true
  */
-static int
-search_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
-                 [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int is_leaf,
+static bool
+search_callback ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
+                 [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const bool is_leaf,
                  [[maybe_unused]] const t8_element_array_view &leaf_elements,
-                 [[maybe_unused]] const t8_locidx_t tree_leaf_index)
+                 [[maybe_unused]] const t8_locidx_t tree_leaf_index, [[maybe_unused]] void *user_data)
 {
-  return 1;
+  return true;
 }
 
 /**
@@ -159,56 +159,47 @@ search_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] const t8_
  * \param[in] leaf_elements       the leaf elements in \a forest that are descendants of \a element (or the element
  *                                itself if \a is_leaf is true)
  * \param[in] tree_leaf_index     the local index of the first leaf in \a leaf_elements
- * \param[in] queries             An array of queries that are checked by the function
- * \param[in] query_indices       An array of size_t entries, where each entry is an index of a query in \a queries.
- * \param[in, out] query_matches  An array of length \a num_active_queries.
- *                                If the element is not a leave must be set to true or false at the i-th index for
- *                                each query, specifying whether the element 'matches' the query of the i-th query
- *                                index or not. When the element is a leaf we can return before all entries are set.
- * \param[in] num_active_queries  The number of currently active queries (equals the number of entries of
- *                                \a query_matches and entries of \a query_indices).
+ * \param[in] cells               The queries that are checked by the function.
+ * \param[in] active_cell_indices The indices of the active queries in \a cells.
+ * \param[in, out] cell_matches   Indexed like \a cells. For each active query, set to true if the element
+ *                                'matches' the query and false otherwise.
+ * \param[in] user_data           Unused.
  */
 static void
-search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
-                       [[maybe_unused]] const t8_element_array_view &leaf_elements,
-                       [[maybe_unused]] const t8_locidx_t tree_leaf_index, sc_array_t *queries,
-                       sc_array_t *query_indices, int *query_matches, const size_t num_active_queries)
+search_query_callback (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                       const bool is_leaf, [[maybe_unused]] const t8_element_array_view &leaf_elements,
+                       [[maybe_unused]] const t8_locidx_t tree_leaf_index, const std::vector<cell_search_query> &cells,
+                       const std::vector<size_t> &active_cell_indices, std::vector<bool> &cell_matches,
+                       [[maybe_unused]] void *user_data)
 {
-  /* Build a vector of all centroid-coords, necessary for t8_forest_element_point_batch_inside */
+  const size_t num_active_cells = active_cell_indices.size ();
+  /* Build a vector of all centroid-coords, necessary for t8_forest_element_points_inside */
   std::vector<double> coords;
-  coords.reserve (3 * num_active_queries);
-  for (size_t cell_iter = 0; cell_iter < num_active_queries; cell_iter++) {
-    /* Get the query at the current query-index (cell_iter in this case). */
-    const size_t cell_id = *(size_t *) sc_array_index_int (query_indices, cell_iter);
-    /* Cast the query into a particle*/
-    const cell_search_query *cell = (cell_search_query *) sc_array_index (queries, cell_id);
-    /* extract the centroid coordinates of the particle struct */
-    coords.push_back (cell->centroid[0]);
-    coords.push_back (cell->centroid[1]);
-    coords.push_back (cell->centroid[2]);
+  coords.reserve (3 * num_active_cells);
+  for (const size_t cell_id : active_cell_indices) {
+    /* extract the centroid coordinates of the cell */
+    coords.insert (coords.end (), cells[cell_id].centroid.begin (), cells[cell_id].centroid.end ());
   }
-  /* Test whether the particles are inside this element. */
-  t8_forest_element_points_inside (forest, ltreeid, element, coords.data (), num_active_queries, query_matches,
+  /* Test whether the centroids are inside this element. The i-th entry of is_inside belongs to the i-th active cell. */
+  std::vector<int> is_inside (num_active_cells);
+  t8_forest_element_points_inside (forest, ltreeid, element, coords.data (), num_active_cells, is_inside.data (),
                                    T8_PRECISION_SQRT_EPS);
+  for (size_t iactive = 0; iactive < num_active_cells; ++iactive) {
+    /* cell_matches is indexed by the cell id, not by the position among the active cells. */
+    cell_matches[active_cell_indices[iactive]] = is_inside[iactive];
+  }
 
   /* If the element is not a leaf the function ends here. */
 
   if (is_leaf) {
     /* We expect that there is only one centroid contained in our leaf element. The centroid of the matching element in the target forest.*/
-    std::span<int> query_matches_cpp (query_matches, num_active_queries);
-    const size_t num_hits = std::accumulate (query_matches_cpp.begin (), query_matches_cpp.end (), 0);
-    ASSERT_EQ (num_hits, 1);
+    const size_t num_hits = std::accumulate (is_inside.begin (), is_inside.end (), size_t { 0 });
+    ASSERT_EQ (num_hits, 1u);
 
     /* Get the matching cell */
-    t8_locidx_t matching_cell_id = -1;
-    for (size_t i_match = 0; i_match < num_active_queries; ++i_match) {
-      if (query_matches[i_match] == 1) {
-        matching_cell_id = *(t8_locidx_t *) sc_array_index_int (query_indices, i_match);
-        break;
-      }
-    }
-    T8_ASSERT (matching_cell_id != -1);
-    const cell_search_query *matching_cell = (cell_search_query *) sc_array_index (queries, matching_cell_id);
+    const auto match = std::find (is_inside.begin (), is_inside.end (), 1);
+    T8_ASSERT (match != is_inside.end ());
+    const cell_search_query &matching_cell = cells[active_cell_indices[match - is_inside.begin ()]];
 
     /* Iterate over each corner of the element and check if it is also present in the target forest element. */
     const t8_scheme *scheme = t8_forest_get_scheme (forest);
@@ -218,7 +209,7 @@ search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_e
     for (int corner_number = 0; corner_number < t8_eclass_num_vertices[shape]; ++corner_number) {
       t8_forest_element_coordinate (forest, ltreeid, element, corner_number, vertex.data ());
       bool cell_vertex_found = false;
-      for (const auto &cell_vertex : matching_cell->vertices) {
+      for (const auto &cell_vertex : matching_cell.vertices) {
         if (t8_eq (cell_vertex, vertex, 1e-4)) {
           ASSERT_FALSE (cell_vertex_found);
           cell_vertex_found = true;
@@ -254,9 +245,8 @@ TEST_P (geometry_cad_component, manually_refined_test)
   }
 
   /* Call the search */
-  sc_array_t *cells_view = sc_array_new_data (cells.data (), sizeof (cell_search_query), cells.size ());
-  t8_forest_search (forest, search_callback, search_query_callback, cells_view);
-  sc_array_destroy (cells_view);
+  t8_search_with_batched_queries<cell_search_query> search (search_callback, search_query_callback, cells, forest);
+  search.do_search ();
 }
 
 /* Currently does not work for parallel files. Replace with VTK_NUM_TYPES as soon

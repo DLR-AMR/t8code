@@ -26,6 +26,7 @@
 
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_w_search.hxx>
 #include <t8_forest/t8_forest_types.h>
+#include <t8_forest/t8_forest_search/t8_forest_search.hxx>
 
 void
 t8_forest_ghost_definition_w_search::fill_remote_ghosts (t8_forest_t forest)
@@ -34,8 +35,15 @@ t8_forest_ghost_definition_w_search::fill_remote_ghosts (t8_forest_t forest)
   void *const store_t8code_data = forest->t8code_data;
   /* Set the internal data for the search routine */
   forest->t8code_data = search_data;
-  /* Loop over the trees of the forest */
-  t8_forest_search (forest, search_fn, nullptr, nullptr);
+  /* Search all trees of the forest */
+  t8_search<void> search (
+    [search_fn = search_fn] (const t8_forest_t search_forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                             const bool is_leaf, const t8_element_array_view &leaf_elements,
+                             const t8_locidx_t tree_leaf_index, [[maybe_unused]] void *user_data) {
+      return search_fn (search_forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index) != 0;
+    },
+    forest);
+  search.do_search ();
 
   /* Reset the internal data from before the search */
   forest->t8code_data = store_t8code_data;
