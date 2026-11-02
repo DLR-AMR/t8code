@@ -120,7 +120,7 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
       const int healpix_face = (2 - layer) * 4 + face;
 
       // Output buffers
-      std::vector<double> t8_out (num_coords * 3);
+      std::array<double,num_coords * 3> t8_out;
 
       // Call the batch evaluation method provided
       geom.t8_geom_evaluate (nullptr, gtreeid, ref_coords.data (), num_coords, t8_out.data ());
