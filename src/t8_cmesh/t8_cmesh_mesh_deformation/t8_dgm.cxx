@@ -36,98 +36,158 @@
 void
 t8_dgm::solve ()
 {
-  create_delaunay_mesh (boundary_nodes);
+  bool no_flipped_elements = false;
+  double substeps = 0;
+  while (!no_flipped_elements) {
+    create_delaunay_mesh (boundary_nodes, substeps);
+    no_flipped_elements = check_delaunay_elements (substeps);
+    substeps++;
+  }
+  t8_debugf ("Delaunay graph mapping: %f substeps were required to avoid flipped elements.\n", substeps - 1);
 }
 
 void
-t8_dgm::create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& boundary_node_data)
+t8_dgm::create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& boundary_nodes, double substeps)
 {
+  delaunay_elements.assign (static_cast<size_t> (substeps) + 1, {});
+
+  for (double step = 0; step <= substeps; ++step) {
+
 #if T8_ENABLE_GMSH
-  const size_t num_nodes = boundary_node_data.size ();
+    const size_t num_nodes = boundary_nodes.size ();
 
-  /* gmsh triangulates in the (u, v) plane, nodes are added with full 3D coordinates. */
-  std::vector<double> coordinates_2d;
-  std::vector<double> coordinates_3d;
-  std::vector<std::size_t> node_tags;
-  for (size_t inode = 0; inode < num_nodes; ++inode) {
-    const auto& position = boundary_node_data[inode].position;
-    coordinates_2d.push_back (position[0]);
-    coordinates_2d.push_back (position[1]);
-    coordinates_3d.push_back (position[0]);
-    coordinates_3d.push_back (position[1]);
-    coordinates_3d.push_back (position[2]);
-    /* gmsh node tags start at 1. */
-    node_tags.push_back (inode + 1);
-  }
+    /* gmsh triangulates in the (u, v) plane, nodes are added with full 3D coordinates. */
+    std::vector<double> coordinates_2d;
+    std::vector<double> coordinates_3d;
+    std::vector<std::size_t> node_tags;
+    for (size_t inode = 0; inode < num_nodes; ++inode) {
+      const auto& position = boundary_nodes[inode].position;
+      const auto& displacement = boundary_nodes[inode].displacement;
+      coordinates_2d.push_back (position[0] + (displacement[0] / (substeps + 1)) * step);
+      coordinates_2d.push_back (position[1] + (displacement[1] / (substeps + 1)) * step);
+      coordinates_3d.push_back (position[0] + (displacement[0] / (substeps + 1)) * step);
+      coordinates_3d.push_back (position[1] + (displacement[1] / (substeps + 1)) * step);
+      coordinates_3d.push_back (position[2] + (displacement[2] / (substeps + 1)) * step);
+      /* gmsh node tags start at 1. */
+      node_tags.push_back (inode + 1);
+    }
 
-  gmsh::initialize ();
-  gmsh::model::add ("t8_dgm");
+    gmsh::initialize ();
+    gmsh::model::add ("t8_dgm");
 
-  /* The returned triangle node tags refer to the input points and start at 1. */
-  std::vector<std::size_t> triangles;
-  gmsh::algorithm::triangulate (coordinates_2d, triangles);
+    /* The returned triangle node tags refer to the input points and start at 1. */
+    std::vector<std::size_t> triangles;
+    gmsh::algorithm::triangulate (coordinates_2d, triangles);
 
-  /* Store the triangles as 0-based indices into the boundary node list. */
-  const size_t num_triangles = triangles.size () / 3;
-  delaunay_elements.clear ();
-  for (size_t itri = 0; itri < num_triangles; ++itri) {
-    delaunay_elements.push_back ({ triangles[3 * itri] - 1, triangles[3 * itri + 1] - 1, triangles[3 * itri + 2] - 1 });
-  }
+    /* Store the triangles as 0-based indices into the boundary node list. */
+    const size_t num_triangles = triangles.size () / 3;
+    s for (size_t itri = 0; itri < num_triangles; ++itri)
+    {
+      delaunay_elements[step].push_back (
+        { triangles[3 * itri] - 1, triangles[3 * itri + 1] - 1, triangles[3 * itri + 2] - 1 });
+    }
 
-  /* Build a discrete surface holding the nodes and triangles and write it to a gmsh mesh file. */
-  const int surface_tag = gmsh::model::addDiscreteEntity (2);
-  gmsh::model::mesh::addNodes (2, surface_tag, node_tags, coordinates_3d);
-  std::vector<std::size_t> element_tags (num_triangles);
-  for (size_t itri = 0; itri < num_triangles; ++itri) {
-    element_tags[itri] = itri + 1;
-  }
-  /* Element type 2 is the 3-node triangle. */
-  gmsh::model::mesh::addElementsByType (surface_tag, 2, element_tags, triangles);
+    /* Build a discrete surface holding the nodes and triangles and write it to a gmsh mesh file. */
+    const int surface_tag = gmsh::model::addDiscreteEntity (2);
+    gmsh::model::mesh::addNodes (2, surface_tag, node_tags, coordinates_3d);
+    std::vector<std::size_t> element_tags (num_triangles);
+    for (size_t itri = 0; itri < num_triangles; ++itri) {
+      element_tags[itri] = itri + 1;
+    }
+    /* Element type 2 is the 3-node triangle. */
+    gmsh::model::mesh::addElementsByType (surface_tag, 2, element_tags, triangles);
 
-  gmsh::write ("t8_dgm.msh");
-  gmsh::finalize ();
+    gmsh::write ("t8_dgm.msh");
+    gmsh::finalize ();
 #else
-  SC_ABORTF ("t8code was not configured with gmsh. The Delaunay graph mapping requires gmsh.\n");
+    SC_ABORTF ("t8code was not configured with gmsh. The Delaunay graph mapping requires gmsh.\n");
 #endif
+  }
+}
+bool
+t8_dgm::check_delaunay_elements (double substeps) const
+{
+  for (double step = 0; step <= substeps; ++step) {
+    for (const auto& element : delaunay_elements[step]) {
+      const auto& point_a = boundary_nodes[element[0]];
+      const auto& point_b = boundary_nodes[element[1]];
+      const auto& point_c = boundary_nodes[element[2]];
+      std::vector<t8_mesh_deformation_node> points = { point_a, point_b, point_c };
+      for (const auto& point : points) {
+        point.position[0] + (point.displacement[0] / (substeps + 1)) * step;
+        point.position[1] + (point.displacement[1] / (substeps + 1)) * step;
+        point.position[2] + (point.displacement[2] / (substeps + 1)) * step;
+      }
+      // Calculate the double area of the triangle and check if it is degenerate
+      const double det_before
+        = (point_b.position[1] - point_c.position[1]) * (point_a.position[0] - point_c.position[0])
+          - (point_b.position[0] - point_c.position[0]) * (point_a.position[1] - point_c.position[1]);
+      const double det_after
+        = ((point_b.position[1] + (point_b.displacement[1] / (substeps + 1) * (step + 1))
+            - (point_c.position[1] + (point_c.displacement[1] / (substeps + 1) * (step + 1)))
+                * ((point_a.position[0] + (point_a.displacement[0] / (substeps + 1) * (step + 1)))
+                   - (point_c.position[0] + (point_c.displacement[0] / (substeps + 1) * (step + 1)))))
+           - ((point_b.position[0] + (point_b.displacement[0] / (substeps + 1) * (step + 1)))
+              - (point_c.position[0] + (point_c.displacement[0] / (substeps + 1) * (step + 1))))
+               * ((point_a.position[1] + (point_a.displacement[1] / (substeps + 1) * (step + 1)))
+                  - (point_c.position[1] + (point_c.displacement[1] / (substeps + 1) * (step + 1)))));
+
+      if (det_before * det_after < 0.0) {
+        t8_debugf ("The triangle with vertices %zu, %zu, %zu is flipped after the deformation.\n", element[0],
+                   element[1], element[2]);
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 void
 t8_dgm::interpolate (t8_mesh_deformation_node& inner_node) const
 {
+  t8_mesh_deformation_node inner_node_tmp = inner_node;
   // Implementation for finding the Delaunay element containing the inner node
   const double tolerance = 1e-12;
-  const double inner_node_x = inner_node.position[0];
-  const double inner_node_y = inner_node.position[1];
   bool found = false;
-
-  for (const auto& element : delaunay_elements) {
-    const auto& point_a = boundary_nodes[element[0]];
-    const auto& point_b = boundary_nodes[element[1]];
-    const auto& point_c = boundary_nodes[element[2]];
-    // Calculate the double area of the triangle and check if it is degenerate
-    const double det = (point_b.position[1] - point_c.position[1]) * (point_a.position[0] - point_c.position[0])
-                       - (point_b.position[0] - point_c.position[0]) * (point_a.position[1] - point_c.position[1]);
-    if (std::abs (det) < std::numeric_limits<double>::min ()) {
-      /* Degenerate triangle. */
-      continue;
-    }
-    // Compute the barycentric coordinates of the point (px, py) with respect to the triangle (a, b, c)
-    const double lambda_a = ((point_b.position[1] - point_c.position[1]) * (inner_node_x - point_c.position[0])
-                             - (point_b.position[0] - point_c.position[0]) * (inner_node_y - point_c.position[1]))
-                            / det;
-    const double lambda_b = ((point_c.position[1] - point_a.position[1]) * (inner_node_x - point_a.position[0])
-                             - (point_c.position[0] - point_a.position[0]) * (inner_node_y - point_a.position[1]))
-                            / det;
-    const double lambda_c = 1.0 - lambda_a - lambda_b;
-
-    if (lambda_a >= -tolerance && lambda_b >= -tolerance && lambda_c >= -tolerance) {
-      /* The barycentric coordinates are the interpolation weights, so move the node directly. */
-      for (int coord = 0; coord < 3; ++coord) {
-        inner_node.displacement[coord] = lambda_a * point_a.displacement[coord] + lambda_b * point_b.displacement[coord]
-                                         + lambda_c * point_c.displacement[coord];
+  for (double step = 0; step <= delaunay_elements.size (); ++step) {
+    for (const auto& element : delaunay_elements[step]) {
+      const double inner_node_x = inner_node_tmp.position[0];
+      const double inner_node_y = inner_node_tmp.position[1];
+      const auto& point_a = boundary_nodes[element[0]];
+      const auto& point_b = boundary_nodes[element[1]];
+      const auto& point_c = boundary_nodes[element[2]];
+      // Calculate the double area of the triangle and check if it is degenerate
+      const double det = (point_b.position[1] - point_c.position[1]) * (point_a.position[0] - point_c.position[0])
+                         - (point_b.position[0] - point_c.position[0]) * (point_a.position[1] - point_c.position[1]);
+      if (std::abs (det) < std::numeric_limits<double>::min ()) {
+        /* Degenerate triangle. */
+        continue;
       }
-      found = true;
-      break;
+      // Compute the barycentric coordinates of the point (px, py) with respect to the triangle (a, b, c)
+      const double lambda_a = ((point_b.position[1] - point_c.position[1]) * (inner_node_x - point_c.position[0])
+                               - (point_b.position[0] - point_c.position[0]) * (inner_node_y - point_c.position[1]))
+                              / det;
+      const double lambda_b = ((point_c.position[1] - point_a.position[1]) * (inner_node_x - point_a.position[0])
+                               - (point_c.position[0] - point_a.position[0]) * (inner_node_y - point_a.position[1]))
+                              / det;
+      const double lambda_c = 1.0 - lambda_a - lambda_b;
+
+      if (lambda_a >= -tolerance && lambda_b >= -tolerance && lambda_c >= -tolerance) {
+        /* The barycentric coordinates are the interpolation weights, so move the node directly. */
+        for (int coord = 0; coord < 3; ++coord) {
+          inner_node_tmp.displacement[coord] = lambda_a * point_a.displacement[coord] / delaunay_elements.size ()
+                                               + lambda_b * point_b.displacement[coord] / delaunay_elements.size ()
+                                               + lambda_c * point_c.displacement[coord] / delaunay_elements.size ();
+          // The new position is the old position plus the displacement.
+          inner_node_tmp.position[coord] += inner_node_tmp.displacement[coord];
+        }
+        found = true;
+        break;
+      }
     }
+  }
+  // After the interpolation, update the inner node's displacement to the global displacement.
+  for (int coord = 0; coord < 3; ++coord) {
+    inner_node.displacement[coord] = inner_node_tmp.position[coord] - inner_node.position[coord];
   }
 }

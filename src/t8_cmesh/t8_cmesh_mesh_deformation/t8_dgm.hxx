@@ -77,7 +77,7 @@ struct t8_dgm: public t8_mesh_deformation_method
    * Returns the Delaunay triangles of the boundary nodes.
    * Each triangle holds three indices into the boundary node list.
    */
-  const std::vector<std::array<size_t, 3>>&
+  const std::vector<std::vector<std::array<size_t, 3>>>&
   get_delaunay_elements () const
   {
     return delaunay_elements;
@@ -89,10 +89,13 @@ struct t8_dgm: public t8_mesh_deformation_method
    * and stores the resulting triangles in \a delaunay_elements.
    */
   void
-  create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& boundary_node_data);
+  create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& boundary_nodes, double substeps);
+
+  bool
+  check_delaunay_elements (double substeps) const;
 
   /** List of all registered support nodes. */
   std::vector<t8_mesh_deformation_node> boundary_nodes;
   /** The Delaunay triangles. Each entry holds three indices into \a boundary_nodes. */
-  std::vector<std::array<size_t, 3>> delaunay_elements;
+  std::vector<std::vector<std::array<size_t, 3>>> delaunay_elements;
 };
