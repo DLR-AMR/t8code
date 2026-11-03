@@ -111,6 +111,8 @@ jobs:
     - name: tests (if MPI is disabled)
       run: cd build_linkage && ctest $MAKEFLAGS
       if: ${{ inputs.MPI == 'OFF' }}
+    - name: post-install tests
+      run: cd build_linkage && ninja post_install_tests
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v7

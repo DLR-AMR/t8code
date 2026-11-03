@@ -137,6 +137,8 @@ jobs:
       run: cd build_tar && ctest -R _serial
     - name: check parallel
       run: cd build_tar && ctest -R _parallel
+    - name: post-install tests
+      run: cd build_tar && ninja post_install_tests
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v7
