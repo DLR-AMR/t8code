@@ -69,6 +69,11 @@ Please keep the following rules in mind:
 `t8_cmesh_new_hypercube_hybrid_ext` serves as an example. It sets `"boundary"` on the outer faces of
 the cube and `"internal"` on all faces between two trees.
 
+`t8_cmesh_from_msh_file` sets boundary conditions automatically if the Gmsh file assigns physical groups
+to elements of one dimension lower than the trees. A tree face gets the name of the physical group of
+the element with the same nodes, or `"physical_group_<tag>"` if the group has no name. All other tree faces
+get an empty label.
+
 ## Querying boundary conditions
 
 #### On the cmesh
