@@ -28,6 +28,8 @@
 #ifndef T8_CMESH_VERTEX_CONNECTIVITY_H
 #define T8_CMESH_VERTEX_CONNECTIVITY_H
 
+#include <t8_cmesh/t8_cmesh.h>
+
 T8_EXTERN_C_BEGIN ();
 
 /**

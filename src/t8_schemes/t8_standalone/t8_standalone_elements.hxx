@@ -28,8 +28,10 @@
 #define T8_STANDALONE_ELEMENTS_HXX
 
 #include <t8.h>
+#include <t8_eclass/t8_eclass.h>
 #include <array>
 #include <bitset>
+#include <cstdint>
 
 /** Can we delete this? */
 #define t8_standalone_element t8_standalone

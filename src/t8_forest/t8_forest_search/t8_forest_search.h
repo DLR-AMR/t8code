@@ -29,6 +29,7 @@
 #define T8_FOREST_SEARCH_C_INTERFACE_H
 
 #include <t8.h>
+#include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
 

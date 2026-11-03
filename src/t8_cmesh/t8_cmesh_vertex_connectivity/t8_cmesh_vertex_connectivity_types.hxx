@@ -32,6 +32,11 @@
 #ifndef T8_CMESH_VERTEX_CONNECTIVITY_TYPES_HXX
 #define T8_CMESH_VERTEX_CONNECTIVITY_TYPES_HXX
 
+#include <t8.h>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 /** Variable type for (tree_id, tree_vertex_id) pair */
 using tree_vertex_pair = std::pair<t8_locidx_t, int>;
 
