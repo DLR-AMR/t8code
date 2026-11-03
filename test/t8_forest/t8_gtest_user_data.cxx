@@ -45,8 +45,8 @@ struct forest_user_data: public testing::TestWithParam<std::tuple<int, cmesh_exa
     const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
     cmesh = std::get<1> (GetParam ())->cmesh_create ();
-    // Skip empty meshes.
-    if (t8_cmesh_is_empty (cmesh)) {
+    // Skip empty meshes and meshes that the scheme does not support.
+    if (t8_cmesh_is_empty (cmesh) || !t8_test_scheme_supports_cmesh (scheme_id, cmesh, sc_MPI_COMM_WORLD)) {
       GTEST_SKIP ();
     }
     // Increase reference counters of cmesh and scheme to avoid reaching zero.
@@ -57,13 +57,13 @@ struct forest_user_data: public testing::TestWithParam<std::tuple<int, cmesh_exa
   void
   TearDown () override
   {
-    if (!t8_cmesh_is_empty (cmesh)) {
+    if (forest != nullptr) {
       t8_forest_unref (&forest);
     }
     t8_cmesh_destroy (&cmesh);
     scheme->unref ();
   }
-  t8_forest_t forest;
+  t8_forest_t forest = nullptr;
   const t8_scheme *scheme;
   t8_cmesh_t cmesh;
 };
@@ -125,7 +125,7 @@ TEST_P (forest_user_data, test_user_function)
   void (*funpointer_second) (void);
 
   /* Set the t8_test_function_42 as user function pointer. */
-  t8_forest_set_user_function (forest, (void (*) (void)) & t8_test_function_42);
+  t8_forest_set_user_function (forest, (void (*) (void)) &t8_test_function_42);
   /* Retrieve the function pointer from the forest. */
   funpointer = (double (*) (int)) t8_forest_get_user_function (forest);
 
@@ -135,7 +135,7 @@ TEST_P (forest_user_data, test_user_function)
   ASSERT_EQ (funpointer (0), 42.42) << "Forest function pointer returned wrong result.";
 
   /* Overwrite the function user pointer with a second function. */
-  t8_forest_set_user_function (forest, (void (*) (void)) & t8_test_function_second);
+  t8_forest_set_user_function (forest, (void (*) (void)) &t8_test_function_second);
   /* Retrieve the function pointer from the forest. */
   funpointer_second = (void (*) (void)) t8_forest_get_user_function (forest);
 
