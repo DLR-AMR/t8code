@@ -48,10 +48,17 @@
 #include <vtkCellData.h>
 #include <vtkMergePoints.h>
 #include <vtkTypeInt64Array.h>
+
 #if T8_ENABLE_MPI
-#include <vtkMPI.h>
-#include <vtkMPICommunicator.h>
-#include <vtkMPIController.h>
+/** Set an MPI controller using \a comm for a parallel VTK writer.
+ * Implemented in t8_vtk_writer.cxx, so that this header does not need to include
+ * vtkMPI.h. vtkMPI.h clashes with OpenCASCADE's Handle(Class) macro when both are
+ * included in one translation unit.
+ * \param[in,out] writer The parallel writer.
+ * \param[in]     comm   The communicator. Must stay valid while \a writer is used.
+ */
+void
+t8_vtk_writer_set_mpi_controller (vtkXMLPUnstructuredGridWriter *writer, sc_MPI_Comm *comm);
 #endif /* T8_ENABLE_MPI */
 #endif /* T8_ENABLE_VTK */
 
@@ -519,14 +526,7 @@ struct vtk_writer
    * therefore we define the controller vtk_mpi_ctrl.
    */
 #if T8_ENABLE_MPI
-    vtkSmartPointer<vtkMPICommunicator> vtk_comm = vtkSmartPointer<vtkMPICommunicator>::New ();
-    vtkMPICommunicatorOpaqueComm vtk_opaque_comm (&comm);
-    vtk_comm->InitializeExternal (&vtk_opaque_comm);
-
-    vtkSmartPointer<vtkMPIController> vtk_mpi_ctrl = vtkSmartPointer<vtkMPIController>::New ();
-    vtk_mpi_ctrl->SetCommunicator (vtk_comm);
-
-    pwriterObj->SetController (vtk_mpi_ctrl);
+    t8_vtk_writer_set_mpi_controller (pwriterObj, &comm);
 #endif /* T8_ENABLE_MPI */
     /*
     * We set the number of pieces as the number of mpi processes,
