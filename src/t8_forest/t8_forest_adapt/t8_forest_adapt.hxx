@@ -102,10 +102,6 @@ struct t8_adaptor
     /* if profiling is enabled, measure runtime */
     if (forest->profile != nullptr) {
       forest->profile->adapt_runtime = -sc_MPI_Wtime ();
-      /* DO NOT DELETE THE FOLLOWING line.
-       * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
-       * runtimes were computed to 0.
-       * Only delete the line, if you know what you are doing. */
       t8_global_productionf ("Start adapt %f %f\n", sc_MPI_Wtime (), forest->profile->adapt_runtime);
     }
     t8_global_productionf ("Into t8_forest_adapt from %lld total elements\n",
