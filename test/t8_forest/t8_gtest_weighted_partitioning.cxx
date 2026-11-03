@@ -40,6 +40,10 @@
  *      weight function such that an element's weight is simply its global element id.
  *      This allows to "manually" compute the expected element offsets to then compare 
  *      them.
+ *
+ * (4.) Finally, all weights are 0.1, whose sums have rounding errors that depend on
+ *      the order of the additions. The partition has to differ from the one without
+ *      weights by at most one element at each process boundary.
  */
 
 // testing
@@ -217,6 +221,25 @@ TEST_P (t8_test_weighted_partitioning_test, test_weighted_partitioning)
   // Make sure the number of local leaves match.
   EXPECT_EQ (t8_forest_get_local_num_leaf_elements (forest_weighted), num_local_leaves);
 
+  // -----------------------------------------------------
+  // ----- (4.) Test 3: Weights with rounding errors -----
+  // -----------------------------------------------------
+  t8_debugf ("Create forest with partition weights 0.1.\n");
+
+  t8_forest_t forest_inexact_weights;
+  t8_forest_init (&forest_inexact_weights);
+  t8_weight_fcn_t *inexact_weight_fcn = [] (t8_forest_t, t8_locidx_t, t8_locidx_t) -> double { return 0.1; };
+  t8_forest_set_partition (forest_inexact_weights, base_forest, 0);
+  t8_forest_set_partition_weight_function (forest_inexact_weights, inexact_weight_fcn);
+  t8_forest_ref (base_forest);
+  t8_forest_commit (forest_inexact_weights);
+
+  // The sums of the weights are multiples of 0.1 only up to rounding, so an element at an ideal process boundary may
+  // go to either side.
+  const t8_gloidx_t first_inexact = t8_forest_get_first_local_leaf_element_id (forest_inexact_weights);
+  const t8_gloidx_t first_no_weights = t8_forest_get_first_local_leaf_element_id (forest_no_weights);
+  EXPECT_LE (std::abs (first_inexact - first_no_weights), 1);
+
   // ---------------------------
   // ----- Memory clean-up -----
   // ---------------------------
@@ -226,6 +249,7 @@ TEST_P (t8_test_weighted_partitioning_test, test_weighted_partitioning)
   t8_forest_unref (&forest_uniform_weights);
   t8_forest_unref (&forest_no_weights);
   t8_forest_unref (&forest_weighted);
+  t8_forest_unref (&forest_inexact_weights);
 }
 
 // Instantiate parameterized test to be run for all schemes and example cmeshes.

@@ -469,40 +469,83 @@ t8_forest_partition_new_first (t8_forest_t forest)
 
   // Else: Weighted load balancing:
   // ------------------------------
+  // Rank p > 0 starts at the first element whose prefix sum of the weights exceeds p / mpisize of the total weight,
+  // and the owner of this element in the old partition computes it. For the ranks to agree on that owner, the end of
+  // the prefix sums of a rank must equal the start of the next one, which MPI_Exscan computes in another order. So the
+  // weights are rounded to multiples of a power of two (the unit) that is small against the total weight, which makes
+  // all their sums exact.
 
-  // Function definition: Sum of the weights on the local partition.
-  double const partition_weight = [&] () {
-    double local_sum = 0.;
+  // The sum of the weights of the local elements
+  const auto local_sum = [&] (const auto &weight) {
+    double sum = 0.;
     for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest_from); ++ltreeid) {
       for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest_from, ltreeid); ++ielm) {
-        local_sum += weight_fcn (forest_from, ltreeid, ielm);
+        sum += weight (ltreeid, ielm);
       }
     }
-    return local_sum;
-  }();
+    return sum;
+  };
+  const auto user_weight = [&] (const t8_locidx_t ltreeid, const t8_locidx_t ielm) {
+    const double weight = weight_fcn (forest_from, ltreeid, ielm);
+    T8_ASSERT (weight >= 0 && std::isfinite (weight));
+    return weight;
+  };
 
-  // Function definition: Partial sum of the partition weights of all lower-rank processes (excluding the local rank).
-  double const partition_weight_offset = [&] () {
-    double local_offset = 0.;
-    double local_partition_weight = partition_weight;  // because MPI does not like const variables
-    sc_MPI_Exscan (&local_partition_weight, &local_offset, 1, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
-    return mpirank > 0 ? local_offset : 0;  // because the result of MPI_Exscan is undefined on rank 0
-  }();
-
-  // Function definition: Complete sum of the partition weights.
-  double const forest_weight = [&] () {
-    double total_weight = partition_weight_offset + partition_weight;
-    sc_MPI_Bcast (&total_weight, 1, sc_MPI_DOUBLE, mpisize - 1, comm);
-    return total_weight;
-  }();
-  if (!(forest_weight > 0)) {
+  // The largest sum of the weights of a rank, which is the same on all ranks, since the maximum is exact.
+  double local_user_weight = local_sum (user_weight);
+  double max_user_weight;
+  int mpiret = sc_MPI_Allreduce (&local_user_weight, &max_user_weight, 1, sc_MPI_DOUBLE, sc_MPI_MAX, comm);
+  SC_CHECK_MPI (mpiret);
+  if (!(max_user_weight > 0)) {
     // Without any weight, the elements are distributed evenly.
     return t8_forest_partition_uniform_first (forest_from, mpirank);
   }
+  // The total weight is at most mpisize * max_user_weight < 2^exponent = 2^51 unit. The rounded weights differ by at
+  // most unit / 2 from the weights, so for less than 2^52 elements they add up to less than 2^52 unit, and all their
+  // sums are exact.
+  int exponent;
+  std::frexp (mpisize * max_user_weight, &exponent);
+  const double unit = std::ldexp (1., exponent - 51);
+  const auto rounded_weight = [&] (const t8_locidx_t ltreeid, const t8_locidx_t ielm) {
+    return std::round (user_weight (ltreeid, ielm) / unit) * unit;
+  };
 
-  // The [rank_begin, rank_end) slice of the new offsets will land in the local partition.
-  int const rank_begin = std::ceil (mpisize * partition_weight_offset / forest_weight);
-  int const rank_end = std::ceil (mpisize * (partition_weight_offset + partition_weight) / forest_weight);
+  // The sum of the rounded weights of this rank, of the ranks before it, and of all ranks
+  double partition_weight = local_sum (rounded_weight);
+  double partition_weight_offset = 0;
+  mpiret = sc_MPI_Exscan (&partition_weight, &partition_weight_offset, 1, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
+  SC_CHECK_MPI (mpiret);
+  if (mpirank == 0) {
+    // The result of MPI_Exscan is undefined on rank 0
+    partition_weight_offset = 0;
+  }
+  double forest_weight;
+  mpiret = sc_MPI_Allreduce (&partition_weight, &forest_weight, 1, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
+  SC_CHECK_MPI (mpiret);
+  if (!(forest_weight > 0)) {
+    return t8_forest_partition_uniform_first (forest_from, mpirank);
+  }
+
+  // The ideal start of the weight of a rank, computed in the same way on all ranks
+  const auto ideal_start = [&] (const int rank) { return forest_weight * rank / mpisize; };
+  // The first rank p > 0 whose ideal start is not below a weight, or mpisize
+  const auto first_rank_from = [&] (const double weight) {
+    int lo = 1, hi = mpisize;
+    while (lo < hi) {
+      const int mid = lo + (hi - lo) / 2;
+      if (ideal_start (mid) < weight) {
+        lo = mid + 1;
+      }
+      else {
+        hi = mid;
+      }
+    }
+    return lo;
+  };
+  // This rank computes the first elements of the ranks whose ideal start lies in the range of its prefix sums. The end
+  // of this range is the start of the range of the next rank, since the sums are exact.
+  const int rank_begin = first_rank_from (partition_weight_offset);
+  const int rank_end = first_rank_from (partition_weight_offset + partition_weight);
   std::vector<t8_gloidx_t> local_offsets (rank_end - rank_begin, 0);
 
   // Prepare computation of local element offsets.
@@ -516,37 +559,33 @@ t8_forest_partition_new_first (t8_forest_t forest)
   for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest_from); ++ltreeid) {
     for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest_from, ltreeid); ++ielm) {
       T8_ASSERT (0 <= global_elm_idx && global_elm_idx < global_num_leaf_elements);
-      accumulated_weight += weight_fcn (forest_from, ltreeid, ielm);
-      while (accumulated_weight
-             > forest_weight * iproc / mpisize) {  // there may be empty partitions, hence while and not if
-        T8_ASSERT (rank_begin <= iproc && iproc < rank_end);
+      accumulated_weight += rounded_weight (ltreeid, ielm);
+      // there may be empty partitions, hence while and not if
+      while (iproc < rank_end && accumulated_weight > ideal_start (iproc)) {
         local_offsets[iproc - rank_begin] = global_elm_idx;
         ++iproc;
       }
       ++global_elm_idx;
     }
   }
+  T8_ASSERT (accumulated_weight == partition_weight_offset + partition_weight);
   T8_ASSERT (iproc == rank_end);  // i.e. local_offsets has been filled properly
 
   // Send each offset to its rank, which receives exactly one. The first rank starts at the first element, even if the
   // first elements have no weight.
-  std::vector<sc_MPI_Request> requests;
-  requests.reserve (local_offsets.size ());
+  std::vector<sc_MPI_Request> requests (local_offsets.size ());
   for (int ioffset = 0; ioffset < (int) local_offsets.size (); ioffset++) {
-    if (rank_begin + ioffset > 0) {
-      requests.push_back (sc_MPI_REQUEST_NULL);
-      const int mpiret = sc_MPI_Isend (&local_offsets[ioffset], 1, T8_MPI_GLOIDX, rank_begin + ioffset,
-                                       T8_MPI_PARTITION_OFFSETS, comm, &requests.back ());
-      SC_CHECK_MPI (mpiret);
-    }
+    mpiret = sc_MPI_Isend (&local_offsets[ioffset], 1, T8_MPI_GLOIDX, rank_begin + ioffset, T8_MPI_PARTITION_OFFSETS,
+                           comm, &requests[ioffset]);
+    SC_CHECK_MPI (mpiret);
   }
   t8_gloidx_t first = 0;
   if (mpirank > 0) {
-    const int mpiret
+    mpiret
       = sc_MPI_Recv (&first, 1, T8_MPI_GLOIDX, sc_MPI_ANY_SOURCE, T8_MPI_PARTITION_OFFSETS, comm, sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
   }
-  const int mpiret = sc_MPI_Waitall (requests.size (), requests.data (), sc_MPI_STATUSES_IGNORE);
+  mpiret = sc_MPI_Waitall (requests.size (), requests.data (), sc_MPI_STATUSES_IGNORE);
   SC_CHECK_MPI (mpiret);
   return first;
 }
