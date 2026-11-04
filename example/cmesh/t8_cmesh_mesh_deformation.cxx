@@ -106,7 +106,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
 
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   int helpme = 0;
   const char *msh_file = NULL;

@@ -52,7 +52,7 @@ t8_dgm::create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& bound
   delaunay_elements.assign (static_cast<size_t> (substeps) + 1, {});
 
   for (double step = 0; step <= substeps; ++step) {
-
+    t8_debugf ("Delaunay graph mapping: Creating Delaunay mesh for step %f of %f.\n", step, substeps);
 #if T8_ENABLE_GMSH
     const size_t num_nodes = boundary_nodes.size ();
 
@@ -81,8 +81,7 @@ t8_dgm::create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& bound
 
     /* Store the triangles as 0-based indices into the boundary node list. */
     const size_t num_triangles = triangles.size () / 3;
-    s for (size_t itri = 0; itri < num_triangles; ++itri)
-    {
+    for (size_t itri = 0; itri < num_triangles; ++itri) {
       delaunay_elements[step].push_back (
         { triangles[3 * itri] - 1, triangles[3 * itri + 1] - 1, triangles[3 * itri + 2] - 1 });
     }
@@ -107,38 +106,44 @@ t8_dgm::create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& bound
 bool
 t8_dgm::check_delaunay_elements (double substeps) const
 {
+
   for (double step = 0; step <= substeps; ++step) {
     for (const auto& element : delaunay_elements[step]) {
       const auto& point_a = boundary_nodes[element[0]];
       const auto& point_b = boundary_nodes[element[1]];
       const auto& point_c = boundary_nodes[element[2]];
-      std::vector<t8_mesh_deformation_node> points = { point_a, point_b, point_c };
-      for (const auto& point : points) {
-        point.position[0] + (point.displacement[0] / (substeps + 1)) * step;
-        point.position[1] + (point.displacement[1] / (substeps + 1)) * step;
-        point.position[2] + (point.displacement[2] / (substeps + 1)) * step;
-      }
       // Calculate the double area of the triangle and check if it is degenerate
-      const double det_before
-        = (point_b.position[1] - point_c.position[1]) * (point_a.position[0] - point_c.position[0])
-          - (point_b.position[0] - point_c.position[0]) * (point_a.position[1] - point_c.position[1]);
+      const double det_before = ((point_b.position[1] + (point_b.displacement[1] / (substeps + 1)) * step)
+                                 - (point_c.position[1] + (point_c.displacement[1] / (substeps + 1)) * step))
+                                  * ((point_a.position[0] + (point_a.displacement[0] / (substeps + 1)) * step)
+                                     - (point_c.position[0] + (point_c.displacement[0] / (substeps + 1)) * step))
+                                - (point_b.position[0] + (point_b.displacement[0] / (substeps + 1)) * step
+                                   - (point_c.position[0] + (point_c.displacement[0] / (substeps + 1)) * step))
+                                    * (point_a.position[1] + (point_a.displacement[1] / (substeps + 1)) * step
+                                       - (point_c.position[1] + (point_c.displacement[1] / (substeps + 1)) * step));
       const double det_after
-        = ((point_b.position[1] + (point_b.displacement[1] / (substeps + 1) * (step + 1))
-            - (point_c.position[1] + (point_c.displacement[1] / (substeps + 1) * (step + 1)))
-                * ((point_a.position[0] + (point_a.displacement[0] / (substeps + 1) * (step + 1)))
-                   - (point_c.position[0] + (point_c.displacement[0] / (substeps + 1) * (step + 1)))))
+        = (((point_b.position[1] + (point_b.displacement[1] / (substeps + 1) * (step + 1)))
+            - (point_c.position[1] + (point_c.displacement[1] / (substeps + 1) * (step + 1))))
+             * ((point_a.position[0] + (point_a.displacement[0] / (substeps + 1) * (step + 1)))
+                - (point_c.position[0] + (point_c.displacement[0] / (substeps + 1) * (step + 1))))
            - ((point_b.position[0] + (point_b.displacement[0] / (substeps + 1) * (step + 1)))
               - (point_c.position[0] + (point_c.displacement[0] / (substeps + 1) * (step + 1))))
                * ((point_a.position[1] + (point_a.displacement[1] / (substeps + 1) * (step + 1)))
                   - (point_c.position[1] + (point_c.displacement[1] / (substeps + 1) * (step + 1)))));
-
-      if (det_before * det_after < 0.0) {
-        t8_debugf ("The triangle with vertices %zu, %zu, %zu is flipped after the deformation.\n", element[0],
+      if (std::abs (det_after) < std::numeric_limits<double>::min ()) {
+        t8_debugf ("The triangle with vertices %zu, %zu, %zu is degenerate after the deformation.\n", element[0],
                    element[1], element[2]);
+        return false;
+      }
+      if (det_before * det_after < 0.0) {
+        t8_debugf ("Triangle %zu, %zu, %zu flipped in step %.0f of %.0f: det_before = %e, det_after = %e\n", element[0],
+                   element[1], element[2], step, substeps + 1, det_before, det_after);
+
         return false;
       }
     }
   }
+  t8_debugf ("All Delaunay triangles are valid after the deformation.\n");
   return true;
 }
 
@@ -149,7 +154,7 @@ t8_dgm::interpolate (t8_mesh_deformation_node& inner_node) const
   // Implementation for finding the Delaunay element containing the inner node
   const double tolerance = 1e-12;
   bool found = false;
-  for (double step = 0; step <= delaunay_elements.size (); ++step) {
+  for (double step = 0; step < delaunay_elements.size (); ++step) {
     for (const auto& element : delaunay_elements[step]) {
       const double inner_node_x = inner_node_tmp.position[0];
       const double inner_node_y = inner_node_tmp.position[1];
@@ -157,19 +162,40 @@ t8_dgm::interpolate (t8_mesh_deformation_node& inner_node) const
       const auto& point_b = boundary_nodes[element[1]];
       const auto& point_c = boundary_nodes[element[2]];
       // Calculate the double area of the triangle and check if it is degenerate
-      const double det = (point_b.position[1] - point_c.position[1]) * (point_a.position[0] - point_c.position[0])
-                         - (point_b.position[0] - point_c.position[0]) * (point_a.position[1] - point_c.position[1]);
+      const double det
+        = ((point_b.position[1] + (point_b.displacement[1] / (delaunay_elements.size ())) * step)
+           - (point_c.position[1] + (point_c.displacement[1] / (delaunay_elements.size ())) * step))
+            * ((point_a.position[0] + (point_a.displacement[0] / (delaunay_elements.size ())) * step)
+               - (point_c.position[0] + (point_c.displacement[0] / (delaunay_elements.size ())) * step))
+          - (point_b.position[0] + (point_b.displacement[0] / (delaunay_elements.size ())) * step
+             - (point_c.position[0] + (point_c.displacement[0] / (delaunay_elements.size ())) * step))
+              * (point_a.position[1] + (point_a.displacement[1] / (delaunay_elements.size ())) * step
+                 - (point_c.position[1] + (point_c.displacement[1] / (delaunay_elements.size ())) * step));
       if (std::abs (det) < std::numeric_limits<double>::min ()) {
         /* Degenerate triangle. */
         continue;
       }
       // Compute the barycentric coordinates of the point (px, py) with respect to the triangle (a, b, c)
-      const double lambda_a = ((point_b.position[1] - point_c.position[1]) * (inner_node_x - point_c.position[0])
-                               - (point_b.position[0] - point_c.position[0]) * (inner_node_y - point_c.position[1]))
-                              / det;
-      const double lambda_b = ((point_c.position[1] - point_a.position[1]) * (inner_node_x - point_a.position[0])
-                               - (point_c.position[0] - point_a.position[0]) * (inner_node_y - point_a.position[1]))
-                              / det;
+      const double lambda_a
+        = (((point_b.position[1] + (point_b.displacement[1] / (delaunay_elements.size ())) * step)
+            - (point_c.position[1] + (point_c.displacement[1] / (delaunay_elements.size ())) * step))
+             * (inner_node_x - (point_c.position[0] + (point_c.displacement[0] / (delaunay_elements.size ())) * step))
+           - ((point_b.position[0] + (point_b.displacement[0] / (delaunay_elements.size ())) * step)
+              - (point_c.position[0] + (point_c.displacement[0] / (delaunay_elements.size ())) * step))
+               * (inner_node_y
+                  - (point_c.position[1] + (point_c.displacement[1] / (delaunay_elements.size ())) * step)))
+
+          / det;
+      const double lambda_b
+        = (((point_c.position[1] + (point_c.displacement[1] / (delaunay_elements.size ())) * step)
+            - (point_a.position[1] + (point_a.displacement[1] / (delaunay_elements.size ())) * step))
+             * (inner_node_x - (point_a.position[0] + (point_a.displacement[0] / (delaunay_elements.size ())) * step))
+           - ((point_c.position[0] + (point_c.displacement[0] / (delaunay_elements.size ())) * step)
+              - (point_a.position[0] + (point_a.displacement[0] / (delaunay_elements.size ())) * step))
+               * (inner_node_y
+                  - (point_a.position[1] + (point_a.displacement[1] / (delaunay_elements.size ())) * step)))
+          / det;
+
       const double lambda_c = 1.0 - lambda_a - lambda_b;
 
       if (lambda_a >= -tolerance && lambda_b >= -tolerance && lambda_c >= -tolerance) {
