@@ -478,8 +478,8 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   faces[0].emplace (face_ids[0]);
   face_orientations[0] = 0;
   const std::span<size_t> face_0_points = face_point_ids[0];
-  for (u_int8_t i_face_point = 0; i_face_point < t8_eclass_num_vertices[T8_ECLASS_QUAD]; ++i_face_point) {
-    const u_int8_t foam_point_id = t8_face_vertex_to_foam_point (T8_ECLASS_QUAD, orientation, i_face_point);
+  for (uint8_t i_face_point = 0; i_face_point < t8_eclass_num_vertices[T8_ECLASS_QUAD]; ++i_face_point) {
+    const uint8_t foam_point_id = t8_face_vertex_to_foam_point (T8_ECLASS_QUAD, orientation, i_face_point);
     points[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][0][i_face_point]].emplace (face_0_points[foam_point_id]);
   }
 
@@ -544,8 +544,8 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
 
   /* After that we add the remaining four points, completing the vertices of the cell */
   face_orientations[1] = orientation.first_node;
-  for (u_int8_t i_face_point = 0; i_face_point < t8_eclass_num_vertices[T8_ECLASS_QUAD]; ++i_face_point) {
-    const u_int8_t foam_point_id = t8_face_vertex_to_foam_point (T8_ECLASS_QUAD, orientation, i_face_point);
+  for (uint8_t i_face_point = 0; i_face_point < t8_eclass_num_vertices[T8_ECLASS_QUAD]; ++i_face_point) {
+    const uint8_t foam_point_id = t8_face_vertex_to_foam_point (T8_ECLASS_QUAD, orientation, i_face_point);
     points[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][1][i_face_point]].emplace (face_1_points[foam_point_id]);
   }
 
