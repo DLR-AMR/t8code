@@ -403,6 +403,9 @@ t8_openfoam_reader::build_cmesh ()
   T8_ASSERT (!m_face_points.empty ());
   T8_ASSERT (!m_points.empty ());
 
+  /* Make the neighborhood vector the right size and default construct all elements. */
+  m_neighborhoods.resize (m_face_points.size ());
+
   t8_cmesh_init (&m_cmesh);
   t8_cmesh_register_geometry<t8_geometry_linear> (m_cmesh);
   /* Reconstruct cells */
@@ -444,7 +447,7 @@ void
 t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> face_ids,
                                           std::vector<std::span<size_t>> face_point_ids, std::vector<char> face_normals)
 {
-  /* To reconstruct the Hexahedron we will follow these stages:
+  /* To reconstruct the hexahedron we will follow these stages:
    * 0. Initialize some needed variables.
    * 1. Assign the first OpenFOAM face to face 0 of the t8 hexahedron.
    * 2. Search for the opposite OpenFOAM face (does not share any vertices with face 0) and make it face 1.
@@ -457,7 +460,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
 
   std::array<std::optional<size_t>, t8_eclass_num_faces[T8_ECLASS_HEX]> faces {};
   std::array<std::optional<size_t>, t8_eclass_num_vertices[T8_ECLASS_HEX]> points {};
-  std::array<int8_t, t8_eclass_num_faces[T8_ECLASS_HEX]> face_orientations {};
+  std::array<t8_foam_face_orientation, t8_eclass_num_faces[T8_ECLASS_HEX]> face_orientations {};
   constexpr t8_eclass_t eclass = T8_ECLASS_HEX;
 
   /** Orientation of the OpenFOAM face with regard to the t8code face.
@@ -473,10 +476,10 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   /* orientation.same_normal_dir is true, if both face normals point in the same direction */
   orientation.same_normal_dir = (t8_face_normal == face_normals[0]);
   orientation.first_node = 0;
+  face_orientations[0] = orientation;
 
   /* Now, we assign the first face to be face 0. */
   faces[0].emplace (face_ids[0]);
-  face_orientations[0] = 0;
   const std::span<size_t> face_0_points = face_point_ids[0];
   for (u_int8_t i_face_point = 0; i_face_point < t8_eclass_num_vertices[T8_ECLASS_QUAD]; ++i_face_point) {
     const u_int8_t foam_point_id = t8_face_vertex_to_foam_point (T8_ECLASS_QUAD, orientation, i_face_point);
@@ -543,7 +546,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   orientation.first_node = face_1_vertex_0_iterator - face_1_points.begin ();
 
   /* After that we add the remaining four points, completing the vertices of the cell */
-  face_orientations[1] = orientation.first_node;
+  face_orientations[1] = orientation;
   for (u_int8_t i_face_point = 0; i_face_point < t8_eclass_num_vertices[T8_ECLASS_QUAD]; ++i_face_point) {
     const u_int8_t foam_point_id = t8_face_vertex_to_foam_point (T8_ECLASS_QUAD, orientation, i_face_point);
     points[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][1][i_face_point]].emplace (face_1_points[foam_point_id]);
@@ -562,11 +565,15 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
     const auto face_id = find_list_containing (face_point_ids, face_vertices);
     T8_ASSERTF (face_id.has_value (),
                 "ERROR: Could not find a specific face for hex reconstruction. Maybe this cell was falsely classified "
-                "as a hex\n");
+                "as a hex.\n");
+    faces[i_t8_face].emplace (face_ids[*face_id]);
+    t8_face_normal = t8_eclass_face_orientation[eclass][i_t8_face];
+    orientation.same_normal_dir = (face_normals[*face_id] == t8_face_normal);
     const size_t vertex_0 = *points[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i_t8_face][0]];
-    face_orientations[i_t8_face]
+    orientation.first_node
       = std::distance (face_point_ids[*face_id].begin (),
                        std::find (face_point_ids[*face_id].begin (), face_point_ids[*face_id].end (), vertex_0));
+    face_orientations[i_t8_face] = orientation;
   }
 
   /* ------------------------- 5. Set cmesh cell ------------------------- */
@@ -581,5 +588,38 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   t8_cmesh_set_tree_vertices (m_cmesh, cell_id, vertices.data (), t8_eclass_num_vertices[T8_ECLASS_HEX]);
 
   /* ------------------------- 6. Set neighbors and boundary conditions ------------------------- */
-  //TODO
+  compute_cell_neighbors (cell_id, T8_ECLASS_HEX, faces, face_orientations);
+  // TODO: Boundary conditions
+}
+
+int
+t8_openfoam_reader::compute_face_orientation (t8_eclass eclass1, u_int8_t face_id1, t8_foam_face_orientation orient1,
+                                              t8_eclass eclass2, u_int8_t face_id2, t8_foam_face_orientation orient2)
+{
+  const t8_eclass face_class = (t8_eclass) t8_eclass_face_types[eclass1][face_id1];
+  const u_int8_t num_vertices = t8_eclass_num_vertices[face_class];
+
+  /* First, we determine the order of cells according to the documentation of
+   * \ref t8_cmesh_set_join */
+  bool main_cell; /** true = cell 1, false = cell 2 */
+  if (eclass1 == eclass2) {
+    main_cell = face_id1 <= face_id2;
+  }
+  else {
+    main_cell = eclass1 < eclass2;
+  }
+
+  /* Save main and other cell */
+  const t8_foam_face_orientation main_orient = main_cell ? orient1 : orient2;
+  const t8_foam_face_orientation other_orient = main_cell ? orient2 : orient1;
+
+  /* Convert orientation */
+  const int8_t steps = other_orient.first_node - main_orient.first_node;
+  const int8_t direction = other_orient.same_normal_dir ? -1 : 1;
+  const int8_t final_orientation = (num_vertices + steps * direction) % num_vertices;
+
+  /* For quads we have to convert between foam and t8 numeration */
+  if (face_class == T8_ECLASS_QUAD)
+    return quad_conversion[final_orientation];
+  return final_orientation;
 }
