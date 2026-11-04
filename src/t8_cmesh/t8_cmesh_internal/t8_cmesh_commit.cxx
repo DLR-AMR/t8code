@@ -36,6 +36,7 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_geometry_internal.hxx>
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_tree_reindex.hxx>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
 
 /**
@@ -544,6 +545,10 @@ t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     T8_ASSERT (cmesh->boundary_condition_handler->verify ());
   }
 #endif
+
+  if (cmesh->reindex_trees) {
+    t8_cmesh_reindex_trees (cmesh, comm);
+  }
 
   if (cmesh->set_partition) {
     /* partitioned commit */

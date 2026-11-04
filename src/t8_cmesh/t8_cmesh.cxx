@@ -153,6 +153,21 @@ t8_cmesh_disable_negative_volume_check ([[maybe_unused]] t8_cmesh_t cmesh)
 #endif
 }
 
+void
+t8_cmesh_enable_tree_reordering (t8_cmesh_t cmesh, const int keep_reindex_map)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  cmesh->reindex_trees = 1;
+  cmesh->keep_reindex_map = keep_reindex_map;
+}
+
+const t8_gloidx_t *
+t8_cmesh_get_tree_reindex_map (const t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  return cmesh->tree_reindex_map;
+}
+
 #if T8_ENABLE_DEBUG
 int
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative_volume)
@@ -240,7 +255,9 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
 #if T8_ENABLE_DEBUG
   cmesh->negative_volume_check = 1;
 #endif /* T8_ENABLE_DEBUG */
-
+  cmesh->reindex_trees = 0;
+  cmesh->keep_reindex_map = 0;
+  cmesh->tree_reindex_map = nullptr;
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
 
@@ -1246,6 +1263,11 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
   /* unref the partition scheme (if set) */
   if (cmesh->set_partition_scheme != nullptr) {
     cmesh->set_partition_scheme->unref ();
+  }
+
+  /* Release the optional tree-ID mapping owned by the coarse mesh. */
+  if (cmesh->tree_reindex_map != nullptr) {
+    T8_FREE (cmesh->tree_reindex_map);
   }
 
   delete cmesh->vertex_connectivity;
@@ -2261,8 +2283,8 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 #endif
 
       } /* End sending of end message */
-    }   /* End loop over processes */
-  }     /* if (num_pure_local_trees > 0) */
+    } /* End loop over processes */
+  } /* if (num_pure_local_trees > 0) */
 
   if (this_proc_is_empty) {
     /* If this proc is empty, we only expect a start message.
