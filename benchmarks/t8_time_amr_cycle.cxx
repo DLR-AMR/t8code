@@ -36,8 +36,11 @@
  *
  * This benchmark only uses functions that exist in both variants, so the same source can be built against both and
  * the results compared. The ghost version 4 (the leaves touching the neighbors of the cover elements of the other
- * ranks) and the balance algorithms only exist in the log variant, where they are the defaults. One CSV line per cycle
- * (appended to the file given with -o):
+ * ranks) and the balance algorithms only exist in the log variant, where they are the defaults. With -B p4est, the
+ * same cycle runs with p4est on the same hexahedral brick (variant p4est): adapt refines and then coarsens with the
+ * same criterion (families created in the cycle are not coarsened, as in the single pass of t8code's adapt), followed
+ * by p8est_balance, p8est_partition, p8est_ghost_new and p8est_ghost_exchange_custom, each timed like a commit. Its
+ * ghost version and balance rounds are 0. One CSV line per cycle (appended to the file given with -o):
  * variant,eclass,trees,procs,min_level,max_level,ghost_type,ghost_version,balance_type,balance_algorithm,
  * partition_for_coarsening,cycle,elements,ghosts,adapt_time,balance_time,balance_rounds,partition_ghost_time,
  * partition_time,ghost_time,exchange_time,cycle_time
@@ -45,6 +48,8 @@
  */
 
 #include <sc_options.h>
+#include <p8est_extended.h>
+#include <p8est_ghost.h>
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -77,6 +82,7 @@ struct shell_t
   double tree_size; /* The side length of the trees */
   int min_level;    /* Elements are not coarser */
   int max_level;    /* Elements are not finer */
+  int cycle;        /* The current cycle, for p4est: quadrants created in it are not coarsened in it */
 };
 
 /* Whether an element with centroid x and size h = tree_size 2^-level touches the shell */
@@ -116,6 +122,59 @@ adapt_shell (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree
   return 0;
 }
 
+/* p4est: the centroid of a quadrant in the unit cube */
+void
+quadrant_centroid (p8est_t *p8est, const p4est_topidx_t which_tree, const p8est_quadrant_t *q, double x[3])
+{
+  const shell_t &shell = *(const shell_t *) p8est->user_pointer;
+  const p4est_qcoord_t half = P8EST_QUADRANT_LEN (q->level) / 2;
+  p8est_qcoord_to_vertex (p8est->connectivity, which_tree, q->x + half, q->y + half, q->z + half, x);
+  for (int i = 0; i < 3; ++i) {
+    x[i] *= shell.tree_size;
+  }
+}
+
+/* p4est: store the cycle in which a quadrant is created */
+void
+init_quadrant (p8est_t *p8est, p4est_topidx_t, p8est_quadrant_t *q)
+{
+  *(int *) q->p.user_data = ((const shell_t *) p8est->user_pointer)->cycle;
+}
+
+/* p4est: refine the quadrants touching the shell */
+int
+refine_shell (p8est_t *p8est, p4est_topidx_t which_tree, p8est_quadrant_t *q)
+{
+  const shell_t &shell = *(const shell_t *) p8est->user_pointer;
+  if (q->level >= shell.max_level) {
+    return 0;
+  }
+  double x[3];
+  quadrant_centroid (p8est, which_tree, q, x);
+  return touches_shell (shell, x, q->level) ? 1 : 0;
+}
+
+/* p4est: coarsen the families not touching the shell, unless they were created by refinement in this cycle */
+int
+coarsen_shell (p8est_t *p8est, p4est_topidx_t which_tree, p8est_quadrant_t *family[])
+{
+  const shell_t &shell = *(const shell_t *) p8est->user_pointer;
+  if (family[0]->level <= shell.min_level) {
+    return 0;
+  }
+  for (int ichild = 0; ichild < P8EST_CHILDREN; ++ichild) {
+    if (*(const int *) family[ichild]->p.user_data == shell.cycle) {
+      return 0;
+    }
+    double x[3];
+    quadrant_centroid (p8est, which_tree, family[ichild], x);
+    if (touches_shell (shell, x, family[ichild]->level)) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 double
 max_over_procs (double t, sc_MPI_Comm comm)
 {
@@ -143,6 +202,8 @@ timed_commit (t8_forest_t forest, sc_MPI_Comm comm)
 }
 
 const char *type_names[4] = { "none", "faces", "edges", "vertices" };
+const p8est_connect_type_t p8est_types[4] = { P8EST_CONNECT_FACE, P8EST_CONNECT_FACE, P8EST_CONNECT_EDGE,
+                                              P8EST_CONNECT_FULL };
 
 t8_ghost_type_t
 parse_type (const std::string &name)
@@ -203,6 +264,46 @@ set_balance (t8_forest_t forest, t8_forest_t from, const settings_t &settings)
 #endif
 }
 
+/* The times of the steps of a cycle, maxima over the processes */
+struct cycle_times_t
+{
+  double adapt, balance;
+  int balance_rounds;
+  double partition_ghost, partition, ghost, exchange;
+};
+
+/* Write the CSV line and the summary of a cycle, return the time of the cycle */
+double
+report_cycle (const settings_t &settings, const char *variant, const int ghost_version, const int procs,
+              const int min_level, const int max_level, const int cycle, const long long elements,
+              const long long ghosts, const cycle_times_t &t)
+{
+  const double cycle_time = t.adapt + t.balance + t.partition_ghost + t.exchange;
+  if (settings.csv != NULL) {
+    fprintf (settings.csv, "%s,%s,%d,%d,%d,%d,%s,%d,%s,%s,%d,%d,%lld,%lld,%g,%g,%d,%g,%g,%g,%g,%g\n", variant,
+             settings.eclass.c_str (), settings.trees, procs, min_level, max_level, type_names[settings.ghost_type],
+             ghost_version, type_names[settings.balance_type], settings.balance_algorithm.c_str (),
+             settings.for_coarsening, cycle, elements, ghosts, t.adapt, t.balance, t.balance_rounds, t.partition_ghost,
+             t.partition, t.ghost, t.exchange, cycle_time);
+    fflush (settings.csv);
+  }
+  t8_global_productionf ("amr_cycle %s cycle %d: %lld elements %lld ghosts, adapt %.4f balance %.4f (%d rounds) "
+                         "partition+ghost %.4f (partition %.4f ghost %.4f) exchange %.4f cycle %.4f s\n",
+                         variant, cycle, elements, ghosts, t.adapt, t.balance, t.balance_rounds, t.partition_ghost,
+                         t.partition, t.ghost, t.exchange, cycle_time);
+  return cycle_time;
+}
+
+void
+report_mean (const settings_t &settings, const char *variant, const int procs, const int cycles,
+             const double sum_cycle_time)
+{
+  if (cycles > 1) {
+    t8_global_productionf ("amr_cycle %s %s procs %d: mean cycle time (without the first) %.4f s\n", variant,
+                           settings.eclass.c_str (), procs, sum_cycle_time / (cycles - 1));
+  }
+}
+
 /* Partition a forest with a ghost layer as in the settings */
 t8_forest_t
 partition_with_ghost (t8_forest_t from, const settings_t &settings, sc_MPI_Comm comm, double *time)
@@ -222,7 +323,7 @@ run (const settings_t &settings, const int min_level, const int max_level, const
 {
   int size;
   sc_MPI_Comm_size (comm, &size);
-  shell_t shell = { { 0.3, 0.3, 0.3 }, radius, 1, min_level, max_level };
+  shell_t shell = { { 0.3, 0.3, 0.3 }, radius, 1, min_level, max_level, 0 };
   t8_cmesh_t cmesh = new_cmesh (settings, comm, &shell.tree_size);
   if (velocity <= 0) {
     velocity = shell.tree_size * std::ldexp (1.0, -max_level);
@@ -286,30 +387,96 @@ run (const settings_t &settings, const int min_level, const int max_level, const
     const double exchange_time = max_over_procs (sc_MPI_Wtime () - start, comm);
     sc_array_destroy (data);
 
-    const double cycle_time = adapt_time + balance_time + partition_ghost_time + exchange_time;
+    const cycle_times_t times = { adapt_time,     balance_time, rounds,       partition_ghost_time,
+                                  partition_time, ghost_time,   exchange_time };
+    const double cycle_time = report_cycle (settings, T8_BENCH_VARIANT, settings.ghost_version, size, min_level,
+                                            max_level, cycle, t8_forest_get_global_num_leaf_elements (forest),
+                                            sum_over_procs (num_ghosts, comm), times);
     if (cycle > 0) {
       sum_cycle_time += cycle_time;
     }
-    const long long elements = t8_forest_get_global_num_leaf_elements (forest);
-    const long long ghosts = sum_over_procs (num_ghosts, comm);
-    if (settings.csv != NULL) {
-      fprintf (settings.csv, "%s,%s,%d,%d,%d,%d,%s,%d,%s,%s,%d,%d,%lld,%lld,%g,%g,%d,%g,%g,%g,%g,%g\n",
-               T8_BENCH_VARIANT, settings.eclass.c_str (), settings.trees, size, min_level, max_level,
-               type_names[settings.ghost_type], settings.ghost_version, type_names[settings.balance_type],
-               settings.balance_algorithm.c_str (), settings.for_coarsening, cycle, elements, ghosts, adapt_time,
-               balance_time, rounds, partition_ghost_time, partition_time, ghost_time, exchange_time, cycle_time);
-      fflush (settings.csv);
-    }
-    t8_global_productionf ("amr_cycle %s cycle %d: %lld elements %lld ghosts, adapt %.4f balance %.4f (%d rounds) "
-                           "partition+ghost %.4f (partition %.4f ghost %.4f) exchange %.4f cycle %.4f s\n",
-                           T8_BENCH_VARIANT, cycle, elements, ghosts, adapt_time, balance_time, rounds,
-                           partition_ghost_time, partition_time, ghost_time, exchange_time, cycle_time);
   }
-  if (cycles > 1) {
-    t8_global_productionf ("amr_cycle %s %s procs %d: mean cycle time (without the first) %.4f s\n", T8_BENCH_VARIANT,
-                           settings.eclass.c_str (), size, sum_cycle_time / (cycles - 1));
-  }
+  report_mean (settings, T8_BENCH_VARIANT, size, cycles, sum_cycle_time);
   t8_forest_unref (&forest);
+}
+
+/* The same cycle with p4est on the hexahedral brick, each step timed like a commit */
+void
+run_p4est (const settings_t &settings, const int min_level, const int max_level, const int cycles, const double radius,
+           double velocity, sc_MPI_Comm comm)
+{
+  int size;
+  sc_MPI_Comm_size (comm, &size);
+  shell_t shell = { { 0.3, 0.3, 0.3 }, radius, 1.0 / settings.trees, min_level, max_level, -1 };
+  if (velocity <= 0) {
+    velocity = shell.tree_size * std::ldexp (1.0, -max_level);
+  }
+  p8est_connectivity_t *conn = p8est_connectivity_new_brick (settings.trees, settings.trees, settings.trees, 0, 0, 0);
+
+  /* The initial forest: uniform, refined at the shell, balanced, partitioned with a ghost layer */
+  sc_MPI_Barrier (comm);
+  double start = sc_MPI_Wtime ();
+  p8est_t *p8est = p8est_new_ext (comm, conn, 0, min_level, 1, sizeof (int), init_quadrant, &shell);
+  const double new_time = max_over_procs (sc_MPI_Wtime () - start, comm);
+  sc_MPI_Barrier (comm);
+  start = sc_MPI_Wtime ();
+  p8est_refine (p8est, 1, refine_shell, init_quadrant);
+  p8est_balance (p8est, p8est_types[settings.balance_type], init_quadrant);
+  p8est_partition (p8est, settings.for_coarsening, NULL);
+  p8est_ghost_t *ghost = p8est_ghost_new (p8est, p8est_types[settings.ghost_type]);
+  const double setup_time = max_over_procs (sc_MPI_Wtime () - start, comm);
+  t8_global_productionf ("amr_cycle p4est %s: new %.4f s, setup %.4f s, %lld elements\n", settings.eclass.c_str (),
+                         new_time, setup_time, (long long) p8est->global_num_quadrants);
+
+  double sum_cycle_time = 0;
+  for (int cycle = 0; cycle < cycles; ++cycle) {
+    for (int i = 0; i < 3; ++i) {
+      shell.center[i] += velocity;
+    }
+    shell.cycle = cycle;
+    cycle_times_t times = {};
+    /* Adapt by one level, including the destruction of the old ghost layer as in t8code's commit */
+    sc_MPI_Barrier (comm);
+    start = sc_MPI_Wtime ();
+    p8est_ghost_destroy (ghost);
+    p8est_refine (p8est, 0, refine_shell, init_quadrant);
+    p8est_coarsen (p8est, 0, coarsen_shell, init_quadrant);
+    times.adapt = max_over_procs (sc_MPI_Wtime () - start, comm);
+    sc_MPI_Barrier (comm);
+    start = sc_MPI_Wtime ();
+    p8est_balance (p8est, p8est_types[settings.balance_type], init_quadrant);
+    times.balance = max_over_procs (sc_MPI_Wtime () - start, comm);
+    sc_MPI_Barrier (comm);
+    start = sc_MPI_Wtime ();
+    p8est_partition (p8est, settings.for_coarsening, NULL);
+    times.partition = max_over_procs (sc_MPI_Wtime () - start, comm);
+    sc_MPI_Barrier (comm);
+    start = sc_MPI_Wtime ();
+    ghost = p8est_ghost_new (p8est, p8est_types[settings.ghost_type]);
+    times.ghost = max_over_procs (sc_MPI_Wtime () - start, comm);
+    times.partition_ghost = times.partition + times.ghost;
+    /* Exchange one double per element with the ghosts */
+    std::vector<double> values (p8est->local_num_quadrants, 1.0), ghost_values (ghost->ghosts.elem_count);
+    sc_MPI_Barrier (comm);
+    start = sc_MPI_Wtime ();
+    std::vector<void *> mirror_data (ghost->mirrors.elem_count);
+    for (size_t imirror = 0; imirror < ghost->mirrors.elem_count; ++imirror) {
+      mirror_data[imirror] = &values[p8est_quadrant_array_index (&ghost->mirrors, imirror)->p.piggy3.local_num];
+    }
+    p8est_ghost_exchange_custom (p8est, ghost, sizeof (double), mirror_data.data (), ghost_values.data ());
+    times.exchange = max_over_procs (sc_MPI_Wtime () - start, comm);
+
+    const double cycle_time
+      = report_cycle (settings, "p4est", 0, size, min_level, max_level, cycle, p8est->global_num_quadrants,
+                      sum_over_procs ((long long) ghost->ghosts.elem_count, comm), times);
+    if (cycle > 0) {
+      sum_cycle_time += cycle_time;
+    }
+  }
+  report_mean (settings, "p4est", size, cycles, sum_cycle_time);
+  p8est_ghost_destroy (ghost);
+  p8est_destroy (p8est);
+  p8est_connectivity_destroy (conn);
 }
 }  // namespace
 
@@ -324,9 +491,11 @@ main (int argc, char **argv)
 
   int help = 0, min_level, max_level, cycles, trees, ghost_version, for_coarsening = 0;
   double radius, velocity;
-  const char *eclass_arg, *ghost_arg, *balance_arg, *algorithm_arg, *csv_name;
+  const char *eclass_arg, *ghost_arg, *balance_arg, *algorithm_arg, *csv_name, *backend_arg;
   sc_options_t *opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &help, "Display a short help message.");
+  sc_options_add_string (opt, 'B', "backend", &backend_arg, "t8code",
+                         "t8code, or p4est (hexahedra only, the same cycle with p8est).");
   sc_options_add_string (opt, 'e', "eclass", &eclass_arg, "hex",
                          "Element class: hex, tet, prism, pyramid or hybrid (comma separated list).");
   sc_options_add_int (opt, 't', "trees", &trees, 1, "For hex: the number of trees in each direction.");
@@ -357,6 +526,8 @@ main (int argc, char **argv)
     settings_t settings
       = { "",  trees, parse_type (ghost_arg), parse_type (balance_arg), ghost_version, algorithm_arg, for_coarsening,
           NULL };
+    const std::string backend = backend_arg;
+    SC_CHECK_ABORT (backend == "t8code" || backend == "p4est", "Unknown backend, use t8code or p4est.");
 #ifndef T8_FOREST_LOG_PARTITION
     SC_CHECK_ABORT (settings.balance_algorithm == "default",
                     "This variant of t8code has no balance algorithms, use -a default.");
@@ -381,7 +552,14 @@ main (int argc, char **argv)
       SC_CHECK_ABORT (settings.eclass == "hex" || settings.eclass == "tet" || settings.eclass == "prism"
                         || settings.eclass == "pyramid" || settings.eclass == "hybrid",
                       "Unknown element class.");
-      run (settings, min_level, max_level, cycles, radius, velocity, comm);
+      if (backend == "p4est") {
+        SC_CHECK_ABORT (settings.eclass == "hex" && settings.balance_algorithm == "default",
+                        "The p4est backend runs on hexahedra with its own balance algorithm.");
+        run_p4est (settings, min_level, max_level, cycles, radius, velocity, comm);
+      }
+      else {
+        run (settings, min_level, max_level, cycles, radius, velocity, comm);
+      }
     }
     if (settings.csv != NULL) {
       fclose (settings.csv);
