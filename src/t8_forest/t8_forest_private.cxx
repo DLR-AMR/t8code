@@ -67,7 +67,7 @@ t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_loci
  */
 /** \brief Search for a linear element id (at level element_level) in a sorted array of
  * elements. If the element does not exist, return the largest index i
- * such that the element at position i has a smaller id than the given one.
+ * such that the element at position i has a smaller linear id than or the same linear id as the given one.
  * If no such i exists, return -1.
  */
 t8_locidx_t
