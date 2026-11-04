@@ -68,22 +68,27 @@ struct t8_openfoam_reader
 
   /**
    * Constructor of OpenFOAM reader.
+   * \param [in] cmesh     The cmesh the OpenFOAM mesh is constructed in. Must be empty and initialized.
    * \param [in] foamfile  Path to the *.foam file inside the OpenFOAM case directory.
    * \param [in] comm      The communicator to use for the obtained forest.
    */
-  t8_openfoam_reader (t8_path foamfile, sc_MPI_Comm comm)
-    : m_case_dir (get_case_dir (foamfile)), m_cmesh (nullptr), m_comm (comm)
+  t8_openfoam_reader (t8_cmesh_t* pcmesh, t8_path foamfile, sc_MPI_Comm comm)
+    : m_case_dir (get_case_dir (foamfile)), m_pcmesh (pcmesh), m_comm (comm)
   {
+    t8_cmesh_t cmesh = *pcmesh;
+    T8_ASSERT (cmesh != NULL);
+    T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+    T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+    T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
     SC_CHECK_ABORTF (std::filesystem::exists (foamfile), "ERROR: Foam file does not exist: %s", foamfile.c_str ());
   };
 
   /**
-   * Reads the OpenFOAM mesh.
+   * Reads the OpenFOAM mesh into \ref m_pcmesh.
    * \note: When this class is finished it will return a forest instead of a cmesh.
    * This is necessary to link the mesh data to the forest and adaptation and interpolation of the data can be performed.
-   * \return  A cmesh containing the OpenFOAM mesh.
    */
-  t8_cmesh_t
+  void
   read ();
 
  private:
@@ -262,7 +267,7 @@ struct t8_openfoam_reader
    * \return  True on success
    */
   bool
-  build_cmesh ();
+  fill_cmesh ();
 
   /**
    * Use the gathered cell information to build a hex cell and add it to the underlying cmesh.
@@ -355,7 +360,7 @@ struct t8_openfoam_reader
         const int orientation
           = compute_face_orientation (cell_eclass, t8_face_id, face_orientations[t8_face_id], other_cell_eclass,
                                       other_cell_t8_face_id, other_cell_face_orientation);
-        t8_cmesh_set_join (m_cmesh, cell_id, other_cell_id, t8_face_id, other_cell_t8_face_id, orientation);
+        t8_cmesh_set_join (*m_pcmesh, cell_id, other_cell_id, t8_face_id, other_cell_t8_face_id, orientation);
       }
       else {
         /* There is no cell with this face saved yet. Save this cell with this face. */
@@ -439,7 +444,7 @@ struct t8_openfoam_reader
   /** Path to the OpenFOAM case. */
   t8_path m_case_dir;
   /** The cmesh to build. */
-  t8_cmesh_t m_cmesh;
+  t8_cmesh_t* m_pcmesh;
   /** The assigned communicator. */
   sc_MPI_Comm m_comm;
 

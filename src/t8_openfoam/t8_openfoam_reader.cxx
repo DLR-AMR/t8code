@@ -25,35 +25,46 @@
  */
 
 #include <t8_openfoam/t8_openfoam_reader.hxx>
+#include <sc_mpi.h>
 
-t8_cmesh_t
+void
 t8_openfoam_reader::read ()
 {
+  int mpirank;
+  SC_CHECK_MPI (sc_MPI_Comm_rank (m_comm, &mpirank));
 
-  /* Build paths to the standard OpenFOAM mesh files. */
-  const t8_path case_faces_file = m_case_dir / "constant/polyMesh/faces";
-  const t8_path case_boundary_file = m_case_dir / "constant/polyMesh/boundary";
-  const t8_path case_neighbor_file = m_case_dir / "constant/polyMesh/neighbour";
-  const t8_path case_owner_file = m_case_dir / "constant/polyMesh/owner";
-  const t8_path case_points_file = m_case_dir / "constant/polyMesh/points";
+  if (mpirank == 0) {
+    /* Build paths to the standard OpenFOAM mesh files. */
+    const t8_path case_faces_file = m_case_dir / "constant/polyMesh/faces";
+    const t8_path case_boundary_file = m_case_dir / "constant/polyMesh/boundary";
+    const t8_path case_neighbor_file = m_case_dir / "constant/polyMesh/neighbour";
+    const t8_path case_owner_file = m_case_dir / "constant/polyMesh/owner";
+    const t8_path case_points_file = m_case_dir / "constant/polyMesh/points";
 
-  /* The file reading needs to happen in this order, since these functions depend on each other. */
-  bool success = true;
-  success = read_points (case_points_file);
-  success = success && read_faces (case_faces_file);
-  success = success && read_owner (case_owner_file);
-  success = success && read_neighbor (case_neighbor_file);
+    /* The file reading needs to happen in this order, since these functions depend on each other. */
+    bool success = true;
+    success = read_points (case_points_file);
+    success = success && read_faces (case_faces_file);
+    success = success && read_owner (case_owner_file);
+    success = success && read_neighbor (case_neighbor_file);
 
-  if (!success) {
-    /* Return the uninitialized cmesh (nullptr) */
-    t8_errorf ("ERROR during OpenFOAM case reading.\n");
-    return nullptr;
+    if (!success) {
+      /* Return the uninitialized cmesh (nullptr) */
+      t8_global_errorf ("ERROR during OpenFOAM case reading.\n");
+      t8_cmesh_destroy (m_pcmesh);
+    }
+    if (!fill_cmesh ()) {
+      t8_global_errorf ("ERROR during OpenFOAM cmesh build.\n");
+      t8_cmesh_destroy (m_pcmesh);
+    }
   }
-  if (!build_cmesh ()) {
-    t8_errorf ("ERROR during OpenFOAM cmesh build.\n");
-    return nullptr;
+  else {
+    t8_cmesh_destroy (m_pcmesh);
   }
-  return m_cmesh;
+
+  *m_pcmesh = t8_cmesh_bcast (*m_pcmesh, 0, m_comm);
+  t8_cmesh_register_geometry<t8_geometry_linear> (*m_pcmesh);
+  t8_cmesh_commit (*m_pcmesh, m_comm);
 }
 
 bool
@@ -405,7 +416,7 @@ t8_openfoam_reader::get_cell_eclass (const size_t cell_id)
 }
 
 bool
-t8_openfoam_reader::build_cmesh ()
+t8_openfoam_reader::fill_cmesh ()
 {
   T8_ASSERT (!m_cell_faces.empty ());
   T8_ASSERT (!m_face_points.empty ());
@@ -414,8 +425,6 @@ t8_openfoam_reader::build_cmesh ()
   /* Make the neighborhood vector the right size and default construct all elements. */
   m_neighborhoods.resize (m_face_points.size ());
 
-  t8_cmesh_init (&m_cmesh);
-  t8_cmesh_register_geometry<t8_geometry_linear> (m_cmesh);
   /* Reconstruct cells */
   size_t cell_id = 0;
   for (auto& cell : m_cell_faces) {
@@ -456,7 +465,6 @@ t8_openfoam_reader::build_cmesh ()
     }
     ++cell_id;
   }
-  t8_cmesh_commit (m_cmesh, m_comm);
   return true;
 }
 
@@ -601,8 +609,8 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
       vertices[i_vertex * 3 + i_coord] = m_points[points[i_vertex].value ()][i_coord];
     }
   }
-  t8_cmesh_set_tree_class (m_cmesh, cell_id, T8_ECLASS_HEX);
-  t8_cmesh_set_tree_vertices (m_cmesh, cell_id, vertices.data (), t8_eclass_num_vertices[T8_ECLASS_HEX]);
+  t8_cmesh_set_tree_class (*m_pcmesh, cell_id, T8_ECLASS_HEX);
+  t8_cmesh_set_tree_vertices (*m_pcmesh, cell_id, vertices.data (), t8_eclass_num_vertices[T8_ECLASS_HEX]);
 
   /* ------------------------- 6. Set neighbors and boundary conditions ------------------------- */
   compute_cell_neighbors (cell_id, T8_ECLASS_HEX, faces, face_orientations);
@@ -702,8 +710,8 @@ t8_openfoam_reader::reconstruct_tet_cell (size_t cell_id, std::vector<size_t> fa
       vertices[i_vertex * 3 + i_coord] = m_points[points[i_vertex].value ()][i_coord];
     }
   }
-  t8_cmesh_set_tree_class (m_cmesh, cell_id, T8_ECLASS_TET);
-  t8_cmesh_set_tree_vertices (m_cmesh, cell_id, vertices.data (), t8_eclass_num_vertices[T8_ECLASS_TET]);
+  t8_cmesh_set_tree_class (*m_pcmesh, cell_id, T8_ECLASS_TET);
+  t8_cmesh_set_tree_vertices (*m_pcmesh, cell_id, vertices.data (), t8_eclass_num_vertices[T8_ECLASS_TET]);
 
   /* ------------------------- 5. Set neighbors and boundary conditions ------------------------- */
   compute_cell_neighbors (cell_id, T8_ECLASS_TET, faces, face_orientations);
@@ -868,8 +876,8 @@ t8_openfoam_reader::reconstruct_prism_cell (size_t cell_id, std::vector<size_t> 
       vertices[i_vertex * 3 + i_coord] = m_points[points[i_vertex].value ()][i_coord];
     }
   }
-  t8_cmesh_set_tree_class (m_cmesh, cell_id, T8_ECLASS_PRISM);
-  t8_cmesh_set_tree_vertices (m_cmesh, cell_id, vertices.data (), t8_eclass_num_vertices[T8_ECLASS_PRISM]);
+  t8_cmesh_set_tree_class (*m_pcmesh, cell_id, T8_ECLASS_PRISM);
+  t8_cmesh_set_tree_vertices (*m_pcmesh, cell_id, vertices.data (), t8_eclass_num_vertices[T8_ECLASS_PRISM]);
 
   /* ------------------------- 6. Set neighbors and boundary conditions ------------------------- */
   compute_cell_neighbors (cell_id, T8_ECLASS_PRISM, faces, face_orientations);
@@ -985,8 +993,8 @@ t8_openfoam_reader::reconstruct_pyramid_cell (size_t cell_id, std::vector<size_t
       vertices[i_vertex * 3 + i_coord] = m_points[points[i_vertex].value ()][i_coord];
     }
   }
-  t8_cmesh_set_tree_class (m_cmesh, cell_id, T8_ECLASS_PYRAMID);
-  t8_cmesh_set_tree_vertices (m_cmesh, cell_id, vertices.data (), t8_eclass_num_vertices[T8_ECLASS_PYRAMID]);
+  t8_cmesh_set_tree_class (*m_pcmesh, cell_id, T8_ECLASS_PYRAMID);
+  t8_cmesh_set_tree_vertices (*m_pcmesh, cell_id, vertices.data (), t8_eclass_num_vertices[T8_ECLASS_PYRAMID]);
 
   /* ------------------------- 5. Set neighbors and boundary conditions ------------------------- */
   compute_cell_neighbors (cell_id, T8_ECLASS_PYRAMID, faces, face_orientations);

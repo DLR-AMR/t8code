@@ -39,8 +39,10 @@ static void
 build_cmesh_from_openfoam_case (const std::filesystem::path& foamfile)
 {
   /* Use the OpenFOAM reader to read the case. */
-  t8_openfoam_reader reader (foamfile, sc_MPI_COMM_WORLD);
-  t8_cmesh_t cmesh = reader.read ();
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_openfoam_reader reader (&cmesh, foamfile, sc_MPI_COMM_WORLD);
+  reader.read ();
 
   /* If the cmesh is empty something went wrong. */
   if (!cmesh) {
