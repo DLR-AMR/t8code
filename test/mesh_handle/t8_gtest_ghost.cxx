@@ -33,13 +33,16 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/competences/cache_element_competences.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
+#include "t8_gtest_common.hxx"
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_forest/t8_forest_subelement.hxx>
 #include <vector>
+#include <algorithm>
 
 /** Parametrized test fixture for the ghost tests. */
 struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
@@ -176,6 +179,39 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
       // Evolve mesh iterator.
       mesh_iterator++;
     }
+  }
+}
+
+/** Check the conformity check of the elements and the mesh. The mesh version is compared to the forest. */
+TEST_P (t8_mesh_ghost_test, test_is_conformal)
+{
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>;
+  auto mesh
+    = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true, true);
+
+  /* A uniform mesh is always conformal. After this, the neighbor cache is also filled. */
+  EXPECT_TRUE (mesh->is_conformal ());
+  for (const auto& element : *mesh) {
+    EXPECT_FALSE (element.has_hanging_node ());
+    for (int iface = 0; iface < element.get_num_faces (); ++iface) {
+      EXPECT_TRUE (element.neighbor_cache_filled (iface));
+    }
+  }
+
+  /* Refining every second element should create hanging nodes (except 0D and 1D, where each face has at most one point). */
+  mesh->set_adapt (adapt_callback_refine_second<mesh_class>);
+  mesh->set_ghost ();
+  mesh->commit ();
+  EXPECT_EQ (mesh->is_conformal (), t8_forest_is_conforming (mesh->get_forest ()));
+  if (mesh->get_dimension () > 1) {
+    EXPECT_FALSE (mesh->is_conformal ());
+    const bool any_element_not_conformal
+      = std::any_of (mesh->cbegin (), mesh->cend (), [] (const auto& element) { return element.has_hanging_node (); });
+    int local = any_element_not_conformal ? 1 : 0;
+    int global = 0;
+    const int mpiret = sc_MPI_Allreduce (&local, &global, 1, sc_MPI_INT, sc_MPI_LOR, sc_MPI_COMM_WORLD);
+    SC_CHECK_MPI (mpiret);
+    EXPECT_TRUE (global != 0);
   }
 }
 
