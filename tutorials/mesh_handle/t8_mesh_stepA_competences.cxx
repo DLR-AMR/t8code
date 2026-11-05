@@ -49,7 +49,7 @@
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constrain the template parameters to only allow mesh handle classes. */
 #include <t8_vector/t8_vec.hxx>     /** t8code vector dataclass. */
-#include <cstring>
+#include <vector>
 
 using namespace t8_mesh_handle; /** Using the namespace to avoid the t8_mesh_handle:: prefix everywhere and shorten the code. */
 
