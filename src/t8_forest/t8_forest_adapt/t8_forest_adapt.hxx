@@ -292,8 +292,9 @@ struct t8_adaptor
       forest->incomplete_trees = 1;
       return;
     }
-    /* Inform the other processes whether elements were removed locally. */
-    const int local_removed = element_removed;
+    /* Inform the other processes whether elements were removed locally. Not const, because sc_MPI_Allreduce takes a
+     * non-const send buffer if t8code is built without MPI. */
+    int local_removed = element_removed;
     int incomplete_trees;
     const int mpiret = sc_MPI_Allreduce (&local_removed, &incomplete_trees, 1, sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
     SC_CHECK_MPI (mpiret);
