@@ -115,10 +115,9 @@ read_vtu_file (const std::string &fileprefix, const int mpirank)
   return content.str ();
 }
 
-/** Convert \a field with \ref t8_mesh_handle::detail::to_vtk_data_field and check the result.
+/** Convert \a field with \ref detail::create_vtk_buffer and detail::fill_vtk_data_field and check the result.
  * The converted field must contain exactly one value per written element. Values of \a field for elements that are
  * not written are dropped and written elements without a value in \a field are set to zero.
- * Old content of the buffer must be overwritten by the conversion.
  * \tparam TMeshClass       The mesh handle class.
  * \tparam TValueType       The type of the values in the data field.
  * \param [in] mesh         The mesh the data field belongs to.
@@ -127,15 +126,15 @@ read_vtu_file (const std::string &fileprefix, const int mpirank)
  */
 template <t8_mesh_handle::T8MeshType TMeshClass, t8_mesh_handle::T8VtkDataValue TValueType>
 void
-check_to_vtk_data_field (const TMeshClass &mesh, const t8_mesh_handle::vtk_data_field<TValueType> &field,
-                         const bool write_ghosts)
+check_vtk_data_conversion (const TMeshClass &mesh, const t8_mesh_handle::vtk_data_field<TValueType> &field,
+                           const bool write_ghosts)
 {
   constexpr bool is_scalar = std::is_same_v<TValueType, double>;
   constexpr int num_components = is_scalar ? 1 : 3;
-  // Fill the buffer with dummy values to check that they are overwritten.
-  std::vector<double> buffer (5, 42.0);
+  // Test the detail functions
+  std::vector<double> buffer = t8_mesh_handle::detail::create_vtk_buffer (mesh, field, write_ghosts);
   t8_vtk_data_field_t vtk_field;
-  t8_mesh_handle::detail::to_vtk_data_field (mesh, field, write_ghosts, buffer, vtk_field);
+  t8_mesh_handle::detail::fill_vtk_data_field (field, buffer, vtk_field);
 
   EXPECT_EQ (vtk_field.type, is_scalar ? T8_VTK_SCALAR : T8_VTK_VECTOR);
   EXPECT_STREQ (vtk_field.description, field.name.c_str ());
@@ -165,23 +164,6 @@ TEST_P (t8_mesh_io_test, write_mesh_to_vtk)
   EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, "t8_gtest_mesh_io"));
 }
 
-/** Check the extended output function \ref t8_mesh_handle::write_mesh_to_vtk_ext with user-defined data fields.
- * In contrast to the forest vtk writer tests (see t8_gtest_vtk_writer.cxx), the output is expected to be successful
- * also if the VTK API is requested but VTK is not linked, because the forest then falls back to the ASCII writer.
- */
-TEST_P (t8_mesh_io_test, write_mesh_to_vtk_ext)
-{
-  // Default options and no user-defined data.
-  EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "t8_gtest_mesh_io_ext", 0, nullptr));
-  for (const bool write_ghosts : { false, true }) {
-    for (const bool do_not_use_API : { false, true }) {
-      EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "t8_gtest_mesh_io_ext", num_vtk_data, vtk_data, true,
-                                                          true, true, true, write_ghosts, false, do_not_use_API))
-        << "write_ghosts = " << write_ghosts << ", do_not_use_API = " << do_not_use_API;
-    }
-  }
-}
-
 /** Check the conversion of the data fields of the handle into the data fields expected by the forest vtk writer.
  * The values of a data field can be given for the local elements only or for the local and the ghost elements.
  */
@@ -191,36 +173,43 @@ TEST_P (t8_mesh_io_test, to_vtk_data_field)
   const std::span<const t8_3D_vec> local_centroids (centroids.data (), num_local_elements);
   for (const bool write_ghosts : { false, true }) {
     // --- Scalar data fields. ---
-    check_to_vtk_data_field (*mesh, t8_mesh_handle::vtk_scalar_field { "volume", volumes }, write_ghosts);
-    check_to_vtk_data_field (*mesh, t8_mesh_handle::vtk_scalar_field { "local volume", local_volumes }, write_ghosts);
+    check_vtk_data_conversion (*mesh, t8_mesh_handle::vtk_scalar_field { "volume", volumes }, write_ghosts);
+    check_vtk_data_conversion (*mesh, t8_mesh_handle::vtk_scalar_field { "local volume", local_volumes }, write_ghosts);
     // --- Vector data fields. ---
-    check_to_vtk_data_field (*mesh, t8_mesh_handle::vtk_vector_field { "centroid", centroids }, write_ghosts);
-    check_to_vtk_data_field (*mesh, t8_mesh_handle::vtk_vector_field { "local centroid", local_centroids },
-                             write_ghosts);
+    check_vtk_data_conversion (*mesh, t8_mesh_handle::vtk_vector_field { "centroid", centroids }, write_ghosts);
+    check_vtk_data_conversion (*mesh, t8_mesh_handle::vtk_vector_field { "local centroid", local_centroids },
+                               write_ghosts);
   }
   // The longest name that fits into the description of the forest data field must be accepted.
   // Longer names abort with SC_CHECK_ABORTF, which cannot be tested here since it aborts all MPI processes.
   const std::string longest_name (T8_VTK_MAX_STRING_LENGTH - 1, 'a');
-  check_to_vtk_data_field (*mesh, t8_mesh_handle::vtk_scalar_field { longest_name, volumes }, false);
+  check_vtk_data_conversion (*mesh, t8_mesh_handle::vtk_scalar_field { longest_name, volumes }, false);
 }
 
-/** Check the output function \ref t8_mesh_handle::write_mesh_to_vtk_ext_data for different data fields and options. */
-TEST_P (t8_mesh_io_test, write_mesh_to_vtk_ext_data)
+/** Check the extended output function \ref t8_mesh_handle::write_mesh_to_vtk for different options and ghost element handling. */
+TEST_P (t8_mesh_io_test, write_mesh_to_vtk_with_options)
 {
   const std::span<const double> local_volumes (volumes.data (), num_local_elements);
+
   // Default options and no data fields.
-  EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk_ext_data (*mesh, "t8_gtest_mesh_io_ext_data", {}));
+  EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, "t8_gtest_mesh_io_with_options", {}, {}, {}));
+
   for (const bool write_ghosts : { false, true }) {
     for (const bool do_not_use_API : { false, true }) {
+
+      // Populate the options struct based on the loop
+      t8_mesh_handle::vtk_write_options options;
+      options.write_ghosts = write_ghosts;
+      options.do_not_use_API = do_not_use_API;
+
       // Only a scalar data field with values for the local elements only.
-      EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk_ext_data (*mesh, "t8_gtest_mesh_io_ext_data",
-                                                               { { "volume", local_volumes } }, {}, true, true, true,
-                                                               true, write_ghosts, false, do_not_use_API))
+      EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, "t8_gtest_mesh_io_with_options",
+                                                      { { "volume", local_volumes } }, {}, options))
         << "write_ghosts = " << write_ghosts << ", do_not_use_API = " << do_not_use_API;
       // Scalar and vector data fields with values for the local and the ghost elements.
-      EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk_ext_data (
-        *mesh, "t8_gtest_mesh_io_ext_data", { { "level", levels }, { "volume", volumes } },
-        { { "centroid", centroids } }, true, true, true, true, write_ghosts, false, do_not_use_API))
+      EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, "t8_gtest_mesh_io_with_options",
+                                                      { { "volume", local_volumes } }, { { "centroid", centroids } },
+                                                      options))
         << "write_ghosts = " << write_ghosts << ", do_not_use_API = " << do_not_use_API;
     }
   }
@@ -252,17 +241,23 @@ TEST_P (t8_mesh_io_test, compare_output_to_forest)
     EXPECT_TRUE (t8_forest_write_vtk_ext (mesh->get_forest (), prefix_forest.c_str (), write_treeid, write_mpirank,
                                           write_level, write_element_id, write_ghosts, write_curved, do_not_use_API,
                                           num_vtk_data, vtk_data));
+
+    // --- Setup options struct ---
+    t8_mesh_handle::vtk_write_options options;
+    options.write_treeid = write_treeid;
+    options.write_mpirank = write_mpirank;
+    options.write_level = write_level;
+    options.write_element_id = write_element_id;
+    options.write_ghosts = write_ghosts;
+    options.write_curved = write_curved;
+    options.do_not_use_API = do_not_use_API;
     // --- Write with the mesh handle. ---
-    EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, prefix_ext.c_str (), num_vtk_data, vtk_data,
-                                                        write_treeid, write_mpirank, write_level, write_element_id,
-                                                        write_ghosts, write_curved, do_not_use_API));
-    EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk_ext_data (
-      *mesh, prefix_ext_data.c_str (), { { "level", levels }, { "volume", volumes } }, { { "centroid", centroids } },
-      write_treeid, write_mpirank, write_level, write_element_id, write_ghosts, write_curved, do_not_use_API));
+    EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_ext_data.c_str (),
+                                                    { { "level", levels }, { "volume", volumes } },
+                                                    { { "centroid", centroids } }, options));
     // --- Compare the process local files. ---
     const std::string forest_output = read_vtu_file (prefix_forest, mpirank);
     EXPECT_FALSE (forest_output.empty ());
-    EXPECT_EQ (forest_output, read_vtu_file (prefix_ext, mpirank)) << "write_ghosts = " << write_ghosts;
     EXPECT_EQ (forest_output, read_vtu_file (prefix_ext_data, mpirank)) << "write_ghosts = " << write_ghosts;
   }
 }
