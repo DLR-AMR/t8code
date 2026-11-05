@@ -325,6 +325,30 @@ struct t8_cad_handle
   int
   edge_is_closed (int edge_index) const;
 
+  /** Projects a point onto a cad edge and returns the parameter of the closest point.
+   * A local Newton search is started at \a reference_param and compared to a global projection.
+   * If several solutions are equally close (e.g. on the seam of a closed edge), the one closest
+   * to \a reference_param is chosen.
+   * \param [in]  edge_index        The index of the cad edge.
+   * \param [in]  point             The point to project.
+   * \param [in]  reference_param   Reference parameter on the edge, used as start value and to resolve ambiguities.
+   * \return                        The parameter of the projected point on the edge.
+   */
+  double
+  project_point_on_edge (const int edge_index, const gp_Pnt &point, const double reference_param) const;
+
+  /** Projects a point onto a cad face and returns the parameters of the closest point.
+   * A local Newton search is started at \a reference_params and compared to a global projection.
+   * For periodic surfaces, the parameters are shifted by full periods to be closest to \a reference_params.
+   * \param [in]  face_index        The index of the cad face.
+   * \param [in]  point             The point to project.
+   * \param [in]  reference_params  Reference parameters on the face, used as start value and to resolve ambiguities.
+   * \param [out] face_params       The parameters of the projected point on the face.
+   */
+  void
+  project_point_on_face (const int face_index, const gp_Pnt &point, const double reference_params[2],
+                         double face_params[2]) const;
+
   /**
    * Increase the reference count of the cad handle.
    */

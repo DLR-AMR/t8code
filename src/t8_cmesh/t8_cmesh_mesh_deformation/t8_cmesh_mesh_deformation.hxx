@@ -37,14 +37,29 @@
 #include <t8_vector/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation_method.hxx>
 
+/** How the new positions of the boundary nodes on the deformed CAD geometry are found. */
+enum class t8_cad_parameter_mode {
+  /** Evaluate the new geometry at the old (u,v)-parameters.
+   * Exact if the parametrization of the geometry does not change, e.g. for rigid motions.
+   * Wrong if the parametrization changes, e.g. for a chord length parametrized spline whose shape changes. */
+  EVALUATE,
+  /** Project the nodes onto the new geometry and update the (u,v)-parameters of the cmesh.
+   * Suited for small shape changes, e.g. a bump on a spline, since it is independent of the parametrization
+   * and nodes away from the change stay in place. Not suited for large motions, since the nodes are moved
+   * to the closest point and not to their moved position. */
+  PROJECT
+};
+
 /** Struct for mesh deformation. */
 struct t8_cmesh_mesh_deformation
 {
  public:
   /** Constructor.
-   * \param [in] cmesh    The committed cmesh which will be deformed.
+   * \param [in] cmesh           The committed cmesh which will be deformed.
+   * \param [in] parameter_mode  How the boundary nodes are mapped onto the new CAD geometry.
    */
-  t8_cmesh_mesh_deformation (t8_cmesh_t cmesh): associated_cmesh (cmesh) {};
+  t8_cmesh_mesh_deformation (t8_cmesh_t cmesh, t8_cad_parameter_mode parameter_mode = t8_cad_parameter_mode::EVALUATE)
+    : associated_cmesh (cmesh), parameter_mode (parameter_mode) {};
 
   /** Destructor */
   ~t8_cmesh_mesh_deformation () {};
@@ -83,8 +98,20 @@ struct t8_cmesh_mesh_deformation
                               std::shared_ptr<t8_cad_handle> cad);
 
  private:
+  /**
+   * Recomputes all (u,v)-parameters stored in the cmesh by projecting the current vertex coordinates
+   * onto the CAD geometry. This affects the node parameters as well as the edge and face parameters
+   * used by the CAD geometry to evaluate curved elements.
+   *
+   * \param [in] cad The CAD geometry the vertices lie on.
+   */
+  void
+  update_cad_parameters (const t8_cad_handle *cad);
+
   /** A pointer to the cmesh for attribute retrieval. */
   t8_cmesh_t associated_cmesh;
+  /** How the boundary nodes are mapped onto the new CAD geometry. */
+  t8_cad_parameter_mode parameter_mode;
   /** The deformation method used to interpolate the boundary displacements to the inner nodes. */
   std::unique_ptr<t8_mesh_deformation_method> deformation_method;
 };

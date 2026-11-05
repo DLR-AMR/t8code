@@ -33,12 +33,13 @@
 #include <TopoDS_Face.hxx>
 #include <Standard_Version.hxx>
 #include <ShapeAnalysis_Edge.hxx>
+#include <ShapeAnalysis_Curve.hxx>
+#include <ShapeAnalysis_Surface.hxx>
 #include <TopExp_Explorer.hxx>
-#include <string_view>
-
-#if T8_ENABLE_DEBUG
 #include <Precision.hxx>
-#endif
+#include <string_view>
+#include <cmath>
+#include <algorithm>
 
 void
 t8_cad_handle::load (const std::string_view fileprefix)
@@ -559,6 +560,92 @@ t8_cad_handle::edge_is_closed (int edge_index) const
 {
   const Handle_Geom_Curve cad_edge = get_cad_curve (edge_index);
   return cad_edge->IsClosed ();
+}
+
+/**
+ * Shifts a parameter on a closed curve or surface direction by full periods, so that it is closest to a reference
+ * parameter. Points on the seam have two valid parameters, and the one on the same side as the reference is chosen.
+ * For non-periodic but closed geometries the result is clamped to the parameter range.
+ * \param [in] param            The parameter to shift.
+ * \param [in] reference_param  The reference parameter.
+ * \param [in] first, last      The parameter range of the closed geometry.
+ * \param [in] is_periodic      Whether the geometry is periodic, i.e. may be evaluated outside of its range.
+ * \return                      The shifted parameter.
+ */
+static double
+t8_cad_shift_to_reference_period (const double param, const double reference_param, const double first,
+                                  const double last, const bool is_periodic)
+{
+  const double period = last - first;
+  const double shifted_param = param + period * std::round ((reference_param - param) / period);
+  return is_periodic ? shifted_param : std::clamp (shifted_param, first, last);
+}
+
+double
+t8_cad_handle::project_point_on_edge (const int edge_index, const gp_Pnt &point, const double reference_param) const
+{
+  Standard_Real first, last;
+  const Handle_Geom_Curve curve = BRep_Tool::Curve (get_cad_edge (edge_index), first, last);
+  const ShapeAnalysis_Curve curve_analyzer;
+  gp_Pnt projected_point;
+
+  /* Local Newton search, starting at the reference parameter. */
+  double local_param;
+  const double local_distance = curve_analyzer.NextProject (reference_param, curve, point, Precision::Confusion (),
+                                                            projected_point, local_param, first, last);
+  /* Global projection, in case the local search converged to a non-global minimum. */
+  double global_param;
+  const double global_distance
+    = curve_analyzer.Project (curve, point, Precision::Confusion (), projected_point, global_param, first, last);
+
+  /* Equally close solutions are resolved with the reference parameter. */
+  double param;
+  if (std::abs (local_distance - global_distance) <= Precision::Confusion ()) {
+    param = std::abs (local_param - reference_param) <= std::abs (global_param - reference_param) ? local_param
+                                                                                                  : global_param;
+  }
+  else {
+    param = local_distance < global_distance ? local_param : global_param;
+  }
+
+  /* On closed curves, a point on the seam can be at the first or the last parameter. Both projections may return
+   * the wrong one, which would make a tree edge span the whole curve. Choose the side of the reference parameter. */
+  if (curve->IsClosed () || curve->IsPeriodic ()) {
+    param = t8_cad_shift_to_reference_period (param, reference_param, first, last, curve->IsPeriodic ());
+  }
+  return param;
+}
+
+void
+t8_cad_handle::project_point_on_face (const int face_index, const gp_Pnt &point, const double reference_params[2],
+                                      double face_params[2]) const
+{
+  const Handle_Geom_Surface surface = get_cad_surface (face_index);
+  const Handle (ShapeAnalysis_Surface) surface_analyzer = new ShapeAnalysis_Surface (surface);
+
+  /* Local Newton search, starting at the reference parameters. Falls back to a global projection internally. */
+  const gp_Pnt2d local_params = surface_analyzer->NextValueOfUV (gp_Pnt2d (reference_params[0], reference_params[1]),
+                                                                 point, Precision::Confusion ());
+  const double local_distance = surface_analyzer->Gap ();
+  /* Global projection, in case the local search converged to a non-global minimum. */
+  const gp_Pnt2d global_params = surface_analyzer->ValueOfUV (point, Precision::Confusion ());
+  const double global_distance = surface_analyzer->Gap ();
+
+  const gp_Pnt2d &params = local_distance <= global_distance + Precision::Confusion () ? local_params : global_params;
+  face_params[0] = params.X ();
+  face_params[1] = params.Y ();
+
+  /* On closed surfaces, choose the side of the seam of the reference parameters (see project_point_on_edge). */
+  double bounds[4];
+  surface->Bounds (bounds[0], bounds[1], bounds[2], bounds[3]);
+  if (surface->IsUClosed () || surface->IsUPeriodic ()) {
+    face_params[0] = t8_cad_shift_to_reference_period (face_params[0], reference_params[0], bounds[0], bounds[1],
+                                                       surface->IsUPeriodic ());
+  }
+  if (surface->IsVClosed () || surface->IsVPeriodic ()) {
+    face_params[1] = t8_cad_shift_to_reference_period (face_params[1], reference_params[1], bounds[2], bounds[3],
+                                                       surface->IsVPeriodic ());
+  }
 }
 
 bool
