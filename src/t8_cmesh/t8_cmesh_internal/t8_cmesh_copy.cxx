@@ -33,7 +33,7 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h>
 
 void
-t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
+t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, [[maybe_unused]] sc_MPI_Comm comm)
 {
   size_t num_parts;
   t8_locidx_t first_tree, num_trees, first_ghost, num_ghosts;
