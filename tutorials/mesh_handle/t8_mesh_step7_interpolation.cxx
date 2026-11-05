@@ -138,15 +138,10 @@ write_vtu (TMeshClass &mesh, const char *prefix)
     element_values[ielem] = mesh[ielem].get_element_data ().distance;
   }
 
-  /* To write user-defined data, we use write_mesh_to_vtk_ext_data.
+  /* To write user-defined data, we use write_mesh_to_vtk.
    * Besides writing user data, it also offers more control over which properties to write. */
-  const bool write_treeid = true;
-  const bool write_mpirank = true;
-  const bool write_level = true;
-  const bool write_element_id = false;
-  const bool write_ghosts = true;
-  t8_mesh_handle::write_mesh_to_vtk_ext_data (mesh, prefix, { { "Centroid distance", element_values } }, {},
-                                              write_treeid, write_mpirank, write_level, write_element_id, write_ghosts);
+  t8_mesh_handle::write_mesh_to_vtk (mesh, prefix, { { "Centroid distance", element_values } }, {},
+                                     { .write_treeid = true, .write_element_id = false, .write_ghosts = true });
 }
 
 /** Helper function to perform mesh adaptation and interpolation.
