@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_step3.h
+/** \file t8_step3.h
  * This is the header file to the step3 example of t8code. It collects
  * functions of t8_step3 that we reuse in other examples.
  * In this example we discuss how to adapt a forest.
@@ -48,13 +48,12 @@ t8_step3_main (int argc, char **argv);
 void
 t8_step3_print_forest_information (t8_forest_t forest);
 
-/* This is our own defined data that we will pass on to the
- * adaptation callback. */
+/** This is our own defined data that we will pass on to the adaptation callback. */
 struct t8_step3_adapt_data
 {
-  double midpoint[3];               /* The midpoint of our sphere. */
-  double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
-  double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
+  double midpoint[3];               /**< The midpoint of our sphere. */
+  double refine_if_inside_radius;   /**< if an element's center is smaller than this value, we refine the element. */
+  double coarsen_if_outside_radius; /**< if an element's center is larger this value, we coarsen its family. */
 };
 
 /** Adapt a forest according to our t8_step3_adapt_callback function.
@@ -66,7 +65,7 @@ struct t8_step3_adapt_data
 t8_forest_t
 t8_step3_adapt_forest (t8_forest_t forest);
 
-/* The adaptation callback function. This will refine elements inside of a given sphere
+/** The adaptation callback function. This will refine elements inside of a given sphere
  * and coarsen the elements outside of a given sphere.
  * The necessary input data is of type t8_step3_adapt_data and should be passed to forest
  * via t8_forest_set_user_data before calling this function.

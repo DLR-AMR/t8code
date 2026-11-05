@@ -223,12 +223,9 @@ main (int argc, char** argv)
       squared_volumes.push_back (elem.get_squared_volume ());
     }
 
-    /* Output the custom competence data to vtu.
-     * The data field is given by its name and its values, one scalar value per element. */
-    t8_mesh_handle::write_mesh_to_vtk_ext_data (*custom_mesh, prefix_mesh_with_data,
-                                                { { "Squared volume", squared_volumes } });
+    /* Output the custom competence data to vtu. */
+    write_mesh_to_vtk (*custom_mesh, prefix_mesh_with_data, { { "Squared volume", squared_volumes } });
     t8_global_productionf (" [mesh_stepA] Wrote mesh and squared volume data to %s*.\n", prefix_mesh_with_data);
-
   } /* End of mesh scope. */
   /* Finalizing. */
   sc_finalize ();

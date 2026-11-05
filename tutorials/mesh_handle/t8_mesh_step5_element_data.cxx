@@ -132,7 +132,8 @@ output_data_to_vtu (const TMeshClass &mesh, const char *prefix)
    * Scalar fields are passed in the first list, vector fields in the optional second list.
    * Further arguments offer more control over which properties to write, as in write_mesh_to_vtk_ext.
    */
-  t8_mesh_handle::write_mesh_to_vtk_ext_data (mesh, prefix, { { "Element volume", element_volumes } });
+  t8_mesh_handle::write_mesh_to_vtk (mesh, prefix, { { "Element volume", element_volumes } }, {},
+                                     { .write_ghosts = true });
 }
 
 /** Entry point of the program. */
