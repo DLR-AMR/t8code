@@ -60,11 +60,8 @@ print_stats_and_export (mesh_type& mesh, const char* prefix)
   t8_global_productionf (" [mesh_step4] Ghost elements: %i \n", ghost_elements);
 
   /* Writing the mesh to vtu and pvtu files, using the extended version of the function to ensure additional data like ghost elements, treeid etc. to be written into the files. */
-  t8_mesh_handle::write_mesh_to_vtk_ext (mesh, prefix, 0, nullptr, /*write_treeid*/ true, /*write_mpirank*/ true,
-                                         /*write_level*/ true, /*write_element_id*/ true, /*write_ghosts*/ true,
-                                         /*write_curved*/ false, /*do_not_use_API*/ false);
+  t8_mesh_handle::write_mesh_to_vtk (mesh, prefix, {}, {}, { .write_treeid = true, .write_ghosts = true });
 }
-
 /** Helper function to adapt a given mesh using the predefined adaption callback function.
  *  \param [in] mesh  The mesh to adapt.
  *  \param [in] adapt_params  The adaptation parameters to use for the adaptation.

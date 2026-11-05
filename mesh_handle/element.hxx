@@ -413,6 +413,22 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     }
   }
 
+  /** Check if the element has a hanging node i.e. if any of its faces has more than one neighbor.
+   *  This is the case if the element has more than one face neighbor at any face.
+   *  This function uses the cached face neighbor defined in TCompetences if available.
+   *  \return True if the element has a hanging node, false otherwise.
+   */
+  bool
+  has_hanging_node () const
+  {
+    for (int iface = 0; iface < get_num_faces (); ++iface) {
+      if (get_face_neighbors (iface).size () > 1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /** Convert points from the reference space of this element to the reference space of
    * its tree / its initial coarse mesh element.
    * \param [in] ref_coords Points in the element's reference space [0,1]^dim.
