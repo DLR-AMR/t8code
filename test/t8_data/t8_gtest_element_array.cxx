@@ -122,6 +122,21 @@ TEST_P (element_array, resize_and_push_back)
   EXPECT_EQ (array.data (), reserved_first);
 }
 
+/* Appending copies of elements creates equal elements, also when the array has to grow. */
+TEST_P (element_array, push_back_copy)
+{
+  const t8_element_array array = create_uniform_array ();
+  t8_element_array copy_array (scheme, eclass);
+  for (size_t ielement = 0; ielement < array.size (); ++ielement) {
+    const t8_element_t *new_element = copy_array.push_back_copy (array[ielement]);
+    EXPECT_EQ (new_element, copy_array[ielement]);
+  }
+  ASSERT_EQ (copy_array.size (), array.size ());
+  for (size_t ielement = 0; ielement < array.size (); ++ielement) {
+    EXPECT_TRUE (scheme->element_is_equal (eclass, copy_array[ielement], array[ielement]));
+  }
+}
+
 /* Shrinking frees the unused memory and keeps the elements. */
 TEST_P (element_array, shrink_to_fit)
 {

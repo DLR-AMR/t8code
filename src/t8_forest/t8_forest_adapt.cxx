@@ -371,8 +371,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_ec
       T8_ASSERT (refine == 0);
       /* This element should not get refined,
        * we remove it from the buffer and add it to the array of new elements. */
-      t8_element_t *insert_el = telements->push_back ();
-      scheme->element_copy (tree_class, el_buffer[0], insert_el);
+      (void) telements->push_back_copy (el_buffer[0]);
       scheme->element_destroy (tree_class, 1, el_buffer);
       (*num_inserted)++;
     }
@@ -609,8 +608,7 @@ t8_forest_adapt (t8_forest_t forest)
           /* The considered elements are neither to be coarsened nor is the first
            * one to be refined.
            * We copy the element to the new element array. */
-          elements[0] = telements->push_back ();
-          scheme->element_copy (tree->eclass, elements_from[0], elements[0]);
+          elements[0] = telements->push_back_copy (elements_from[0]);
           el_inserted++;
           if (forest->set_adapt_recursive) {
             /* Adaptation is recursive.

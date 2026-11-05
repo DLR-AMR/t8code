@@ -686,6 +686,31 @@ struct t8_element_array
     return (*this)[old_count];
   }
 
+  /** Append a copy of an element.
+   * Unlike \ref push_back followed by \ref t8_scheme::element_copy, the new element is not initialized before it
+   * is overwritten by the copy, which saves one scheme call per element.
+   * \param [in] element The element to copy. Must not be an element of this array, since growing the array may move
+   *                     it.
+   * \return A pointer to the new element.
+   * \note This invalidates all pointers to elements of the array.
+   */
+  inline t8_element_t *
+  push_back_copy (const t8_element_t *element)
+  {
+    T8_ASSERT (scheme != nullptr);
+    if (num_elements == capacity) {
+      grow (num_elements + 1);
+    }
+    ++num_elements;
+    t8_element_t *new_element = (*this)[num_elements - 1];
+#if T8_ENABLE_DEBUG
+    /* In debug mode, element_copy checks that its destination is a valid element. */
+    scheme->element_init (tree_class, 1, new_element);
+#endif
+    scheme->element_copy (tree_class, element, new_element);
+    return new_element;
+  }
+
   /** Deinitialize and remove all elements. The allocated memory is kept for reuse. */
   inline void
   clear ()

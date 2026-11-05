@@ -125,8 +125,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
       || scheme->element_get_linear_id (tree_class, elem_copy, copy_level)
            != scheme->element_get_linear_id (tree_class, elem, level)) {
     /* Add the element */
-    elem_copy = remote_tree->elements.push_back ();
-    scheme->element_copy (tree_class, elem, elem_copy);
+    elem_copy = remote_tree->elements.push_back_copy (elem);
     /* Add the index of the element */
     remote_tree->element_indices.push_back (element_index);
     remote_entry.num_elements++;
