@@ -1083,22 +1083,6 @@ t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const 
   geometry->t8_geom_point_batch_inside_element (forest, ltreeid, element, points, num_points, is_inside, tolerance);
 }
 
-t8_tree::~t8_tree ()
-{
-  /* A tree without a scheme (e.g. one that was moved from) has no descendants. */
-  const t8_scheme *scheme = leaf_elements.get_scheme ();
-  if (scheme == nullptr) {
-    T8_ASSERT (first_desc == nullptr && last_desc == nullptr);
-    return;
-  }
-  if (first_desc != nullptr) {
-    scheme->element_destroy (eclass, 1, &first_desc);
-  }
-  if (last_desc != nullptr) {
-    scheme->element_destroy (eclass, 1, &last_desc);
-  }
-}
-
 /* For each tree in a forest compute its first and last descendant */
 void
 t8_forest_compute_desc (t8_forest_t forest)
@@ -1111,27 +1095,24 @@ t8_forest_compute_desc (t8_forest_t forest)
   for (t8_locidx_t itree_id = 0; itree_id < num_trees; itree_id++) {
     /* get a pointer to the tree */
     const t8_tree_t itree = t8_forest_get_tree (forest, itree_id);
+    /* get the eclass associated to tree */
+    const t8_eclass_t tree_class = itree->eclass;
     if (t8_forest_get_tree_leaf_element_count (itree) < 1) {
       /* if local tree is empty */
       T8_ASSERT (forest->incomplete_trees);
-      itree->first_desc = nullptr;
-      itree->last_desc = nullptr;
+      itree->descendants = t8_element_array (scheme, tree_class);
       continue;
     }
-    /* get the eclass associated to tree */
-    const t8_eclass_t tree_class = itree->eclass;
+    /* get memory for the trees first and last descendant */
+    itree->descendants = t8_element_array (scheme, tree_class, 2);
     /* get a pointer to the first element of itree */
     const t8_element_t *first_element = itree->leaf_elements[0];
-    /* get memory for the trees first descendant */
-    scheme->element_new (tree_class, 1, &itree->first_desc);
     /* calculate the first descendant of the first element */
-    scheme->element_get_first_descendant (tree_class, first_element, itree->first_desc, forest->maxlevel);
+    scheme->element_get_first_descendant (tree_class, first_element, itree->descendants[0], forest->maxlevel);
     /* get a pointer to the last element of itree */
     const t8_element_t *last_element = itree->leaf_elements[itree->leaf_elements.size () - 1];
-    /* get memory for the trees first descendant */
-    scheme->element_new (tree_class, 1, &itree->last_desc);
-    /* calculate the last descendant of the first element */
-    scheme->element_get_last_descendant (tree_class, last_element, itree->last_desc, forest->maxlevel);
+    /* calculate the last descendant of the last element */
+    scheme->element_get_last_descendant (tree_class, last_element, itree->descendants[1], forest->maxlevel);
   }
 }
 
@@ -1254,7 +1235,6 @@ t8_forest_tree_shared ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] int
 #if T8_ENABLE_MPI
   t8_element_t *desc;
   t8_element_t *element;
-  t8_element_t *tree_desc;
   t8_gloidx_t global_neighbour_tree_idx;
   int ret;
   int mpiret;
@@ -1334,7 +1314,8 @@ t8_forest_tree_shared ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] int
     }
     /* We can now check whether the first/last possible descendant matches the
      * first/last local descendant */
-    tree_desc = first_or_last == 0 ? tree->first_desc : tree->last_desc;
+    T8_ASSERT (tree->descendants.size () == 2);
+    const t8_element_t *tree_desc = tree->descendants[first_or_last == 0 ? 0 : 1];
     ret = !scheme->element_is_equal (eclass, desc, tree_desc);
     /* clean-up */
     scheme->element_destroy (eclass, 1, &element);

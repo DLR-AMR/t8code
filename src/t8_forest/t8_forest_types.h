@@ -68,45 +68,17 @@ typedef int8_t t8_forest_from_t;
 #define T8_PROFILE_NUM_STATS 17
 
 /** The t8 tree datatype.
- * A tree owns its leaf elements and its first and last descendant. It is move-only, such that
- * this ownership is never duplicated.
- * \note The elements and descendants are allocated by the scheme of \a leaf_elements. Hence, a tree
+ * A tree owns its leaf elements and its first and last descendant.
+ * \note The elements and descendants are initialized by the scheme of \a leaf_elements. Hence, a tree
  *       must be destroyed before this scheme is.
  */
 struct t8_tree
 {
-  t8_element_array leaf_elements;     /**< locally stored leaf elements */
-  t8_eclass_t eclass {};              /**< The element class of this tree */
-  t8_element_t *first_desc = nullptr; /**< first local descendant, nullptr if not computed or the tree is empty */
-  t8_element_t *last_desc = nullptr;  /**< last local descendant, nullptr if not computed or the tree is empty */
-  t8_locidx_t elements_offset = 0;    /**< cumulative sum over earlier trees on this processor (locals only) */
-
-  /** Construct an empty tree without a scheme. */
-  t8_tree () = default;
-
-  /** Move constructor. Takes over the elements and descendants of \a other, which is left without any.
-   * \param [in,out] other The tree to move from.
-   */
-  t8_tree (t8_tree &&other) noexcept
-    : leaf_elements (std::move (other.leaf_elements)), eclass (other.eclass),
-      first_desc (std::exchange (other.first_desc, nullptr)), last_desc (std::exchange (other.last_desc, nullptr)),
-      elements_offset (other.elements_offset)
-  {
-  }
-
-  /** Copying is forbidden, since the tree owns its elements. */
-  t8_tree (const t8_tree &) = delete;
-  /** Copying is forbidden, since the tree owns its elements. */
-  t8_tree &
-  operator= (const t8_tree &)
-    = delete;
-  /** Move assignment is not needed for storing trees in a std::vector. */
-  t8_tree &
-  operator= (t8_tree &&)
-    = delete;
-
-  /** Destructor. Frees the first and last descendant. The leaf elements free themselves. */
-  ~t8_tree ();
+  t8_element_array leaf_elements;  /**< locally stored leaf elements */
+  t8_eclass_t eclass {};           /**< The element class of this tree */
+  t8_element_array descendants;    /**< The first and last local descendant at index 0 and 1.
+                                        Empty if they were not computed or the tree is empty. */
+  t8_locidx_t elements_offset = 0; /**< cumulative sum over earlier trees on this processor (locals only) */
 };
 
 /** This structure is private to the implementation. */
