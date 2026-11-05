@@ -3755,8 +3755,14 @@ t8_forest_get_num_ghost_trees (const t8_forest_t forest)
   }
 }
 
-t8_locidx_t
-t8_forest_get_num_local_trees (const t8_forest_t forest)
+/** Compute the number of local trees of a forest.
+ * The exported function \ref t8_forest_get_num_local_trees cannot be inlined into other functions of this library,
+ * since the dynamic linker may replace it. Functions that are called once per element use this one instead.
+ * \param [in] forest The forest.
+ * \return            The number of local trees of \a forest.
+ */
+static inline t8_locidx_t
+t8_forest_compute_num_local_trees (const t8_forest_t forest)
 {
   t8_locidx_t num_trees;
 
@@ -3768,6 +3774,12 @@ t8_forest_get_num_local_trees (const t8_forest_t forest)
     num_trees = 0;
   }
   return num_trees;
+}
+
+t8_locidx_t
+t8_forest_get_num_local_trees (const t8_forest_t forest)
+{
+  return t8_forest_compute_num_local_trees (forest);
 }
 
 t8_gloidx_t
@@ -3929,11 +3941,13 @@ t8_forest_get_tree_num_leaf_elements (t8_forest_t forest, t8_locidx_t ltreeid)
 t8_eclass_t
 t8_forest_get_tree_class (const t8_forest_t forest, const t8_locidx_t ltreeid)
 {
-  t8_locidx_t const num_local_trees = t8_forest_get_num_local_trees (forest);
+  t8_locidx_t const num_local_trees = t8_forest_compute_num_local_trees (forest);
   T8_ASSERT (0 <= ltreeid && ltreeid < num_local_trees + t8_forest_get_num_ghost_trees (forest));
   if (ltreeid < num_local_trees) {
-    /* The id belongs to a local tree */
-    return t8_forest_get_tree (forest, ltreeid)->eclass;
+    /* The id belongs to a local tree. This function is called once per element, so we access the tree directly
+     * instead of through the exported t8_forest_get_tree. */
+    T8_ASSERT (static_cast<size_t> (ltreeid) < forest->trees.size ());
+    return forest->trees[ltreeid].eclass;
   }
   else {
     /* The id belongs to a ghost tree */
