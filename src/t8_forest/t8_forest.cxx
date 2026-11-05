@@ -2140,14 +2140,16 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
     }
   }
   if (allocate_tree_offset) {
-    t8_shmem_array_destroy (&forest->tree_offsets);
+    delete forest->tree_offsets;
+    forest->tree_offsets = nullptr;
   }
   if (allocate_first_desc) {
     delete forest->global_first_desc;
     forest->global_first_desc = nullptr;
   }
   if (allocate_el_offset) {
-    t8_shmem_array_destroy (&forest->element_offsets);
+    delete forest->element_offsets;
+    forest->element_offsets = nullptr;
   }
 }
 
@@ -2277,7 +2279,7 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_glo
   T8_ASSERT (0 <= gtreeid && gtreeid < t8_forest_get_num_global_trees (forest));
 
   /* Get a pointer to the first_global_trees array of forest */
-  const t8_gloidx_t *first_global_trees = t8_shmem_array_get_gloidx_array (forest->tree_offsets);
+  const t8_gloidx_t *first_global_trees = forest->tree_offsets->data ();
 
   if (t8_offset_in_range (gtreeid, rank, first_global_trees)) {
     /* The process has elements of that tree */
@@ -2418,12 +2420,12 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   T8_ASSERT (forest->global_first_desc != NULL);
 
   /* Get pointers to the arrays of first local trees and first local descendants */
-  const t8_gloidx_t *first_trees = t8_shmem_array_get_gloidx_array (forest->tree_offsets);
+  const t8_gloidx_t *first_trees = forest->tree_offsets->data ();
   first_descs = forest->global_first_desc->data ();
   /* Compute the linear id of the element's first descendant */
   element_desc_id = scheme->element_get_linear_id (eclass, first_desc, scheme->element_get_level (eclass, first_desc));
   /* Get a pointer to the element offset array */
-  const t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array (forest->element_offsets);
+  const t8_gloidx_t *element_offsets = forest->element_offsets->data ();
 
   /* binary search for the owner process using the first descendant and first tree array */
   while (!found) {
@@ -2574,8 +2576,7 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
     /* Compute the owners and store them (sorted) in owners_of_tree */
     /* TODO: This is only useful, if cmesh is partitioned */
     /* TODO: Isnt it better to only store the first and the last owner? */
-    t8_offset_all_owners_of_tree (forest->mpisize, gtreeid, t8_shmem_array_get_gloidx_array (forest->tree_offsets),
-                                  owners_of_tree);
+    t8_offset_all_owners_of_tree (forest->mpisize, gtreeid, forest->tree_offsets->data (), owners_of_tree);
   }
   /* Compute the first descendant of the element */
   scheme->element_new (eclass, 1, &element_first_desc);
@@ -3675,27 +3676,19 @@ t8_forest_get_num_ghosts (const t8_forest_t forest)
   return forest->ghosts->num_ghosts_elements;
 }
 
-/* Currently this function is not used */
-
 /* Compute the offset array for a partition cmesh that should match the
  * forest's partition.
  */
 static t8_shmem_array_t
-t8_forest_compute_cmesh_offset (t8_forest_t forest, sc_MPI_Comm comm)
+t8_forest_compute_cmesh_offset (t8_forest_t forest, [[maybe_unused]] sc_MPI_Comm comm)
 {
-  t8_shmem_array_t offset;
-
   if (forest->tree_offsets == nullptr) {
     /* Create the tree offsets if necessary */
     t8_forest_partition_create_tree_offsets (forest);
   }
-  /* initialize the shared memory array */
-  t8_shmem_array_init (&offset, sizeof (t8_gloidx_t), forest->mpisize + 1, comm);
-
-  /* Copy the contents */
-  t8_shmem_array_copy (offset, forest->tree_offsets);
-
-  return offset;
+  T8_ASSERT (comm == forest->tree_offsets->get_comm ());
+  /* The cmesh takes ownership of a deep copy */
+  return new t8_shmem_array<t8_gloidx_t> (forest->tree_offsets->clone ());
 }
 
 void
@@ -3973,7 +3966,7 @@ t8_forest_get_first_local_leaf_element_id (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   if (forest->element_offsets != nullptr) {
-    return t8_shmem_array_get_gloidx (forest->element_offsets, forest->mpirank);
+    return (*forest->element_offsets)[forest->mpirank];
   }
   return -1;
 }
@@ -4496,7 +4489,8 @@ t8_forest_reset (t8_forest_t *pforest)
 
   /* free the memory of the offset array */
   if (forest->element_offsets != nullptr) {
-    t8_shmem_array_destroy (&forest->element_offsets);
+    delete forest->element_offsets;
+    forest->element_offsets = nullptr;
   }
   /* free the memory of the global_first_desc array */
   if (forest->global_first_desc != nullptr) {
@@ -4505,7 +4499,8 @@ t8_forest_reset (t8_forest_t *pforest)
   }
   /* free the memory of the tree_offsets array */
   if (forest->tree_offsets != nullptr) {
-    t8_shmem_array_destroy (&forest->tree_offsets);
+    delete forest->tree_offsets;
+    forest->tree_offsets = nullptr;
   }
   if (forest->profile != nullptr) {
     T8_FREE (forest->profile);

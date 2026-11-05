@@ -133,7 +133,7 @@ t8_forest_pfc_message::fill (t8_forest_t forest)
 {
   // Set mpi rank and partition element offsets.
   const t8_procidx_t rank = t8_forest_get_mpirank (forest);
-  const t8_gloidx_t *partition = t8_shmem_array_get_gloidx_array (forest->element_offsets);
+  const t8_gloidx_t *partition = forest->element_offsets->data ();
 
   // Determine the global element ID of the current process ("rank") that is closest to the elements of process iproc:
   // If iproc < rank, the first element is closest to iproc; otherwise, the last one is.

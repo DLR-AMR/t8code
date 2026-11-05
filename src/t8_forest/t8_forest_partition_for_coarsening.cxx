@@ -123,7 +123,7 @@ t8_forest_pfc_send_loop_range (const t8_forest_t forest_from, std::vector<sc_MPI
   T8_ASSERT (requests.size () == 0);
 
   // Get current offset vector of forest.
-  const t8_gloidx_t *partition_old = t8_shmem_array_get_gloidx_array (forest_from->element_offsets);
+  const t8_gloidx_t *partition_old = forest_from->element_offsets->data ();
 
   // Get range of elements that may potentially be a sibling of a process-local element.
   t8_procidx_t begin;
@@ -175,7 +175,7 @@ t8_forest_pfc_recv_loop_range (const t8_forest_t forest_from, std::vector<Messag
   T8_ASSERT (messages.size () == 0);
 
   // Get current offset vector of forest.
-  const t8_gloidx_t *partition_old = t8_shmem_array_get_gloidx_array (forest_from->element_offsets);
+  const t8_gloidx_t *partition_old = forest_from->element_offsets->data ();
 
   // Get range of elements that may potentially be a sibling of a process-local element.
   t8_procidx_t begin;
@@ -329,14 +329,12 @@ t8_forest_pfc_correct_local_offsets (const t8_forest_t forest_from, const t8_shm
   T8_ASSERT (t8_forest_is_committed (forest_from));
 
   // Get current partitioning as array of t8_gloidx_t.
-  const t8_gloidx_t *partition_new = t8_shmem_array_get_gloidx_array (partition_new_shmem);
+  const t8_gloidx_t *partition_new = partition_new_shmem->data ();
 
   // Get offsets of current and next process in old partitioning.
   // (Note that here the next process is used solely to know the upper bounds.)
-  const t8_gloidx_t old_offset_this_process
-    = t8_shmem_array_get_gloidx (forest_from->element_offsets, forest_from->mpirank);
-  const t8_gloidx_t old_offset_next_process
-    = t8_shmem_array_get_gloidx (forest_from->element_offsets, forest_from->mpirank + 1);
+  const t8_gloidx_t old_offset_this_process = (*forest_from->element_offsets)[forest_from->mpirank];
+  const t8_gloidx_t old_offset_next_process = (*forest_from->element_offsets)[forest_from->mpirank + 1];
 
   // Determine where these offsets would end up in the new partitioning.
   const t8_gloidx_t *min_local_element_pointer
@@ -400,7 +398,7 @@ t8_forest_pfc_correction_offsets (t8_forest_t forest)
   }
 
   // Allgatherv the corrected local offsets, resulting in the new partition.
-  t8_shmem_array_allgatherv (corrected_local_offsets.data (), corrected_local_offsets.size (), T8_MPI_GLOIDX,
-                             partition_new, T8_MPI_GLOIDX, forest->mpicomm);
+  // The entries behind the gathered corrections keep their values.
+  partition_new->allgatherv (corrected_local_offsets);
 }
 T8_EXTERN_C_END ();
