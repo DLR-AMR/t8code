@@ -657,8 +657,13 @@ t8_forest_adapt (t8_forest_t forest)
       el_offset += el_inserted;
       /* Add to the new number of local elements. */
       forest->local_num_leaf_elements += el_inserted;
-      /* Possibly shrink the telements array to the correct size */
+      /* Shrink the telements array to the correct size. The array reserved memory for all elements of the old tree,
+       * so after coarsening most of it would stay unused. Like an sc_array, we accept up to twice the needed memory,
+       * which avoids copying the elements after refining. */
       telements->resize (el_inserted);
+      if (telements->get_capacity () > 2 * telements->size ()) {
+        telements->shrink_to_fit ();
+      }
 
       /* It is not supported to delete all elements from a tree.
        * In this case, we will abort. */

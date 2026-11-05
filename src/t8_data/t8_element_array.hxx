@@ -647,6 +647,21 @@ struct t8_element_array
   void
   reserve (const size_t new_capacity);
 
+  /** Free the memory that is allocated, but not used by elements. The elements do not change.
+   * \note This invalidates all pointers to elements of the array if the memory is reallocated.
+   */
+  void
+  shrink_to_fit ();
+
+  /** Get the number of elements the array has allocated memory for.
+   * \return The capacity. At least \ref size.
+   */
+  inline size_t
+  get_capacity () const
+  {
+    return capacity;
+  }
+
   /** Append one initialized element.
    * \return A pointer to the new element.
    * \note This invalidates all pointers to elements of the array.
@@ -718,6 +733,12 @@ struct t8_element_array
    */
   void
   grow (const size_t min_capacity);
+
+  /** Move the elements to new storage for \a new_capacity elements.
+   * \param [in] new_capacity The new capacity. Must be at least \ref size.
+   */
+  void
+  reallocate (const size_t new_capacity);
 
   /** Update the cached data pointer and capacity after the element vector changed.
    *

@@ -122,6 +122,27 @@ TEST_P (element_array, resize_and_push_back)
   EXPECT_EQ (array.data (), reserved_first);
 }
 
+/* Shrinking frees the unused memory and keeps the elements. */
+TEST_P (element_array, shrink_to_fit)
+{
+  const t8_element_array array = create_uniform_array ();
+  t8_element_array shrunk_array (array);
+  shrunk_array.reserve (2 * array.size ());
+  EXPECT_EQ (shrunk_array.get_capacity (), 2 * array.size ());
+
+  shrunk_array.shrink_to_fit ();
+  EXPECT_EQ (shrunk_array.get_capacity (), array.size ());
+  ASSERT_EQ (shrunk_array.size (), array.size ());
+  for (size_t ielement = 0; ielement < array.size (); ++ielement) {
+    EXPECT_TRUE (scheme->element_is_equal (eclass, shrunk_array[ielement], array[ielement]));
+  }
+
+  /* Shrinking an array without unused memory does not reallocate. */
+  const t8_element_t *shrunk_data = shrunk_array.data ();
+  shrunk_array.shrink_to_fit ();
+  EXPECT_EQ (shrunk_array.data (), shrunk_data);
+}
+
 /* Copying an array copies its elements, moving an array transfers them. */
 TEST_P (element_array, copy_and_move)
 {

@@ -130,9 +130,30 @@ t8_element_array::reserve (const size_t new_capacity)
   if (new_capacity <= capacity) {
     return;
   }
+  reallocate (new_capacity);
+}
+
+void
+t8_element_array::shrink_to_fit ()
+{
+  if (capacity == num_elements) {
+    return;
+  }
+  reallocate (num_elements);
+}
+
+void
+t8_element_array::reallocate (const size_t new_capacity)
+{
+  T8_ASSERT (new_capacity >= num_elements);
   std::visit (
     [this, new_capacity] (auto &vector) {
-      vector.resize (new_capacity);
+      /* We copy the elements ourselves instead of resizing the vector: Because of its allocator, the vector would
+       * copy the elements one by one, while std::copy_n copies these trivially copyable elements as one block.
+       * This also copies only the elements and not the unused rest of the storage. */
+      std::decay_t<decltype (vector)> new_vector (new_capacity);
+      std::copy_n (vector.data (), num_elements, new_vector.data ());
+      vector.swap (new_vector);
       update_cache (vector);
     },
     elements);
