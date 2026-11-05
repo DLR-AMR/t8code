@@ -26,6 +26,7 @@
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_data/t8_shmem.hxx>
 
 #include <t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx>
 #include <t8_vtk/t8_with_vtk/t8_vtk_parallel.hxx>
@@ -259,14 +260,11 @@ t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_glo
   t8_gloidx_t first_tree = 0;
   t8_gloidx_t last_tree = 1;
   /* Compute the global id of the first tree on each proc. */
-  SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "Error in shared memory setup in vtk output.");
-  t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
-  t8_shmem_array_t offsets = NULL;
-  t8_shmem_array_init (&offsets, sizeof (t8_gloidx_t), mpisize + 1, comm);
-
-  t8_shmem_array_prefix ((void *) &num_trees, offsets, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
-
-  first_tree = t8_shmem_array_get_gloidx (offsets, mpirank);
+  {
+    t8_shmem_array<t8_gloidx_t> offsets (comm, mpisize + 1);
+    offsets.prefix_sum (num_trees);
+    first_tree = offsets[mpirank];
+  }
   /* Set the partition of the cmesh. */
   if (num_trees == 0) {
     last_tree = first_tree - 1;
@@ -276,7 +274,6 @@ t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_glo
   }
   const int set_face_knowledge = 3; /* Expect face connection of local and ghost trees. */
   t8_cmesh_set_partition_range (cmesh, set_face_knowledge, first_tree, last_tree);
-  t8_shmem_array_destroy (&offsets);
   return first_tree;
 }
 

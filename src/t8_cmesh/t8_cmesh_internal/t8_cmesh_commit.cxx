@@ -24,7 +24,6 @@
  * Functionality to commit a cmesh.
  */
 
-#include <t8_data/t8_shmem.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
@@ -80,14 +79,6 @@ t8_ghost_hash (const void *v, const void *u)
   t8_locidx_t const num_hashes = *((t8_locidx_t *) u);
 
   return ghost_id % num_hashes;
-}
-
-static void
-t8_cmesh_set_shmem_type (sc_MPI_Comm comm)
-{
-  T8_ASSERT (comm != sc_MPI_COMM_NULL);
-
-  t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
 }
 
 static void
@@ -241,8 +232,6 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     /* TODO: reset cmesh */
     return;
   }
-  SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "Error in shared memory setup. Could not build Cmesh.");
-  t8_cmesh_set_shmem_type (comm); /* TODO: do we actually need the shared array? */
   t8_stash_attribute_sort (cmesh->stash);
 
 #if T8_ENABLE_DEBUG
@@ -252,11 +241,11 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #endif
 
   if (cmesh->tree_offsets != nullptr) {
-    const t8_gloidx_t *tree_offsets = (t8_gloidx_t *) t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+    const t8_gloidx_t *tree_offsets = cmesh->tree_offsets->data ();
     /* We partition using tree offsets */
     /* Get the first tree and whether it is shared */
     cmesh->first_tree = t8_offset_first (cmesh->mpirank, tree_offsets);
-    cmesh->first_tree_shared = t8_shmem_array_get_gloidx (cmesh->tree_offsets, cmesh->mpirank) < 0;
+    cmesh->first_tree_shared = (*cmesh->tree_offsets)[cmesh->mpirank] < 0;
     /* Get the number of local trees */
     cmesh->num_local_trees = t8_offset_num_trees (cmesh->mpirank, tree_offsets);
   }

@@ -1,3 +1,19 @@
+# Typed shared memory arrays
+The shared memory arrays (`t8_shmem_array_t`) are now implemented by the C++ container `t8_shmem_array<TValue>` in `t8_data/t8_shmem.hxx`. It no longer uses `sc_shmem` of libsc.
+
+## What has changed?
+`t8_shmem_array<TValue>` is a typed, read-only contiguous range: it works with range-based for loops, `std::span`, `<algorithm>` and `std::ranges`, and element access is inline. Its content is changed only by the collective functions `allgather`, `allgatherv`, `prefix_sum` and `write`. The content of a new array is zero.
+The data is shared between the processes of a node whenever this is possible, also if the nodes have different numbers of processes. If the processes of a node are not contiguous in the communicator (for example with `mpirun --map-by node`), every process stores its own copy; previously the data was gathered in the wrong order in this case.
+Shared memory arrays initialize their communicator themselves, so calling `t8_shmem_init` is optional. It returns at least 1 and no longer attaches the node communicators of libsc.
+
+## What do I have to change?
+Nothing, if you use the C interface with `t8_gloidx_t` arrays only. In C++, `t8_shmem_array_t` is now a pointer to `t8_shmem_array<t8_gloidx_t>`, so you can also use the container directly:
+```diff
+- const t8_gloidx_t first = t8_shmem_array_get_gloidx (offsets, rank);
++ const t8_gloidx_t first = (*offsets)[rank];
+```
+The C interface supports `t8_gloidx_t` elements only: `t8_shmem_array_init` aborts for any other element size. Use `t8_shmem_array<TValue>` for other types. C++ code that forward declares `struct t8_shmem_array;` has to include `t8_data/t8_shmem.h` instead.
+
 # Ghost interface restructuring
 The ghost interface is one of the oldest parts of t8code and needed a restructuring to be fit for future changes. Until now, only face-neighbor ghosts communication was allowed. The new modular interface allows for arbitrary ghost definitions and is designed similar to the already known geometry and scheme interfaces.
 

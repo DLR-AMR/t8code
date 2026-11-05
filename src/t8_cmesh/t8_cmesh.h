@@ -165,9 +165,8 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from);
 /** Allocate a shared memory array to store the tree offsets of a cmesh.
  * \param [in]      mpisize The number of processes.
  * \param [in]      comm    The MPI communicator to use. Its mpisize must match \a mpisize.
- *                  The shared memory type must have been set. Best practice would be
- *                  calling sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE).
- * \return          A t8_shmem_array struct that stores \a mpisize + 1 t8_gloidx_t entries.
+ * \return          A t8_shmem_array that stores \a mpisize + 1 t8_gloidx_t entries.
+ * \note This function is collective.
  * \see t8_shmem.h
  */
 t8_shmem_array_t

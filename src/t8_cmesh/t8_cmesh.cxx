@@ -274,7 +274,6 @@ t8_cmesh_set_derive (const t8_cmesh_t cmesh, const t8_cmesh_t set_from)
 t8_shmem_array_t
 t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm)
 {
-  t8_shmem_array_t offsets;
 #if T8_ENABLE_DEBUG
   int mpisize_debug, mpiret;
   mpiret = sc_MPI_Comm_size (comm, &mpisize_debug);
@@ -282,8 +281,7 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm)
   T8_ASSERT (mpisize == mpisize_debug);
 #endif
 
-  t8_shmem_array_init (&offsets, sizeof (t8_gloidx_t), mpisize + 1, comm);
-  return offsets;
+  return new t8_shmem_array<t8_gloidx_t> (comm, mpisize + 1);
 }
 
 void
@@ -309,7 +307,8 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, const int set_face_knowledge, co
   cmesh->set_partition = 1;
   /* Overwrite previous partition settings */
   if (cmesh->tree_offsets != nullptr) {
-    t8_shmem_array_destroy (&cmesh->tree_offsets);
+    delete cmesh->tree_offsets;
+    cmesh->tree_offsets = nullptr;
     cmesh->tree_offsets = nullptr;
   }
   cmesh->set_partition_level = -1;
@@ -323,7 +322,8 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets)
   if (cmesh->tree_offsets != nullptr && cmesh->tree_offsets != tree_offsets) {
     /* We overwrite a previously set offset array, so
      * we need to free its memory first. */
-    t8_shmem_array_destroy (&cmesh->tree_offsets);
+    delete cmesh->tree_offsets;
+    cmesh->tree_offsets = nullptr;
   }
   cmesh->tree_offsets = tree_offsets;
   cmesh->set_partition = 1;
@@ -351,7 +351,8 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, const int element_level, const
     cmesh->first_tree = -1;
     cmesh->num_local_trees = -1;
     if (cmesh->tree_offsets != nullptr) {
-      t8_shmem_array_destroy (&cmesh->tree_offsets);
+      delete cmesh->tree_offsets;
+      cmesh->tree_offsets = nullptr;
       cmesh->tree_offsets = nullptr;
     }
   }
@@ -1212,12 +1213,13 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
     /* Check whether a correct communicator was stored at tree_offsets.
      * This is useful for debugging. */
     if (t8_cmesh_is_committed (cmesh)) {
-      comm = t8_shmem_array_get_comm (cmesh->tree_offsets);
+      comm = cmesh->tree_offsets->get_comm ();
       T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
     }
 #endif
     /* Destroy the shared memory array */
-    t8_shmem_array_destroy (&cmesh->tree_offsets);
+    delete cmesh->tree_offsets;
+    cmesh->tree_offsets = nullptr;
   }
   /*TODO: write this */
   if (!t8_cmesh_is_committed (cmesh, 0)) {
@@ -1892,24 +1894,6 @@ recv_message (const bool start, t8_gloidx_t *first_last_local_tree, t8_gloidx_t 
   }
 }
 
-/**
- * Find the bounds of a value in a given offset array. Used for a binary search to find the
- * rank that contains the value.
- *
- * \param[in] array The offset array.
- * \param[in] guess The index to start searching from.
- * \param[in] value The value to find the bounds for.
- *
- * \return 0 if the value is within the bounds, -1 if it is below the bounds, and 1 otherwise.
- */
-inline int
-find_bounds_in_offset (t8_shmem_array_t array, const int guess, const t8_gloidx_t value)
-{
-  const t8_gloidx_t first_elem = t8_shmem_array_get_gloidx (array, guess);
-  const t8_gloidx_t last_elem = t8_shmem_array_get_gloidx (array, guess + 1) - 1;
-  return (first_elem <= value && value <= last_elem) ? 0 : (value < first_elem ? -1 : 1);
-}
-
 static void
 t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_t local_num_children, const int level,
                                         const t8_scheme *scheme, t8_gloidx_t *first_local_tree,
@@ -1922,15 +1906,19 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   int num_message_sent = 0;
   int num_message_recv = 0;
 #endif
-  t8_shmem_array_t offset_array;
-  t8_shmem_array_init (&offset_array, sizeof (t8_gloidx_t), cmesh->mpisize + 1, comm);
   /* Fill the offset array for each process with the global index of its first element in
    * the uniform partition.
    * (0, l_n_c_0, l_n_c_0 + l_n_c_1, l_n_c_0 + l_n_c_1 + l_n_c_2, ...) */
-  t8_shmem_array_prefix (&local_num_children, offset_array, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
+  t8_shmem_array<t8_gloidx_t> offset_array (comm, cmesh->mpisize + 1);
+  offset_array.prefix_sum (local_num_children);
+  /* The process that owns an element: The last process whose first element is not greater. Since empty processes
+   * have the same first element as their successor, this is always a nonempty process. */
+  auto owner_of_element = [&offset_array] (const t8_gloidx_t element) {
+    return static_cast<int> (std::ranges::upper_bound (offset_array, element) - offset_array.begin () - 1);
+  };
 
   /* Get global number of elements */
-  const t8_gloidx_t global_num_elements = t8_shmem_array_get_gloidx (offset_array, cmesh->mpisize);
+  const t8_gloidx_t global_num_elements = offset_array[cmesh->mpisize];
   SC_CHECK_ABORTF (0 <= global_num_elements && global_num_elements < T8_GLOIDX_MAX,
                    "Overflow in number of elements.\n");
 
@@ -1967,7 +1955,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
     /* Set the first entry of first_element_tree to the global index of
      * the first element of our first pure local tree. */
-    first_element_tree[0] = t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank);
+    first_element_tree[0] = offset_array[cmesh->mpirank];
 
     /* Compute the first element in every pure local tree.
      * This array stores for each tree the global element index offset.
@@ -1979,8 +1967,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
     }
 
     /* Check that the last tree + 1 stores as offset the start of the next process */
-    T8_ASSERT (first_element_tree[num_pure_local_trees]
-               == t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank + 1));
+    T8_ASSERT (first_element_tree[num_pure_local_trees] == offset_array[cmesh->mpirank + 1]);
 
     /* Compute the range of mpiranks to minimize the loop over processes */
     /* Compute the process that will own the first element of our first tree. */
@@ -2276,8 +2263,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   }
   /* Post the receives. */
   if (expect_start_message) {
-    const int recv_from
-      = t8_shmem_array_binary_search (offset_array, first_element, cmesh->mpisize - 1, find_bounds_in_offset);
+    const int recv_from = owner_of_element (first_element);
 
     T8_ASSERT (0 <= recv_from && recv_from < cmesh->mpisize);
 
@@ -2294,8 +2280,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
     }
   } /* End receiving start message */
   if (expect_end_message) {
-    const int recv_from
-      = t8_shmem_array_binary_search (offset_array, last_element - 1, cmesh->mpisize - 1, find_bounds_in_offset);
+    const int recv_from = owner_of_element (last_element - 1);
 
     T8_ASSERT (0 <= recv_from && recv_from < cmesh->mpisize);
     recv_message (false, last_local_tree, child_in_tree_end, nullptr, nullptr, global_num_elements, cmesh, recv_from,
@@ -2322,7 +2307,6 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
       *first_tree_shared = 0;
     }
   }
-  t8_shmem_array_destroy (&offset_array);
 
 #if T8_ENABLE_DEBUG
   int total_num_sent = 0;

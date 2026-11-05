@@ -24,7 +24,7 @@
  * Functionality to copy a cmesh.
  */
 
-#include <t8_data/t8_shmem.h>
+#include <t8_data/t8_shmem.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
@@ -67,8 +67,8 @@ t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
   /* Copy the tree_offsets */
   if (cmesh_from->tree_offsets != NULL) {
     T8_ASSERT (cmesh->tree_offsets == NULL);
-    cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
-    t8_shmem_array_copy (cmesh->tree_offsets, cmesh_from->tree_offsets);
+    T8_ASSERT (cmesh_from->tree_offsets->get_comm () == comm);
+    cmesh->tree_offsets = new t8_shmem_array<t8_gloidx_t> (cmesh_from->tree_offsets->clone ());
   }
   /* Copy the numbers of trees */
   memcpy (cmesh->num_trees_per_eclass, cmesh_from->num_trees_per_eclass, T8_ECLASS_COUNT * sizeof (t8_gloidx_t));

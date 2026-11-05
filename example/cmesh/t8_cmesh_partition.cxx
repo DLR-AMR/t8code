@@ -29,7 +29,6 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
-#include <sc_shmem.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 static void
