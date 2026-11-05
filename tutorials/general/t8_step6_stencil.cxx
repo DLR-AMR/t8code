@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-6-Computing-stencils
+/** \file t8_step6_stencil.cxx
+ * See also: https://github.com/DLR-AMR/t8code/wiki/Step-6-Computing-stencils
  *
  * This is step6 of the t8code tutorials using the C++ interface of t8code.
  * In the following we will store data in the individual elements of our forest.
@@ -51,29 +52,29 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* The data that we want to store for each element. */
+/** The data that we want to store for each element. */
 struct data_per_element
 {
-  /* The first three data fields are not necessary for our
+  /** The first three data fields are not necessary for our
    * computations in this step, but are left here for reference. */
-  int level;
-  double volume;
-  double midpoint[3];
+  int level;          /**< Level of the element. */
+  double volume;      /**< Volume of the element. */
+  double midpoint[3]; /**< Midpoint of the element. */
 
-  /* Element length in x- and y-direction. */
-  double dx;
-  double dy;
+  /** Element length in x- and y-direction. */
+  double dx; /**< Element length in x-direction. */
+  double dy; /**< Element length in y-direction. */
 
-  /* `Height` which is filled according to the position of the element
+  /** `Height` which is filled according to the position of the element
    * in the computational domain. */
   double height;
 
-  /* Storage for our finite difference computations. */
-  double schlieren;
-  double curvature;
+  /** Storage for our finite difference computations. */
+  double schlieren; /**< FD value schlieren. */
+  double curvature; /**< FD value curvature. */
 };
 
-/* In this function we first allocate a new uniformly refined forest at given
+/** In this function we first allocate a new uniformly refined forest at given
  * refinement level. Then a second forest is created, where user data for the
  * adaption call (cf. step 3) is registered.  The second forest inherits all
  * properties of the first ("root") forest and deallocates it. The final
@@ -108,7 +109,7 @@ t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
   return forest_apbg;
 }
 
-/* Allocate and fill the element data array with `heights` from an arbitrary
+/** Allocate and fill the element data array with `heights` from an arbitrary
  * mathematical function. Returns a pointer to the array which is then owned
  * by the calling scope. */
 static struct data_per_element *
@@ -171,7 +172,7 @@ t8_step6_create_element_data (t8_forest_t forest)
   return element_data;
 }
 
-/* Gather the 3x3 stencil for each element and compute finite difference approximations
+/** Gather the 3x3 stencil for each element and compute finite difference approximations
  * for schlieren and curvature of the stored heights in the elements. */
 static void
 t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_data)
@@ -277,7 +278,7 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
   }
 }
 
-/* Each process has computed the data entries for its local elements.
+/** Each process has computed the data entries for its local elements.
  * In order to get the values for the ghost elements, we use t8_forest_ghost_exchange_data.
  * Calling this function will fill all the ghost entries of our element data array with the
  * value on the process that owns the corresponding element. */
@@ -299,7 +300,7 @@ t8_step6_exchange_ghost_data (t8_forest_t forest, struct data_per_element *data)
   sc_array_destroy (sc_array_wrapper);
 }
 
-/* Write the forest as vtu and also write the element's volumes in the file.
+/** Write the forest as vtu and also write the element's volumes in the file.
  *
  * t8code supports writing element based data to vtu as long as its stored
  * as doubles. Each of the data fields to write has to be provided in its own
