@@ -53,6 +53,7 @@
 #endif
 
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <span>
 #include <vector>
@@ -433,7 +434,19 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
 
-  double *tree_ref_coords = T8_ALLOC (double, (tree_dim == 0 ? 1 : tree_dim) * num_coords);
+  /* This function is often called once per element for few coordinates, e.g. for the centroid.
+   * Allocating on the heap would then dominate its runtime, so we only allocate if the coordinates
+   * do not fit into the stack buffer. */
+  const size_t num_tree_ref_coords = (tree_dim == 0 ? 1 : tree_dim) * num_coords;
+  /** Buffer for the tree reference coordinates if they fit, unused otherwise. */
+  std::array<double, T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM> tree_ref_coords_stack;
+  /** Buffer for the tree reference coordinates if they do not fit into tree_ref_coords_stack, empty otherwise. */
+  std::vector<double> tree_ref_coords_heap;
+  if (num_tree_ref_coords > tree_ref_coords_stack.size ()) {
+    tree_ref_coords_heap.resize (num_tree_ref_coords);
+  }
+  double *tree_ref_coords
+    = tree_ref_coords_heap.empty () ? tree_ref_coords_stack.data () : tree_ref_coords_heap.data ();
 
   if (stretch_factors != nullptr) {
 #if T8_ENABLE_DEBUG
@@ -455,8 +468,6 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
   }
 
   t8_geometry_evaluate (cmesh, gtreeid, tree_ref_coords, num_coords, coords_out);
-
-  T8_FREE (tree_ref_coords);
 }
 
 void
