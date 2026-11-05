@@ -109,6 +109,7 @@ t8_forest_ghost_definition::clean_up (t8_forest_t forest, const int memory_flag)
   }
   if (memory_flag & CREATE_GFIRST_DESC_ARRAY) {
     /* Free the offset memory, if allocated */
-    t8_shmem_array_destroy (&forest->global_first_desc);
+    delete forest->global_first_desc;
+    forest->global_first_desc = nullptr;
   }
 }

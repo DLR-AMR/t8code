@@ -187,7 +187,7 @@ t8_forest_partition_test_desc (t8_forest_t forest)
   tree = t8_forest_get_tree (forest, 0);
   const t8_eclass_t tree_class = tree->eclass;
   /* Get the first descendant id of this rank */
-  first_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, forest->mpirank);
+  first_desc_id = (*forest->global_first_desc)[forest->mpirank];
   scheme->element_new (tree_class, 1, &elem_desc);
   for (ielem = 0; ielem < t8_forest_get_tree_leaf_element_count (tree); ielem++) {
     /* Iterate over elems, for each one create the first descendant and check
@@ -292,8 +292,7 @@ t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t fo
   T8_ASSERT (level == forest->maxlevel);
   const t8_linearidx_t last_desc_id = scheme->element_get_linear_id (tree_class, element_last_desc, level);
   /* Get the first descendant id of rank+1 */
-  const t8_linearidx_t first_desc_id
-    = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, forest->mpirank + 1);
+  const t8_linearidx_t first_desc_id = (*forest->global_first_desc)[forest->mpirank + 1];
   /* The following inequality must apply, if our last element is on the same tree :
    * last_desc_id of last element of rank < first_desc_id of first element of rank+1 */
   /** TODO: This assertion might still be wrong, when our last element is the last element of the tree*/
@@ -320,18 +319,8 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   t8_debugf ("Building global first descendants for forest %p\n", (void *) forest);
   comm = forest->mpicomm;
 
-  if (forest->global_first_desc == nullptr) {
-    /* Set the shmem array type of comm */
-    SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "Error in shared memory setup. Could not partition forest.");
-    t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
-    /* Initialize the offset array as a shmem array
-     * holding mpisize+1 many t8_linearidx_t to store the elements linear ids */
-    t8_shmem_array_init (&forest->global_first_desc, sizeof (t8_linearidx_t), forest->mpisize, comm);
-  }
-  /* Assert whether the array is set up correctly */
-  T8_ASSERT (t8_shmem_array_get_elem_count (forest->global_first_desc) == (size_t) forest->mpisize);
-  T8_ASSERT (t8_shmem_array_get_elem_size (forest->global_first_desc) == sizeof (t8_linearidx_t));
-  T8_ASSERT (t8_shmem_array_get_comm (forest->global_first_desc) == comm);
+  /* One linear id per process */
+  forest->global_first_desc = new t8_shmem_array<t8_linearidx_t> (comm, forest->mpisize);
   if (forest->local_num_leaf_elements <= 0) {
     /* This process is empty, we store 0 in the array */
     local_first_desc = 0;
@@ -374,7 +363,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   }
 #endif
 #endif
-  t8_shmem_array_allgather (&local_first_desc, 1, T8_MPI_LINEARIDX, forest->global_first_desc, 1, T8_MPI_LINEARIDX);
+  forest->global_first_desc->allgather (local_first_desc);
 #if T8_ENABLE_DEBUG
   {
     int iproc;
@@ -382,7 +371,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     t8_linearidx_t desc_id;
 
     for (iproc = 0; iproc < forest->mpisize; iproc++) {
-      desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, iproc);
+      desc_id = (*forest->global_first_desc)[iproc];
       snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer), " %llu,", (long long unsigned) desc_id);
     }
   }

@@ -33,6 +33,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_element/t8_element.h>
 #include <t8_data/t8_element_array.hxx>
+#include <t8_data/t8_shmem.hxx>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
@@ -129,28 +130,29 @@ typedef struct t8_forest
   int mpisize;              /**< Number of MPI processes. */
   int mpirank;              /**< Number of this MPI process. */
 
-  t8_gloidx_t first_local_tree;       /**< The global index of the first local tree on this process.
+  t8_gloidx_t first_local_tree;     /**< The global index of the first local tree on this process.
                                              If first_local_tree is larger than last_local_tree then
                                              this processor/forest is empty.
                                              See https://github.com/DLR-AMR/t8code/wiki/Tree-indexing */
-  t8_gloidx_t last_local_tree;        /**< The global index of the last local tree on this process.
+  t8_gloidx_t last_local_tree;      /**< The global index of the last local tree on this process.
                                              -1 if this processor is empty. */
-  t8_gloidx_t global_num_trees;       /**< The total number of global trees. */
-  std::vector<t8_tree> trees;         /**< The local trees. Since the forest is allocated with T8_ALLOC_ZERO,
+  t8_gloidx_t global_num_trees;     /**< The total number of global trees. */
+  std::vector<t8_tree> trees;       /**< The local trees. Since the forest is allocated with T8_ALLOC_ZERO,
                                            it is constructed in \ref t8_forest_init and destroyed in
                                            t8_forest_reset explicitly. */
-  t8_forest_ghost_t ghosts;           /**< The ghost elements. NULL on all processes if no ghost layer was
+  t8_forest_ghost_t ghosts;         /**< The ghost elements. NULL on all processes if no ghost layer was
                                                 constructed, otherwise set on all processes (possibly empty).
                                                 \see t8_forest_ghost.h */
-  t8_shmem_array_t element_offsets;   /**< If partitioned, for each process the global index
+  t8_shmem_array_t element_offsets; /**< If partitioned, for each process the global index
                                             of its first element. Since it is memory consuming,
                                             it is usually only constructed when needed and otherwise unallocated. */
-  t8_shmem_array_t global_first_desc; /**< If partitioned, for each process the linear id (at maxlevel) of its
+  t8_shmem_array<t8_linearidx_t>
+    *global_first_desc;          /**< If partitioned, for each process the linear id (at maxlevel) of its
                                               first element's first descendant.
                                              \ref t8_element_set_linear_id. Stores 0 for empty processes.
                                             Since it is memory consuming,
                                             it is usually only constructed when needed and otherwise unallocated. */
-  t8_shmem_array_t tree_offsets;      /**<  If partitioned for each process the global index of its first local tree
+  t8_shmem_array_t tree_offsets; /**<  If partitioned for each process the global index of its first local tree
                                           or -(first local tree) - 1
                                           if the first tree on that process is shared.
                                           Since this is memory consuming we only construct it when needed.

@@ -21,7 +21,8 @@
 */
 
 /** \file t8_shmem.h
- * We define basic shared memory routines.
+ * The C interface of shared memory arrays: arrays of t8_gloidx_t whose content is identical on all processes of an
+ * MPI communicator. C++ code should use the typed container \ref t8_shmem_array from t8_shmem.hxx directly.
  */
 
 #ifndef T8_SHMEM_H
@@ -30,13 +31,22 @@
 #include <t8.h>
 #include <sc_shmem.h>
 
-typedef struct t8_shmem_array *t8_shmem_array_t; /**< A shared memory array structure. */
+#ifdef __cplusplus
+extern "C++" {
+template <typename TValue>
+struct t8_shmem_array;
+}
+/** Handle to a shared memory array of t8_gloidx_t. In C++ this is a pointer to t8_shmem_array<t8_gloidx_t>,
+ * in C an opaque pointer. */
+typedef t8_shmem_array<t8_gloidx_t> *t8_shmem_array_t;
+#else
+typedef struct t8_shmem_array *t8_shmem_array_t; /**< Opaque handle to a shared memory array of t8_gloidx_t. */
+#endif
 
 /** Defines the shared memory type that is best suited for t8code and the
  * current machine.
  * \see sc_shmem.h
  */
-/* TODO: Change it as soon as we do not always need basic */
 #if defined(__bgq__)
 #define T8_SHMEM_BEST_TYPE SC_SHMEM_BGQ
 #elif defined(SC_ENABLE_MPIWINSHARED)
@@ -48,14 +58,13 @@ typedef struct t8_shmem_array *t8_shmem_array_t; /**< A shared memory array stru
 T8_EXTERN_C_BEGIN ();
 
 /** Initialize shared memory usage for a communicator.
- *  This sets up the intra- and internode communicators.
+ *  This computes the shared memory topology of \a comm once and caches it at the communicator.
+ *  Shared memory arrays call this function themselves, so calling it is optional.
  * \param [in]          comm    The MPI Communicator.
- * \note This function needs to be called to enable shared memory usage for a communicator.
- * \note Calling this function multiple times with the same communicator is safe and does
- *  not change the behaviour.
- * \return                    If the intranode communicator cannot be
- *                            obtained, return 0.
- *                            Otherwise return size of intranode communicator.
+ * \note This function is collective the first time it is called for a communicator.
+ *  Calling it multiple times with the same communicator is safe and does not change the behaviour.
+ * \return             The number of processes that share the memory of one array with this process
+ *                     (1 if every process stores its own copy). Always at least 1.
  */
 int
 t8_shmem_init (sc_MPI_Comm comm);
@@ -72,7 +81,7 @@ t8_shmem_array_is_initialized (const t8_shmem_array_t array);
 #endif
 
 /** Finalize shared memory usage for a communicator.
- *  This destroys the intra- and internode communicators.
+ *  This removes the cached topology from the communicator. Arrays that are still alive keep working.
  * \param [in]          comm    The MPI Communicator.
  * \note Call this function if you initialized the communicator for shared memory usage
  *  and you are sure that you will not use it for shared memory again.
@@ -83,7 +92,10 @@ void
 t8_shmem_finalize (sc_MPI_Comm comm);
 
 /** Set a shared memory type of a communicator.
- * If the type was already set it is overwritten.
+ * If the type was already set it is overwritten. SC_SHMEM_BASIC and SC_SHMEM_PRESCAN select one copy per process,
+ * all other types select one copy per shared memory node if this is possible. The type only affects arrays that
+ * are created afterwards.
+ * \note This function is collective if the communicator was not initialized with \ref t8_shmem_init before.
  * \param [in,out]      comm    The MPI Communicator
  * \param [in]          type    A shared memory type.
  */
@@ -93,10 +105,10 @@ t8_shmem_set_type (sc_MPI_Comm comm, sc_shmem_type_t type);
 /** Initialize and allocate a shared memory array structure.
  * \param [in,out]      parray On input this pointer must be non-NULL.
  *                             On return this pointer is set to the new t8_shmem_array.
- * \param [in]          elem_size The size in bytes of an array element.
+ * \param [in]          elem_size The size in bytes of an array element. Must be sizeof (t8_gloidx_t).
  * \param [in]          elem_count The total number of elements to allocate.
  * \param [in]          comm      The MPI communicator to be associated with the shmem_array.
- *                                If not set, the shared memory type will be set to T8_SHMEM_BEST_TYPE.
+ * \note This function is collective.
  */
 void
 t8_shmem_array_init (t8_shmem_array_t *parray, size_t elem_size, size_t elem_count, sc_MPI_Comm comm);

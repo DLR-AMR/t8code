@@ -2143,7 +2143,8 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
     t8_shmem_array_destroy (&forest->tree_offsets);
   }
   if (allocate_first_desc) {
-    t8_shmem_array_destroy (&forest->global_first_desc);
+    delete forest->global_first_desc;
+    forest->global_first_desc = nullptr;
   }
   if (allocate_el_offset) {
     t8_shmem_array_destroy (&forest->element_offsets);
@@ -2305,10 +2306,10 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_glo
       }
       /* Get the id of the trees first descendant and the first descendant
        * of the next nonempty rank */
-      rfirst_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, rank);
+      rfirst_desc_id = (*forest->global_first_desc)[rank];
       if (check_next) {
         /* Get the id of the trees first descendant on the next nonempty rank */
-        rnext_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, next_nonempty);
+        rnext_desc_id = (*forest->global_first_desc)[next_nonempty];
       }
       /* The element is not in the tree if and only if
        *  is_first && first_desc_id > id (first_desc)
@@ -2355,7 +2356,7 @@ t8_forest_element_find_owner_compare (const void *find_owner_data, const void *p
 
   T8_ASSERT (0 <= proc && proc < forest->mpisize);
   /* Get the id of the first element on this process. */
-  proc_first_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, (size_t) proc);
+  proc_first_desc_id = (*forest->global_first_desc)[proc];
 
   if (proc == data->last_owner) {
     /* If we are the last process owning the element's tree, then
@@ -2369,7 +2370,7 @@ t8_forest_element_find_owner_compare (const void *find_owner_data, const void *p
       return -1;
     }
     /* Get the linear id of the first element on the next process. */
-    next_proc_first_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, (size_t) proc + 1);
+    next_proc_first_desc_id = (*forest->global_first_desc)[proc + 1];
     if (next_proc_first_desc_id <= linear_id) {
       /* We have to look further right */
       return 1;
@@ -2387,7 +2388,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_gloidx_t current_first_tree;
   t8_linearidx_t current_id, element_desc_id;
-  t8_linearidx_t *first_descs;
+  const t8_linearidx_t *first_descs;
   int found = 0;
   int empty_dir = 1, last_guess, reached_bound;
   int next_nonempty;
@@ -2418,7 +2419,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
 
   /* Get pointers to the arrays of first local trees and first local descendants */
   const t8_gloidx_t *first_trees = t8_shmem_array_get_gloidx_array (forest->tree_offsets);
-  first_descs = (t8_linearidx_t *) t8_shmem_array_get_array (forest->global_first_desc);
+  first_descs = forest->global_first_desc->data ();
   /* Compute the linear id of the element's first descendant */
   element_desc_id = scheme->element_get_linear_id (eclass, first_desc, scheme->element_get_level (eclass, first_desc));
   /* Get a pointer to the element offset array */
@@ -2598,8 +2599,7 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
     /* Get the next owning process. Its first descendant is in fact an element of the tree.
      * If it is bigger than the descendant we look for, then proc is the owning process of element. */
     proc_next = *(int *) sc_array_index (owners_of_tree, 1);
-    if (*(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, (size_t) proc_next)
-        > element_desc_lin_id) {
+    if ((*forest->global_first_desc)[proc_next] > element_desc_lin_id) {
       scheme->element_destroy (eclass, 1, &element_first_desc);
       if (all_owners_of_tree == nullptr) {
         sc_array_destroy (owners_of_tree);
@@ -4500,7 +4500,8 @@ t8_forest_reset (t8_forest_t *pforest)
   }
   /* free the memory of the global_first_desc array */
   if (forest->global_first_desc != nullptr) {
-    t8_shmem_array_destroy (&forest->global_first_desc);
+    delete forest->global_first_desc;
+    forest->global_first_desc = nullptr;
   }
   /* free the memory of the tree_offsets array */
   if (forest->tree_offsets != nullptr) {
