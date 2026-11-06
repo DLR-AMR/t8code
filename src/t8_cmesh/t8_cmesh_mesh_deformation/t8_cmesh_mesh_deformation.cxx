@@ -27,6 +27,7 @@
 #include <unordered_map>
 #include <set>
 #include <tuple>
+#include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cad/t8_cad_handle.hxx>
 #include <t8_cmesh/t8_cmesh.h>
@@ -221,6 +222,11 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
         break;
       }
       case 2: {
+        /* In 3D, nodes on planar faces (e.g. farfield planes cut by the object) slide on the plane.
+         * They are interpolated like inner nodes in apply_vertex_displacements. */
+        if (mesh_dimension == 3 && cad->is_plane (first_tree_entity_tag)) {
+          continue;
+        }
         const Handle_Geom_Surface surface = cad->get_cad_surface (first_tree_entity_tag);
         double new_parameters[2] = { uv_parameter[0], uv_parameter[1] };
         if (parameter_mode == t8_cad_parameter_mode::PROJECT) {
@@ -365,6 +371,8 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
 
   std::unordered_map<t8_gloidx_t, t8_3D_vec> vertex_displacements;
   std::vector<t8_mesh_deformation_node> inner_nodes;
+  /* Inner nodes that lie on a planar face: index into inner_nodes, face tag and the trees of the vertex. */
+  std::vector<std::tuple<size_t, int, std::vector<std::pair<t8_locidx_t, int>>>> sliding_nodes;
 
   /* The displacements of the boundary nodes are already known from the new CAD geometry. */
   for (const auto &boundary_node : boundary_node_data) {
@@ -393,9 +401,14 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
     }
 
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
+    const int first_tree_entity_tag = first_tree_geom_attribute[2 * tree_list[0].second + 1];
+
+    /* In 3D, nodes on planar faces slide on the plane and are interpolated like inner nodes. */
+    const bool is_sliding_node
+      = mesh_dimension == 3 && first_tree_entity_dim == 2 && cad->is_plane (first_tree_entity_tag);
 
     /* Boundary nodes were already handled above. */
-    if (first_tree_entity_dim < mesh_dimension && first_tree_entity_dim >= 0) {
+    if (first_tree_entity_dim < mesh_dimension && first_tree_entity_dim >= 0 && !is_sliding_node) {
       continue;
     }
 
@@ -413,11 +426,15 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
     inner_node.global_id = global_vertex_id;
     inner_node.position = { vertex_coords[3 * first_tree.second], vertex_coords[3 * first_tree.second + 1],
                             vertex_coords[3 * first_tree.second + 2] };
+    if (is_sliding_node) {
+      sliding_nodes.push_back ({ inner_nodes.size (), first_tree_entity_tag, tree_list });
+    }
     inner_nodes.push_back (inner_node);
   }
 
   deformation_method->set_dimension (mesh_dimension);
   /* Calculate the weights of the deformation method from the known boundary displacements. */
+  deformation_method->set_dimension (mesh_dimension);
   deformation_method->set_boundary_nodes (boundary_node_data);
   deformation_method->solve ();
 
@@ -425,6 +442,32 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
   for (auto &inner_node : inner_nodes) {
     deformation_method->interpolate (inner_node);
     vertex_displacements[inner_node.global_id] = inner_node.displacement;
+  }
+
+  /* Project the interpolated sliding nodes back onto their plane in the deformed geometry. */
+  for (const auto &[inner_index, face_tag, tree_list] : sliding_nodes) {
+    t8_mesh_deformation_node &node = inner_nodes[inner_index];
+    const gp_Pnt interpolated (node.position[0] + node.displacement[0], node.position[1] + node.displacement[1],
+                               node.position[2] + node.displacement[2]);
+    GeomAPI_ProjectPointOnSurf projection (interpolated, cad->get_cad_surface (face_tag));
+    SC_CHECK_ABORTF (projection.NbPoints () > 0,
+                     "Projection of global vertex %" T8_GLOIDX_FORMAT " onto face %d failed.\n", node.global_id,
+                     face_tag);
+    const gp_Pnt projected = projection.NearestPoint ();
+    vertex_displacements[node.global_id]
+      = { projected.X () - node.position[0], projected.Y () - node.position[1], projected.Z () - node.position[2] };
+
+    /* The old (u,v)-parameters refer to the undeformed position, so update them in all trees. */
+    double u, v;
+    projection.LowerDistanceParameters (u, v);
+    for (const auto &[tree_id, local_corner_index] : tree_list) {
+      double *uv_attribute = (double *) t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (),
+                                                                T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY, tree_id);
+      if (uv_attribute != nullptr) {
+        uv_attribute[2 * local_corner_index] = u;
+        uv_attribute[2 * local_corner_index + 1] = v;
+      }
+    }
   }
 
   for (const auto &global_vertex : *(associated_cmesh->vertex_connectivity)) {

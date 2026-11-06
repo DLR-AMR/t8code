@@ -77,7 +77,7 @@ struct t8_dgm: public t8_mesh_deformation_method
    * Returns the Delaunay triangles of the boundary nodes.
    * Each triangle holds three indices into the boundary node list.
    */
-  const std::vector<std::vector<std::array<size_t, 3>>>&
+  const std::vector<std::vector<std::array<size_t, 4>>>&
   get_delaunay_elements () const
   {
     return delaunay_elements;
@@ -96,6 +96,9 @@ struct t8_dgm: public t8_mesh_deformation_method
 
   /** List of all registered support nodes. */
   std::vector<t8_mesh_deformation_node> boundary_nodes;
-  /** The Delaunay triangles. Each entry holds three indices into \a boundary_nodes. */
-  std::vector<std::vector<std::array<size_t, 3>>> delaunay_elements;
+  /** The Delaunay elements for each substep. Each entry holds dimension + 1 indices into \a boundary_nodes,
+   *  the remaining entries are unused. */
+  std::vector<std::vector<std::array<size_t, 4>>> delaunay_elements;
+  /** Elements with a smaller absolute signed volume are treated as degenerate. Set in \ref solve. */
+  double volume_tolerance = 0.0;
 };
