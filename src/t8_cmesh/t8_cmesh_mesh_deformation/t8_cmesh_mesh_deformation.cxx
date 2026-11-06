@@ -337,8 +337,9 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
     const gp_Pnt interpolated (node.position[0] + node.displacement[0], node.position[1] + node.displacement[1],
                                node.position[2] + node.displacement[2]);
     GeomAPI_ProjectPointOnSurf projection (interpolated, cad->get_cad_surface (face_tag));
-    SC_CHECK_ABORTF (projection.NbPoints () > 0, "Projection of global vertex %" T8_GLOIDX_FORMAT " onto face %d failed.\n",
-                     node.global_id, face_tag);
+    SC_CHECK_ABORTF (projection.NbPoints () > 0,
+                     "Projection of global vertex %" T8_GLOIDX_FORMAT " onto face %d failed.\n", node.global_id,
+                     face_tag);
     const gp_Pnt projected = projection.NearestPoint ();
     vertex_displacements[node.global_id]
       = { projected.X () - node.position[0], projected.Y () - node.position[1], projected.Z () - node.position[2] };
