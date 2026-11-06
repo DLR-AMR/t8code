@@ -81,8 +81,8 @@ t8_dgm::solve ()
   // Volumes below this tolerance are roundoff, e.g. slivers spanned by coplanar boundary nodes.
   double max_coordinate = 0.0;
   for (const auto& node : boundary_nodes) {
-    max_coordinate = std::max ({ max_coordinate, std::abs (node.position[0]), std::abs (node.position[1]),
-                                 std::abs (node.position[2]) });
+    max_coordinate = std::max (
+      { max_coordinate, std::abs (node.position[0]), std::abs (node.position[1]), std::abs (node.position[2]) });
   }
   volume_tolerance = 1e-12 * std::pow (max_coordinate, dimension);
 
