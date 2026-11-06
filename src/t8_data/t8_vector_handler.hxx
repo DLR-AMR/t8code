@@ -229,7 +229,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
     SC_CHECK_MPI (mpiret);
 
     std::for_each (m_data->begin (), m_data->end (),
-                   [&] (const TType &item) { single_handler.pack (item, pos, buffer, num_bytes, comm); });
+                   [&] (const TType &item) { single_handler.pack (item, buffer, num_bytes, pos, comm); });
   }
 
   /**
@@ -378,10 +378,10 @@ struct t8_vector_handler: public t8_abstract_vector_handler
    *
    * \return The type of the data handler.
    */
-  constexpr t8_data_handler_type
+  t8_data_handler_type
   type () override
   {
-    return t8_data_handler_type (single_handler.type ());
+    return single_handler.type ();
   }
 
  private:
