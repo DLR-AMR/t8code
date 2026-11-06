@@ -191,15 +191,24 @@ TEST_P (t8_mesh_io_test, write_mesh_to_vtk_with_options)
 {
   const std::span<const double> local_volumes (volumes.data (), num_local_elements);
 
+  // We explicitly set the same default options as the original C test to prevent FPEs
+  t8_mesh_handle::vtk_write_options default_options;
+  default_options.write_treeid = true;
+
   // Default options and no data fields.
-  EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, "t8_gtest_mesh_io_with_options", {}, {}, {}));
+  EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, "t8_gtest_mesh_io_with_options", {}, {}, default_options));
 
   for (const bool write_ghosts : { false, true }) {
     for (const bool do_not_use_API : { false, true }) {
 
       // Populate the options struct based on the loop
       t8_mesh_handle::vtk_write_options options;
+      options.write_treeid = true;
+      options.write_mpirank = true;
+      options.write_level = true;
+      options.write_element_id = true;
       options.write_ghosts = write_ghosts;
+      options.write_curved = false;
       options.do_not_use_API = do_not_use_API;
 
       // Only a scalar data field with values for the local elements only.
@@ -208,8 +217,8 @@ TEST_P (t8_mesh_io_test, write_mesh_to_vtk_with_options)
         << "write_ghosts = " << write_ghosts << ", do_not_use_API = " << do_not_use_API;
       // Scalar and vector data fields with values for the local and the ghost elements.
       EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, "t8_gtest_mesh_io_with_options",
-                                                      { { "volume", local_volumes } }, { { "centroid", centroids } },
-                                                      options))
+                                                      { { "level", levels }, { "volume", local_volumes } },
+                                                      { { "centroid", centroids } }, options))
         << "write_ghosts = " << write_ghosts << ", do_not_use_API = " << do_not_use_API;
     }
   }
