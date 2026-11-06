@@ -109,7 +109,11 @@ create_vtk_buffer (const TMeshClass &mesh, const vtk_data_field<TValueType> &fie
     std::ranges::copy (values_to_copy, buffer.begin ());
   }
   else {
-    std::ranges::copy (values_to_copy | std::views::join, buffer.begin ());
+    // Flatten the vectors into the buffer.
+    auto out = buffer.begin ();
+    for (const auto &value : values_to_copy) {
+      out = std::copy (value.begin (), value.end (), out);
+    }
   }
   return buffer;
 }
