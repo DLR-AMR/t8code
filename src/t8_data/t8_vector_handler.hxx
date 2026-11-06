@@ -35,6 +35,7 @@
 #include <t8_data/t8_data_handler.hxx>
 #include <algorithm>
 #include <memory>
+#include <utility>
 #include <numeric>
 
 /**
@@ -164,33 +165,45 @@ struct t8_vector_handler: public t8_abstract_vector_handler
 {
  public:
   /**
-   * Construct a t8_vector_handler.
-   * m_data is initialized to nullptr.
-   */
-  t8_vector_handler (): single_handler ()
-  {
-    m_data = nullptr;
-  }
-
-  /**
-   * Construct a t8_vector_handler with the given data.
+   * Construct a t8_vector_handler that owns the given data.
    *
-   * \param[in] data The data to be handled.
+   * \param[in] data The data to be handled. Pass an rvalue (e.g. via std::move) to avoid a copy.
    */
-  t8_vector_handler (const std::vector<TType> &data)
-    : m_data (std::make_shared<std::vector<TType>> (data)), single_handler ()
+  explicit t8_vector_handler (std::vector<TType> data = {}): m_data (std::move (data))
   {
   }
 
   /**
    * Get the data.
    *
-   * \return The data.
+   * \return A reference to the data.
    */
-  std::shared_ptr<std::vector<TType>>
+  const std::vector<TType> &
   get_data () const
   {
     return m_data;
+  }
+
+  /**
+   * Replace the data.
+   *
+   * \param[in] data The new data. Pass an rvalue (e.g. via std::move) to avoid a copy.
+   */
+  void
+  set_data (std::vector<TType> data)
+  {
+    m_data = std::move (data);
+  }
+
+  /**
+   * Move the data out of the handler. The handler is empty afterwards.
+   *
+   * \return The data.
+   */
+  std::vector<TType>
+  take_data ()
+  {
+    return std::exchange (m_data, {});
   }
 
   /**
@@ -205,11 +218,8 @@ struct t8_vector_handler: public t8_abstract_vector_handler
     int total_size = 0;
     const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
     SC_CHECK_MPI (mpiret);
-    if (m_data) {
-      total_size += std::accumulate (m_data->begin (), m_data->end (), 0, [&] (int sum, const TType &item) {
-        return sum + single_handler.size (item, comm);
-      });
-    }
+    total_size += std::accumulate (m_data.begin (), m_data.end (), 0,
+                                   [&] (int sum, const TType &item) { return sum + single_handler.size (item, comm); });
     return total_size;
   }
 
@@ -224,11 +234,11 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   void
   pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm) override
   {
-    const int num_data = m_data->size ();
+    const int num_data = m_data.size ();
     const int mpiret = sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
     SC_CHECK_MPI (mpiret);
 
-    std::for_each (m_data->begin (), m_data->end (),
+    std::for_each (m_data.begin (), m_data.end (),
                    [&] (const TType &item) { single_handler.pack (item, buffer, num_bytes, pos, comm); });
   }
 
@@ -248,14 +258,8 @@ struct t8_vector_handler: public t8_abstract_vector_handler
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (outcount >= 0);
 
-    if (!m_data) {
-      m_data = std::make_shared<std::vector<TType>> (outcount);
-    }
-    else {
-      m_data->clear ();
-      m_data->resize (outcount);
-    }
-    std::for_each (m_data->begin (), m_data->end (),
+    m_data.resize (outcount);
+    std::for_each (m_data.begin (), m_data.end (),
                    [&] (TType &item) { single_handler.unpack (buffer, num_bytes, pos, item, comm); });
   }
 
@@ -385,11 +389,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   }
 
  private:
-  /**
-  * A shared pointer to a vector of data.
-  * This data will be packed, unpacked, and communicated via MPI.
-  */
-  std::shared_ptr<std::vector<TType>> m_data;
+  std::vector<TType> m_data; /**< The data that is packed, unpacked and communicated via MPI. */
   /**
    * A single data handler for the data type T.
    * This handler will be used to pack and unpack individual data items.

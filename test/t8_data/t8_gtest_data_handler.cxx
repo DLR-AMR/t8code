@@ -90,7 +90,7 @@ TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
   this->data_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, this->comm);
   EXPECT_EQ (outcount, this->max_num_data);
 
-  this->recv_data = *(this->data_handler->get_data ());
+  this->recv_data = this->data_handler->get_data ();
 
   for (int idata = 0; idata < this->max_num_data; idata++) {
     EXPECT_EQ (this->recv_data[idata].data, this->creator.large_data[idata].data);
@@ -125,7 +125,7 @@ TYPED_TEST_P (data_handler_test, send_recv)
   int outcount;
   mpiret = this->data_handler->recv (recv_from, 0, this->comm, &status, outcount);
   SC_CHECK_MPI (mpiret);
-  this->recv_data = *(this->data_handler->get_data ());
+  this->recv_data = this->data_handler->get_data ();
 
   EXPECT_EQ (outcount, this->max_num_data);
   for (int idata = 0; idata < this->max_num_data; idata++) {
@@ -176,15 +176,15 @@ TEST (data_handler_test, multiple_handler)
     t8_debugf ("Rank %i not sending data to itself\n", mpirank);
   }
 
-  auto recv_ints = int_handler.get_data ();
-  auto recv_doubles = double_handler.get_data ();
+  const auto &recv_ints = int_handler.get_data ();
+  const auto &recv_doubles = double_handler.get_data ();
 
   SC_CHECK_MPI (mpiret);
   for (int idata = 0; idata < num_data; idata++) {
-    EXPECT_EQ ((*recv_ints)[idata].check, recv_from);
-    EXPECT_EQ ((*recv_ints)[idata].data, idata);
-    EXPECT_EQ ((*recv_doubles)[idata].check, recv_from);
-    EXPECT_NEAR ((*recv_doubles)[idata].data, (double) idata + fraction, T8_PRECISION_EPS);
+    EXPECT_EQ (recv_ints[idata].check, recv_from);
+    EXPECT_EQ (recv_ints[idata].data, idata);
+    EXPECT_EQ (recv_doubles[idata].check, recv_from);
+    EXPECT_NEAR (recv_doubles[idata].data, (double) idata + fraction, T8_PRECISION_EPS);
   }
 #endif
 }
@@ -210,7 +210,7 @@ TEST (data_handler_test, pseudo_tree_test)
 
   auto handler = std::dynamic_pointer_cast<t8_vector_handler<enlarged_data<int>>> (tree_copy.tree_data[0]).get ();
   ASSERT_NE (handler, nullptr);
-  std::vector<enlarged_data<int>> copied_data = *(handler->get_data ());
+  const std::vector<enlarged_data<int>> &copied_data = handler->get_data ();
 
   for (int idata = 0; idata < num_data; ++idata) {
     EXPECT_EQ (copied_data[idata].data, idata);
@@ -225,7 +225,7 @@ TEST (data_handler_test, pseudo_tree_test)
   auto handler_equal
     = std::dynamic_pointer_cast<t8_vector_handler<enlarged_data<int>>> (tree_equal.tree_data[0]).get ();
   ASSERT_NE (handler_equal, nullptr);
-  std::vector<enlarged_data<int>> equal_data = *(handler_equal->get_data ());
+  const std::vector<enlarged_data<int>> &equal_data = handler_equal->get_data ();
 
   for (int idata = 0; idata < num_data; ++idata) {
     EXPECT_EQ (equal_data[idata].data, idata);
@@ -294,7 +294,7 @@ TEST (data_handler_test, tree_test)
   mpiret = tree_handler.recv (recv_from, 0, comm, &status, outcount);
   SC_CHECK_MPI (mpiret);
 
-  std::vector<pseudo_tree> recv_trees = *(tree_handler.get_data ());
+  const std::vector<pseudo_tree> &recv_trees = tree_handler.get_data ();
 
   const int num_recv_trees = recv_trees.size ();
   ASSERT_EQ (num_recv_trees, (recv_from % 4) * 10);
@@ -315,7 +315,7 @@ TEST (data_handler_test, tree_test)
           = std::dynamic_pointer_cast<t8_vector_handler<enlarged_data<int>>> (recv_trees[itree].tree_data[itree_data])
               .get ();
         ASSERT_NE (int_handler, nullptr);
-        std::vector<enlarged_data<int>> recv_ints = *(int_handler->get_data ());
+        const std::vector<enlarged_data<int>> &recv_ints = int_handler->get_data ();
 
         ASSERT_EQ (static_cast<int> (recv_ints.size ()), num_data);
         for (int idata = 0; idata < num_data; ++idata) {
@@ -328,7 +328,7 @@ TEST (data_handler_test, tree_test)
                                 recv_trees[itree].tree_data[itree_data])
                                 .get ();
         ASSERT_NE (double_handler, nullptr);
-        std::vector<enlarged_data<double>> recv_double = *(double_handler->get_data ());
+        const std::vector<enlarged_data<double>> &recv_double = double_handler->get_data ();
         ASSERT_EQ (static_cast<int> (recv_double.size ()), num_data);
         for (int idata = 0; idata < num_data; ++idata) {
           EXPECT_EQ (recv_double[idata].data, static_cast<double> (idata) + fraction);
