@@ -29,6 +29,8 @@
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_dgm.hxx>
 #include <t8_vector/t8_vec.hxx>
 #include <map>
+#include <algorithm>
+#include <cmath>
 
 #if T8_ENABLE_GMSH
 #include <gmsh.h>
@@ -76,9 +78,17 @@ t8_dgm_signed_volume (const std::array<double, 3>& point_a, const std::array<dou
 void
 t8_dgm::solve ()
 {
+  // Volumes below this tolerance are roundoff, e.g. slivers spanned by coplanar boundary nodes.
+  double max_coordinate = 0.0;
+  for (const auto& node : boundary_nodes) {
+    max_coordinate = std::max ({ max_coordinate, std::abs (node.position[0]), std::abs (node.position[1]),
+                                 std::abs (node.position[2]) });
+  }
+  volume_tolerance = 1e-12 * std::pow (max_coordinate, dimension);
+
   bool no_flipped_elements = false;
   double substeps = 0;
-  while (!no_flipped_elements) {
+  while (!no_flipped_elements && substeps < 16) {
     create_delaunay_mesh (boundary_nodes, substeps);
     no_flipped_elements = check_delaunay_elements (substeps);
     substeps++;
@@ -164,7 +174,7 @@ t8_dgm::create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& bound
       gmsh::model::mesh::addElementsByType (volume_tag, 4, element_tags, tetrahedra);
     }
     else {
-      SC_ABORTF ("Delaunay graph mapping is only implemented for 2D and 3D meshes.\n");
+      SC_ABORTF ("Delaunay graph mapping is only implemented for 2D and 3D meshes. Dimension: %d\n", dimension);
     }
     gmsh::write ("t8_dgm.msh");
     gmsh::finalize ();
@@ -176,7 +186,6 @@ t8_dgm::create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& bound
 bool
 t8_dgm::check_delaunay_elements (double substeps) const
 {
-
   for (double step = 0; step <= substeps; ++step) {
     for (const auto& element : delaunay_elements[step]) {
       const auto& point_a = boundary_nodes[element[0]];
@@ -188,6 +197,10 @@ t8_dgm::check_delaunay_elements (double substeps) const
                                                       t8_dgm_position_at_step (point_b, step, substeps + 1),
                                                       t8_dgm_position_at_step (point_c, step, substeps + 1),
                                                       t8_dgm_position_at_step (point_d, step, substeps + 1), dimension);
+      // Already flat elements cannot be fixed by substepping, skip them.
+      if (std::abs (det_before) < volume_tolerance) {
+        continue;
+      }
       // Check the determinant after the next substep to see if the triangle has flipped (step + 1).
       const double det_after
         = t8_dgm_signed_volume (t8_dgm_position_at_step (point_a, step + 1, substeps + 1),
@@ -195,7 +208,7 @@ t8_dgm::check_delaunay_elements (double substeps) const
                                 t8_dgm_position_at_step (point_c, step + 1, substeps + 1),
                                 t8_dgm_position_at_step (point_d, step + 1, substeps + 1), dimension);
 
-      if (std::abs (det_after) < std::numeric_limits<double>::min ()) {
+      if (std::abs (det_after) < volume_tolerance) {
         t8_debugf ("The element with vertices %zu, %zu, %zu is degenerate after the deformation.\n", element[0],
                    element[1], element[2]);
         return false;
@@ -235,7 +248,7 @@ t8_dgm::interpolate (t8_mesh_deformation_node& inner_node) const
       const auto pos_d = t8_dgm_position_at_step (point_d, step, num_steps);
       // Calculate the double area of the triangle and check if it is degenerate
       const double det = t8_dgm_signed_volume (pos_a, pos_b, pos_c, pos_d, dimension);
-      if (std::abs (det) < std::numeric_limits<double>::min ()) {
+      if (std::abs (det) < volume_tolerance) {
         /* Degenerate triangle. */
         continue;
       }

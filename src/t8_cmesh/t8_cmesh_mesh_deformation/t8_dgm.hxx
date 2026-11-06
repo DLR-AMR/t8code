@@ -99,4 +99,6 @@ struct t8_dgm: public t8_mesh_deformation_method
   /** The Delaunay elements for each substep. Each entry holds dimension + 1 indices into \a boundary_nodes,
    *  the remaining entries are unused. */
   std::vector<std::vector<std::array<size_t, 4>>> delaunay_elements;
+  /** Elements with a smaller absolute signed volume are treated as degenerate. Set in \ref solve. */
+  double volume_tolerance = 0.0;
 };

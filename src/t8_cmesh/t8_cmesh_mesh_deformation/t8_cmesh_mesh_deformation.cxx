@@ -305,6 +305,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
   }
 
   /* Calculate the weights of the deformation method from the known boundary displacements. */
+  deformation_method->set_dimension (mesh_dimension);
   deformation_method->set_boundary_nodes (boundary_node_data);
   deformation_method->solve ();
 

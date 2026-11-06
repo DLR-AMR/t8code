@@ -90,5 +90,5 @@ struct t8_mesh_deformation_method
 
  protected:
   /** The dimension of the mesh. */
-  int dimension;
+  int dimension = -1;
 };
