@@ -34,6 +34,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_data/t8_vector_handler.hxx>
 #include <vector>
 #include <numeric>
+#include <type_traits>
+#include <utility>
 
 /**
  * Templated testing class. Creates enlarged data (original data + a checking integer) and a
@@ -345,3 +347,316 @@ REGISTER_TYPED_TEST_SUITE_P (data_handler_test, pack_unpack_vector_of_data, send
 using DataTypes = ::testing::Types<int, double>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P (Test_data_handler, data_handler_test, DataTypes, );
+
+/**
+ * A trivially copyable struct with padding. It has no t8_data_handler specialization and is therefore
+ * handled by the generic handler.
+ */
+struct t8_test_pod
+{
+  int index;    /**< Index of the item. */
+  char tag;     /**< A character derived from the rank. */
+  double value; /**< A floating point value derived from the index. */
+
+  /** Compare two items field by field. */
+  bool
+  operator== (const t8_test_pod &other) const
+    = default;
+};
+
+/* Trivially copyable types without explicit specialization are communicated as raw bytes. */
+static_assert (T8BytewiseData<int>);
+static_assert (T8BytewiseData<double>);
+static_assert (T8BytewiseData<t8_test_pod>);
+/* enlarged_data is trivially copyable, but its explicit specialization packs field-wise. */
+static_assert (std::is_trivially_copyable_v<enlarged_data<int>>);
+static_assert (!T8BytewiseData<enlarged_data<int>>);
+static_assert (!T8BytewiseData<enlarged_data<double>>);
+static_assert (!T8BytewiseData<pseudo_tree>);
+
+/**
+ * Create a test item of a generic type.
+ *
+ * \tparam TType The type of the item.
+ * \param[in] index The index of the item.
+ * \param[in] rank The rank that creates the item.
+ * \return An item that depends on \a index and \a rank.
+ */
+template <typename TType>
+static TType
+t8_test_generic_item (const int index, const int rank)
+{
+  if constexpr (std::is_same_v<TType, t8_test_pod>) {
+    return t8_test_pod { index, static_cast<char> ('a' + rank % 26), index + 0.5 };
+  }
+  else {
+    return static_cast<TType> (index + 1000 * rank);
+  }
+}
+
+/**
+ * Create the test data of a rank. The number of items depends on the rank.
+ *
+ * \tparam TType The type of the items.
+ * \param[in] rank The rank that creates the data.
+ * \return The test data of \a rank.
+ */
+template <typename TType>
+static std::vector<TType>
+t8_test_generic_data (const int rank)
+{
+  std::vector<TType> data (10 + rank);
+  for (size_t iitem = 0; iitem < data.size (); ++iitem) {
+    data[iitem] = t8_test_generic_item<TType> (static_cast<int> (iitem), rank);
+  }
+  return data;
+}
+
+/**
+ * Test the generic handler of trivially copyable types without explicit specialization.
+ *
+ * \tparam TType The type of the data.
+ */
+template <typename TType>
+struct generic_data_handler_test: public testing::Test
+{
+ protected:
+  void
+  SetUp () override
+  {
+    int mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Comm_size (comm, &mpisize);
+    SC_CHECK_MPI (mpiret);
+  }
+
+  int mpirank;                          /**< The rank of this process. */
+  int mpisize;                          /**< The number of processes. */
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD; /**< The communicator of the test. */
+};
+
+using GenericDataTypes = ::testing::Types<int, double, t8_test_pod>;
+TYPED_TEST_SUITE (generic_data_handler_test, GenericDataTypes);
+
+/**
+ * Pack a vector of generic items and unpack it into another handler.
+ */
+TYPED_TEST (generic_data_handler_test, pack_unpack)
+{
+  const std::vector<TypeParam> data = t8_test_generic_data<TypeParam> (this->mpirank);
+  t8_vector_handler<TypeParam> handler (data);
+
+  const int num_bytes = handler.buffer_size (this->comm);
+  std::vector<char> buffer (num_bytes);
+  int position = 0;
+  handler.pack_vector_prefix (buffer.data (), num_bytes, position, this->comm);
+  EXPECT_LE (position, num_bytes);
+
+  t8_vector_handler<TypeParam> unpacked;
+  int outcount = 0;
+  position = 0;
+  unpacked.unpack_vector_prefix (buffer.data (), num_bytes, position, outcount, this->comm);
+  EXPECT_EQ (outcount, static_cast<int> (data.size ()));
+  EXPECT_EQ (unpacked.get_data (), data);
+}
+
+/**
+ * Exchange vectors of generic items of different sizes in a ring.
+ */
+TYPED_TEST (generic_data_handler_test, sendrecv)
+{
+#if T8_ENABLE_MPI
+  const int send_to = (this->mpirank + 1) % this->mpisize;
+  const int recv_from = (this->mpirank - 1 + this->mpisize) % this->mpisize;
+  t8_vector_handler<TypeParam> handler (t8_test_generic_data<TypeParam> (this->mpirank));
+
+  sc_MPI_Status status;
+  int outcount = 0;
+  handler.sendrecv (send_to, recv_from, 0, this->comm, &status, outcount);
+
+  const std::vector<TypeParam> expected = t8_test_generic_data<TypeParam> (recv_from);
+  EXPECT_EQ (outcount, static_cast<int> (expected.size ()));
+  EXPECT_EQ (handler.get_data (), expected);
+#endif
+}
+
+/**
+ * Check the type ids of generic and explicitly specialized handlers.
+ */
+TEST (data_handler_test, type_ids)
+{
+  EXPECT_TRUE (t8_vector_handler<int> ().type () == t8_data_handler_type_unregistered);
+  EXPECT_TRUE (t8_vector_handler<t8_test_pod> ().type () == t8_data_handler_type_unregistered);
+  EXPECT_TRUE (t8_vector_handler<enlarged_data<int>> ().type () == t8_data_handler_type (T8_ENLARGED_INT));
+  EXPECT_TRUE (t8_vector_handler<enlarged_data<double>> ().type () == t8_data_handler_type (T8_ENLARGED_DOUBLE));
+}
+
+/**
+ * Data moved into and out of a handler is not copied.
+ */
+TEST (data_handler_test, move_set_take)
+{
+  std::vector<double> values (100, 1.5);
+  const double *storage = values.data ();
+
+  t8_vector_handler<double> handler (std::move (values));
+  EXPECT_EQ (handler.get_data ().data (), storage);
+
+  std::vector<double> taken = handler.take_data ();
+  EXPECT_EQ (taken.data (), storage);
+  EXPECT_TRUE (handler.get_data ().empty ());
+
+  handler.set_data (std::move (taken));
+  EXPECT_EQ (handler.get_data ().data (), storage);
+  EXPECT_EQ (handler.get_data ().size (), static_cast<size_t> (100));
+}
+
+/**
+ * An item that has to be serialized, since it holds a std::vector. It has no t8_data_handler specialization.
+ */
+struct t8_test_cell
+{
+  std::vector<double> values; /**< The values of the cell, e.g. coefficients of a polynomial. */
+
+  /** Compare two cells value by value. */
+  bool
+  operator== (const t8_test_cell &other) const
+    = default;
+};
+
+/**
+ * A data handler for \ref t8_test_cell that is passed to the vector handler instead of specializing
+ * t8_data_handler. Every cell has the same number of values, which is only known at run time, e.g. from a
+ * polynomial degree. The handler therefore carries it as state and does not pack it per cell.
+ */
+struct t8_test_cell_handler
+{
+  int num_values; /**< The number of values of every cell. */
+
+  /**
+   * Returns the number of bytes needed to pack a cell.
+   * \param[in] cell The cell.
+   * \param[in] comm The MPI communicator.
+   * \return The number of bytes.
+   */
+  int
+  size ([[maybe_unused]] const t8_test_cell &cell, sc_MPI_Comm comm) const
+  {
+    int pack_size = 0;
+    const int mpiret = sc_MPI_Pack_size (num_values, sc_MPI_DOUBLE, comm, &pack_size);
+    SC_CHECK_MPI (mpiret);
+    return pack_size;
+  }
+
+  /**
+   * Packs a cell into a buffer.
+   * \param[in] cell The cell to pack.
+   * \param[in, out] buffer The buffer.
+   * \param[in] buffer_size The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the packed bytes.
+   * \param[in] comm The MPI communicator.
+   */
+  void
+  pack (const t8_test_cell &cell, void *buffer, const int buffer_size, int &position, sc_MPI_Comm comm) const
+  {
+    T8_ASSERT (cell.values.size () == static_cast<size_t> (num_values));
+    const int mpiret
+      = sc_MPI_Pack (cell.values.data (), num_values, sc_MPI_DOUBLE, buffer, buffer_size, &position, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+
+  /**
+   * Unpacks a cell from a buffer.
+   * \param[in] buffer The buffer.
+   * \param[in] buffer_size The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the unpacked bytes.
+   * \param[out] cell The unpacked cell.
+   * \param[in] comm The MPI communicator.
+   */
+  void
+  unpack (const void *buffer, const int buffer_size, int &position, t8_test_cell &cell, sc_MPI_Comm comm) const
+  {
+    cell.values.resize (num_values);
+    const int mpiret
+      = sc_MPI_Unpack (buffer, buffer_size, &position, cell.values.data (), num_values, sc_MPI_DOUBLE, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+};
+
+/* A passed data handler is accepted if it has the required members; it serializes unless it opts in to raw bytes. */
+static_assert (T8DataHandler<t8_test_cell_handler, t8_test_cell>);
+static_assert (!T8BytewiseDataHandler<t8_test_cell_handler, t8_test_cell>);
+/* Without specialization and without passed handler, a type that is not trivially copyable has no data handler. */
+static_assert (!T8DataHandler<t8_data_handler<t8_test_cell>, t8_test_cell>);
+
+/**
+ * Create the cells of a rank. The number of cells depends on the rank.
+ *
+ * \param[in] rank The rank that creates the cells.
+ * \param[in] num_values The number of values per cell.
+ * \return The cells of \a rank.
+ */
+static std::vector<t8_test_cell>
+t8_test_cells (const int rank, const int num_values)
+{
+  std::vector<t8_test_cell> cells (5 + rank);
+  for (size_t icell = 0; icell < cells.size (); ++icell) {
+    for (int ivalue = 0; ivalue < num_values; ++ivalue) {
+      cells[icell].values.push_back (1000.0 * rank + 10.0 * icell + ivalue);
+    }
+  }
+  return cells;
+}
+
+/**
+ * The data handler is deduced from the constructor arguments and its state is used for packing.
+ */
+TEST (data_handler_test, passed_data_handler_pack_unpack)
+{
+  const int num_values = 3;
+  const std::vector<t8_test_cell> cells = t8_test_cells (2, num_values);
+  t8_vector_handler handler (cells, t8_test_cell_handler { num_values });
+  static_assert (std::is_same_v<decltype (handler), t8_vector_handler<t8_test_cell, t8_test_cell_handler>>);
+  EXPECT_TRUE (handler.type () == t8_data_handler_type_unregistered);
+
+  const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  const int num_bytes = handler.buffer_size (comm);
+  std::vector<char> buffer (num_bytes);
+  int position = 0;
+  handler.pack_vector_prefix (buffer.data (), num_bytes, position, comm);
+  EXPECT_LE (position, num_bytes);
+
+  t8_vector_handler<t8_test_cell, t8_test_cell_handler> unpacked ({}, t8_test_cell_handler { num_values });
+  int outcount = 0;
+  position = 0;
+  unpacked.unpack_vector_prefix (buffer.data (), num_bytes, position, outcount, comm);
+  EXPECT_EQ (outcount, static_cast<int> (cells.size ()));
+  EXPECT_EQ (unpacked.get_data (), cells);
+}
+
+/**
+ * Exchange cells with a passed data handler in a ring, with a different number of cells per rank.
+ */
+TEST (data_handler_test, passed_data_handler_sendrecv)
+{
+#if T8_ENABLE_MPI
+  const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int mpirank, mpisize;
+  int mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  const int send_to = (mpirank + 1) % mpisize;
+  const int recv_from = (mpirank - 1 + mpisize) % mpisize;
+
+  const int num_values = 4;
+  t8_vector_handler handler (t8_test_cells (mpirank, num_values), t8_test_cell_handler { num_values });
+  sc_MPI_Status status;
+  int outcount = 0;
+  handler.sendrecv (send_to, recv_from, 0, comm, &status, outcount);
+
+  const std::vector<t8_test_cell> expected = t8_test_cells (recv_from, num_values);
+  EXPECT_EQ (outcount, static_cast<int> (expected.size ()));
+  EXPECT_EQ (handler.get_data (), expected);
+#endif
+}
