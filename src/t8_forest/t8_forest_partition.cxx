@@ -31,6 +31,9 @@
 #include <t8_forest/t8_forest_partition_for_coarsening.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_data/t8_data_exchange.hxx>
+#include <functional>
+#include <vector>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -1398,45 +1401,77 @@ t8_forest_partition (t8_forest_t forest)
   t8_global_productionf ("Done forest partition.\n");
 }
 
+T8_EXTERN_C_END ();
+
+/**
+ * Compute the partition pattern of this process for repartitioning element data from \a forest_from to
+ * \a forest_to. Creates the element offsets of the forests if they do not exist yet.
+ *
+ * \param[in,out] forest_from The committed forest the data belongs to.
+ * \param[in,out] forest_to   The committed forest that was partitioned from \a forest_from.
+ * \return The partition pattern of this process, one item per local leaf element.
+ */
+static t8_data_partition_pattern
+t8_forest_partition_data_pattern (t8_forest_t forest_from, t8_forest_t forest_to)
+{
+  T8_ASSERT (t8_forest_is_committed (forest_from));
+  T8_ASSERT (t8_forest_is_committed (forest_to));
+  T8_ASSERT (forest_from->mpisize == forest_to->mpisize && forest_from->mpirank == forest_to->mpirank);
+  T8_ASSERT (forest_from->global_num_leaf_elements == forest_to->global_num_leaf_elements);
+
+  if (forest_from->element_offsets == nullptr) {
+    t8_forest_partition_create_offsets (forest_from);
+  }
+  if (forest_to->element_offsets == nullptr) {
+    t8_forest_partition_create_offsets (forest_to);
+  }
+  /* The messages use the tag of the forest partition. Message existence and sizes follow from the same offsets
+   * on both sides, so they cannot be mismatched with other messages of this tag: per source, messages are
+   * matched in the order they were sent. */
+  return t8_data_partition_pattern_from_offsets (t8_shmem_array_get_gloidx_array (forest_from->element_offsets),
+                                                 t8_shmem_array_get_gloidx_array (forest_to->element_offsets),
+                                                 forest_to->mpirank, forest_to->mpisize, forest_to->mpicomm,
+                                                 T8_MPI_PARTITION_FOREST);
+}
+
 void
 t8_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, const sc_array_t *data_in,
                           sc_array_t *data_out)
 {
-  t8_forest_t save_set_from;
-
   t8_global_productionf ("Enter forest partition data.\n");
   t8_log_indent_push ();
 
-  /* Assertions */
-  T8_ASSERT (t8_forest_is_committed (forest_from));
-  T8_ASSERT (t8_forest_is_committed (forest_to));
   T8_ASSERT (data_in != NULL && data_out != NULL);
   T8_ASSERT (data_in->elem_size == data_out->elem_size);
+  T8_ASSERT (data_in->elem_count == (size_t) t8_forest_get_local_num_leaf_elements (forest_from));
+  T8_ASSERT (data_out->elem_count == (size_t) t8_forest_get_local_num_leaf_elements (forest_to));
 
-  /* data_in must have length of forest_from number of elements.
-   * data_out length of forest_to number of elements */
-  T8_ASSERT (data_in->elem_count == (size_t) forest_from->local_num_leaf_elements);
-  T8_ASSERT (data_out->elem_count == (size_t) forest_to->local_num_leaf_elements);
+  const t8_data_partition_pattern pattern = t8_forest_partition_data_pattern (forest_from, forest_to);
+  const size_t item_size = data_in->elem_size;
+  const char *bytes_in = data_in->array;
+  char *bytes_out = data_out->array;
 
-  /* Create partition tables if not existent yet */
-  if (forest_from->element_offsets == nullptr) {
-    /* We create the partition table of forest_from */
-    t8_forest_partition_create_offsets (forest_from);
+  /* The exchange writes directly into data_out while reading from data_in, so the arrays must not overlap.
+   * Overlapping arrays are supported by copying the input first. */
+  const size_t num_bytes_in = item_size * data_in->elem_count;
+  const size_t num_bytes_out = item_size * data_out->elem_count;
+  const std::less<const char *> before;
+  /** The input copy if data_in and data_out overlap, empty otherwise. */
+  std::vector<char> input_copy;
+  if (num_bytes_in > 0 && num_bytes_out > 0 && before (bytes_in, bytes_out + num_bytes_out)
+      && before (bytes_out, bytes_in + num_bytes_in)) {
+    if (bytes_in == bytes_out && pattern.sends.empty () && pattern.recvs.empty ()) {
+      /* Same array and no item changes the process: every item already is at its place. */
+      t8_log_indent_pop ();
+      t8_global_productionf ("Done forest partition data.\n");
+      return;
+    }
+    input_copy.assign (bytes_in, bytes_in + num_bytes_in);
+    bytes_in = input_copy.data ();
   }
 
-  if (forest_to->element_offsets == nullptr) {
-    /* We create the partition table of forest_to */
-    t8_forest_partition_create_offsets (forest_to);
-  }
-
-  /* perform the actual partitioning */
-  save_set_from = forest_to->set_from;
-  forest_to->set_from = forest_from;
-  t8_forest_partition_given (forest_to, 1, data_in, data_out);
-  forest_to->set_from = save_set_from;
+  t8_data_partition_bytes (pattern, bytes_in, bytes_out, item_size);
 
   t8_log_indent_pop ();
   t8_global_productionf ("Done forest partition data.\n");
 }
-
-T8_EXTERN_C_END ();
