@@ -97,7 +97,8 @@ struct t8_abstract_vector_handler
 
   /**
    * Repartition the data: Before the call, the handler holds the \a pattern.num_old items of this process in the
-   * old distribution, afterwards the \a pattern.num_new items in the new distribution.
+   * old distribution, possibly followed by further entries, e.g. of ghost elements, which are dropped. Afterwards it
+   * holds the \a pattern.num_new items in the new distribution.
    * Every process of \a pattern.comm calls this with its pattern of the same repartitioning.
    *
    * \param[in] pattern The partition pattern of this process, e.g. from \ref t8_data_partition_pattern_from_offsets.
@@ -313,11 +314,12 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   partition (const t8_data_partition_pattern &pattern) override
   {
     T8_ASSERT (t8_data_partition_pattern_is_valid (pattern));
-    T8_ASSERT (m_data.size () == pattern.num_old);
+    T8_ASSERT (m_data.size () >= pattern.num_old);
     if (pattern.sends.empty () && pattern.recvs.empty ()) {
-      /* No item changes the process, so every item keeps its index. */
+      /* No item changes the process, so every item keeps its index. Only trailing entries are dropped. */
       T8_ASSERT (pattern.num_old == pattern.num_new && pattern.self_count == pattern.num_old);
       T8_ASSERT (pattern.self_count == 0 || (pattern.self_first_old == 0 && pattern.self_first_new == 0));
+      m_data.resize (pattern.num_new);
       return;
     }
     if constexpr (T8BytewiseDataHandler<TDataHandler, TType>) {
@@ -455,7 +457,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   partition_bytewise (const t8_data_partition_pattern &pattern)
     requires T8BytewiseDataHandler<TDataHandler, TType>
   {
-    const size_t capacity = pattern.num_new;
+    const size_t capacity = std::max (pattern.num_new, pattern.min_capacity_new);
     t8_data_messages messages (pattern.comm, pattern.tag);
     const auto self_begin = m_data.cbegin () + pattern.self_first_old;
     if (can_reuse_buffer (capacity)) {
@@ -518,7 +520,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
     }
 
     /* The storage of the new data is the kept buffer if possible. */
-    const size_t capacity = pattern.num_new;
+    const size_t capacity = std::max (pattern.num_new, pattern.min_capacity_new);
     std::vector<TType> new_data;
     if (can_reuse_buffer (capacity)) {
       new_data = std::move (m_buffer);
