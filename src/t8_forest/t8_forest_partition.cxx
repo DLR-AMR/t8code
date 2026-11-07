@@ -25,6 +25,7 @@
  */
 
 #include <t8_forest/t8_forest_partition.h>
+#include <t8_forest/t8_forest_partition.hxx>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_general.h>
@@ -32,6 +33,7 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_data/t8_data_exchange.hxx>
+#include <t8_data/t8_vector_handler.hxx>
 #include <functional>
 #include <vector>
 
@@ -1328,6 +1330,18 @@ t8_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, const 
   }
 
   t8_data_partition_bytes (pattern, bytes_in, bytes_out, item_size);
+
+  t8_log_indent_pop ();
+  t8_global_productionf ("Done forest partition data.\n");
+}
+
+void
+t8_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, t8_abstract_vector_handler &handler)
+{
+  t8_global_productionf ("Enter forest partition data.\n");
+  t8_log_indent_push ();
+
+  handler.partition (t8_forest_partition_data_pattern (forest_from, forest_to));
 
   t8_log_indent_pop ();
   t8_global_productionf ("Done forest partition data.\n");
