@@ -207,9 +207,10 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   /**
    * Choose whether a repartitioning keeps the storage it replaces for the next repartitioning.
    * If enabled, the storage of the old data is kept as a buffer and receives the new data of the next
-   * repartitioning, if its capacity suffices. Then no fresh memory is needed after a first repartitioning, as long
-   * as the number of items stays within the capacities. This costs the memory of a second vector between
-   * repartitionings, see \ref release_buffer.
+   * repartitioning, if its capacity suffices. Otherwise new storage with at least the capacity of the old storage is
+   * allocated, so both storages grow to the largest number of items so far. Then no fresh memory is needed after
+   * the first repartitionings, as long as the number of items stays within the capacities. This costs the memory
+   * of a second vector between repartitionings, see \ref release_buffer.
    * Disabled by default: The old storage is freed and every repartitioning allocates new storage.
    *
    * \param[in] reuse True to keep the replaced storage, false to free it, including a kept buffer.
@@ -427,6 +428,20 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   }
 
   /**
+   * Compute the capacity of new storage for the new data of a repartitioning. With buffer reuse, it is at least the
+   * capacity of the old storage, which becomes the kept buffer, so that both storages grow to the largest number of
+   * items so far instead of alternating between too small sizes.
+   *
+   * \param[in] capacity The number of items the storage of the new data needs room for.
+   * \return The capacity to reserve for the new storage.
+   */
+  size_t
+  new_storage_capacity (const size_t capacity) const
+  {
+    return m_reuse_buffer ? std::max (capacity, m_data.capacity ()) : capacity;
+  }
+
+  /**
    * Replace the data by the new data of a repartitioning. The storage of the old data is kept as buffer for the
    * next repartitioning if buffer reuse is enabled, and freed otherwise.
    *
@@ -479,7 +494,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
       messages.send (chunk.rank, m_data.data () + chunk.first, chunk.count * sizeof (TType));
     }
     std::vector<TType> new_data;
-    new_data.reserve (capacity);
+    new_data.reserve (new_storage_capacity (capacity));
     new_data.resize (pattern.self_first_new);
     new_data.insert (new_data.end (), self_begin, self_begin + pattern.self_count);
     new_data.resize (pattern.num_new);
@@ -526,7 +541,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
       new_data = std::move (m_buffer);
     }
     else {
-      new_data.reserve (capacity);
+      new_data.reserve (new_storage_capacity (capacity));
     }
     new_data.resize (pattern.num_new);
     const auto self_begin = m_data.begin () + pattern.self_first_old;
