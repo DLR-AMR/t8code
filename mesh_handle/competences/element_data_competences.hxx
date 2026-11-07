@@ -32,7 +32,8 @@
 #include <t8.h>
 #include <mesh_handle/concepts.hxx>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_partition.h>
+#include <t8_forest/t8_forest_partition.hxx>
+#include <t8_data/t8_vector_handler.hxx>
 #include <t8_types/t8_crtp.hxx>
 #include <t8_types/t8_operators.hxx>
 #include <type_traits>
@@ -162,22 +163,14 @@ class element_data_mesh_competence_impl: public t8_crtp_basic<TUnderlying> {
   void
   repartition_element_data (t8_forest_t forest_from, t8_forest_t forest_to)
   {
-    // Take ownership of old data and wrap into sc_array. This is because the forest functions expect an sc_array.
-    std::vector<TElementDataType> old_data = take_element_data ();
-    const t8_locidx_t num_old_local = t8_forest_get_local_num_leaf_elements (forest_from);
-    T8_ASSERT (old_data.size () >= static_cast<size_t> (num_old_local));
-    sc_array* data_in = sc_array_new_data (old_data.data (), sizeof (TElementDataType), num_old_local);
-    const t8_locidx_t num_new_local = t8_forest_get_local_num_leaf_elements (forest_to);
-    // Define vector for the new data and wrap it.
-    std::vector<TElementDataType> partitioned_data (num_new_local);
-    sc_array* data_out = sc_array_new_data (partitioned_data.data (), sizeof (TElementDataType), num_new_local);
-    // Partition magic using the forest function.
-    t8_forest_partition_data (forest_from, forest_to, data_in, data_out);
-    // Clean up.
-    sc_array_destroy (data_in);
-    sc_array_destroy (data_out);
-    // Set the partitioned element data to the mesh.
-    set_element_data (std::move (partitioned_data));
+    // The data may hold entries for the ghost elements of forest_from after the local ones, the handler drops them.
+    T8_ASSERT (m_element_data.size () >= static_cast<size_t> (t8_forest_get_local_num_leaf_elements (forest_from)));
+    // Repartition the data in place, without copying it into or out of the handler. The new storage has room for
+    // the ghost elements of forest_to.
+    t8_vector_handler<TElementDataType> handler (std::move (m_element_data));
+    t8_forest_partition_data (forest_from, forest_to, handler);
+    // Assign directly instead of using set_element_data, since the mesh may still refer to forest_from.
+    m_element_data = handler.take_data ();
   }
 
   std::vector<TElementDataType> m_element_data; /**< Vector storing the (local) element data. */
