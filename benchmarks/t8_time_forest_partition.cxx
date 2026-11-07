@@ -44,6 +44,7 @@
 #include <t8_vector/t8_vec.hxx>
 #include <array>
 #include <cstring>
+#include <memory>
 
 /* This is the user defined data used to define the
  * region in which we partition.
@@ -121,6 +122,8 @@ struct t8_time_element_data
   bool use_handler = false; /**< True to repartition a t8_vector_handler, false to repartition sc_arrays. */
   sc_array_t *in = nullptr; /**< The persistent input array if \a keep is true. */
   sc_array_t *out = nullptr; /**< The persistent output array if \a keep is true. */
+  /** The persistent handler with buffer reuse if \a keep and \a use_handler are true. */
+  std::unique_ptr<t8_abstract_vector_handler> handler;
 };
 
 /** Write to every byte of an array, so that its memory is resident. */
@@ -133,20 +136,37 @@ t8_time_touch_array (sc_array_t *array)
 }
 
 /* Repartition element data of type TItem from forest_from to forest_to with a t8_vector_handler and return the
- * runtime. The handler allocates the new storage and frees the old one inside the timed region. */
+ * runtime. A fresh handler allocates the new storage and frees the old one inside the timed region. The persistent
+ * handler of keep mode reuses the replaced storage, so the data ping-pongs between two storages; the data is
+ * refilled within its storage, which touches it, before the timed region. */
 template <typename TItem>
 static double
-t8_time_forest_partition_data_handler (t8_forest_t forest_from, t8_forest_t forest_to, sc_MPI_Comm comm)
+t8_time_forest_partition_data_handler (t8_forest_t forest_from, t8_forest_t forest_to, t8_time_element_data &data,
+                                       sc_MPI_Comm comm)
 {
+  /** The handler of a time step without keep mode. */
+  t8_vector_handler<TItem> fresh_handler;
+  /** The handler that is repartitioned: the persistent one in keep mode, the fresh one otherwise. */
+  t8_vector_handler<TItem> *handler = &fresh_handler;
+  if (data.keep) {
+    if (data.handler == nullptr) {
+      auto kept_handler = std::make_unique<t8_vector_handler<TItem>> ();
+      kept_handler->set_buffer_reuse (true);
+      data.handler = std::move (kept_handler);
+    }
+    handler = static_cast<t8_vector_handler<TItem> *> (data.handler.get ());
+  }
   TItem item;
   memset (&item, 1, sizeof (TItem));
-  t8_vector_handler<TItem> handler (std::vector<TItem> (t8_forest_get_local_num_leaf_elements (forest_from), item));
+  std::vector<TItem> items = handler->take_data ();
+  items.assign (t8_forest_get_local_num_leaf_elements (forest_from), item);
+  handler->set_data (std::move (items));
   /* Start all processes together, so that a late partner does not count as exchange time. */
   const int mpiret = sc_MPI_Barrier (comm);
   SC_CHECK_MPI (mpiret);
 
   double runtime = -sc_MPI_Wtime ();
-  t8_forest_partition_data (forest_from, forest_to, handler);
+  t8_forest_partition_data (forest_from, forest_to, *handler);
   runtime += sc_MPI_Wtime ();
   return runtime;
 }
@@ -162,11 +182,11 @@ t8_time_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, t
   if (data.use_handler) {
     switch (data.data_bytes) {
     case 8:
-      return t8_time_forest_partition_data_handler<double> (forest_from, forest_to, comm);
+      return t8_time_forest_partition_data_handler<double> (forest_from, forest_to, data, comm);
     case 64:
-      return t8_time_forest_partition_data_handler<std::array<double, 8>> (forest_from, forest_to, comm);
+      return t8_time_forest_partition_data_handler<std::array<double, 8>> (forest_from, forest_to, data, comm);
     case 512:
-      return t8_time_forest_partition_data_handler<std::array<double, 64>> (forest_from, forest_to, comm);
+      return t8_time_forest_partition_data_handler<std::array<double, 64>> (forest_from, forest_to, data, comm);
     default:
       SC_ABORTF ("The handler interface is only timed for 8, 64 or 512 bytes per element, not %i.", data.data_bytes);
     }
@@ -230,7 +250,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   sc_stats_init (&times[4], "balance");
   sc_stats_init (&times[5], "total");
   sc_stats_init (&times[6], "partition_data");
-  if (data.keep) {
+  if (data.keep && !data.use_handler) {
     data.in = sc_array_new (data.data_bytes);
     data.out = sc_array_new (data.data_bytes);
   }
@@ -325,7 +345,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   sc_stats_compute (comm, 7, times);
   sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 7, times, 1, 1);
   t8_forest_unref (&forest_partition);
-  if (data.keep) {
+  if (data.keep && !data.use_handler) {
     sc_array_destroy (data.in);
     sc_array_destroy (data.out);
   }
@@ -463,11 +483,11 @@ main (int argc, char *argv[])
                       "If > 0, repartition element data with this many bytes per element in every time step "
                       "and report its runtime as partition_data.");
   sc_options_add_switch (opt, 'K', "keep-data", &keep_data,
-                         "Together with -B: Keep the element data arrays over the time steps instead of allocating "
-                         "fresh ones in every time step.");
+                         "Together with -B: Keep the element data over the time steps instead of allocating fresh "
+                         "storage in every time step. With -V, the handler reuses the storage it replaces.");
   sc_options_add_switch (opt, 'V', "vector-handler", &vector_handler,
                          "Together with -B: Repartition a t8_vector_handler instead of sc_arrays. "
-                         "Only for 8, 64 or 512 bytes per element and without -K.");
+                         "Only for 8, 64 or 512 bytes per element.");
   sc_options_add_switch (opt, 'z', "use_cad", &use_cad,
                          "If used, meshes will be curved to original geometries (msh- and brep-files necessary).");
 
@@ -480,9 +500,8 @@ main (int argc, char *argv[])
       || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0 && test_hybrid_cube == 0
           && test_hex_cube == 0)
       || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0 || element_data.data_bytes < 0
-      || (element_data.use_handler
-          && (element_data.keep
-              || (element_data.data_bytes != 8 && element_data.data_bytes != 64 && element_data.data_bytes != 512)))
+      || (element_data.use_handler && element_data.data_bytes != 8 && element_data.data_bytes != 64
+          && element_data.data_bytes != 512)
       || test_tet + test_hybrid_cube + test_hex_cube > 1
       || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_tet || test_hybrid_cube || test_hex_cube))
       || (mshfileprefix == NULL && use_cad)) {
