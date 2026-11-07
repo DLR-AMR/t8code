@@ -54,46 +54,46 @@ t8_mpi_int (const size_t count)
 
 /**
  * A base class for vector handlers.
+ *
+ * A vector handler owns a vector of data items and can pack, unpack and communicate it via MPI.
+ * Derived classes implement the item-type dependent packing; sending and receiving is implemented
+ * once in this base class on top of it.
  */
 struct t8_abstract_vector_handler
 {
- public:
+  /** Default destructor. */
+  virtual ~t8_abstract_vector_handler () = default;
+
   /**
-   * Pure virtual function to determine the buffer size.
-   *
-   * This function must be implemented by derived classes to calculate
-   * the size of the buffer required for communication.
+   * Compute an upper bound of the number of bytes needed by \ref pack_vector_prefix.
    *
    * \param[in] comm The MPI communicator.
    * \return The size of the buffer.
    */
   virtual int
-  buffer_size (sc_MPI_Comm comm)
+  buffer_size (sc_MPI_Comm comm) const
     = 0;
 
   /**
-   * Packs a vector into a buffer. The vector data will be prefixed with the number of elements in the vector.
+   * Packs the vector into a buffer. The data is prefixed with the number of items in the vector.
    *
-   * This pure virtual function is responsible for packing a vector prefix into the provided buffer.
-   *
-   * \param[in, out] buffer A pointer to the buffer where the vector prefix will be packed.
-   * \param[in] num_bytes The number of bytes to be packed.
-   * \param[in, out] pos A reference to an integer representing the current position in the buffer. This will be updated as bytes are packed.
+   * \param[in, out] buffer The buffer to pack the vector into.
+   * \param[in] num_bytes The number of bytes of \a buffer.
+   * \param[in, out] pos The current position in \a buffer. Advanced by the packed bytes.
    * \param[in] comm The MPI communicator used for the operation.
    */
   virtual void
-  pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm)
+  pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm) const
     = 0;
 
   /**
-   * Unpacks a vector from a buffer. Expected to be prefixed with the number of elements in the vector.
+   * Unpacks a vector from a buffer and replaces the data of this handler.
+   * The data is expected to be prefixed with the number of items in the vector.
    *
-   * This pure virtual function is responsible for unpacking a vector prefix from the provided buffer.
-   *
-   * \param[in] buffer Pointer to the buffer containing the packed data.
-   * \param[in] num_bytes The number of bytes in the buffer.
-   * \param[in] pos Reference to an integer representing the current position in the buffer. This will be updated as data is unpacked.
-   * \param[in] outcount Reference to an integer where the count of unpacked elements will be stored.
+   * \param[in] buffer The buffer containing the packed data.
+   * \param[in] num_bytes The number of bytes of \a buffer.
+   * \param[in, out] pos The current position in \a buffer. Advanced by the unpacked bytes.
+   * \param[out] outcount The number of unpacked items.
    * \param[in] comm The MPI communicator used for the operation.
    */
   virtual void
@@ -101,69 +101,49 @@ struct t8_abstract_vector_handler
     = 0;
 
   /**
-   * Pure virtual function to send data to a specified destination.
+   * Get the type of the handled data.
    *
-   * This function is responsible for packing and sending data to a given destination
-   * with a specific tag using the provided MPI communicator.
-   *
-   * \param[in] dest The destination rank to which the data will be sent.
-   * \param[in] tag The tag associated with the message to be sent.
-   * \param[in] comm The MPI communicator used for the communication.
-   * \return An integer indicating the status of the send operation.
-   */
-  virtual int
-  send (const int dest, const int tag, sc_MPI_Comm comm)
-    = 0;
-
-  /**
-   * Receives a message from a specified source.
-   *
-   * This pure virtual function is responsible for receiving and unpacking a message from a given source
-   * with a specific tag within the provided MPI communicator. The function will also
-   * update the status and output count of the received message.
-   *
-   * \param[in] source The rank of the source process from which the message is received.
-   * \param[in] tag The tag of the message to be received.
-   * \param[in] comm The MPI communicator within which the message is received.
-   * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
-   * \param[in] outcount A reference to an integer that will be updated with the count of received elements.
-   * \return An integer indicating the success or failure of the receive operation.
-   */
-  virtual int
-  recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
-    = 0;
-
-  /**
-   * Sends and receives messages to and from specified destinations.
-   *
-   * This pure virtual function is responsible for packing, sending, receiving and unpacking a message from and
-   * to a given source and destination with a specific tag within the provided MPI communicator. The function will also
-   * update the status and output count of the received message.
-   *
-   * \param[in] dest The destination rank to which the data will be sent.
-   * \param[in] source The rank of the source process from which the message is received.
-   * \param[in] tag The tag associated with the messages to be sent.
-   * \param[in] comm The MPI communicator used for the communication.
-   * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
-   * \param[in] outcount A reference to an integer that will be updated with the count of received elements.
-   * \return An integer indicating the status of the send operation.
-   */
-  virtual int
-  sendrecv (const int dest, const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
-    = 0;
-
-  /**
-   * Pure virtual function to get the type.
-   *
-   * This function must be overridden in derived classes to return the type.
-   *
-   * \return An integer representing the type.
+   * \return The type of the data handler.
    */
   virtual t8_data_handler_type
-  type ()
+  type () const
     = 0;
 
-  virtual ~t8_abstract_vector_handler () {};
+  /**
+   * Pack the vector and send it to a process (blocking). Requires MPI.
+   *
+   * \param[in] dest The rank to send to.
+   * \param[in] tag The tag of the message.
+   * \param[in] comm The MPI communicator used for the communication.
+   */
+  void
+  send (const int dest, const int tag, sc_MPI_Comm comm) const;
+
+  /**
+   * Receive a vector from a process (blocking) and replace the data of this handler with it. Requires MPI.
+   *
+   * \param[in] source The rank to receive from.
+   * \param[in] tag The tag of the message.
+   * \param[in] comm The MPI communicator used for the communication.
+   * \param[out] status The MPI status of the received message.
+   * \param[out] outcount The number of received items.
+   */
+  void
+  recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount);
+
+  /**
+   * Send the vector to one process and replace the data of this handler with the vector received from
+   * another process. Requires MPI.
+   *
+   * \param[in] dest The rank to send to.
+   * \param[in] source The rank to receive from.
+   * \param[in] tag The tag of the messages.
+   * \param[in] comm The MPI communicator used for the communication.
+   * \param[out] status The MPI status of the received message.
+   * \param[out] outcount The number of received items.
+   */
+  void
+  sendrecv (const int dest, const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount);
 };
 
 /**
@@ -232,7 +212,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
    * \return The size of the buffer.
    */
   int
-  buffer_size (sc_MPI_Comm comm) override
+  buffer_size (sc_MPI_Comm comm) const override
   {
     int prefix_size = 0;
     const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &prefix_size);
@@ -249,7 +229,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
    * \param[in] comm The MPI communicator used for the operation.
    */
   void
-  pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm) override
+  pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm) const override
   {
     const int num_data = t8_mpi_int (m_data.size ());
     const int mpiret = sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
@@ -278,127 +258,13 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   }
 
   /**
-   * Sends a message to a specified destination.
-   *
-   * This function is responsible for packing and sending data to a given destination
-   * with a specific tag using the provided MPI communicator.
-   *
-   * \param[in] dest The destination rank to which the data will be sent.
-   * \param[in] tag The tag associated with the message to be sent.
-   * \param[in] comm The MPI communicator used for the communication.
-   * \return An integer indicating the status of the send operation.
-   */
-  int
-  send (const int dest, const int tag, sc_MPI_Comm comm) override
-  {
-    int pos = 0;
-    const int num_bytes = buffer_size (comm);
-    std::vector<char> buffer (num_bytes);
-    pack_vector_prefix (buffer.data (), num_bytes, pos, comm);
-
-    const int mpiret = sc_MPI_Send (buffer.data (), num_bytes, sc_MPI_PACKED, dest, tag, comm);
-    SC_CHECK_MPI (mpiret);
-    return mpiret;
-  }
-
-  /**
-   * Receives a message from a specified source.
-   *
-   * This function is responsible for receiving and unpacking a message from a given source
-   * with a specific tag within the provided MPI communicator. The function will also
-   * update the status and output count of the received message.
-   *
-   * \param[in] source The rank of the source process from which the message is received.
-   * \param[in] tag The tag of the message to be received.
-   * \param[in] comm The MPI communicator within which the message is received.
-   * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
-   * \param[in] outcount A reference to an integer that will be updated with the count of received elements.
-   * \return An integer indicating the success or failure of the receive operation.
-   */
-  int
-  recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount) override
-  {
-    int pos = 0;
-    int mpiret = sc_MPI_Probe (source, tag, comm, status);
-    SC_CHECK_MPI (mpiret);
-
-    int num_bytes;
-    mpiret = sc_MPI_Get_count (status, sc_MPI_PACKED, &num_bytes);
-    SC_CHECK_MPI (mpiret);
-    std::vector<char> buffer (num_bytes);
-
-    mpiret = sc_MPI_Recv (buffer.data (), num_bytes, sc_MPI_PACKED, source, tag, comm, status);
-    SC_CHECK_MPI (mpiret);
-    unpack_vector_prefix (buffer.data (), num_bytes, pos, outcount, comm);
-    return mpiret;
-  }
-
-  /**
-   * Sends and receives messages to and from specified destinations.
-   *
-   * This function is responsible for packing, sending and receiving data to and from given destinations
-   * with a specific tag using the provided MPI communicator.
-   *
-   * \param[in] dest The destination rank to which the data will be sent.
-   * \param[in] source The rank of the source process from which the message is received.
-   * \param[in] tag The tag associated with the messages to be sent.
-   * \param[in] comm The MPI communicator used for the communication.
-   * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
-   * \param[in] outcount A reference to an integer that will be updated with the count of received elements.
-   * \return An integer indicating the status of the send operation.
-   */
-  int
-  sendrecv ([[maybe_unused]] const int dest, [[maybe_unused]] const int source, [[maybe_unused]] const int tag,
-            [[maybe_unused]] sc_MPI_Comm comm, [[maybe_unused]] sc_MPI_Status *status,
-            [[maybe_unused]] int &outcount) override
-  {
-    {
-#if T8_ENABLE_MPI
-      /* Compute sizes of outgoing and incoming messages */
-      const int send_num_bytes = buffer_size (comm);
-      int recv_num_bytes = 0;
-      int mpiret = sc_MPI_Sendrecv (&send_num_bytes, 1, sc_MPI_INT, dest, tag, &recv_num_bytes, 1, sc_MPI_INT, source,
-                                    tag, comm, status);
-      SC_CHECK_MPI (mpiret);
-
-      /* Prepare send buffer */
-      std::vector<char> send_buffer (send_num_bytes);
-      int send_pos = 0;
-      pack_vector_prefix (send_buffer.data (), send_num_bytes, send_pos, comm);
-
-      /* Prepare receive buffer using size received */
-      std::vector<char> recv_buffer (recv_num_bytes);
-
-      /* Actual sendrecv of data */
-      mpiret = sc_MPI_Sendrecv (
-        /* send payload */
-        send_buffer.data (), send_num_bytes, sc_MPI_PACKED, dest, tag,
-        /* receive payload */
-        recv_buffer.data (), recv_num_bytes, sc_MPI_PACKED, source, tag,
-        /* communicator + status */
-        comm, status);
-      SC_CHECK_MPI (mpiret);
-
-      /* Unpack received data */
-      int recv_pos = 0;
-      unpack_vector_prefix (recv_buffer.data (), recv_num_bytes, recv_pos, outcount, comm);
-
-      return mpiret;
-#else
-      SC_ABORT ("MPI_Sendrecv not available without MPI");
-      return 0;
-#endif
-    }
-  }
-
-  /**
    * Get the type of the data handler.
    *
    * \return The type of the data handler, \ref t8_data_handler_type_unregistered if the data handler has no
    *         member type ().
    */
   t8_data_handler_type
-  type () override
+  type () const override
   {
     if constexpr (requires { m_data_handler.type (); }) {
       return m_data_handler.type ();
