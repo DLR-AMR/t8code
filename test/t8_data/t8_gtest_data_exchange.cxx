@@ -371,3 +371,60 @@ TYPED_TEST (handler_partition_test, all_shapes)
     }
   }
 }
+
+/**
+ * Repartition back and forth with buffer reuse, with trailing entries after the local items and with a capacity
+ * hint. The trailing entries are dropped, new storage has room for the hint, and the way back receives into the
+ * original storage, which the way forth kept.
+ */
+TYPED_TEST (handler_partition_test, reuse_trailing_capacity)
+{
+  const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int mpirank, mpisize;
+  int mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  for (const t8_test_partition_shape shape : t8_test_partition_shapes) {
+    const auto [offsets_old, offsets_new] = t8_test_partition_offsets (shape, mpisize);
+    t8_data_partition_pattern forth
+      = t8_data_partition_pattern_from_offsets (offsets_old.data (), offsets_new.data (), mpirank, mpisize, comm, 0);
+    forth.min_capacity_new = forth.num_new + 7;
+    const t8_data_partition_pattern back
+      = t8_data_partition_pattern_from_offsets (offsets_new.data (), offsets_old.data (), mpirank, mpisize, comm, 0);
+
+    std::vector<TypeParam> data;
+    for (t8_gloidx_t iglobal = offsets_old[mpirank]; iglobal < offsets_old[mpirank + 1]; ++iglobal) {
+      data.push_back (t8_test_item_from_global_index<TypeParam> (iglobal));
+    }
+    /* Trailing entries, e.g. of ghost elements, with indices that no local item has. */
+    for (t8_gloidx_t itrailing = 0; itrailing < 3; ++itrailing) {
+      data.push_back (t8_test_item_from_global_index<TypeParam> (offsets_old.back () + itrailing));
+    }
+    const TypeParam *const original_storage = data.data ();
+    auto handler = t8_test_make_handler (std::move (data));
+    handler.set_buffer_reuse (true);
+
+    handler.partition (forth);
+    ASSERT_EQ (handler.get_data ().size (), forth.num_new) << "shape " << shape;
+    for (size_t iitem = 0; iitem < forth.num_new; ++iitem) {
+      EXPECT_TRUE (t8_test_item_has_global_index (handler.get_data ()[iitem],
+                                                  offsets_new[mpirank] + static_cast<t8_gloidx_t> (iitem)))
+        << "shape " << shape << ", item " << iitem;
+    }
+    if (!forth.sends.empty () || !forth.recvs.empty ()) {
+      /* The new data got new storage. */
+      EXPECT_GE (handler.get_data ().capacity (), forth.min_capacity_new) << "shape " << shape;
+    }
+
+    handler.partition (back);
+    ASSERT_EQ (handler.get_data ().size (), back.num_new) << "shape " << shape;
+    for (size_t iitem = 0; iitem < back.num_new; ++iitem) {
+      EXPECT_TRUE (t8_test_item_has_global_index (handler.get_data ()[iitem],
+                                                  offsets_old[mpirank] + static_cast<t8_gloidx_t> (iitem)))
+        << "shape " << shape << ", item " << iitem;
+    }
+    EXPECT_EQ (handler.get_data ().data (), original_storage) << "shape " << shape;
+  }
+}
