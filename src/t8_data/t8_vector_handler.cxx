@@ -37,11 +37,11 @@ t8_abstract_vector_handler::send ([[maybe_unused]] const int dest, [[maybe_unuse
   const int num_bytes = buffer_size (comm);
   /* The buffer is completely overwritten by packing, so it is not initialized. */
   const std::unique_ptr<char[]> buffer (new char[num_bytes]);
-  int pos = 0;
-  pack_vector_prefix (buffer.get (), num_bytes, pos, comm);
+  int position = 0;
+  pack_vector_prefix (buffer.get (), num_bytes, position, comm);
 
   /* buffer_size is an upper bound, only the packed bytes are sent. */
-  const int mpiret = sc_MPI_Send (buffer.get (), pos, sc_MPI_PACKED, dest, tag, comm);
+  const int mpiret = sc_MPI_Send (buffer.get (), position, sc_MPI_PACKED, dest, tag, comm);
   SC_CHECK_MPI (mpiret);
 #else
   SC_ABORT ("t8_abstract_vector_handler::send requires MPI.");
@@ -64,8 +64,8 @@ t8_abstract_vector_handler::recv ([[maybe_unused]] const int source, [[maybe_unu
   mpiret = sc_MPI_Recv (buffer.get (), num_bytes, sc_MPI_PACKED, source, tag, comm, status);
   SC_CHECK_MPI (mpiret);
 
-  int pos = 0;
-  unpack_vector_prefix (buffer.get (), num_bytes, pos, outcount, comm);
+  int position = 0;
+  unpack_vector_prefix (buffer.get (), num_bytes, position, outcount, comm);
 #else
   SC_ABORT ("t8_abstract_vector_handler::recv requires MPI.");
 #endif
@@ -95,8 +95,8 @@ t8_abstract_vector_handler::sendrecv ([[maybe_unused]] const int dest, [[maybe_u
                             recv_num_bytes, sc_MPI_PACKED, source, tag, comm, status);
   SC_CHECK_MPI (mpiret);
 
-  int pos = 0;
-  unpack_vector_prefix (recv_buffer.get (), recv_num_bytes, pos, outcount, comm);
+  int position = 0;
+  unpack_vector_prefix (recv_buffer.get (), recv_num_bytes, position, outcount, comm);
 #else
   SC_ABORT ("t8_abstract_vector_handler::sendrecv requires MPI.");
 #endif

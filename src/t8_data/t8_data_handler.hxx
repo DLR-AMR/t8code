@@ -62,7 +62,7 @@ inline constexpr t8_data_handler_type t8_data_handler_type_unregistered { -1 };
  * \return True if the type is handled internally, false otherwise
  */
 constexpr bool
-is_internal_data (const t8_data_handler_type type)
+t8_is_internal_data (const t8_data_handler_type type)
 {
   switch (type.get ()) {
   // Placeholder for future internal data, which is handled here.
