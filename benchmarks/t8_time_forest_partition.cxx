@@ -34,12 +34,15 @@
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_partition.h>
+#include <t8_forest/t8_forest_partition.hxx>
+#include <t8_data/t8_vector_handler.hxx>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <example/common/t8_example_common.hxx>
 #include <t8_vector/t8_vec.hxx>
+#include <array>
 #include <cstring>
 
 /* This is the user defined data used to define the
@@ -110,11 +113,12 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
   return 0;
 }
 
-/** Element data that is repartitioned in every time step, see the options -B and -K. */
+/** Element data that is repartitioned in every time step, see the options -B, -K and -V. */
 struct t8_time_element_data
 {
   int data_bytes;           /**< The number of bytes per element, 0 to not repartition element data. */
   int keep;                 /**< True if the arrays persist over the time steps, false if every step uses fresh ones. */
+  int use_handler;          /**< True to repartition a t8_vector_handler, false to repartition sc_arrays. */
   sc_array_t *in = nullptr; /**< The persistent input array if \a keep is true. */
   sc_array_t *out = nullptr; /**< The persistent output array if \a keep is true. */
 };
@@ -128,6 +132,25 @@ t8_time_touch_array (sc_array_t *array)
   }
 }
 
+/* Repartition element data of type TItem from forest_from to forest_to with a t8_vector_handler and return the
+ * runtime. The handler allocates the new storage and frees the old one inside the timed region. */
+template <typename TItem>
+static double
+t8_time_forest_partition_data_handler (t8_forest_t forest_from, t8_forest_t forest_to, sc_MPI_Comm comm)
+{
+  TItem item;
+  memset (&item, 1, sizeof (TItem));
+  t8_vector_handler<TItem> handler (std::vector<TItem> (t8_forest_get_local_num_leaf_elements (forest_from), item));
+  /* Start all processes together, so that a late partner does not count as exchange time. */
+  const int mpiret = sc_MPI_Barrier (comm);
+  SC_CHECK_MPI (mpiret);
+
+  double runtime = -sc_MPI_Wtime ();
+  t8_forest_partition_data (forest_from, forest_to, handler);
+  runtime += sc_MPI_Wtime ();
+  return runtime;
+}
+
 /* Repartition the element data from forest_from to forest_to with t8_forest_partition_data and return the runtime.
  * Fresh arrays: The output array is allocated and the input array is freed inside the timed region, as most
  * callers do. Persistent arrays: They are resized and touched before the timed region, so only the
@@ -136,6 +159,18 @@ static double
 t8_time_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, t8_time_element_data &data,
                                sc_MPI_Comm comm)
 {
+  if (data.use_handler) {
+    switch (data.data_bytes) {
+    case 8:
+      return t8_time_forest_partition_data_handler<double> (forest_from, forest_to, comm);
+    case 64:
+      return t8_time_forest_partition_data_handler<std::array<double, 8>> (forest_from, forest_to, comm);
+    case 512:
+      return t8_time_forest_partition_data_handler<std::array<double, 64>> (forest_from, forest_to, comm);
+    default:
+      SC_ABORTF ("The handler interface is only timed for 8, 64 or 512 bytes per element, not %i.", data.data_bytes);
+    }
+  }
   const size_t num_old = t8_forest_get_local_num_leaf_elements (forest_from);
   const size_t num_new = t8_forest_get_local_num_leaf_elements (forest_to);
   sc_array_t *data_in = data.keep ? data.in : sc_array_new (data.data_bytes);
@@ -428,6 +463,9 @@ main (int argc, char *argv[])
   sc_options_add_switch (opt, 'K', "keep-data", &element_data.keep,
                          "Together with -B: Keep the element data arrays over the time steps instead of allocating "
                          "fresh ones in every time step.");
+  sc_options_add_switch (opt, 'V', "vector-handler", &element_data.use_handler,
+                         "Together with -B: Repartition a t8_vector_handler instead of sc_arrays. "
+                         "Only for 8, 64 or 512 bytes per element and without -K.");
   sc_options_add_switch (opt, 'z', "use_cad", &use_cad,
                          "If used, meshes will be curved to original geometries (msh- and brep-files necessary).");
 
@@ -438,6 +476,9 @@ main (int argc, char *argv[])
       || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0 && test_hybrid_cube == 0
           && test_hex_cube == 0)
       || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0 || element_data.data_bytes < 0
+      || (element_data.use_handler
+          && (element_data.keep
+              || (element_data.data_bytes != 8 && element_data.data_bytes != 64 && element_data.data_bytes != 512)))
       || test_tet + test_hybrid_cube + test_hex_cube > 1
       || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_tet || test_hybrid_cube || test_hex_cube))
       || (mshfileprefix == NULL && use_cad)) {
