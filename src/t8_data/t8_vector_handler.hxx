@@ -31,26 +31,11 @@
 #define T8_VECTOR_HANDLER_HXX
 
 #include <t8.h>
+#include <t8_data/t8_data_exchange.hxx>
 #include <t8_data/t8_data_handler.hxx>
-#include <limits>
 #include <memory>
 #include <utility>
 #include <vector>
-
-/**
- * Convert a count of bytes or items to the int that MPI expects.
- * Aborts if the count does not fit into an int.
- *
- * \param[in] count The count to convert.
- * \return \a count as int.
- */
-inline int
-t8_mpi_int (const size_t count)
-{
-  SC_CHECK_ABORTF (count <= static_cast<size_t> (std::numeric_limits<int>::max ()),
-                   "Count %zu exceeds the int range of MPI.", count);
-  return static_cast<int> (count);
-}
 
 /**
  * A base class for vector handlers.
