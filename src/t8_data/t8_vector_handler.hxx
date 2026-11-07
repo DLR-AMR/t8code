@@ -33,6 +33,7 @@
 #include <t8.h>
 #include <t8_data/t8_data_exchange.hxx>
 #include <t8_data/t8_data_handler.hxx>
+#include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -92,6 +93,17 @@ struct t8_abstract_vector_handler
    */
   virtual t8_data_handler_type
   type () const
+    = 0;
+
+  /**
+   * Repartition the data: Before the call, the handler holds the \a pattern.num_old items of this process in the
+   * old distribution, afterwards the \a pattern.num_new items in the new distribution.
+   * Every process of \a pattern.comm calls this with its pattern of the same repartitioning.
+   *
+   * \param[in] pattern The partition pattern of this process, e.g. from \ref t8_data_partition_pattern_from_offsets.
+   */
+  virtual void
+  partition (const t8_data_partition_pattern &pattern)
     = 0;
 
   /**
@@ -262,6 +274,31 @@ struct t8_vector_handler: public t8_abstract_vector_handler
     }
   }
 
+  /**
+   * Repartition the data, see \ref t8_abstract_vector_handler::partition.
+   * Items with a bytewise data handler are exchanged without packing, all other items are serialized chunk by chunk.
+   * Items that stay on this process are copied or moved, never packed.
+   *
+   * \param[in] pattern The partition pattern of this process.
+   */
+  void
+  partition (const t8_data_partition_pattern &pattern) override
+  {
+    T8_ASSERT (m_data.size () == pattern.num_old);
+    if (pattern.sends.empty () && pattern.recvs.empty ()) {
+      /* No item changes the process, so every item keeps its index. */
+      T8_ASSERT (pattern.num_old == pattern.num_new && pattern.self_count == pattern.num_old);
+      T8_ASSERT (pattern.self_count == 0 || (pattern.self_first_old == 0 && pattern.self_first_new == 0));
+      return;
+    }
+    if constexpr (T8BytewiseDataHandler<TDataHandler, TType>) {
+      partition_bytewise (pattern);
+    }
+    else {
+      partition_serialized (pattern);
+    }
+  }
+
  private:
   /**
    * Compute the number of bytes needed to pack a range of items (without count prefix).
@@ -344,6 +381,105 @@ struct t8_vector_handler: public t8_abstract_vector_handler
         m_data_handler.unpack (buffer, num_bytes, position, items[iitem], comm);
       }
     }
+  }
+
+  /**
+   * Repartition items with a bytewise data handler, without packing.
+   * The outgoing items are sent directly from the old storage first, so that the other processes do not wait while
+   * the new storage is set up. Only the slots of incoming items are value-initialized, the staying items are copied
+   * once, directly to their final position. The incoming items are received directly into their final slots.
+   *
+   * \param[in] pattern The partition pattern of this process.
+   */
+  void
+  partition_bytewise (const t8_data_partition_pattern &pattern)
+    requires T8BytewiseDataHandler<TDataHandler, TType>
+  {
+    t8_data_messages messages (pattern);
+    for (const auto &chunk : pattern.sends) {
+      messages.send (chunk.rank, m_data.data () + chunk.first, chunk.count * sizeof (TType));
+    }
+
+    std::vector<TType> new_data;
+    new_data.reserve (pattern.num_new);
+    new_data.resize (pattern.self_first_new);
+    const auto self_begin = m_data.cbegin () + pattern.self_first_old;
+    new_data.insert (new_data.end (), self_begin, self_begin + pattern.self_count);
+    new_data.resize (pattern.num_new);
+
+    for (const auto &chunk : pattern.recvs) {
+      messages.receive (chunk.rank, new_data.data () + chunk.first, chunk.count * sizeof (TType));
+    }
+    messages.wait_all ();
+    m_data = std::move (new_data);
+  }
+
+  /**
+   * Repartition items that are serialized by the data handler.
+   * Each outgoing chunk is packed into its own buffer and sent. The items that stay on this process are moved.
+   * The size of an incoming chunk depends on its items, so the sources are probed in rank order and each
+   * receive is posted as soon as its size is known; the transfers overlap. The chunks are unpacked directly
+   * into their final position when all of them have arrived.
+   *
+   * \param[in] pattern The partition pattern of this process.
+   */
+  void
+  partition_serialized (const t8_data_partition_pattern &pattern)
+  {
+    const sc_MPI_Comm comm = pattern.comm;
+
+    /* The send buffers have to live until the sends are complete. */
+    const size_t num_sends = pattern.sends.size ();
+    std::vector<std::unique_ptr<char[]>> send_buffers (num_sends);
+    std::vector<sc_MPI_Request> send_requests (num_sends);
+    for (size_t isend = 0; isend < num_sends; ++isend) {
+      const t8_data_partition_chunk &chunk = pattern.sends[isend];
+      const int num_bytes = t8_mpi_int (range_buffer_size (chunk.first, chunk.count, comm));
+      send_buffers[isend].reset (new char[num_bytes]);
+      int position = 0;
+      pack_range (chunk.first, chunk.count, send_buffers[isend].get (), num_bytes, position, comm);
+      const int mpiret = sc_MPI_Isend (send_buffers[isend].get (), position, sc_MPI_PACKED, chunk.rank, pattern.tag,
+                                       comm, &send_requests[isend]);
+      SC_CHECK_MPI (mpiret);
+    }
+
+    std::vector<TType> new_data (pattern.num_new);
+    const auto self_begin = m_data.begin () + pattern.self_first_old;
+    std::move (self_begin, self_begin + pattern.self_count, new_data.begin () + pattern.self_first_new);
+
+    const size_t num_recvs = pattern.recvs.size ();
+    std::vector<std::unique_ptr<char[]>> recv_buffers (num_recvs);
+    std::vector<int> recv_num_bytes (num_recvs);
+    std::vector<sc_MPI_Request> recv_requests (num_recvs);
+    for (size_t irecv = 0; irecv < num_recvs; ++irecv) {
+      const t8_data_partition_chunk &chunk = pattern.recvs[irecv];
+      sc_MPI_Status status;
+      int mpiret = sc_MPI_Probe (chunk.rank, pattern.tag, comm, &status);
+      SC_CHECK_MPI (mpiret);
+      mpiret = sc_MPI_Get_count (&status, sc_MPI_PACKED, &recv_num_bytes[irecv]);
+      SC_CHECK_MPI (mpiret);
+      recv_buffers[irecv].reset (new char[recv_num_bytes[irecv]]);
+      mpiret = sc_MPI_Irecv (recv_buffers[irecv].get (), recv_num_bytes[irecv], sc_MPI_PACKED, chunk.rank, pattern.tag,
+                             comm, &recv_requests[irecv]);
+      SC_CHECK_MPI (mpiret);
+    }
+    if (num_recvs > 0) {
+      const int mpiret = sc_MPI_Waitall (t8_mpi_int (num_recvs), recv_requests.data (), sc_MPI_STATUSES_IGNORE);
+      SC_CHECK_MPI (mpiret);
+    }
+    for (size_t irecv = 0; irecv < num_recvs; ++irecv) {
+      const t8_data_partition_chunk &chunk = pattern.recvs[irecv];
+      int position = 0;
+      unpack_range (recv_buffers[irecv].get (), recv_num_bytes[irecv], position, new_data.data () + chunk.first,
+                    chunk.count, comm);
+      T8_ASSERT (position == recv_num_bytes[irecv]);
+    }
+
+    if (num_sends > 0) {
+      const int mpiret = sc_MPI_Waitall (t8_mpi_int (num_sends), send_requests.data (), sc_MPI_STATUSES_IGNORE);
+      SC_CHECK_MPI (mpiret);
+    }
+    m_data = std::move (new_data);
   }
 
   std::vector<TType> m_data;   /**< The data that is packed, unpacked and communicated via MPI. */
