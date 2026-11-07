@@ -153,14 +153,17 @@ struct t8_abstract_vector_handler
 };
 
 /**
- * A template class for handling data in a distributed environment.
+ * A vector handler for a std::vector with one item of type TType per entry.
  *
- * This class inherits from t8_abstract_data_handler and provides methods for
- * packing, unpacking, sending, and receiving data using MPI.
+ * Single items are packed and unpacked by a data handler of type TDataHandler. By default this is the
+ * \ref t8_data_handler of TType, which handles trivially copyable types without user code. For data that has
+ * to be serialized, e.g. items holding a std::vector, pass a handler that describes how one item is packed.
  *
- * \tparam TType The type of data to be handled.
+ * \tparam TType The type of the data items.
+ * \tparam TDataHandler The type of the handler for single items, see \ref T8DataHandler.
  */
-template <typename TType>
+template <typename TType, typename TDataHandler = t8_data_handler<TType>>
+  requires T8DataHandler<TDataHandler, TType>
 struct t8_vector_handler: public t8_abstract_vector_handler
 {
  public:
@@ -168,8 +171,10 @@ struct t8_vector_handler: public t8_abstract_vector_handler
    * Construct a t8_vector_handler that owns the given data.
    *
    * \param[in] data The data to be handled. Pass an rvalue (e.g. via std::move) to avoid a copy.
+   * \param[in] data_handler The handler for single items, e.g. one that depends on run time parameters.
    */
-  explicit t8_vector_handler (std::vector<TType> data = {}): m_data (std::move (data))
+  explicit t8_vector_handler (std::vector<TType> data = {}, TDataHandler data_handler = {})
+    : m_data (std::move (data)), m_data_handler (std::move (data_handler))
   {
   }
 
@@ -219,7 +224,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
     const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
     SC_CHECK_MPI (mpiret);
     total_size += std::accumulate (m_data.begin (), m_data.end (), 0,
-                                   [&] (int sum, const TType &item) { return sum + single_handler.size (item, comm); });
+                                   [&] (int sum, const TType &item) { return sum + m_data_handler.size (item, comm); });
     return total_size;
   }
 
@@ -239,7 +244,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
     SC_CHECK_MPI (mpiret);
 
     std::for_each (m_data.begin (), m_data.end (),
-                   [&] (const TType &item) { single_handler.pack (item, buffer, num_bytes, pos, comm); });
+                   [&] (const TType &item) { m_data_handler.pack (item, buffer, num_bytes, pos, comm); });
   }
 
   /**
@@ -260,7 +265,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
 
     m_data.resize (outcount);
     std::for_each (m_data.begin (), m_data.end (),
-                   [&] (TType &item) { single_handler.unpack (buffer, num_bytes, pos, item, comm); });
+                   [&] (TType &item) { m_data_handler.unpack (buffer, num_bytes, pos, item, comm); });
   }
 
   /**
@@ -380,21 +385,23 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   /**
    * Get the type of the data handler.
    *
-   * \return The type of the data handler.
+   * \return The type of the data handler, \ref t8_data_handler_type_unregistered if the data handler has no
+   *         member type ().
    */
   t8_data_handler_type
   type () override
   {
-    return single_handler.type ();
+    if constexpr (requires { m_data_handler.type (); }) {
+      return m_data_handler.type ();
+    }
+    else {
+      return t8_data_handler_type_unregistered;
+    }
   }
 
  private:
-  std::vector<TType> m_data; /**< The data that is packed, unpacked and communicated via MPI. */
-  /**
-   * A single data handler for the data type T.
-   * This handler will be used to pack and unpack individual data items.
-   */
-  t8_data_handler<TType> single_handler;
+  std::vector<TType> m_data;   /**< The data that is packed, unpacked and communicated via MPI. */
+  TDataHandler m_data_handler; /**< Handler to pack and unpack single items. */
 };
 
 /**
