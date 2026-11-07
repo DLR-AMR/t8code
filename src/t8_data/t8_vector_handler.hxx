@@ -33,10 +33,24 @@
 #include <t8.h>
 #include <vector>
 #include <t8_data/t8_data_handler.hxx>
-#include <algorithm>
 #include <memory>
 #include <utility>
-#include <numeric>
+#include <limits>
+
+/**
+ * Convert a count of bytes or items to the int that MPI expects.
+ * Aborts if the count does not fit into an int.
+ *
+ * \param[in] count The count to convert.
+ * \return \a count as int.
+ */
+inline int
+t8_mpi_int (const size_t count)
+{
+  SC_CHECK_ABORTF (count <= static_cast<size_t> (std::numeric_limits<int>::max ()),
+                   "Count %zu exceeds the int range of MPI.", count);
+  return static_cast<int> (count);
+}
 
 /**
  * A base class for vector handlers.
@@ -220,12 +234,10 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   int
   buffer_size (sc_MPI_Comm comm) override
   {
-    int total_size = 0;
-    const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
+    int prefix_size = 0;
+    const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &prefix_size);
     SC_CHECK_MPI (mpiret);
-    total_size += std::accumulate (m_data.begin (), m_data.end (), 0,
-                                   [&] (int sum, const TType &item) { return sum + m_data_handler.size (item, comm); });
-    return total_size;
+    return t8_mpi_int (prefix_size + range_buffer_size (0, m_data.size (), comm));
   }
 
   /**
@@ -239,12 +251,10 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   void
   pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm) override
   {
-    const int num_data = m_data.size ();
+    const int num_data = t8_mpi_int (m_data.size ());
     const int mpiret = sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
     SC_CHECK_MPI (mpiret);
-
-    std::for_each (m_data.begin (), m_data.end (),
-                   [&] (const TType &item) { m_data_handler.pack (item, buffer, num_bytes, pos, comm); });
+    pack_range (0, m_data.size (), buffer, num_bytes, pos, comm);
   }
 
   /**
@@ -264,8 +274,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
     T8_ASSERT (outcount >= 0);
 
     m_data.resize (outcount);
-    std::for_each (m_data.begin (), m_data.end (),
-                   [&] (TType &item) { m_data_handler.unpack (buffer, num_bytes, pos, item, comm); });
+    unpack_range (buffer, num_bytes, pos, m_data.data (), m_data.size (), comm);
   }
 
   /**
@@ -400,6 +409,89 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   }
 
  private:
+  /**
+   * Compute the number of bytes needed to pack a range of items (without count prefix).
+   *
+   * \param[in] first The index of the first item of the range.
+   * \param[in] count The number of items in the range.
+   * \param[in] comm The MPI communicator used for the operation.
+   * \return The number of bytes needed to pack the items [first, first + count).
+   */
+  size_t
+  range_buffer_size (const size_t first, const size_t count, sc_MPI_Comm comm) const
+  {
+    T8_ASSERT (first + count <= m_data.size ());
+    if constexpr (T8BytewiseDataHandler<TDataHandler, TType>) {
+      /* Bytewise items are packed in bulk. */
+      int pack_size = 0;
+      const int mpiret = sc_MPI_Pack_size (t8_mpi_int (count * sizeof (TType)), sc_MPI_BYTE, comm, &pack_size);
+      SC_CHECK_MPI (mpiret);
+      return pack_size;
+    }
+    else {
+      size_t pack_size = 0;
+      for (size_t iitem = first; iitem < first + count; ++iitem) {
+        pack_size += m_data_handler.size (m_data[iitem], comm);
+      }
+      return pack_size;
+    }
+  }
+
+  /**
+   * Pack a range of items into a buffer (without count prefix).
+   *
+   * \param[in] first The index of the first item of the range.
+   * \param[in] count The number of items in the range.
+   * \param[in, out] buffer The buffer to pack the items into.
+   * \param[in] num_bytes The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the packed bytes.
+   * \param[in] comm The MPI communicator used for the operation.
+   */
+  void
+  pack_range (const size_t first, const size_t count, void *buffer, const int num_bytes, int &position,
+              sc_MPI_Comm comm) const
+  {
+    T8_ASSERT (first + count <= m_data.size ());
+    if constexpr (T8BytewiseDataHandler<TDataHandler, TType>) {
+      /* Bytewise items are packed in bulk. */
+      const int mpiret = sc_MPI_Pack (m_data.data () + first, t8_mpi_int (count * sizeof (TType)), sc_MPI_BYTE, buffer,
+                                      num_bytes, &position, comm);
+      SC_CHECK_MPI (mpiret);
+    }
+    else {
+      for (size_t iitem = first; iitem < first + count; ++iitem) {
+        m_data_handler.pack (m_data[iitem], buffer, num_bytes, position, comm);
+      }
+    }
+  }
+
+  /**
+   * Unpack a range of items from a buffer (without count prefix).
+   *
+   * \param[in] buffer The buffer containing the packed items.
+   * \param[in] num_bytes The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the unpacked bytes.
+   * \param[out] items Array of at least \a count items to unpack into.
+   * \param[in] count The number of items to unpack.
+   * \param[in] comm The MPI communicator used for the operation.
+   */
+  void
+  unpack_range (const void *buffer, const int num_bytes, int &position, TType *items, const size_t count,
+                sc_MPI_Comm comm) const
+  {
+    if constexpr (T8BytewiseDataHandler<TDataHandler, TType>) {
+      /* Bytewise items are unpacked in bulk. */
+      const int mpiret
+        = sc_MPI_Unpack (buffer, num_bytes, &position, items, t8_mpi_int (count * sizeof (TType)), sc_MPI_BYTE, comm);
+      SC_CHECK_MPI (mpiret);
+    }
+    else {
+      for (size_t iitem = 0; iitem < count; ++iitem) {
+        m_data_handler.unpack (buffer, num_bytes, position, items[iitem], comm);
+      }
+    }
+  }
+
   std::vector<TType> m_data;   /**< The data that is packed, unpacked and communicated via MPI. */
   TDataHandler m_data_handler; /**< Handler to pack and unpack single items. */
 };
