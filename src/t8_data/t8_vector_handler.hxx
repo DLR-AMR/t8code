@@ -23,19 +23,19 @@
 /**
  * \file t8_vector_handler.hxx
  *
- * This file provides functions to pack and unpack data for communication and to send and receive it using MPI.
- *
+ * Vector handlers own a vector of data items (e.g. one item per element) and pack, unpack and
+ * communicate it via MPI. Single items are handled by a data handler, see \ref t8_data_handler.
  */
 
 #ifndef T8_VECTOR_HANDLER_HXX
 #define T8_VECTOR_HANDLER_HXX
 
 #include <t8.h>
-#include <vector>
 #include <t8_data/t8_data_handler.hxx>
+#include <limits>
 #include <memory>
 #include <utility>
-#include <limits>
+#include <vector>
 
 /**
  * Convert a count of bytes or items to the int that MPI expects.
@@ -79,11 +79,11 @@ struct t8_abstract_vector_handler
    *
    * \param[in, out] buffer The buffer to pack the vector into.
    * \param[in] num_bytes The number of bytes of \a buffer.
-   * \param[in, out] pos The current position in \a buffer. Advanced by the packed bytes.
+   * \param[in, out] position The current position in \a buffer. Advanced by the packed bytes.
    * \param[in] comm The MPI communicator used for the operation.
    */
   virtual void
-  pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm) const
+  pack_vector_prefix (void *buffer, const int num_bytes, int &position, sc_MPI_Comm comm) const
     = 0;
 
   /**
@@ -92,12 +92,12 @@ struct t8_abstract_vector_handler
    *
    * \param[in] buffer The buffer containing the packed data.
    * \param[in] num_bytes The number of bytes of \a buffer.
-   * \param[in, out] pos The current position in \a buffer. Advanced by the unpacked bytes.
+   * \param[in, out] position The current position in \a buffer. Advanced by the unpacked bytes.
    * \param[out] outcount The number of unpacked items.
    * \param[in] comm The MPI communicator used for the operation.
    */
   virtual void
-  unpack_vector_prefix (const void *buffer, const int num_bytes, int &pos, int &outcount, sc_MPI_Comm comm)
+  unpack_vector_prefix (const void *buffer, const int num_bytes, int &position, int &outcount, sc_MPI_Comm comm)
     = 0;
 
   /**
@@ -152,6 +152,8 @@ struct t8_abstract_vector_handler
  * Single items are packed and unpacked by a data handler of type TDataHandler. By default this is the
  * \ref t8_data_handler of TType, which handles trivially copyable types without user code. For data that has
  * to be serialized, e.g. items holding a std::vector, pass a handler that describes how one item is packed.
+ * Ranges of items with a bytewise data handler (\ref T8BytewiseDataHandler) are packed in bulk, all other items
+ * are serialized one by one.
  *
  * \tparam TType The type of the data items.
  * \tparam TDataHandler The type of the handler for single items, see \ref T8DataHandler.
@@ -160,7 +162,6 @@ template <typename TType, typename TDataHandler = t8_data_handler<TType>>
   requires T8DataHandler<TDataHandler, TType>
 struct t8_vector_handler: public t8_abstract_vector_handler
 {
- public:
   /**
    * Construct a t8_vector_handler that owns the given data.
    *
@@ -206,7 +207,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   }
 
   /**
-   * Compute the size of the buffer that is needed to pack the data.
+   * Compute an upper bound of the number of bytes needed by \ref pack_vector_prefix.
    *
    * \param[in] comm The MPI communicator used for the operation.
    * \return The size of the buffer.
@@ -221,40 +222,42 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   }
 
   /**
-   * Packs a vector into a buffer. The vector data will be prefixed with the number of elements in the vector.
+   * Packs the vector into a buffer. The data is prefixed with the number of items in the vector.
    *
-   * \param[in, out] buffer A pointer to the buffer where the vector prefix will be packed.
-   * \param[in] num_bytes The number of bytes to be packed.
-   * \param[in, out] pos A reference to an integer representing the current position in the buffer. This will be updated as bytes are packed.
+   * \param[in, out] buffer The buffer to pack the vector into.
+   * \param[in] num_bytes The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the packed bytes.
    * \param[in] comm The MPI communicator used for the operation.
    */
   void
-  pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm) const override
+  pack_vector_prefix (void *buffer, const int num_bytes, int &position, sc_MPI_Comm comm) const override
   {
-    const int num_data = t8_mpi_int (m_data.size ());
-    const int mpiret = sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
+    const int num_items = t8_mpi_int (m_data.size ());
+    const int mpiret = sc_MPI_Pack (&num_items, 1, sc_MPI_INT, buffer, num_bytes, &position, comm);
     SC_CHECK_MPI (mpiret);
-    pack_range (0, m_data.size (), buffer, num_bytes, pos, comm);
+    pack_range (0, m_data.size (), buffer, num_bytes, position, comm);
   }
 
   /**
-   * Unpacks a vector from a buffer. Expected to be prefixed with the number of elements in the vector.
+   * Unpacks a vector from a buffer and replaces the data of this handler.
+   * The data is expected to be prefixed with the number of items in the vector.
    *
-   * \param[in] buffer Pointer to the buffer containing the packed data.
-   * \param[in] num_bytes The number of bytes in the buffer.
-   * \param[in] pos Reference to an integer representing the current position in the buffer. This will be updated as data is unpacked.
-   * \param[in] outcount Reference to an integer where the count of unpacked elements will be stored.
+   * \param[in] buffer The buffer containing the packed data.
+   * \param[in] num_bytes The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the unpacked bytes.
+   * \param[out] outcount The number of unpacked items.
    * \param[in] comm The MPI communicator used for the operation.
    */
   void
-  unpack_vector_prefix (const void *buffer, const int num_bytes, int &pos, int &outcount, sc_MPI_Comm comm) override
+  unpack_vector_prefix (const void *buffer, const int num_bytes, int &position, int &outcount,
+                        sc_MPI_Comm comm) override
   {
-    const int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &outcount, 1, sc_MPI_INT, comm);
+    const int mpiret = sc_MPI_Unpack (buffer, num_bytes, &position, &outcount, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (outcount >= 0);
 
     m_data.resize (outcount);
-    unpack_range (buffer, num_bytes, pos, m_data.data (), m_data.size (), comm);
+    unpack_range (buffer, num_bytes, position, m_data.data (), m_data.size (), comm);
   }
 
   /**
@@ -367,10 +370,10 @@ struct t8_vector_handler: public t8_abstract_vector_handler
  * data structures implemented by t8code.
  *
  * \param[in] type The type of the data handler to create.
- * \return A handler for the given data type.
+ * \return A handler for the given data type, nullptr if \a type is not an internal type.
  */
-inline t8_abstract_vector_handler *
-create_internal_handler (const t8_data_handler_type type)
+inline std::unique_ptr<t8_abstract_vector_handler>
+t8_create_internal_handler (const t8_data_handler_type type)
 {
   switch (type.get ()) {
     /* Place holder to create a handler for internal data structures */
