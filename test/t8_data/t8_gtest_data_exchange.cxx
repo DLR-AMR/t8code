@@ -23,15 +23,22 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 /**
  * \file t8_gtest_data_exchange.cxx
  *
- * Tests for the repartitioning of distributed arrays: the partition pattern and the byte exchange.
- * Every process computes the same old and new distributions without communication.
+ * Tests for the repartitioning of distributed arrays: the partition pattern, the byte exchange and the
+ * repartitioning of vector handlers. Every process computes the same old and new distributions without
+ * communication.
  */
 
 #include <gtest/gtest.h>
 #include <t8_data/t8_data_exchange.hxx>
+#include <t8_data/t8_data_handler_specs.hxx>
+#include <t8_data/t8_enlarged_stdtypes.hxx>
+#include <t8_data/t8_pseudo_trees.hxx>
+#include <t8_data/t8_vector_handler.hxx>
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <numeric>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -209,3 +216,158 @@ TEST_P (data_partition_test, bytes)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_data_exchange, data_partition_test, testing::ValuesIn (t8_test_partition_shapes));
+
+/** The number of values of every \ref t8_test_cell in the handler tests. */
+static constexpr int t8_test_cell_num_values = 3;
+
+/**
+ * Create a test item that encodes its global index.
+ * pseudo_tree items have a size that varies with the index and contain a nested handler for some indices.
+ *
+ * \tparam TType The type of the item: double, enlarged_data<int>, pseudo_tree or t8_test_cell.
+ * \param[in] global_index The global index of the item.
+ * \return The item.
+ */
+template <typename TType>
+static TType
+t8_test_item_from_global_index (const t8_gloidx_t global_index)
+{
+  if constexpr (std::is_same_v<TType, double>) {
+    return static_cast<double> (global_index);
+  }
+  else if constexpr (std::is_same_v<TType, enlarged_data<int>>) {
+    return enlarged_data<int> (static_cast<int> (global_index), static_cast<int> (2 * global_index));
+  }
+  else if constexpr (std::is_same_v<TType, t8_test_cell>) {
+    t8_test_cell cell;
+    for (int ivalue = 0; ivalue < t8_test_cell_num_values; ++ivalue) {
+      cell.values.push_back (global_index + 0.25 * ivalue);
+    }
+    return cell;
+  }
+  else {
+    static_assert (std::is_same_v<TType, pseudo_tree>);
+    pseudo_tree tree;
+    tree.topo_data.assign (global_index % 4, static_cast<int> (global_index));
+    if (global_index % 2 == 1) {
+      std::vector<enlarged_data<double>> values;
+      for (t8_gloidx_t ivalue = 0; ivalue < global_index % 3; ++ivalue) {
+        values.emplace_back (global_index + 0.5, static_cast<int> (ivalue));
+      }
+      tree.tree_data.push_back (std::make_shared<t8_vector_handler<enlarged_data<double>>> (std::move (values)));
+    }
+    return tree;
+  }
+}
+
+/**
+ * Check that an item encodes a given global index, see \ref t8_test_item_from_global_index.
+ *
+ * \tparam TType The type of the item.
+ * \param[in] item The item to check.
+ * \param[in] global_index The expected global index.
+ * \return True if \a item encodes \a global_index, false otherwise.
+ */
+template <typename TType>
+static bool
+t8_test_item_has_global_index (const TType &item, const t8_gloidx_t global_index)
+{
+  if constexpr (std::is_same_v<TType, enlarged_data<int>>) {
+    return item.data == global_index && item.check == 2 * global_index;
+  }
+  else if constexpr (std::is_same_v<TType, pseudo_tree>) {
+    const pseudo_tree expected = t8_test_item_from_global_index<pseudo_tree> (global_index);
+    if (item.topo_data != expected.topo_data || item.tree_data.size () != expected.tree_data.size ()) {
+      return false;
+    }
+    if (item.tree_data.empty ()) {
+      return true;
+    }
+    const auto *values = dynamic_cast<const t8_vector_handler<enlarged_data<double>> *> (item.tree_data[0].get ());
+    const auto *expected_values
+      = dynamic_cast<const t8_vector_handler<enlarged_data<double>> *> (expected.tree_data[0].get ());
+    if (values == nullptr || values->get_data ().size () != expected_values->get_data ().size ()) {
+      return false;
+    }
+    for (size_t ivalue = 0; ivalue < values->get_data ().size (); ++ivalue) {
+      if (values->get_data ()[ivalue].data != expected_values->get_data ()[ivalue].data
+          || values->get_data ()[ivalue].check != expected_values->get_data ()[ivalue].check) {
+        return false;
+      }
+    }
+    return true;
+  }
+  else {
+    return item == t8_test_item_from_global_index<TType> (global_index);
+  }
+}
+
+/**
+ * Create a vector handler for test items. Cells get a passed data handler, all other types their t8_data_handler.
+ *
+ * \tparam TType The type of the items.
+ * \param[in] data The items.
+ * \return The handler owning \a data.
+ */
+template <typename TType>
+static auto
+t8_test_make_handler (std::vector<TType> data)
+{
+  if constexpr (std::is_same_v<TType, t8_test_cell>) {
+    return t8_vector_handler (std::move (data), t8_test_cell_handler { t8_test_cell_num_values });
+  }
+  else {
+    return t8_vector_handler<TType> (std::move (data));
+  }
+}
+
+/**
+ * Repartition vector handlers: double takes the bytewise path, enlarged_data<int> (fixed size), pseudo_tree
+ * (varying size, nested handlers) and t8_test_cell (passed data handler) are serialized.
+ *
+ * \tparam TType The type of the items.
+ */
+template <typename TType>
+struct handler_partition_test: public testing::Test
+{
+};
+
+/** The item types of \ref handler_partition_test. */
+using PartitionDataTypes = ::testing::Types<double, enlarged_data<int>, pseudo_tree, t8_test_cell>;
+TYPED_TEST_SUITE (handler_partition_test, PartitionDataTypes);
+
+/**
+ * Repartition a handler with every test distribution through the abstract interface and check that every item
+ * arrives at the position of its global index.
+ */
+TYPED_TEST (handler_partition_test, all_shapes)
+{
+  const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int mpirank, mpisize;
+  int mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  for (const t8_test_partition_shape shape : t8_test_partition_shapes) {
+    const auto [offsets_old, offsets_new] = t8_test_partition_offsets (shape, mpisize);
+    const t8_data_partition_pattern pattern
+      = t8_data_partition_pattern_from_offsets (offsets_old.data (), offsets_new.data (), mpirank, mpisize, comm, 0);
+
+    std::vector<TypeParam> data;
+    for (t8_gloidx_t iglobal = offsets_old[mpirank]; iglobal < offsets_old[mpirank + 1]; ++iglobal) {
+      data.push_back (t8_test_item_from_global_index<TypeParam> (iglobal));
+    }
+    auto handler = t8_test_make_handler (std::move (data));
+    t8_abstract_vector_handler &abstract_handler = handler;
+    abstract_handler.partition (pattern);
+
+    const std::vector<TypeParam> &new_data = handler.get_data ();
+    ASSERT_EQ (new_data.size (), pattern.num_new) << "shape " << shape;
+    for (size_t iitem = 0; iitem < new_data.size (); ++iitem) {
+      EXPECT_TRUE (
+        t8_test_item_has_global_index (new_data[iitem], offsets_new[mpirank] + static_cast<t8_gloidx_t> (iitem)))
+        << "shape " << shape << ", item " << iitem;
+    }
+  }
+}
