@@ -100,6 +100,57 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   }
 }
 
+/** Check that element data follows the elements if the mesh is only partitioned, i.e. without adapting it.
+ * An adaptation without element data makes the load imbalanced, so the partitioning afterwards moves elements
+ * between the processes.
+ */
+TEST (t8_gtest_handle_data, repartition_element_data)
+{
+  const int level = 2;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences_basic,
+                                          t8_mesh_handle::data_mesh_competences_basic<data_per_element>>;
+  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  mesh->set_adapt (adapt_callback_coarsen_left_refine_middle<mesh_class>);
+  mesh->commit ();
+
+  // Create element data for all local mesh elements.
+  std::vector<data_per_element> element_data;
+  for (const auto &elem : *mesh) {
+    element_data.push_back ({ elem.get_level (), elem.get_volume () });
+  }
+  mesh->set_element_data (std::move (element_data));
+  /** The number of local elements before the partitioning. */
+  const t8_locidx_t num_local_elements_before = mesh->get_num_local_elements ();
+
+  mesh->set_partition ();
+  mesh->set_ghost ();
+  mesh->commit ();
+
+  // Check that the element data matches the elements, including the ghosts.
+  const auto &mesh_element_data = mesh->get_element_data ();
+  ASSERT_EQ (mesh_element_data.size (),
+             static_cast<size_t> (mesh->get_num_local_elements () + mesh->get_num_ghosts ()));
+  for (t8_locidx_t ielem = 0; ielem < mesh->get_num_local_elements () + mesh->get_num_ghosts (); ielem++) {
+    EXPECT_EQ (mesh_element_data[ielem].level, (*mesh)[ielem].get_level ()) << "ielem = " << ielem;
+    EXPECT_EQ (mesh_element_data[ielem].volume, (*mesh)[ielem].get_volume ()) << "ielem = " << ielem;
+  }
+
+  // Check that the partitioning moved elements between the processes.
+  int mpi_size;
+  int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpi_size);
+  SC_CHECK_MPI (mpiret);
+  if (mpi_size > 1) {
+    /** 1 if the number of local elements changed on this process, 0 otherwise. */
+    int local_count_changed = (mesh->get_num_local_elements () != num_local_elements_before);
+    /** 1 if the number of local elements changed on any process, 0 otherwise. */
+    int global_count_changed;
+    mpiret
+      = sc_MPI_Allreduce (&local_count_changed, &global_count_changed, 1, sc_MPI_INT, sc_MPI_LOR, sc_MPI_COMM_WORLD);
+    SC_CHECK_MPI (mpiret);
+    EXPECT_TRUE (global_count_changed);
+  }
+}
+
 /** Check that the unique union of multiple mesh competence packs works as intended.
  * This is done in this file because there is only one mesh competence at the moment, where we need a data class.
  * We use the data class defined here.
