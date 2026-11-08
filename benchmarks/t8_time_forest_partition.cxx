@@ -114,10 +114,11 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
   return 0;
 }
 
-/** Element data that is repartitioned in every time step, see the options -B, -K and -V. */
+/** Element data that is repartitioned in every time step, see the options -B, -K, -V and -E. */
 struct t8_time_element_data
 {
   int data_bytes;           /**< The number of bytes per element, 0 to not repartition element data. */
+  int ghost_exchanges;      /**< The number of ghost exchanges of the element data in every time step. */
   bool keep = false;        /**< True if the arrays persist over the time steps, false if every step uses fresh ones. */
   bool use_handler = false; /**< True to repartition a t8_vector_handler, false to repartition sc_arrays. */
   sc_array_t *in = nullptr; /**< The persistent input array if \a keep is true. */
@@ -218,6 +219,29 @@ t8_time_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, t
   return runtime;
 }
 
+/* Exchange the element data with the ghosts of forest data.ghost_exchanges times and return the runtime.
+ * The array is allocated and touched before the timed region, since an application exchanges the same data
+ * repeatedly. */
+static double
+t8_time_forest_ghost_exchange (t8_forest_t forest, const t8_time_element_data &data, sc_MPI_Comm comm)
+{
+  const t8_locidx_t num_local = t8_forest_get_local_num_leaf_elements (forest);
+  const t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
+  sc_array_t *element_data = sc_array_new_count (data.data_bytes, num_local + num_ghosts);
+  t8_time_touch_array (element_data);
+  /* Start all processes together, so that a late partner does not count as exchange time. */
+  const int mpiret = sc_MPI_Barrier (comm);
+  SC_CHECK_MPI (mpiret);
+
+  double runtime = -sc_MPI_Wtime ();
+  for (int iexchange = 0; iexchange < data.ghost_exchanges; ++iexchange) {
+    t8_forest_ghost_exchange_data (forest, element_data);
+  }
+  runtime += sc_MPI_Wtime ();
+  sc_array_destroy (element_data);
+  return runtime;
+}
+
 /* Create a cmesh from a .msh files uniform level 0
  * partitioned. */
 static void
@@ -232,8 +256,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   int cmesh_is_partitioned;
   int time_step;
   double adapt_time = 0, ghost_time = 0, partition_time = 0, new_time = 0, total_time = 0, balance_time = 0;
-  double partition_data_time = 0;
-  sc_statinfo_t times[7];
+  double partition_data_time = 0, ghost_exchange_time = 0;
+  sc_statinfo_t times[8];
 
   t8_global_productionf ("Committed cmesh with %lli global trees.\n", (long long) t8_cmesh_get_num_trees (cmesh));
 
@@ -250,6 +274,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   sc_stats_init (&times[4], "balance");
   sc_stats_init (&times[5], "total");
   sc_stats_init (&times[6], "partition_data");
+  sc_stats_init (&times[7], "ghost_exchange");
   if (data.keep && !data.use_handler) {
     data.in = sc_array_new (data.data_bytes);
     data.out = sc_array_new (data.data_bytes);
@@ -329,6 +354,10 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
       /* Repartition element data of the adapted forest to the partitioned forest. */
       partition_data_time += t8_time_forest_partition_data (forest_adapt, forest_partition, data, comm);
     }
+    if (data.ghost_exchanges > 0) {
+      /* Exchange element data with the ghosts of the partitioned forest. */
+      ghost_exchange_time += t8_time_forest_ghost_exchange (forest_partition, data, comm);
+    }
     /* clean-up */
     t8_forest_unref (&forest_adapt);
     /* TIME-LOOP ends here */
@@ -342,8 +371,9 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   sc_stats_accumulate (&times[4], balance_time);
   sc_stats_accumulate (&times[5], total_time);
   sc_stats_accumulate (&times[6], partition_data_time);
-  sc_stats_compute (comm, 7, times);
-  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 7, times, 1, 1);
+  sc_stats_accumulate (&times[7], ghost_exchange_time);
+  sc_stats_compute (comm, 8, times);
+  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 8, times, 1, 1);
   t8_forest_unref (&forest_partition);
   if (data.keep && !data.use_handler) {
     sc_array_destroy (data.in);
@@ -488,6 +518,9 @@ main (int argc, char *argv[])
   sc_options_add_switch (opt, 'V', "vector-handler", &vector_handler,
                          "Together with -B: Repartition a t8_vector_handler instead of sc_arrays. "
                          "Only for 8, 64 or 512 bytes per element.");
+  sc_options_add_int (opt, 'E', "ghost-exchanges", &element_data.ghost_exchanges, 0,
+                      "Together with -g and -B: Exchange the element data with the ghosts this many times in every "
+                      "time step and report its runtime as ghost_exchange. Not together with -V.");
   sc_options_add_switch (opt, 'z', "use_cad", &use_cad,
                          "If used, meshes will be curved to original geometries (msh- and brep-files necessary).");
 
@@ -502,6 +535,8 @@ main (int argc, char *argv[])
       || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0 || element_data.data_bytes < 0
       || (element_data.use_handler && element_data.data_bytes != 8 && element_data.data_bytes != 64
           && element_data.data_bytes != 512)
+      || element_data.ghost_exchanges < 0
+      || (element_data.ghost_exchanges > 0 && (!do_ghost || element_data.data_bytes <= 0 || element_data.use_handler))
       || test_tet + test_hybrid_cube + test_hex_cube > 1
       || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_tet || test_hybrid_cube || test_hex_cube))
       || (mshfileprefix == NULL && use_cad)) {
