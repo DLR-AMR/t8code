@@ -117,8 +117,8 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
 struct t8_time_element_data
 {
   int data_bytes;           /**< The number of bytes per element, 0 to not repartition element data. */
-  int keep;                 /**< True if the arrays persist over the time steps, false if every step uses fresh ones. */
-  int use_handler;          /**< True to repartition a t8_vector_handler, false to repartition sc_arrays. */
+  bool keep = false;        /**< True if the arrays persist over the time steps, false if every step uses fresh ones. */
+  bool use_handler = false; /**< True to repartition a t8_vector_handler, false to repartition sc_arrays. */
   sc_array_t *in = nullptr; /**< The persistent input array if \a keep is true. */
   sc_array_t *out = nullptr; /**< The persistent output array if \a keep is true. */
 };
@@ -394,6 +394,8 @@ main (int argc, char *argv[])
   int dim, num_files;
   int test_tet, test_hybrid_cube, test_hex_cube;
   int stride;
+  /** The switches -K and -V, nonzero if given. sc_options needs an int, element_data stores them as bool. */
+  int keep_data, vector_handler;
   t8_time_element_data element_data;
   double T, delta_t, cfl;
   sc_options_t *opt;
@@ -460,10 +462,10 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'B', "data-bytes", &element_data.data_bytes, 0,
                       "If > 0, repartition element data with this many bytes per element in every time step "
                       "and report its runtime as partition_data.");
-  sc_options_add_switch (opt, 'K', "keep-data", &element_data.keep,
+  sc_options_add_switch (opt, 'K', "keep-data", &keep_data,
                          "Together with -B: Keep the element data arrays over the time steps instead of allocating "
                          "fresh ones in every time step.");
-  sc_options_add_switch (opt, 'V', "vector-handler", &element_data.use_handler,
+  sc_options_add_switch (opt, 'V', "vector-handler", &vector_handler,
                          "Together with -B: Repartition a t8_vector_handler instead of sc_arrays. "
                          "Only for 8, 64 or 512 bytes per element and without -K.");
   sc_options_add_switch (opt, 'z', "use_cad", &use_cad,
@@ -471,6 +473,8 @@ main (int argc, char *argv[])
 
   /* parse command line options */
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
+  element_data.keep = keep_data != 0;
+  element_data.use_handler = vector_handler != 0;
   /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
       || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0 && test_hybrid_cube == 0
