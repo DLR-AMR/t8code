@@ -101,6 +101,16 @@ t8_data_partition_pattern_from_offsets (const t8_gloidx_t *offsets_old, const t8
                                         const int num_ranks, sc_MPI_Comm comm, const int tag);
 
 /**
+ * Check that the chunks of a partition pattern cover the old and the new data exactly once.
+ * Meant for assertions at the start of a repartitioning.
+ *
+ * \param[in] pattern A partition pattern.
+ * \return True if the chunks are consistent with num_old and num_new, false otherwise.
+ */
+bool
+t8_data_partition_pattern_is_valid (const t8_data_partition_pattern &pattern);
+
+/**
  * The nonblocking messages of one communication step with plain bytes, e.g. a repartitioning.
  * A chunk with more than the maximum number of bytes per message is split into consecutive messages; both sides
  * split it identically, since both know its size. All messages have to be posted before \ref wait_all, so that no
@@ -118,16 +128,6 @@ struct t8_data_messages
    */
   t8_data_messages (sc_MPI_Comm comm, const int tag,
                     const size_t max_message_bytes = static_cast<size_t> (std::numeric_limits<int>::max ()));
-
-  /**
-   * Prepare the messages of a repartitioning step.
-   *
-   * \param[in] pattern The partition pattern, provides the communicator and the tag.
-   * \param[in] max_message_bytes Chunks with more bytes are split into several messages. Only meant to be
-   *                              changed by tests; the default is the largest message size MPI can describe.
-   */
-  explicit t8_data_messages (const t8_data_partition_pattern &pattern,
-                             const size_t max_message_bytes = static_cast<size_t> (std::numeric_limits<int>::max ()));
 
   /** The messages are not copyable, since MPI requests cannot be shared. */
   t8_data_messages (const t8_data_messages &) = delete;

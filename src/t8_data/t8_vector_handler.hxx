@@ -284,6 +284,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   void
   partition (const t8_data_partition_pattern &pattern) override
   {
+    T8_ASSERT (t8_data_partition_pattern_is_valid (pattern));
     T8_ASSERT (m_data.size () == pattern.num_old);
     if (pattern.sends.empty () && pattern.recvs.empty ()) {
       /* No item changes the process, so every item keeps its index. */
@@ -395,7 +396,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   partition_bytewise (const t8_data_partition_pattern &pattern)
     requires T8BytewiseDataHandler<TDataHandler, TType>
   {
-    t8_data_messages messages (pattern);
+    t8_data_messages messages (pattern.comm, pattern.tag);
     for (const auto &chunk : pattern.sends) {
       messages.send (chunk.rank, m_data.data () + chunk.first, chunk.count * sizeof (TType));
     }

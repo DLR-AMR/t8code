@@ -89,14 +89,7 @@ t8_data_partition_pattern_from_offsets (const t8_gloidx_t *offsets_old, const t8
   return pattern;
 }
 
-#if T8_ENABLE_DEBUG
-/**
- * Check that the chunks of a partition pattern cover the old and the new data exactly once.
- *
- * \param[in] pattern A partition pattern.
- * \return True if the chunks are consistent with num_old and num_new, false otherwise.
- */
-static bool
+bool
 t8_data_partition_pattern_is_valid (const t8_data_partition_pattern &pattern)
 {
   size_t num_sent = pattern.self_count;
@@ -115,18 +108,11 @@ t8_data_partition_pattern_is_valid (const t8_data_partition_pattern &pattern)
   }
   return num_sent == pattern.num_old && num_received == pattern.num_new;
 }
-#endif
 
 t8_data_messages::t8_data_messages (sc_MPI_Comm comm, const int tag, const size_t max_message_bytes)
   : m_comm (comm), m_tag (tag), m_max_message_bytes (max_message_bytes)
 {
   T8_ASSERT (0 < max_message_bytes && max_message_bytes <= static_cast<size_t> (std::numeric_limits<int>::max ()));
-}
-
-t8_data_messages::t8_data_messages (const t8_data_partition_pattern &pattern, const size_t max_message_bytes)
-  : t8_data_messages (pattern.comm, pattern.tag, max_message_bytes)
-{
-  T8_ASSERT (t8_data_partition_pattern_is_valid (pattern));
 }
 
 t8_data_messages::~t8_data_messages ()
@@ -197,12 +183,13 @@ void
 t8_data_partition_bytes (const t8_data_partition_pattern &pattern, const void *data_in, void *data_out,
                          const size_t item_size, const size_t max_message_bytes)
 {
+  T8_ASSERT (t8_data_partition_pattern_is_valid (pattern));
   T8_ASSERT (item_size > 0);
   const char *const bytes_in = static_cast<const char *> (data_in);
   char *const bytes_out = static_cast<char *> (data_out);
   T8_ASSERT (pattern.num_old == 0 || pattern.num_new == 0 || bytes_in + pattern.num_old * item_size <= bytes_out
              || bytes_out + pattern.num_new * item_size <= bytes_in);
-  t8_data_messages messages (pattern, max_message_bytes);
+  t8_data_messages messages (pattern.comm, pattern.tag, max_message_bytes);
 
   /* Post the receives first, so that incoming messages land directly at their final position. */
   for (const auto &chunk : pattern.recvs) {
