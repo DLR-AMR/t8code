@@ -35,6 +35,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/competences/element_data_competences.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_vector/t8_vec.hxx>
+#include <cstdlib>
 #include <vector>
 
 /** Check that element data can be set for the handle and that exchanging data for the ghosts works. */
@@ -140,14 +141,14 @@ TEST (t8_gtest_handle_data, repartition_element_data)
   int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpi_size);
   SC_CHECK_MPI (mpiret);
   if (mpi_size > 1) {
-    /** 1 if the number of local elements changed on this process, 0 otherwise. */
-    int local_count_changed = (mesh->get_num_local_elements () != num_local_elements_before);
-    /** 1 if the number of local elements changed on any process, 0 otherwise. */
-    int global_count_changed;
-    mpiret
-      = sc_MPI_Allreduce (&local_count_changed, &global_count_changed, 1, sc_MPI_INT, sc_MPI_LOR, sc_MPI_COMM_WORLD);
+    /** The number of elements by which the number of local elements changed on this process.
+     * Not const, since sc_MPI_Allreduce takes a non-const send buffer in builds without MPI. */
+    t8_locidx_t local_count_change = std::abs (mesh->get_num_local_elements () - num_local_elements_before);
+    /** The largest change of the number of local elements over all processes. */
+    t8_locidx_t max_count_change = 0;
+    mpiret = sc_MPI_Allreduce (&local_count_change, &max_count_change, 1, T8_MPI_LOCIDX, sc_MPI_MAX, sc_MPI_COMM_WORLD);
     SC_CHECK_MPI (mpiret);
-    EXPECT_TRUE (global_count_changed);
+    EXPECT_GT (max_count_change, 0);
   }
 }
 
