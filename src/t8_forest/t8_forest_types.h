@@ -226,6 +226,10 @@ typedef struct t8_forest_ghost
 
   sc_mempool_t *glo_tree_mempool;    /**< The global tree memory pool. */
   sc_mempool_t *proc_offset_mempool; /**< The process offset memory pool. */
+
+  struct t8_data_buffer *send_buffer; /**< The gather buffer of the element data sent by ghost exchanges, reused
+                                           by all exchanges of this ghost layer. NULL until the first exchange.
+                                           Defined in t8_data/t8_data_exchange.hxx. */
 } t8_forest_ghost_struct_t;
 
 #endif /* ! T8_FOREST_TYPES_H */

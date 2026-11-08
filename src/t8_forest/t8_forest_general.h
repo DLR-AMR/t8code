@@ -764,9 +764,6 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
  * \note This function is collective and hence must be called by all processes in the forest's
  *       MPI Communicator.
  */
-/* TODO: In \ref t8_forest_ghost_cxx we already implemented a begin and end function
- *       that allow for overlapping communication and computation. We will make them
- *       available in this interface in the future. */
 void
 t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t *element_data);
 
