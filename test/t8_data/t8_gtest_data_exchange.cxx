@@ -554,3 +554,57 @@ TEST (data_ghost_exchange, bytes)
     EXPECT_EQ (data, expected) << "max_message_bytes " << max_message_bytes;
   }
 }
+
+/**
+ * Exchange the ghost items of vector handlers with the ring pattern of the ghost tests: double takes the bytewise
+ * path, enlarged_data<int>, pseudo_tree and t8_test_cell are serialized.
+ *
+ * \tparam TType The type of the items.
+ */
+template <typename TType>
+struct handler_ghost_test: public testing::Test
+{
+};
+
+TYPED_TEST_SUITE (handler_ghost_test, PartitionDataTypes);
+
+/**
+ * Exchange the ghosts through the abstract interface, once with only the local items and once with outdated ghost
+ * entries after them, which are replaced. The send buffer is reused by both exchanges.
+ */
+TYPED_TEST (handler_ghost_test, ring)
+{
+  const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int mpirank, mpisize;
+  int mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  const t8_data_ghost_pattern pattern = t8_test_ghost_pattern (mpirank, mpisize, comm);
+  const std::vector<t8_gloidx_t> global_indices = t8_test_ghost_global_indices (mpirank, mpisize);
+  ASSERT_EQ (global_indices.size (), pattern.num_local + pattern.num_ghosts);
+
+  t8_data_buffer send_buffer;
+  for (const bool with_outdated_ghosts : { false, true }) {
+    std::vector<TypeParam> data;
+    for (size_t iitem = 0; iitem < pattern.num_local; ++iitem) {
+      data.push_back (t8_test_item_from_global_index<TypeParam> (global_indices[iitem]));
+    }
+    if (with_outdated_ghosts) {
+      /* More outdated entries than ghosts, with indices that no item has. */
+      for (size_t ientry = 0; ientry < pattern.num_ghosts + 2; ++ientry) {
+        data.push_back (t8_test_item_from_global_index<TypeParam> (100000 + static_cast<t8_gloidx_t> (ientry)));
+      }
+    }
+    auto handler = t8_test_make_handler (std::move (data));
+    t8_abstract_vector_handler &abstract_handler = handler;
+    abstract_handler.exchange_ghosts (pattern, send_buffer);
+
+    const std::vector<TypeParam> &new_data = handler.get_data ();
+    ASSERT_EQ (new_data.size (), global_indices.size ()) << "outdated ghosts " << with_outdated_ghosts;
+    for (size_t iitem = 0; iitem < new_data.size (); ++iitem) {
+      EXPECT_TRUE (t8_test_item_has_global_index (new_data[iitem], global_indices[iitem]))
+        << "outdated ghosts " << with_outdated_ghosts << ", item " << iitem;
+    }
+  }
+}
