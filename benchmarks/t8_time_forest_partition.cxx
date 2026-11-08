@@ -350,13 +350,14 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
       t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
     }
     t8_forest_print_profile (forest_partition);
+    if (data.ghost_exchanges > 0) {
+      /* Exchange element data with the ghosts of the partitioned forest. This happens before the element data is
+       * repartitioned, so that the ghost exchanges of all modes follow the same forest operations. */
+      ghost_exchange_time += t8_time_forest_ghost_exchange (forest_partition, data, comm);
+    }
     if (data.data_bytes > 0) {
       /* Repartition element data of the adapted forest to the partitioned forest. */
       partition_data_time += t8_time_forest_partition_data (forest_adapt, forest_partition, data, comm);
-    }
-    if (data.ghost_exchanges > 0) {
-      /* Exchange element data with the ghosts of the partitioned forest. */
-      ghost_exchange_time += t8_time_forest_ghost_exchange (forest_partition, data, comm);
     }
     /* clean-up */
     t8_forest_unref (&forest_adapt);
