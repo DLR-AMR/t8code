@@ -763,6 +763,8 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
  *                         the corresponding owning process.
  * \note This function is collective and hence must be called by all processes in the forest's
  *       MPI Communicator.
+ * \see t8_forest_ghost.hxx for a C++ interface with vector handlers, which also supports data that has to be
+ *      serialized.
  */
 void
 t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t *element_data);
