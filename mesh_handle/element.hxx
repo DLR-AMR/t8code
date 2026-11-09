@@ -537,7 +537,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   /** The normal vector of a face of the element.
    *  This function uses the cached version defined in TCompetence if available and calculates if not.
    * \param [in] face Index of a face of the element.
-   * \return The normal vector of the face with id \a face.
+   * \return The normal vector of the face with id \a face, always pointing outwards.
    */
   t8_3D_vec
   get_face_normal (int face) const
@@ -566,6 +566,33 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   {
     T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
     return t8_forest_get_scheme (m_mesh->m_forest)->element_get_face_shape (get_tree_class (), m_element, face);
+  }
+
+  /** Whether the vertex ordering of a face yields an outward-pointing normal.
+   *  For a face with vertices v_0, v_1, v_2, ... (in the face's vertex order, see
+   *  \ref face_vertex_to_element_vertex), consider the normal
+   *  n = (v_1 - v_0) x (v_2 - v_0).
+   *  This function returns true if n points out of the element and false if it points into the element.
+   *  For a consistently oriented normal, flip the sign of n if this returns false.
+   *  The result is computed per element from its vertex coordinates by comparing n with the
+   *  outward face normal (\ref get_face_normal). It can differ between elements of the same shape,
+   *  e.g. for refined tetrahedra or prisms that are mirrored with respect to their reference element.
+   *  It is independent of neighboring elements; do not confuse it with \ref get_face_orientation,
+   *  which describes the orientation relative to the face neighbor.
+   *  Only defined for three-dimensional elements.
+   * \param [in] face Index of a face of the element.
+   * \return true if (v_1 - v_0) x (v_2 - v_0) points outward, false otherwise.
+   */
+  bool
+  face_vertex_normal_points_outward (int face) const
+  {
+    T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
+    T8_ASSERT (t8_eclass_to_dimension[get_shape ()] == 3);
+    t8_3D_vec normal_from_vertices;
+    t8_normal_of_tri (get_vertex_coordinates (face_vertex_to_element_vertex (face, 0)),
+                      get_vertex_coordinates (face_vertex_to_element_vertex (face, 1)),
+                      get_vertex_coordinates (face_vertex_to_element_vertex (face, 2)), normal_from_vertices);
+    return t8_dot (normal_from_vertices, get_face_normal (face)) > 0;
   }
 
   /** The number of vertices adjacent to \a face.

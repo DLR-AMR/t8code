@@ -63,8 +63,8 @@ struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
 TEST_P (t8_mesh_ghost_test, check_ghosts)
 {
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>;
-  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
-                                                                            false, false);
+  auto mesh
+    = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, false, false);
 
   EXPECT_EQ (mesh->get_num_ghosts (), 0);
   mesh->set_ghost ();
@@ -186,8 +186,7 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
 TEST_P (t8_mesh_ghost_test, test_is_conformal)
 {
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>;
-  auto mesh
-    = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true, true);
+  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true);
 
   /* A uniform mesh is always conformal. After this, the neighbor cache is also filled. */
   EXPECT_TRUE (mesh->is_conformal ());
@@ -241,8 +240,8 @@ TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_neighbors_overwrite>>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
-    eclass, level, sc_MPI_COMM_WORLD, true, true, false);
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (eclass, level,
+                                                                                        sc_MPI_COMM_WORLD, true, false);
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
   if (mesh->get_num_local_elements () == 0) {

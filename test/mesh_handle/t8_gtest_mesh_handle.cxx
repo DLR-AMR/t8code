@@ -35,6 +35,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/competences/cache_element_competences.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
+#include <t8_vector/t8_vec.hxx>
 
 /** Parametrized test fixture for the mesh handle tests. */
 struct t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
@@ -56,8 +57,8 @@ TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
 {
   using mesh_class = t8_mesh_handle::mesh<>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
-    eclass, level, sc_MPI_COMM_WORLD, true, true, false);
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (eclass, level,
+                                                                                        sc_MPI_COMM_WORLD, true, false);
   EXPECT_FALSE (element_class::has_vertex_cache ());
   EXPECT_FALSE (element_class::has_centroid_cache ());
 
@@ -90,8 +91,8 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
   // --- Use predefined competences to use all available caching competences. ---
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
-    eclass, level, sc_MPI_COMM_WORLD, true, true, false);
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (eclass, level,
+                                                                                        sc_MPI_COMM_WORLD, true, false);
   EXPECT_TRUE (element_class::has_volume_cache ());
   EXPECT_TRUE (element_class::has_diameter_cache ());
   EXPECT_TRUE (element_class::has_vertex_cache ());
@@ -137,8 +138,8 @@ TEST_P (t8_mesh_handle_test, test_cache_face_competences)
 {
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_face_element_competences>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
-    eclass, level, sc_MPI_COMM_WORLD, true, true, false);
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (eclass, level,
+                                                                                        sc_MPI_COMM_WORLD, true, false);
   EXPECT_FALSE (element_class::has_volume_cache ());
   EXPECT_FALSE (element_class::has_diameter_cache ());
   EXPECT_FALSE (element_class::has_vertex_cache ());
@@ -172,6 +173,40 @@ TEST_P (t8_mesh_handle_test, test_cache_face_competences)
     EXPECT_FALSE (it->neighbor_cache_filled_any ());
   }
 }
+
+/** Test that \ref t8_mesh_handle::element::get_face_vertex_normal_points_outward matches the geometry.
+ * For elements of dimension 2 or lower, the function should always return 0.
+ */
+TEST_P (t8_mesh_handle_test, test_face_vertex_normal_points_outward)
+{
+  if (t8_eclass_to_dimension[eclass] < 3) {
+    GTEST_SKIP () << "Only defined for three-dimensional elements.";
+  }
+  using mesh_class = t8_mesh_handle::mesh<>;
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (eclass, level,
+                                                                                        sc_MPI_COMM_WORLD, true, false);
+
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
+    for (int iface = 0; iface < it->get_num_faces (); ++iface) {
+      // Normal from the face vertices: (v_1 - v_0) x (v_2 - v_0).
+      t8_3D_vec normal_from_vertices;
+      t8_normal_of_tri (it->get_vertex_coordinates (it->face_vertex_to_element_vertex (iface, 0)),
+                        it->get_vertex_coordinates (it->face_vertex_to_element_vertex (iface, 1)),
+                        it->get_vertex_coordinates (it->face_vertex_to_element_vertex (iface, 2)),
+                        normal_from_vertices);
+      // Outward direction: face centroid - element centroid.
+      t8_3D_vec centroid_to_face;
+      t8_diff (it->get_face_centroid (iface), it->get_centroid (), centroid_to_face);
+
+      const bool points_outward = t8_dot (normal_from_vertices, centroid_to_face) > 0;
+      EXPECT_EQ (it->face_vertex_normal_points_outward (iface), points_outward)
+        << "Element " << it->get_element_handle_id () << " (shape " << t8_eclass_to_string[it->get_shape ()]
+        << "), face " << iface;
+    }
+  }
+}
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_mesh, t8_mesh_handle_test, testing::Combine (AllEclasses, testing::Range (2, 3)));
 
 /** Check that the unique union of multiple competence packs works as intended. */
 TEST (t8_mesh_handle_test, test_union_element_competence_pack)
@@ -213,5 +248,3 @@ TEST (t8_mesh_handle_test, test_union_mesh_competence_pack)
   EXPECT_TRUE (element_class::has_volume_cache ());
   EXPECT_TRUE (element_class::has_diameter_cache ());
 }
-
-INSTANTIATE_TEST_SUITE_P (t8_gtest_mesh, t8_mesh_handle_test, testing::Combine (AllEclasses, testing::Range (2, 3)));
