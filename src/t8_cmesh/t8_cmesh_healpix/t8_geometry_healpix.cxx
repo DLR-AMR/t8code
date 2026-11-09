@@ -55,12 +55,28 @@ t8_eval_geom_point (t8_gloidx_t layer, t8_gloidx_t face, double xi, double eta, 
     phi = (std::numbers::pi / 4.0) * dX;
   }
   else if (dY > 1.0) {
-    z = 1.0 - (1.0 / 3.0) * std::pow (2.0 - dY, 2.0);
-    phi = (std::numbers::pi / 4.0) * (offset_x + (dX - offset_x) / (2.0 - dY));
+    const double denominator = 2.0 - dY;
+    z = 1.0 - (1.0 / 3.0) * std::pow (denominator, 2.0);
+
+    if (denominator > 0.0) {
+      phi = (std::numbers::pi / 4.0) * (offset_x + (dX - offset_x) / denominator);
+    }
+    else {
+      // At the north pole, phi is arbitrary.
+      phi = (std::numbers::pi / 4.0) * offset_x;
+    }
   }
   else {
-    z = -1.0 + (1.0 / 3.0) * std::pow (2.0 + dY, 2.0);
-    phi = (std::numbers::pi / 4.0) * (offset_x + (dX - offset_x) / (2.0 + dY));
+    const double denominator = 2.0 + dY;
+    z = -1.0 + (1.0 / 3.0) * std::pow (denominator, 2.0);
+
+    if (denominator > 0.0) {
+      phi = (std::numbers::pi / 4.0) * (offset_x + (dX - offset_x) / denominator);
+    }
+    else {
+      // At the south pole, phi is arbitrary.
+      phi = (std::numbers::pi / 4.0) * offset_x;
+    }
   }
 
   z = std::clamp (z, -1.0, 1.0);
@@ -86,8 +102,8 @@ t8_geometry_healpix::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, t8_glo
     const size_t base_idx_2d = i * 2;
     const size_t base_idx_3d = i * 3;  // t8code outputs 3D Cartesian coordinates (x, y, z)
 
-    const double xi = std::clamp (ref_coords[base_idx_2d + 0], 1e-10, 1.0 - 1e-10);
-    const double eta = std::clamp (ref_coords[base_idx_2d + 1], 1e-10, 1.0 - 1e-10);
+    const double xi = (ref_coords[base_idx_2d + 0]);
+    const double eta = (ref_coords[base_idx_2d + 1]);
 
     // Pass the pointer offset for 3D coordinates: out_coords + base_idx_3d
     t8_eval_geom_point (layer, face, xi, eta, out_coords + base_idx_3d, sphere_radius);

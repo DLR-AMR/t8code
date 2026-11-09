@@ -114,5 +114,4 @@ struct t8_geometry_healpix: public t8_geometry
   */
   t8_geometry_type_t
   t8_geom_get_type () const override;
-
 };
