@@ -25,7 +25,7 @@
 /**
 * The t8_geometry_healpix struct implements a spherical geometry mapping
 * based on the HEALPix (Hierarchical Equal Area isoLatitude Pixelization)
-* base-mesh configuration. It inherits from t8_geometry_with_vertices and
+* base-mesh configuration. It inherits from t8_geometry and
 * is designed to map planar quadrilateral faces onto a spherical surface.
 */
 struct t8_geometry_healpix: public t8_geometry
@@ -93,7 +93,7 @@ struct t8_geometry_healpix: public t8_geometry
 
   /**
    * Check for compatibility of the currently loaded tree with the geometry.
-   * Only hex elements are supported by this geometry.
+   * Only quad elements are supported by this geometry.
    * \return                True if the geometry is compatible with the tree.
    */
   bool
@@ -101,7 +101,7 @@ struct t8_geometry_healpix: public t8_geometry
   {
     if (active_tree_class != T8_ECLASS_QUAD) {
       t8_productionf ("t8_geometry_healpix is not compatible with tree type %s\n"
-                      "It is only compatible with hex elements.\n",
+                      "It is only compatible with quad elements.\n",
                       t8_eclass_to_string[active_tree_class]);
       return false;
     }
@@ -115,5 +115,4 @@ struct t8_geometry_healpix: public t8_geometry
   t8_geometry_type_t
   t8_geom_get_type () const override;
 
-  /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
