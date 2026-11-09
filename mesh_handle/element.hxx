@@ -304,7 +304,9 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
       this->m_vertex_coordinates = std::move (vertex_coordinates);
       return this->m_vertex_coordinates;
     }
-    return vertex_coordinates;
+    else {
+      return vertex_coordinates;
+    }
   }
 
   /** Getter for the coordinates of one specific vertex of the element.
@@ -324,9 +326,11 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
       }
       return this->m_vertex_coordinates[vertex];
     }
-    t8_3D_vec coordinates;
-    t8_forest_element_coordinate (m_mesh->m_forest, m_tree_id, m_element, vertex, coordinates.data ());
-    return coordinates;
+    else {
+      t8_3D_vec coordinates;
+      t8_forest_element_coordinate (m_mesh->m_forest, m_tree_id, m_element, vertex, coordinates.data ());
+      return coordinates;
+    }
   }
 
   /** Getter for the center of mass of the element.
@@ -336,13 +340,13 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   t8_3D_vec
   get_centroid () const
   {
-    // Check if we have a cached version and if the cache has already been filled.
+    t8_3D_vec coordinates;
     if constexpr (has_centroid_cache ()) {
       if (this->centroid_cache_filled ()) {
-        return this->m_centroid.value ();
+        coordinates = this->m_centroid.value ();
+        return coordinates;
       }
     }
-    t8_3D_vec coordinates;
     t8_forest_element_centroid (m_mesh->m_forest, m_tree_id, m_element, coordinates.data ());
     // Fill the cache in the cached version.
     if constexpr (has_centroid_cache ()) {
@@ -399,7 +403,9 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     if constexpr (has_face_neighbor_cache ()) {
       return this->m_neighbors[face];
     }
-    return neighbors_handle;
+    else {
+      return neighbors_handle;
+    }
   }
 
   /** Function to fill the face neighbor cache for all faces of the mesh element.
@@ -521,12 +527,13 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   get_face_centroid (int face) const
   {
     T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
+    t8_3D_vec coordinates;
     if constexpr (has_face_centroids_cache ()) {
       if (this->face_centroid_cache_filled (face)) {
-        return this->m_face_centroids[face].value ();
+        coordinates = this->m_face_centroids[face].value ();
+        return coordinates;
       }
     }
-    t8_3D_vec coordinates;
     t8_forest_element_face_centroid (m_mesh->m_forest, m_tree_id, m_element, face, coordinates.data ());
     if constexpr (has_face_centroids_cache ()) {
       this->m_face_centroids[face] = coordinates;
@@ -543,12 +550,13 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   get_face_normal (int face) const
   {
     T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
+    t8_3D_vec normal;
     if constexpr (has_face_normals_cache ()) {
       if (this->face_normal_cache_filled (face)) {
-        return this->m_face_normals[face].value ();
+        normal = this->m_face_normals[face].value ();
+        return normal;
       }
     }
-    t8_3D_vec normal;
     t8_forest_element_face_normal (m_mesh->m_forest, m_tree_id, m_element, face, normal.data ());
     if constexpr (has_face_normals_cache ()) {
       this->m_face_normals[face] = normal;
