@@ -24,8 +24,8 @@
  * This file contains tests for the linear geometry of t8code.
  */
 
-#include <test/t8_gtest_macros.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_macros.hxx>
+#include <t8_gtest_custom_assertion.hxx>
 #include <gtest/gtest.h>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.hxx>
@@ -168,7 +168,22 @@ INSTANTIATE_TEST_SUITE_P (
   print_test);
 
 #if T8_ENABLE_DEBUG
-TEST (test_geometry_linear, incompatible_geometry)
+
+/* NOTE: THE FOLLOWING TEST IS DISABLED
+ *
+ * The test uses a now fixed security risk that allowed t8_cmesh_register_geometry of a cmesh
+ * to be called after commit.
+ * The test needed to do so, since it checks whether a specific geometry fails
+ * the t8_cmesh_validate_geometry test.
+ * However, this test is also executed and asserted in cmesh_commit. If the geometry is set before
+ * commit, then the code aborts during commit.
+ *
+ * We leave the code in here for later generations of developers who might have a
+ * solution to test if t8_cmesh_validate_geometry returns false while setting
+ * the geometry before commit.
+ * This might be solvable with Death Tests from GoogleTest (checking that t8_cmesh_commit aborts).
+ * */
+TEST (test_geometry_linear, DISABLED_incompatible_geometry)
 {
   t8_cmesh_t cmesh;
 

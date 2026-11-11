@@ -175,10 +175,10 @@ struct vtk_writer_test: public testing::Test
 
     // Fill the vtk_data descriptors
     vtk_data[0].type = T8_VTK_SCALAR;
-    strncpy (vtk_data[0].description, "Testdata scalar i/10.", BUFSIZ);
+    strncpy (vtk_data[0].description, "Testdata scalar i/10.", T8_VTK_MAX_STRING_LENGTH);
     vtk_data[0].data = scalar_data.data ();
     vtk_data[1].type = T8_VTK_VECTOR;
-    strncpy (vtk_data[1].description, "Testdata vector (i/10.,-i/10.,42)", BUFSIZ);
+    strncpy (vtk_data[1].description, "Testdata vector (i/10.,-i/10.,42)", T8_VTK_MAX_STRING_LENGTH);
     vtk_data[1].data = vector_data.data ();
 
     writer = new vtk_writer<grid_t> (true, true, true, true, true, true, std::string ("test_vtk_writer"), num_vtk_data,

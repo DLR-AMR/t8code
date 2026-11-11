@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_element/t8_element_shape.h>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 /** \file
  * This file consists of several test all around the shape of an element.

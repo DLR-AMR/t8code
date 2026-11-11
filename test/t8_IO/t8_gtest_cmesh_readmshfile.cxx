@@ -39,7 +39,6 @@
 
 TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
 {
-
   auto fileprefix = t8_test_data_dir / "test_msh_file_vers4_ascii";
   char filename[BUFSIZ];
 

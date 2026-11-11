@@ -48,7 +48,7 @@
  */
 struct t8_foam_face_orientation
 {
-  u_int8_t first_node;  /**< The foam face-vertex, which corresponds to the t8code face-vertex 0. */
+  uint8_t first_node;   /**< The foam face-vertex, which corresponds to the t8code face-vertex 0. */
   bool same_normal_dir; /**< True, if the face normals of the foam and the t8code face point in the same direction. */
 };
 
@@ -179,9 +179,9 @@ struct t8_openfoam_reader
    * \param [in] t8_face_vertex_id  The t8 face-vertex id to convert
    * \return                        The converted foam face-vertex id
    */
-  constexpr static u_int8_t
+  constexpr static uint8_t
   t8_face_vertex_to_foam_point (t8_eclass_t face_class, const t8_foam_face_orientation orientation,
-                                u_int8_t t8_face_vertex_id)
+                                uint8_t t8_face_vertex_id)
   {
     /* While t8code uses the z-order for quads, OpenFOAM uses an anti-clockwise numeration.
      * So if the face is a quad, we have to switch indices in accordance with this LUT.
