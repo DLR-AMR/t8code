@@ -113,14 +113,20 @@ get_relevant_process_range (const t8_gloidx_t *partition_old, const t8_procidx_t
  * \param[out]  requests  the MPI requests as std::vector
  *                          on input:  empty
  *                          on output: contains the send requests
+ * \param[out]  send_buffers  the packed messages as std::vector, one per request
+ *                              on input:  empty
+ *                              on output: contains the send buffers, which must stay alive until all
+ *                                         \a requests have completed
 */
 template <typename MessageType>
 static void
-t8_forest_pfc_send_loop_range (const t8_forest_t forest_from, std::vector<sc_MPI_Request> &requests)
+t8_forest_pfc_send_loop_range (const t8_forest_t forest_from, std::vector<sc_MPI_Request> &requests,
+                               std::vector<std::vector<char>> &send_buffers)
 {
-  // Assertions: The forest must be committed and the request vector empty.
+  // Assertions: The forest must be committed and the request and buffer vectors empty.
   T8_ASSERT (t8_forest_is_committed (forest_from));
   T8_ASSERT (requests.size () == 0);
+  T8_ASSERT (send_buffers.size () == 0);
 
   // Get current offset vector of forest.
   const t8_gloidx_t *partition_old = t8_shmem_array_get_gloidx_array (forest_from->element_offsets);
@@ -141,12 +147,14 @@ t8_forest_pfc_send_loop_range (const t8_forest_t forest_from, std::vector<sc_MPI
     MessageType message (forest_from->scheme, iproc, forest_from->mpicomm);
     message.fill (forest_from);
 
-    // Send the message (and obtain the associated requests).
+    // Send the message (and obtain the associated requests). Moving the send buffers when send_buffers
+    // grows keeps their data in place, so the pending sends stay valid.
+    std::vector<char> &send_buffer = send_buffers.emplace_back ();
     sc_MPI_Request request;
-    message.mpi_Isend (forest_from, request);
+    message.mpi_Isend (forest_from, send_buffer, request);
 
     // Add to requests array
-    requests.push_back (std::move (request));
+    requests.push_back (request);
   }
 }
 
@@ -385,7 +393,9 @@ t8_forest_pfc_correction_offsets (t8_forest_t forest)
 
     // Send requests to other processes.
     std::vector<sc_MPI_Request> requests;
-    t8_forest_pfc_send_loop_range<t8_forest_pfc_message> (forest_old, requests);
+    /** The packed messages, which must stay alive until the Isend requests have completed. */
+    std::vector<std::vector<char>> send_buffers;
+    t8_forest_pfc_send_loop_range<t8_forest_pfc_message> (forest_old, requests, send_buffers);
 
     // Receive messages from other processes.
     std::vector<t8_forest_pfc_message> messages;

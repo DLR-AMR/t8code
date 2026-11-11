@@ -35,6 +35,7 @@
 #include <t8_forest/t8_forest_pfc_helper.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 #include <sc_mpi.h>
+#include <vector>
 
 /**
  * This class collects all functionality to handle the data to be sent/received
@@ -87,13 +88,16 @@ struct t8_forest_pfc_message
   pack_size ();
 
   /**
-   * Send the message using non-blocking MPI send.
+   * Pack the message into \a send_buffer and send it using non-blocking MPI send.
    *
-   * \param[in]   forest  the forest (only used for forest->mpicomm)
-   * \param[out]  request the MPI send request
+   * \param[in]   forest      the forest (only used for forest->mpicomm)
+   * \param[out]  send_buffer the buffer holding the packed message. It is resized to the size of the message.
+   * \param[out]  request     the MPI send request
+   *
+   * \warning \a send_buffer must neither be modified nor destroyed until \a request has completed.
   */
   void
-  mpi_Isend (const t8_forest_t forest, sc_MPI_Request &request);
+  mpi_Isend (const t8_forest_t forest, std::vector<char> &send_buffer, sc_MPI_Request &request);
 
   /**
    * Receive data from another process. Probes for the size of the message before receiving
