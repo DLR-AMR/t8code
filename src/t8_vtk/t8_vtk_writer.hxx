@@ -48,18 +48,6 @@
 #include <vtkCellData.h>
 #include <vtkMergePoints.h>
 #include <vtkTypeInt64Array.h>
-
-#if T8_ENABLE_MPI
-/** Set an MPI controller using \a comm for a parallel VTK writer.
- * Implemented in t8_vtk_writer.cxx, so that this header does not need to include
- * vtkMPI.h. vtkMPI.h clashes with OpenCASCADE's Handle(Class) macro when both are
- * included in one translation unit.
- * \param[in,out] writer The parallel writer.
- * \param[in]     comm   The communicator. Must stay valid while \a writer is used.
- */
-void
-t8_vtk_writer_set_mpi_controller (vtkXMLPUnstructuredGridWriter *writer, sc_MPI_Comm *comm);
-#endif /* T8_ENABLE_MPI */
 #endif /* T8_ENABLE_VTK */
 
 /**
@@ -487,87 +475,7 @@ struct vtk_writer
    * \return false if writing was not successful.
    */
   bool
-  write_vtk ([[maybe_unused]] const grid_t grid)
-  {
-#if T8_ENABLE_VTK
-    T8_ASSERT (!fileprefix.empty ());
-
-    /*
-   * Write file: First we construct the unstructured Grid that will store the points and elements. It requires
-   * information about the points(coordinates, stored in the points object) and the cells(cellTypes and which points
-   * belong to this cell).
-   */
-    vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New ();
-
-    std::string mpifilename = fileprefix + std::string (".pvtu");
-
-    vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriterObj = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New ();
-    t8_grid_to_vtkUnstructuredGrid (grid, unstructuredGrid);
-    /*
-    * Get/Set whether the appended data section is base64 encoded.
-    * If encoded, reading and writing will be slower, but the file
-    * will be fully valid XML and text-only.
-    * If not encoded, the XML specification will be violated,
-    * but reading and writing will be fast. The default is to do the encoding.
-    * Documentation: https://vtk.org/doc/release/5.0/html/a02260.html#z3560_2
-    */
-    pwriterObj->EncodeAppendedDataOff ();
-
-    /* We set the filename of the pvtu file. The filenames of the vtu files
-    * are given based on the name of the pvtu file and the process number.
-    */
-    pwriterObj->SetFileName (mpifilename.c_str ());
-
-/*
-   * Since we want to write multiple files, the processes
-   * have to communicate. Therefore, we define the communicator
-   * vtk_comm and set it as the communicator.
-   * We have to set a controller for the pwriterObj,
-   * therefore we define the controller vtk_mpi_ctrl.
-   */
-#if T8_ENABLE_MPI
-    t8_vtk_writer_set_mpi_controller (pwriterObj, &comm);
-#endif /* T8_ENABLE_MPI */
-    /*
-    * We set the number of pieces as the number of mpi processes,
-    * since we want to write a file for each process. We also
-    * need to define a Start and EndPiece for the current
-    * process. Then we can set the inputData for the writer:
-    * We want to write the unstructured Grid, update the writer
-    * and then write.
-    *
-    * Note: We could write more than one file per process here, if desired.
-    */
-    int mpisize;
-    int mpirank;
-    int mpiret = sc_MPI_Comm_size (comm, &mpisize);
-    SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-    SC_CHECK_MPI (mpiret);
-
-    pwriterObj->SetNumberOfPieces (mpisize);
-    pwriterObj->SetStartPiece (mpirank);
-    pwriterObj->SetEndPiece (mpirank);
-
-    /* We set the input data and write the vtu files. */
-    pwriterObj->SetInputData (unstructuredGrid);
-    pwriterObj->Update ();
-    if (pwriterObj->Write ()) {
-      return true;
-    }
-    else {
-      t8_errorf ("Error when writing vtk file.\n");
-    }
-
-    /* Return whether writing was successful */
-    return false;
-
-#else
-    t8_global_errorf ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
-    t8_global_productionf ("Consider calling 't8_forest_write_vtk' or 't8_forest_vtk_write_file' instead.\n");
-    return false;
-#endif
-  }
+  write_vtk ([[maybe_unused]] const grid_t grid);
 
   bool write_treeid = false;
   bool write_mpirank = false;
