@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This is step3 of the t8code tutorials.
+/** \file t8_step3_adapt_forest.cxx
+ * This is step3 of the t8code tutorials.
  * After generating a coarse mesh (step1) and building a uniform forest
  * on it (step2), we will now adapt (= refine and coarsen) the forest
  * according to our own criterion.
