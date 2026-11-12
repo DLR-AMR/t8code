@@ -207,3 +207,61 @@ t8_data_partition_bytes (const t8_data_partition_pattern &pattern, const void *d
   }
   messages.wait_all ();
 }
+
+bool
+t8_data_ghost_pattern_is_valid (const t8_data_ghost_pattern &pattern)
+{
+  if (pattern.send_offsets.size () != pattern.send_ranks.size () + 1 || pattern.send_offsets.front () != 0
+      || pattern.send_offsets.back () != pattern.send_indices.size ()) {
+    return false;
+  }
+  for (size_t isend = 0; isend < pattern.send_ranks.size (); ++isend) {
+    if (pattern.send_offsets[isend] >= pattern.send_offsets[isend + 1]) {
+      return false;
+    }
+  }
+  for (const size_t index : pattern.send_indices) {
+    if (index >= pattern.num_local) {
+      return false;
+    }
+  }
+  for (const auto &chunk : pattern.recvs) {
+    if (chunk.count == 0 || chunk.first < pattern.num_local
+        || chunk.first + chunk.count > pattern.num_local + pattern.num_ghosts) {
+      return false;
+    }
+  }
+  return true;
+}
+
+t8_data_ghost_bytes_exchange::t8_data_ghost_bytes_exchange (const t8_data_ghost_pattern &pattern, void *data,
+                                                            const size_t item_size, t8_data_buffer &send_buffer,
+                                                            const size_t max_message_bytes)
+  : m_messages (pattern.comm, pattern.tag, max_message_bytes)
+{
+  T8_ASSERT (t8_data_ghost_pattern_is_valid (pattern));
+  T8_ASSERT (item_size > 0);
+  char *const bytes = static_cast<char *> (data);
+
+  /* Post the receives first, so that incoming messages land directly in the ghost slots. */
+  for (const auto &chunk : pattern.recvs) {
+    m_messages.receive (chunk.rank, bytes + chunk.first * item_size, chunk.count * item_size);
+  }
+
+  /* Gather the items for one process after another and send them right away. */
+  char *const gathered = send_buffer.get (pattern.send_indices.size () * item_size);
+  for (size_t isend = 0; isend < pattern.send_ranks.size (); ++isend) {
+    const size_t first = pattern.send_offsets[isend];
+    const size_t end = pattern.send_offsets[isend + 1];
+    for (size_t iitem = first; iitem < end; ++iitem) {
+      std::memcpy (gathered + iitem * item_size, bytes + pattern.send_indices[iitem] * item_size, item_size);
+    }
+    m_messages.send (pattern.send_ranks[isend], gathered + first * item_size, (end - first) * item_size);
+  }
+}
+
+void
+t8_data_ghost_bytes_exchange::wait ()
+{
+  m_messages.wait_all ();
+}
