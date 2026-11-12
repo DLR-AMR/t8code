@@ -33,6 +33,7 @@
 #include <mesh_handle/concepts.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_partition.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.hxx>
 #include <t8_data/t8_vector_handler.hxx>
 #include <t8_types/t8_crtp.hxx>
 #include <t8_types/t8_operators.hxx>
@@ -133,18 +134,11 @@ class element_data_mesh_competence_impl: public t8_crtp_basic<TUnderlying> {
   void
   exchange_ghost_data ()
   {
-    // Extend element data array to hold also the ghost elements.
-    const auto num_local_elements = this->underlying ().get_num_local_elements ();
-    const auto num_ghosts = this->underlying ().get_num_ghosts ();
-    m_element_data.resize (num_local_elements + num_ghosts);
-    // t8_forest_ghost_exchange_data expects an sc_array, so we need to wrap our data array to one.
-    sc_array* sc_array_wrapper
-      = sc_array_new_data (m_element_data.data (), sizeof (TElementDataType), num_local_elements + num_ghosts);
-
-    // Data exchange: entries with indices > num_local_elements will get overwritten.
-    t8_forest_ghost_exchange_data (this->underlying ().get_forest (), sc_array_wrapper);
-
-    sc_array_destroy (sc_array_wrapper);
+    // The handler takes over the data of the local elements, possibly followed by outdated ghost entries, and
+    // appends the data of the ghost elements.
+    t8_vector_handler<TElementDataType> handler (std::move (m_element_data));
+    t8_forest_ghost_exchange_data (this->underlying ().get_forest (), handler);
+    m_element_data = handler.take_data ();
   }
 
  protected:

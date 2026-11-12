@@ -35,6 +35,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_partition.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.hxx>
 #include <t8_data/t8_vector_handler.hxx>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -219,12 +220,47 @@ t8_time_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, t
   return runtime;
 }
 
+/* Exchange element data of type TItem with the ghosts of forest data.ghost_exchanges times with a t8_vector_handler
+ * and return the runtime. The handler holds the entries of the local and the ghost elements before the timed
+ * region, as the array of the sc_array interface does. */
+template <typename TItem>
+static double
+t8_time_forest_ghost_exchange_handler (t8_forest_t forest, const t8_time_element_data &data, sc_MPI_Comm comm)
+{
+  TItem item;
+  memset (&item, 1, sizeof (TItem));
+  const size_t num_entries = t8_forest_get_local_num_leaf_elements (forest) + t8_forest_get_num_ghosts (forest);
+  t8_vector_handler<TItem> handler (std::vector<TItem> (num_entries, item));
+  /* Start all processes together, so that a late partner does not count as exchange time. */
+  const int mpiret = sc_MPI_Barrier (comm);
+  SC_CHECK_MPI (mpiret);
+
+  double runtime = -sc_MPI_Wtime ();
+  for (int iexchange = 0; iexchange < data.ghost_exchanges; ++iexchange) {
+    t8_forest_ghost_exchange_data (forest, handler);
+  }
+  runtime += sc_MPI_Wtime ();
+  return runtime;
+}
+
 /* Exchange the element data with the ghosts of forest data.ghost_exchanges times and return the runtime.
- * The array is allocated and touched before the timed region, since an application exchanges the same data
+ * The data is allocated and touched before the timed region, since an application exchanges the same data
  * repeatedly. */
 static double
 t8_time_forest_ghost_exchange (t8_forest_t forest, const t8_time_element_data &data, sc_MPI_Comm comm)
 {
+  if (data.use_handler) {
+    switch (data.data_bytes) {
+    case 8:
+      return t8_time_forest_ghost_exchange_handler<double> (forest, data, comm);
+    case 64:
+      return t8_time_forest_ghost_exchange_handler<std::array<double, 8>> (forest, data, comm);
+    case 512:
+      return t8_time_forest_ghost_exchange_handler<std::array<double, 64>> (forest, data, comm);
+    default:
+      SC_ABORTF ("The handler interface is only timed for 8, 64 or 512 bytes per element, not %i.", data.data_bytes);
+    }
+  }
   const t8_locidx_t num_local = t8_forest_get_local_num_leaf_elements (forest);
   const t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
   sc_array_t *element_data = sc_array_new_count (data.data_bytes, num_local + num_ghosts);
@@ -516,12 +552,13 @@ main (int argc, char *argv[])
   sc_options_add_switch (opt, 'K', "keep-data", &keep_data,
                          "Together with -B: Keep the element data over the time steps instead of allocating fresh "
                          "storage in every time step. With -V, the handler reuses the storage it replaces.");
-  sc_options_add_switch (opt, 'V', "vector-handler", &vector_handler,
-                         "Together with -B: Repartition a t8_vector_handler instead of sc_arrays. "
-                         "Only for 8, 64 or 512 bytes per element.");
+  sc_options_add_switch (
+    opt, 'V', "vector-handler", &vector_handler,
+    "Together with -B: Repartition and, with -E, exchange a t8_vector_handler instead of sc_arrays. "
+    "Only for 8, 64 or 512 bytes per element.");
   sc_options_add_int (opt, 'E', "ghost-exchanges", &element_data.ghost_exchanges, 0,
                       "Together with -g and -B: Exchange the element data with the ghosts this many times in every "
-                      "time step and report its runtime as ghost_exchange. Not together with -V.");
+                      "time step and report its runtime as ghost_exchange.");
   sc_options_add_switch (opt, 'z', "use_cad", &use_cad,
                          "If used, meshes will be curved to original geometries (msh- and brep-files necessary).");
 
@@ -537,7 +574,7 @@ main (int argc, char *argv[])
       || (element_data.use_handler && element_data.data_bytes != 8 && element_data.data_bytes != 64
           && element_data.data_bytes != 512)
       || element_data.ghost_exchanges < 0
-      || (element_data.ghost_exchanges > 0 && (!do_ghost || element_data.data_bytes <= 0 || element_data.use_handler))
+      || (element_data.ghost_exchanges > 0 && (!do_ghost || element_data.data_bytes <= 0))
       || test_tet + test_hybrid_cube + test_hex_cube > 1
       || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_tet || test_hybrid_cube || test_hex_cube))
       || (mshfileprefix == NULL && use_cad)) {
