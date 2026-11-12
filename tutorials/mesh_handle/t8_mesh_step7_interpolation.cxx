@@ -39,7 +39,7 @@
  */
 
 #include <t8.h>                        /** General t8code header. Always include this. */
-#include <mesh_handle/mesh_handle.hxx> /** Convenience header for the mesh_handle. Includes the most necessary headers.  */
+#include <mesh_handle/mesh_handle.hxx> /** Convenience header for the mesh_handle. Includes all necessary headers for the mesh handle.  */
 #include <t8_vector/t8_vec.hxx>
 #include <vector>
 #include <span>                         /** Required for the interpolation callback function.  */
@@ -182,7 +182,7 @@ step7_mesh_interpolation (TMeshClass &mesh, const char *initial_prefix, const ch
   mesh.set_partition ();
   mesh.set_ghost ();
 
-  /** Commit the mesh to change it according to all set flags.
+  /* Commit the mesh to change it according to all set flags.
    *  This will first adapt the mesh. After that, it will interpolate the data automatically according to the interpolation callback.
    *  Then, the mesh will be partitioned and a ghost layer will be created.
    *  In the end the data will be repartitioned and ghost data will be exchanged automatically.
@@ -223,7 +223,7 @@ main (int argc, char **argv)
 
   { /* Scope for the mesh. It is destroyed and cleaned up automatically at the end of the scope. */
 
-    /** The mesh class we use in this tutorial with all the necessary competences.
+    /* The mesh class we use in this tutorial with all the necessary competences.
      *  data_element_competences_basic lets us access the data directly via each element.
      *  interpolate_data_mesh_competence_pack stores one \ref step7_element_data_type per element on the mesh and adds the
      *  ability to interpolate this data after adaptation via a user-defined callback. */
