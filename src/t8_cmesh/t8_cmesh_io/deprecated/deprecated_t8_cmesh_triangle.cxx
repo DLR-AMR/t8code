@@ -577,12 +577,6 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
     }
     t8_cmesh_commit (cmesh, comm);
   }
-#if T8_ENABLE_METIS
-  if (cmesh != NULL && !partition) {
-    t8_cmesh_reorder (cmesh, comm);
-    t8_debugf ("Reordered mesh with METIS.\n");
-  }
-#endif
   return cmesh;
 }
 #endif  // End of deactivated code section.
