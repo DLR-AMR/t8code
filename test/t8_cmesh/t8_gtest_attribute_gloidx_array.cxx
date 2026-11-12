@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 /* Test the t8_cmesh_set_attribute_gloidx_array and t8_cmesh_get_attribute_gloidx_array functions.
  * We create a cmesh with two trees and add an array with N entries to each tree.

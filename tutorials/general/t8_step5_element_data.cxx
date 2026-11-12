@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-5---Store-element-data
+/** \file t8_step5_element_data.cxx
+ * See also: https://github.com/DLR-AMR/t8code/wiki/Step-5---Store-element-data
  *
  * This is step5 of the t8code tutorials.
  * In the following we will store data in the individual elements of our forest.
@@ -53,14 +54,19 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* The data that we want to store for each element.
+/** The data that we want to store for each element.
  * In this example we want to store the element's level and volume. */
 struct t8_step5_data_per_element
 {
-  int level;
-  double volume;
+  int level;     /**< The level of the element. */
+  double volume; /**< The volume of the element. */
 };
 
+/** Build an adapted, partitioned and balanced forest with ghost elements as the initial forest, to which we will add
+ * element data in subsequent steps.
+ * \param [in] comm   The MPI communicator to use.
+ * \param [in] level  An initial uniform refinement level.
+ */
 static t8_forest_t
 t8_step5_build_forest (sc_MPI_Comm comm, int level)
 {
@@ -89,6 +95,9 @@ t8_step5_build_forest (sc_MPI_Comm comm, int level)
   return forest_apbg;
 }
 
+/** Create an array for the element data of the forest.
+ * \param [in] forest The forest we want to create data for.
+ */
 static struct t8_step5_data_per_element *
 t8_step5_create_element_data (t8_forest_t forest)
 {
@@ -163,7 +172,7 @@ t8_step5_create_element_data (t8_forest_t forest)
   return element_data;
 }
 
-/* Each process has computed the data entries for its local elements.
+/** Each process has computed the data entries for its local elements.
  * In order to get the values for the ghost elements, we use t8_forest_ghost_exchange_data.
  * Calling this function will fill all the ghost entries of our element data array with the
  * value on the process that owns the corresponding element. */
@@ -186,7 +195,7 @@ t8_step5_exchange_ghost_data (t8_forest_t forest, struct t8_step5_data_per_eleme
   sc_array_destroy (sc_array_wrapper);
 }
 
-/* Write the forest as vtu and also write the element's volumes in the file.
+/** Write the forest as vtu and also write the element's volumes in the file.
  *
  * t8code supports writing element based data to vtu as long as its stored
  * as doubles. Each of the data fields to write has to be provided in its own

@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <test/t8_gtest_memory_macros.hxx>
+#include <t8_gtest_memory_macros.hxx>
 
 /**
  * Package id for the testsuite. Used for attributes.

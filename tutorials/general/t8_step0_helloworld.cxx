@@ -20,13 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-0---Hello-World
+/** \file t8_step0_helloworld.cxx
+ * See also: https://github.com/DLR-AMR/t8code/wiki/Step-0---Hello-World
  *
  * In this example we initialize t8code and print a small welcome message.
  * This is the t8code equivalent of HelloWorld. */
 
 #include <t8.h> /* General t8code header, always include this. */
 
+/** Entry point of the program. */
 int
 main (int argc, char **argv)
 {
