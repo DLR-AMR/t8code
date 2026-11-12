@@ -120,17 +120,19 @@ template <t8_mesh_handle::T8MeshType TMeshClass>
 static void
 output_data_to_vtu (const TMeshClass &mesh, const char *prefix)
 {
+  const t8_locidx_t num_local_elements = mesh.get_num_local_elements ();
+  const t8_locidx_t num_ghosts = mesh.get_num_ghosts ();
   /* We collect the volumes with one entry per local element. */
   std::vector<double> element_volumes;
-  element_volumes.reserve (mesh.get_num_local_elements ());
+  element_volumes.reserve (num_local_elements + num_ghosts);
   /* Copy the element's volumes from the element data. */
-  for (const auto &elem : mesh) {
-    element_volumes.push_back (elem.get_element_data ().volume);
+  for (t8_locidx_t i = 0; i < num_local_elements + num_ghosts; ++i) {
+    element_volumes.push_back (mesh[i].get_element_data ().volume);
   }
-  /* To write user-defined data, we use the output function write_mesh_to_vtk_ext_data.
+  /* To write user-defined data, we use the output function write_mesh_to_vtk.
    * Each data field consists of its name, as it should be written to the file, and its values.
    * Scalar fields are passed in the first list, vector fields in the optional second list.
-   * Further arguments offer more control over which properties to write, as in write_mesh_to_vtk_ext.
+   * Further arguments offer more control over which properties to write.
    */
   t8_mesh_handle::write_mesh_to_vtk (mesh, prefix, { { "Element volume", element_volumes } }, {},
                                      { .write_ghosts = true });
