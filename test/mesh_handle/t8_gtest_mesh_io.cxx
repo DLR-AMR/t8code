@@ -30,9 +30,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <t8.h>
 
-#include <mesh_handle/mesh.hxx>
-#include <mesh_handle/mesh_io.hxx>
-#include <mesh_handle/constructor_wrappers.hxx>
+#include <mesh_handle/mesh_handle.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_vtk/t8_vtk.h>
@@ -45,6 +43,8 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <cstdio>
+#include <filesystem>
 
 /** Parametrized test fixture for the mesh io tests.
  * Provides a mesh with ghosts and exemplary per element data for all local and ghost elements.
@@ -57,6 +57,15 @@ struct t8_mesh_io_test: public testing::TestWithParam<std::tuple<t8_eclass_t, in
   void
   SetUp () override
   {
+    // All vtk files of a test are written into output_dir, which is deleted again in TearDown.
+    int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+    SC_CHECK_MPI (mpiret);
+    if (mpirank == 0) {
+      std::filesystem::create_directories (output_dir);
+    }
+    //All processes have to wait until the directory exists before they write into it.
+    mpiret = sc_MPI_Barrier (sc_MPI_COMM_WORLD);
+    SC_CHECK_MPI (mpiret);
     const t8_eclass_t eclass = std::get<0> (GetParam ());
     const int level = std::get<1> (GetParam ());
     // Create the mesh with ghosts to be able to test the output of ghost elements.
@@ -86,12 +95,32 @@ struct t8_mesh_io_test: public testing::TestWithParam<std::tuple<t8_eclass_t, in
     vtk_data[2].data = centroid_components.data ();
   }
 
-  std::unique_ptr<mesh_class> mesh;           /**< The mesh to write. */
-  t8_locidx_t num_local_elements;             /**< Number of local elements of \a mesh. */
-  t8_locidx_t num_ghosts;                     /**< Number of ghost elements of \a mesh. */
-  std::vector<double> levels;                 /**< Level of each local and ghost element. */
-  std::vector<double> volumes;                /**< Volume of each local and ghost element. */
-  std::vector<t8_3D_vec> centroids;           /**< Centroid of each local and ghost element. */
+  void
+  TearDown () override
+  {
+    // All processes have to be done writing and reading before the files are deleted.
+    const int mpiret = sc_MPI_Barrier (sc_MPI_COMM_WORLD);
+    SC_CHECK_MPI (mpiret);
+    if (mpirank == 0) {
+      std::filesystem::remove_all (output_dir);
+    }
+  }
+
+  /** Get the file prefix for the vtk output \a name inside \a output_dir. */
+  std::string
+  output_prefix (const std::string &name) const
+  {
+    return output_dir + "/" + name;
+  }
+
+  const std::string output_dir = "t8_gtest_mesh_io_output"; /**< Directory for all files written. */
+  int mpirank;                                              /**< The rank of this process. */
+  std::unique_ptr<mesh_class> mesh;                         /**< The mesh to write. */
+  t8_locidx_t num_local_elements;                           /**< Number of local elements of \a mesh. */
+  t8_locidx_t num_ghosts;                                   /**< Number of ghost elements of \a mesh. */
+  std::vector<double> levels;                               /**< Level of each local and ghost element. */
+  std::vector<double> volumes;                              /**< Volume of each local and ghost element. */
+  std::vector<t8_3D_vec> centroids;                         /**< Centroid of each local and ghost element. */
   std::vector<double> centroid_components;    /**< The centroids as flat array as expected by the forest. */
   static constexpr int num_vtk_data = 3;      /**< Number of data fields in \a vtk_data. */
   t8_vtk_data_field_t vtk_data[num_vtk_data]; /**< Data fields for the forest vtk writer pointing to the data above. */
@@ -110,6 +139,9 @@ read_vtu_file (const std::string &fileprefix, const int mpirank)
   snprintf (filename, BUFSIZ, "%s_%04d.vtu", fileprefix.c_str (), mpirank);
   std::ifstream file (filename);
   EXPECT_TRUE (file.is_open ()) << "Could not open file " << filename;
+  if (!file.is_open ()) {
+    return "";
+  }
   std::stringstream content;
   content << file.rdbuf ();
   return content.str ();
@@ -161,7 +193,7 @@ check_vtk_data_conversion (const TMeshClass &mesh, const t8_mesh_handle::vtk_dat
 /** Check that the mesh can be written with the standard output function \ref t8_mesh_handle::write_mesh_to_vtk. */
 TEST_P (t8_mesh_io_test, write_mesh_to_vtk)
 {
-  EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, "t8_gtest_mesh_io"));
+  EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, output_prefix ("mesh_io")));
 }
 
 /** Check the conversion of the data fields of the handle into the data fields expected by the forest vtk writer.
@@ -190,34 +222,22 @@ TEST_P (t8_mesh_io_test, to_vtk_data_field)
 TEST_P (t8_mesh_io_test, write_mesh_to_vtk_with_options)
 {
   const std::span<const double> local_volumes (volumes.data (), num_local_elements);
-
-  // We explicitly set the same default options as the original C test to prevent FPEs
-  t8_mesh_handle::vtk_write_options default_options;
-  default_options.write_treeid = true;
-
   // Default options and no data fields.
-  EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, "t8_gtest_mesh_io_with_options", {}, {}, default_options));
+  EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, output_prefix ("with_options"), {}, {}, {}));
 
   for (const bool write_ghosts : { false, true }) {
     for (const bool do_not_use_API : { false, true }) {
-
-      // Populate the options struct based on the loop
-      t8_mesh_handle::vtk_write_options options;
-      options.write_treeid = true;
-      options.write_mpirank = true;
-      options.write_level = true;
-      options.write_element_id = true;
-      options.write_ghosts = write_ghosts;
-      options.write_curved = false;
-      options.do_not_use_API = do_not_use_API;
+      // All other options keep their default values.
+      const t8_mesh_handle::vtk_write_options options { .write_ghosts = write_ghosts,
+                                                        .do_not_use_API = do_not_use_API };
 
       // Only a scalar data field with values for the local elements only.
-      EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, "t8_gtest_mesh_io_with_options",
+      EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, output_prefix ("with_options"),
                                                       { { "volume", local_volumes } }, {}, options))
         << "write_ghosts = " << write_ghosts << ", do_not_use_API = " << do_not_use_API;
       // Scalar and vector data fields with values for the local and the ghost elements.
-      EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, "t8_gtest_mesh_io_with_options",
-                                                      { { "level", levels }, { "volume", local_volumes } },
+      EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, output_prefix ("with_options"),
+                                                      { { "level", levels }, { "volume", volumes } },
                                                       { { "centroid", centroids } }, options))
         << "write_ghosts = " << write_ghosts << ", do_not_use_API = " << do_not_use_API;
     }
@@ -231,12 +251,7 @@ TEST_P (t8_mesh_io_test, write_mesh_to_vtk_with_options)
  */
 TEST_P (t8_mesh_io_test, compare_output_to_forest)
 {
-  int mpirank;
-  const int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-  SC_CHECK_MPI (mpiret);
-
   const std::string prefix_forest = "t8_gtest_mesh_io_forest";
-  const std::string prefix_ext = "t8_gtest_mesh_io_handle_ext";
   const std::string prefix_ext_data = "t8_gtest_mesh_io_handle_ext_data";
   // Use different values for the options to detect if they are mixed up.
   const bool write_treeid = true;
@@ -251,15 +266,7 @@ TEST_P (t8_mesh_io_test, compare_output_to_forest)
                                           write_level, write_element_id, write_ghosts, write_curved, do_not_use_API,
                                           num_vtk_data, vtk_data));
 
-    // --- Setup options struct ---
-    t8_mesh_handle::vtk_write_options options;
-    options.write_treeid = write_treeid;
-    options.write_mpirank = write_mpirank;
-    options.write_level = write_level;
-    options.write_element_id = write_element_id;
-    options.write_ghosts = write_ghosts;
-    options.write_curved = write_curved;
-    options.do_not_use_API = do_not_use_API;
+    const t8_mesh_handle::vtk_write_options options { .write_ghosts = write_ghosts };
     // --- Write with the mesh handle. ---
     EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_ext_data.c_str (),
                                                     { { "level", levels }, { "volume", volumes } },
