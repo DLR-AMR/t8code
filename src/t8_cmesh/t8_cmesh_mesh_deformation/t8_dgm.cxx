@@ -52,9 +52,10 @@ t8_dgm_position_at_step (const t8_mesh_deformation_node& node, const double step
 }
 
 /**
- * Computes the double signed area of the triangle (a, b, c) in the xy-plane.
- * \param [in] a, b, c  The vertices of the triangle.
- * \return              The double signed area of the triangle.
+ * Computes the double signed volume/area of the tetraherda/triangle (point_a, point_b, point_c) in the xy-plane.
+ * \param [in] point_a, point_b, point_c, point_d  The vertices of the tetraherda.
+ * \param [in] dimension  The dimension of the element.
+ * \return              The double signed volume/area of the tetraherda.
  */
 static inline double
 t8_dgm_signed_volume (const std::array<double, 3>& point_a, const std::array<double, 3>& point_b,
@@ -88,12 +89,23 @@ t8_dgm::solve ()
 
   bool no_flipped_elements = false;
   double substeps = 0;
-  while (!no_flipped_elements && substeps < 16) {
+  const bool gmsh_was_initialized = gmsh::isInitialized ();
+  if (!gmsh_was_initialized) {
+    gmsh::initialize ();
+    gmsh::option::setNumber ("General.Terminal", 0);
+  }
+  const int max_substeps = 16;
+  while (!no_flipped_elements && substeps < max_substeps) {
     create_delaunay_mesh (boundary_nodes, substeps);
     no_flipped_elements = check_delaunay_elements (substeps);
     substeps++;
   }
+  SC_CHECK_ABORTF (no_flipped_elements,
+                   "Delaunay graph mapping: Flipped elements remain after the maximum of %i substeps.\n", max_substeps);
   t8_debugf ("Delaunay graph mapping: %f substeps were required to avoid flipped elements.\n", substeps - 1);
+  if (!gmsh_was_initialized) {
+    gmsh::finalize ();
+  }
 }
 
 void
@@ -121,7 +133,6 @@ t8_dgm::create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& bound
       node_tags.push_back (inode + 1);
     }
 
-    gmsh::initialize ();
     gmsh::model::add ("t8_dgm");
     if (dimension == 2) {
       /* The returned triangle node tags refer to the input points and start at 1. */
@@ -176,8 +187,9 @@ t8_dgm::create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& bound
     else {
       SC_ABORTF ("Delaunay graph mapping is only implemented for 2D and 3D meshes. Dimension: %d\n", dimension);
     }
+#if T8_ENABLE_DEBUG
     gmsh::write ("t8_dgm.msh");
-    gmsh::finalize ();
+#endif /* T8_ENABLE_DEBUG */
 #else
     SC_ABORTF ("t8code was not configured with gmsh. The Delaunay graph mapping requires gmsh.\n");
 #endif
@@ -274,6 +286,8 @@ t8_dgm::interpolate (t8_mesh_deformation_node& inner_node) const
         break;
       }
     }
+    SC_CHECK_ABORTF (found, "Global vertex %" T8_GLOIDX_FORMAT " is not inside any Delaunay element in substep %zu.\n",
+                     inner_node.global_id, step);
   }
   // After the interpolation, update the inner node's displacement to the global displacement.
   for (int coord = 0; coord < 3; ++coord) {

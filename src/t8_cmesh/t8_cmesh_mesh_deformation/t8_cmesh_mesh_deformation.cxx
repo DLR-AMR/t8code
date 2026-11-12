@@ -345,14 +345,14 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
       = { projected.X () - node.position[0], projected.Y () - node.position[1], projected.Z () - node.position[2] };
 
     /* The old (u,v)-parameters refer to the undeformed position, so update them in all trees. */
-    double u, v;
-    projection.LowerDistanceParameters (u, v);
+    double param_u, param_v;
+    projection.LowerDistanceParameters (param_u, param_v);
     for (const auto &[tree_id, local_corner_index] : tree_list) {
       double *uv_attribute = (double *) t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (),
                                                                 T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY, tree_id);
       if (uv_attribute != nullptr) {
-        uv_attribute[2 * local_corner_index] = u;
-        uv_attribute[2 * local_corner_index + 1] = v;
+        uv_attribute[2 * local_corner_index] = param_u;
+        uv_attribute[2 * local_corner_index + 1] = param_v;
       }
     }
   }
