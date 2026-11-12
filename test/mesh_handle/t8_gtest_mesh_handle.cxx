@@ -56,8 +56,8 @@ TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
 {
   using mesh_class = t8_mesh_handle::mesh<>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
-    eclass, level, sc_MPI_COMM_WORLD, true, true, false);
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (eclass, level,
+                                                                                        sc_MPI_COMM_WORLD, true, false);
   EXPECT_FALSE (element_class::has_vertex_cache ());
   EXPECT_FALSE (element_class::has_centroid_cache ());
 
@@ -90,8 +90,8 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
   // --- Use predefined competences to use all available caching competences. ---
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
-    eclass, level, sc_MPI_COMM_WORLD, true, true, false);
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (eclass, level,
+                                                                                        sc_MPI_COMM_WORLD, true, false);
   EXPECT_TRUE (element_class::has_volume_cache ());
   EXPECT_TRUE (element_class::has_diameter_cache ());
   EXPECT_TRUE (element_class::has_vertex_cache ());
@@ -137,8 +137,8 @@ TEST_P (t8_mesh_handle_test, test_cache_face_competences)
 {
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_face_element_competences>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
-    eclass, level, sc_MPI_COMM_WORLD, true, true, false);
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (eclass, level,
+                                                                                        sc_MPI_COMM_WORLD, true, false);
   EXPECT_FALSE (element_class::has_volume_cache ());
   EXPECT_FALSE (element_class::has_diameter_cache ());
   EXPECT_FALSE (element_class::has_vertex_cache ());
