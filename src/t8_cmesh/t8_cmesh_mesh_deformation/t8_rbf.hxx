@@ -197,7 +197,7 @@ struct t8_rbf: public t8_mesh_deformation_method
 
   /**
    * Transfers the boundary node data to the internal data structure of the RBF.
-   * \param [in] boundary_node_data Map of global vertex IDs to boundary nodes.
+   * \param [in] boundary_node_data Vector of boundary nodes.
    */
   void
   set_boundary_nodes (const std::vector<t8_mesh_deformation_node>& boundary_node_data) override

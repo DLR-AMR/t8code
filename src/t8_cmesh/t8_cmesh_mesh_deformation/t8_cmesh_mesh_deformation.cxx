@@ -319,6 +319,11 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
     const t8_gloidx_t global_vertex_id = global_vertex.first;
     /* Get the list of trees where this vertex exists. */
     const auto &tree_list = global_vertex.second;
+
+    /* Check if a displacement exists for this vertex. */
+    SC_CHECK_ABORTF (vertex_displacements.count (global_vertex_id) == 1,
+                     "No displacement for global vertex %" T8_GLOIDX_FORMAT ".\n", global_vertex_id);
+
     /* Update the vertex coordinates in each tree. */
     for (const auto &[tree_id, local_vertex_index] : tree_list) {
       /* Get the vertex coordinates of the current tree. */

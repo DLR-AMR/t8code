@@ -64,8 +64,8 @@ struct t8_mesh_deformation_method
     = 0;
 
   /**
-   * Solves the linear system A * alpha = displacements to find the weight.
-   * This step is mandatory for RBF to later be able to interpolate the inner nodes.
+   * Prepare the method for interpolation, e.g. compute weights from the boundary nodes.
+   * Must be called after set_boundary_nodes and before interpolate.
    */
   virtual void
   solve ()
