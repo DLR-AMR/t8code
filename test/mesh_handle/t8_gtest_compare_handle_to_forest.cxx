@@ -126,7 +126,7 @@ TEST (t8_gtest_compare_handle_to_forest, compare_boundary_conditions)
   const int level = 2;
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
-  t8_cmesh_new_hypercube_hybrid_ext (cmesh, sc_MPI_COMM_WORLD, 0, true);
+  t8_cmesh_new_hypercube_hybrid_ext (cmesh, sc_MPI_COMM_WORLD, false, true);
   auto mesh = t8_mesh_handle::handle_new_uniform_default<t8_mesh_handle::mesh<>> (cmesh, level, sc_MPI_COMM_WORLD);
   const t8_forest_t forest = mesh->get_forest ();
 
@@ -140,7 +140,7 @@ TEST (t8_gtest_compare_handle_to_forest, compare_boundary_conditions)
       const auto conditions_handle = mesh_iterator->get_boundary_conditions ();
       const auto conditions_forest = t8_forest_get_boundary_conditions (forest, itree, elem);
       EXPECT_EQ (conditions_handle.size (), conditions_forest.size ());
-      for (size_t iface = 0; iface < std::min (conditions_handle.size (), conditions_forest.size ()); ++iface) {
+      for (size_t iface = 0; iface < conditions_handle.size (); ++iface) {
         EXPECT_EQ (conditions_handle[iface], conditions_forest[iface]) << "face = " << iface;
       }
       // --- Boundary conditions of individual faces. ---

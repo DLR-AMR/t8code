@@ -43,6 +43,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_subelement.hxx>
 #include <vector>
 #include <algorithm>
+#include <optional>
+#include <string_view>
 
 /** Parametrized test fixture for the ghost tests. */
 struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
@@ -266,6 +268,66 @@ TEST_P (t8_mesh_ghost_test, cache_neighbors)
       // --- Compare results. ---
       EXPECT_EQ (neighbors, unrealistic_neighbors);
       EXPECT_EQ (dual_faces, unrealistic_dual_faces);
+    }
+  }
+}
+
+/** Check that the boundary condition getters of the handle give the same results as the forest functions for ghost elements. */
+TEST_P (t8_mesh_ghost_test, compare_boundary_conditions)
+{
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  // Create a hypercube with boundary conditions.
+  t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, 1);
+  // Create the mesh handle with ghost elements.
+  auto mesh = t8_mesh_handle::handle_new_uniform_default<t8_mesh_handle::mesh<>> (cmesh, level, sc_MPI_COMM_WORLD);
+  mesh->set_ghost ();
+  mesh->commit ();
+  const t8_forest_t forest = mesh->get_forest ();
+
+  // Skip if no ghosts are created (e.g. single process or not enough elements to partition).
+  int mpisize;
+  const int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  if (!(mpisize > 1) || !(mesh->get_dimension () > 1) || (mesh->get_num_global_elements () < mpisize)) {
+    GTEST_SKIP () << "Skipping test as no ghost elements are created.";
+  }
+  const t8_locidx_t num_local_elements = mesh->get_num_local_elements ();
+  const t8_locidx_t num_ghosts = mesh->get_num_ghosts ();
+  ASSERT_GT (num_ghosts, 0);
+  EXPECT_EQ (num_ghosts, t8_forest_get_num_ghosts (forest));
+  // Without boundary conditions in the cmesh, every face has none and the test would not check anything.
+  ASSERT_NE (::detail::t8_cmesh_get_boundary_condition_handler (t8_forest_get_cmesh (forest)), nullptr)
+    << "The cmesh has no boundary conditions.";
+
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+  // The ghost elements are stored in the handle after the local elements.
+  for (t8_locidx_t ielem = num_local_elements; ielem < num_local_elements + num_ghosts; ++ielem) {
+    const auto& ghost = (*mesh)[ielem];
+    ASSERT_TRUE (ghost.is_ghost_element ());
+    // For ghosts, the local tree id is the number of local trees plus the local ghost tree id.
+    const t8_locidx_t ltreeid = ghost.get_local_tree_id ();
+    const t8_element_t* elem
+      = t8_forest_ghost_get_leaf_element (forest, ltreeid - num_local_trees, ghost.get_local_element_id ());
+    EXPECT_EQ (elem, ghost.get_forest_element ());
+
+    // --- Boundary conditions of all faces at once. ---
+    const auto conditions_handle = ghost.get_boundary_conditions ();
+    const auto conditions_forest = t8_forest_get_boundary_conditions (forest, ltreeid, elem);
+    ASSERT_EQ (conditions_handle.size (), conditions_forest.size ());
+    for (size_t iface = 0; iface < conditions_handle.size (); ++iface) {
+      EXPECT_EQ (conditions_handle[iface], conditions_forest[iface]) << "face = " << iface << " (ghost)";
+    }
+
+    // --- Boundary conditions of individual faces. ---
+    for (int iface = 0; iface < ghost.get_num_faces (); ++iface) {
+      // The forest returns a nullptr for faces without boundary condition, the handle returns std::nullopt.
+      const auto condition_forest = t8_forest_get_boundary_condition (forest, ltreeid, elem, iface);
+      std::optional<std::string_view> expected_condition = std::nullopt;
+      if (condition_forest != nullptr) {
+        expected_condition = condition_forest;
+      }
+      EXPECT_EQ (ghost.get_boundary_condition (iface), expected_condition) << "face = " << iface << " (ghost)";
     }
   }
 }

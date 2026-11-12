@@ -36,6 +36,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_vector/t8_vec.hxx>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_c_helper.cxx>
 #include <vector>
 #include <span>
 #include <optional>
@@ -620,13 +621,26 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   /** Getter for the boundary condition of one face of the element.
    *  See \ref get_boundary_conditions for which faces can have a boundary condition.
    * \param [in] face Index of a face of the element.
-   * \return The boundary condition of the face with id \a face, of std::nullopt if the face has none.
+   * \return The boundary condition of the face with id \a face, or std::nullopt if the face has none.
    */
   std::optional<std::string_view>
   get_boundary_condition (int face) const
   {
     T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
-    return t8_forest_get_boundary_condition (m_mesh->m_forest, m_tree_id, m_element, face);
+    const t8_cmesh_t cmesh = t8_forest_get_cmesh (m_mesh->m_forest);
+
+    // 1. There is no handler (nullopt)
+    if (::detail::t8_cmesh_get_boundary_condition_handler (cmesh) == nullptr) {
+      return std::nullopt;
+    }
+    // 2. Default case
+    const auto bc = t8_forest_get_boundary_condition (m_mesh->m_forest, m_tree_id, m_element, face);
+
+    // 3. Exception case: bc is a nullptr (e.g. for internal faces)
+    if (bc == nullptr) {
+      return std::nullopt;
+    }
+    return bc;
   }
 
   // --- Print for the element for debugging purpose. ---
