@@ -851,6 +851,95 @@ t8_cmesh_new_hypercube_hybrid_2D (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
 }
 
+void
+t8_cmesh_new_periodic_hypercube_hex_bc (t8_cmesh_t *pcmesh, sc_MPI_Comm comm, int do_bcast, int do_partition,
+                                        int periodic, int use_boundary_conditions)
+{
+  /* Like t8_cmesh_new_hypercube, this function may need to replace the cmesh handle
+   * itself (see t8_cmesh_bcast below), so it operates on a local copy of *pcmesh and
+   * writes the final handle back at the end. */
+  t8_cmesh_t cmesh = *pcmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
+
+  const int num_trees = 1;
+  t8_locidx_t vertices[8];
+  double attr_vertices[24];
+  int mpirank, mpiret;
+  /* clang-format off */
+  const double vertices_coords[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    0, 1, 1,
+    1, 1, 1
+  };
+  /* clang-format on */
+
+  const std::string internal = "internal";
+  /* Outer faces of the hex, ordered by t8code face number:
+   * face 0: x = 0, face 1: x = 1,
+   * face 2: y = 0, face 3: y = 1,
+   * face 4: z = 0, face 5: z = 1 */
+  const std::array<std::string, 6> outer_face_names = { "p1", "p2", "p5", "p6", "p3", "p4" };
+  std::array<t8_boundary_conditions<std::string>, num_trees> boundary_conditions;
+
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  if (!do_bcast || mpirank == 0) {
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+
+    for (int i = 0; i < 8; i++) {
+      vertices[i] = i;
+    }
+    t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, 8);
+    t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, 8);
+
+    /* Periodic in all three directions: join opposite faces of tree 0 with itself */
+    if (periodic) {
+      t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0); /* x */
+      t8_cmesh_set_join (cmesh, 0, 0, 2, 3, 0); /* y */
+      t8_cmesh_set_join (cmesh, 0, 0, 4, 5, 0); /* z */
+    }
+
+    if (use_boundary_conditions) {
+      /* Default everything to internal, then mark the outer (periodic) faces p1 ... p6 */
+      boundary_conditions[0].assign (t8_eclass_num_faces[T8_ECLASS_HEX], internal);
+      for (int iface = 0; iface < t8_eclass_num_faces[T8_ECLASS_HEX]; ++iface) {
+        boundary_conditions[0][iface] = outer_face_names[iface];
+      }
+      for (int itree = 0; itree < num_trees; ++itree) {
+        t8_cmesh_set_boundary_conditions (cmesh, itree, boundary_conditions[itree]);
+      }
+    }
+  }
+
+  if (do_bcast) {
+    if (mpirank != 0) {
+      /* On non-root ranks cmesh was initialized by the caller but never used:
+       * t8_cmesh_bcast allocates its own cmesh for these ranks, so the unused,
+       * uncommitted one is released first. */
+      t8_cmesh_destroy (&cmesh);
+    }
+    cmesh = t8_cmesh_bcast (cmesh, 0, comm);
+  }
+
+  /* Use linear geometry. Set after broadcasting, since geometries cannot be broadcast. */
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
+
+  if (do_partition) {
+    t8_cmesh_examples_compute_and_set_partition_range (cmesh, num_trees, 3, comm);
+  }
+
+  t8_cmesh_commit (cmesh, comm);
+  *pcmesh = cmesh;
+}
+
 /* The unit cube is constructed from trees of the same eclass.
  * For triangles the square is divided along the (0,0) -- (1,1) diagonal.
  * For prisms the bottom (z=0) and top (z=1) faces are divided into triangles

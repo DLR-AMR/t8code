@@ -117,6 +117,19 @@ void
 t8_cmesh_new_hypercube (t8_cmesh_t *pcmesh, const t8_eclass_t eclass, sc_MPI_Comm comm, const int do_bcast,
                         const int do_partition, int periodic);
 
+/** Construct a periodic hypercube consisting of a single hexahedron, with
+ * boundary conditions "p1" ... "p6" on the outer faces (face 0 ... 5) and
+ * "internal" on all interior faces.
+ * \param [in,out] pcmesh  Pointer to an initialized, uncommitted cmesh. On return, the committed cmesh.
+ * \param [in] comm        The MPI communicator.
+ * \param [in] do_bcast    If true, the cmesh is only built on rank 0 and broadcast.
+ * \param [in] do_partition If true, the cmesh is partitioned.
+ * \param [in] use_boundary_conditions If true, boundary conditions are set.
+ */
+void
+t8_cmesh_new_periodic_hypercube_hex_bc (t8_cmesh_t *pcmesh, sc_MPI_Comm comm, int do_bcast, int do_partition,
+                                        int periodic, int use_boundary_conditions);
+
 /** Construct a hypercube cmesh from one primitive tree class.
  * \param [in,out] cmesh    An initialized, but not committed cmesh, as created by \ref t8_cmesh_init.
  *                          Filled and committed in place with
