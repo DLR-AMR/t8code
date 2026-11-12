@@ -24,11 +24,19 @@ on:
   issues:
     types: [labeled, assigned, unassigned, unlabeled, opened]
   pull_request_target:
-    types: [opened, reopened, ready_for_review, review_requested, review_request_removed, closed]
+    types: [opened, reopened, ready_for_review, converted_to_draft, review_requested, review_request_removed, closed]
 
 permissions:
   contents: read
   pull-requests: write
+
+# Process the events of one PR or issue one after another, never in parallel.
+# Otherwise, e.g. the 'opened' and 'review_requested' events of a new PR without a linked issue
+# would both create an issue, and concurrent runs would read and move the same card at the same time.
+# PRs and issues share one number space, so the number identifies the PR or issue uniquely.
+concurrency:
+  group: move-card-${{ github.event.pull_request.number || github.event.issue.number }}
+  queue: max
 
 jobs:
   evaluate_issues:
@@ -115,10 +123,6 @@ jobs:
   
   evaluate_pr:
     runs-on: ubuntu-latest
-    # Don't run in parallel on the same PR. Otherwise multiple issues might be created for the same PR. 
-    concurrency:
-      group: pr-move-card-${{ github.event.pull_request.id }}
-      queue: max
     outputs:
       NUMBER_IS_SET: ${{ steps.get_pr_issue_link.outputs.NUMBER_IS_SET }}
       CLEAN_ISSUE_NUMBER: ${{ steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER }}
@@ -127,13 +131,21 @@ jobs:
     steps:
       - name: "Get link between PR and Issue"
         id: get_pr_issue_link
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
             # Extract the repository node ID from the pull request event
             REPO_NODE_ID=$(jq -r '.repository.node_id' < $GITHUB_EVENT_PATH)
             echo "REPO_NODE_ID=$REPO_NODE_ID"
             echo "REPO_NODE_ID=$REPO_NODE_ID" >> $GITHUB_OUTPUT
-            # Extract the issue number from the pull request body
-            CLEAN_ISSUE_NUMBER=$(jq -r '.pull_request.body // ""' < $GITHUB_EVENT_PATH | grep -oEi '\b([cC]lose|[cC]loses|[cC]losed|[fF]ix|[fF]ixes|[fF]ixed|[rR]esolve|[rR]esolves|[rR]esolved) #[0-9]+' | grep -oE '[0-9]+' | paste -sd ',' -)
+            # Extract the issue number from the current pull request body. The body in the event payload
+            # may be outdated, e.g. if a previous run of this workflow has linked a newly created issue.
+            # Fetch the body in a separate assignment, so that the step fails if the request fails,
+            # instead of continuing with an empty body and creating an unnecessary issue.
+            pr_body=$(gh pr view "$PR_NUMBER" --json body --jq '.body')
+            CLEAN_ISSUE_NUMBER=$(printf '%s' "$pr_body" | grep -oEi '\b([cC]lose|[cC]loses|[cC]losed|[fF]ix|[fF]ixes|[fF]ixed|[rR]esolve|[rR]esolves|[rR]esolved) #[0-9]+' | grep -oE '[0-9]+' | paste -sd ',' -)
             # Set the issue number to an empty string if no issue number is found
             CLEAN_ISSUE_NUMBER=${CLEAN_ISSUE_NUMBER:-""}
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
@@ -214,27 +226,41 @@ jobs:
     secrets:
         PAT: ${{ secrets.T8DDY_PROJECTS }}
 
-  # For a PR event, move the card to Needs Review if the PR is opened, ready for review, or reopened
+  # For a PR event, move the card to Needs Review if the PR is opened, ready for review, or reopened and is not a draft.
+  # The card is also moved if the issue has not been triaged or assigned yet (In-Box, ToDo).
   move_card_to_Needs_Review:
     needs: [evaluate_pr]
-    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && (github.event.action == 'opened' || github.event.action == 'ready_for_review' || github.event.action == 'reopened') }}
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true' && !github.event.pull_request.draft && (github.event.action == 'opened' || github.event.action == 'ready_for_review' || github.event.action == 'reopened') }}
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
-        CURRENT_COLUMN_NAME: 'In Progress'
+        CURRENT_COLUMN_NAME: 'In-Box,ToDo,In Progress'
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
         PAT: ${{ secrets.T8DDY_PROJECTS }}
 
-  # For a PR event move the card to In Review if a review is requested
+  # For a PR event, move the card to In Progress if a draft PR is opened or reopened, or the PR is converted to a draft
+  move_card_to_In_Progress_for_draft:
+    needs: [evaluate_pr]
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true' && (github.event.action == 'converted_to_draft' || (github.event.pull_request.draft && (github.event.action == 'opened' || github.event.action == 'reopened'))) }}
+    uses: ./.github/workflows/pr_event_moves_card.yml
+    with:
+        ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'In-Box,ToDo,Needs Review,In Review'
+        COLUMN_NAME: 'In Progress'
+        REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
+
+  # For a PR event move the card to In Review if a review is requested, from any column before In Review
   move_card_to_In_Review:
     needs: [evaluate_pr]
     if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'review_requested' }}
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
-        CURRENT_COLUMN_NAME: 'Needs Review'
+        CURRENT_COLUMN_NAME: 'In-Box,ToDo,In Progress,Needs Review'
         COLUMN_NAME: 'In Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
@@ -260,16 +286,17 @@ jobs:
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
-        CURRENT_COLUMN_NAME: 'Needs Review'
+        CURRENT_COLUMN_NAME: 'Needs Review,In Review'
         COLUMN_NAME: 'In Progress'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
         PAT: ${{ secrets.T8DDY_PROJECTS }}
 
-  # For a PR event where no issue is linked, open a new issue and add "Closes #ISSUE_NUMBER" to the PR body
+  # For a PR event where no issue is linked, open a new issue and add "Closes #ISSUE_NUMBER" to the PR body.
+  # Closing a PR does not create an issue.
   open_issue_for_quick_pr:
     needs: [evaluate_pr]
-    if: ${{ github.event_name == 'pull_request_target' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
+    if: ${{ github.event_name == 'pull_request_target' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' && github.event.action != 'closed' }}
     uses: ./.github/workflows/quick_pr.yml
     with:
         DEFAULT_PROJECT: "t8code's Issue Landing page"

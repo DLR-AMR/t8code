@@ -61,28 +61,24 @@ jobs:
                 fi
                 echo "TITLE=$TITLE"
                 echo "AUTHOR=$AUTHOR"
-                # Create the new issue. Use the DEFAULT_PROJECT to directly add it to the project. 
-                # Letting GH add the Issue to the project by automatization can lead to a delay, 
-                # and the following worfkflows will try to move a card that doesn't exist yet.
-                # Only assign the issue if the author is not a bot
-                if [[ "$AUTHOR" == *"[bot]"* ]]; then
-                  new_issue_url=$(gh issue create \
+                # Create the new issue exactly once. The project and the assignee are added afterwards in
+                # separate, non-fatal calls: gh can create the issue and still fail while adding them,
+                # and creating the issue again in that case would produce a duplicate.
+                new_issue_url=$(gh issue create \
                   --title "$TITLE" \
-                  --body "$ISSUE_BODY" \
-                  --project "$DEFAULT_PROJECT"
-                  )
-                elif ! new_issue_url=$(gh issue create \
-                  --title "$TITLE" \
-                  --assignee "$AUTHOR" \
-                  --body "$ISSUE_BODY" \
-                  --project "$DEFAULT_PROJECT" 2>/dev/null); then
-                  # Assignment failed (e.g. outside contributor without repo access).
-                  new_issue_url=$(gh issue create \
-                  --title "$TITLE" \
-                  --body "$ISSUE_BODY" \
-                  --project "$DEFAULT_PROJECT")
-                fi
+                  --body "$ISSUE_BODY")
                 echo "new_issue_url=$new_issue_url"
+                # Use the DEFAULT_PROJECT to directly add the issue to the project.
+                # Letting GH add the Issue to the project by automatization can lead to a delay,
+                # and the following workflows will try to move a card that doesn't exist yet.
+                if ! gh issue edit "$new_issue_url" --add-project "$DEFAULT_PROJECT"; then
+                  echo "::warning::Could not add $new_issue_url to the project '$DEFAULT_PROJECT'."
+                fi
+                # Only assign the issue if the author is not a bot.
+                # The assignment can fail, e.g. for an outside contributor without repo access.
+                if [[ "$AUTHOR" != *"[bot]"* ]] && ! gh issue edit "$new_issue_url" --add-assignee "$AUTHOR"; then
+                  echo "::warning::Could not assign $AUTHOR to $new_issue_url."
+                fi
                 # Extract the issue number from the URL. 
                 # The URL is in the format https://github.com/orga-name/repo-name/issues/issues_number
                 ISSUE_NUMBER=$(echo "$new_issue_url" | awk -F'/' '{print $NF}')
@@ -98,8 +94,9 @@ jobs:
                 ISSUE_NUMBER="${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}"
                 echo "ISSUE_NUMBER=$ISSUE_NUMBER"
                 echo "PR_NUMBER=$PR_NUMBER"
-                # Get the PR body
-                pr_body=$(jq -r '.pull_request.body // ""' < $GITHUB_EVENT_PATH)
+                # Get the current PR body. The body in the event payload may be outdated by now,
+                # writing it back would discard edits made in the meantime.
+                pr_body=$(gh pr view "$PR_NUMBER" --json body --jq '.body')
                 echo "pr_body=$pr_body"
                 # Add the issue number to the PR body
                 # Add "Closes #ISSUE_NUMBER" to the top of the PR body
