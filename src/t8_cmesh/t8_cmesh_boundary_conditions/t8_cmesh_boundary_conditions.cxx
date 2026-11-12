@@ -32,6 +32,15 @@
 
 /**************************************** FUNCTION DEFINITIONS ****************************************/
 
+T8_EXTERN_C_BEGIN ();
+int
+t8_cmesh_has_boundary_conditions (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
+  return detail::t8_cmesh_get_boundary_condition_handler (cmesh) != NULL;
+}
+T8_EXTERN_C_END ();
+
 t8_boundary_conditions<std::string_view>
 t8_cmesh_get_boundary_conditions (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
 {

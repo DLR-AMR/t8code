@@ -32,6 +32,17 @@
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_c_helper.h>
 #include <t8_schemes/t8_scheme.hxx>
 
+T8_EXTERN_C_BEGIN ();
+int
+t8_forest_has_boundary_conditions (t8_forest_t forest)
+{
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  const t8_cmesh_t forest_cmesh = t8_forest_get_cmesh (forest);
+  return detail::t8_cmesh_get_boundary_condition_handler (forest_cmesh) != NULL;
+}
+T8_EXTERN_C_END ();
+
 t8_boundary_conditions<std::optional<std::string_view>>
 t8_forest_get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element)
 {

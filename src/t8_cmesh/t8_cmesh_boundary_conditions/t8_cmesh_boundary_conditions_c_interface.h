@@ -47,7 +47,20 @@ t8_cmesh_set_boundary_conditions (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const c
                                   size_t length);
 
 /**
+ * Indicates if a cmesh has boundary conditions.
+ * If this is true, \ref t8_cmesh_get_boundary_conditions and \ref t8_cmesh_get_boundary_condition
+ * are safe to use. The cmesh has to be committed.
+ *
+ * \return True if the cmesh has boundary conditions. False otherwise.
+ */
+int
+t8_cmesh_has_boundary_conditions (t8_cmesh_t cmesh);
+
+/**
  * Retrieves the boundary conditions of a cmesh cell.
+ * Will abort if the cmesh does not have boundary conditions.
+ * When in doubt use \ref t8_cmesh_has_boundary_conditions beforehand.
+ * The cmesh has to be committed.
  *
  * \param [in]  cmesh               The cmesh the cell lives in.
  * \param [in]  ltreeid             The local cmesh id of the cell.
@@ -62,6 +75,9 @@ t8_cmesh_get_boundary_conditions (t8_cmesh_t cmesh, t8_locidx_t ltreeid,
 /**
  * Retrieves the boundary condition of one face of a cmesh cell.
  * Retrieving all boundary conditions at once via \ref t8_cmesh_get_boundary_conditions() will be faster.
+ * Will abort if the cmesh does not have boundary conditions.
+ * When in doubt use \ref t8_cmesh_has_boundary_conditions beforehand.
+ * The cmesh has to be committed.
  *
  * \param [in]  cmesh               The cmesh the cell lives in.
  * \param [in]  ltreeid             The local cmesh id of the cell.
