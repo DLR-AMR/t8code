@@ -218,6 +218,8 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
     const t8_forest_t forest = mesh.get_forest ();
     SC_CHECK_ABORT (!t8_forest_has_incomplete_trees (forest),
                     "This functionality is not specified for incomplete trees.\n");
+    SC_CHECK_ABORT ((t8_forest_get_mpisize (forest) == 1) || t8_forest_has_ghosts (forest),
+                    "Filling the unique face vector only makes sense with ghosts to find all neighbors!\n");
 
     // Vector should store one entry per face of each element, so reserve space accordingly.
     m_element_face_vector.assign (mesh.get_num_local_elements () + mesh.get_num_ghosts (), {});
