@@ -51,6 +51,13 @@ typedef enum {
  */
 struct t8_rbf_boundary_node: public t8_mesh_deformation_node
 {
+  /** Constructor. Copies the data of a generic mesh deformation node.
+   * \param [in] node  The boundary node of the mesh deformation.
+   */
+  explicit t8_rbf_boundary_node (const t8_mesh_deformation_node& node): t8_mesh_deformation_node (node)
+  {
+  }
+
   /** The calculated RBF coefficient alpha. This is needed for the interpolation to distribute the influence of the boundary nodes.
   * This weight represents the fixed influence assigned to each boundary node. */
   t8_3D_vec weight;
@@ -206,9 +213,7 @@ struct t8_rbf: public t8_mesh_deformation_method
     boundary_nodes.reserve (boundary_node_data.size ());
     for (const auto& boundary_node : boundary_node_data) {
 
-      t8_rbf_boundary_node rbf_boundary_node;
-      static_cast<t8_mesh_deformation_node&> (rbf_boundary_node) = boundary_node;
-      rbf_boundary_node.weight.fill (0.0);
+      t8_rbf_boundary_node rbf_boundary_node (boundary_node);
 
       /* Calculate the local support radius based on the mean neighbor distance. Globally supported RBFs keep the default T8_RBF_GLOBAL_SUPPORT. */
       if (rbf_function->is_compactly_supported ()) {

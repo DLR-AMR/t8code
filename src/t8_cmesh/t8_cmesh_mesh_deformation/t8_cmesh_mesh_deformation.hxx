@@ -49,7 +49,7 @@ struct t8_cmesh_mesh_deformation
   /** Destructor */
   ~t8_cmesh_mesh_deformation () {};
 
-  /** Create the deformation method of type method_type.
+  /** Create the deformation method of type TMethod.
    * \tparam TMethod  Class derived from t8_mesh_deformation_method.
    * \tparam TArgs       Types of the constructor arguments of TMethod.
    * \param [in] args    Arguments passed to the constructor of TMethod. */
