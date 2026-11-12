@@ -568,6 +568,8 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE *vtufile, const char *da
   return 1;
 }
 
+/* VTK vector fields always have 3 components; lower-dimensional data is zero-padded. */
+constexpr int T8_VTK_VECTOR_NUM_COMPONENTS = 3;
 /* Write the cell data to an open file stream.
  * Returns true on success and zero otherwise.
  * After completion the file will remain open, whether writing
@@ -687,9 +689,9 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE *vtufile, const int write_tr
       char component_string[BUFSIZ];
       T8_ASSERT (data[idata].type == T8_VTK_VECTOR);
       snprintf (component_string, BUFSIZ, "NumberOfComponents=\"3\"");
-      freturn
-        = t8_forest_vtk_write_cell_data (forest, vtufile, data[idata].description, T8_VTK_FLOAT_NAME, component_string,
-                                         8 * 3, t8_forest_vtk_cells_vector_kernel, write_ghosts, data[idata].data);
+      freturn = t8_forest_vtk_write_cell_data (forest, vtufile, data[idata].description, T8_VTK_FLOAT_NAME,
+                                               component_string, 8 * T8_VTK_VECTOR_NUM_COMPONENTS,
+                                               t8_forest_vtk_cells_vector_kernel, write_ghosts, data[idata].data);
     }
     if (!freturn) {
       goto t8_forest_vtk_cell_failure;
@@ -771,9 +773,9 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE *vtufile, const int write_g
           t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
         }
 
-        freturn
-          = t8_forest_vtk_write_cell_data (forest, vtufile, description, T8_VTK_FLOAT_NAME, component_string, 8 * 3,
-                                           t8_forest_vtk_vertices_vector_kernel, write_ghosts, data[idata].data);
+        freturn = t8_forest_vtk_write_cell_data (forest, vtufile, description, T8_VTK_FLOAT_NAME, component_string,
+                                                 8 * T8_VTK_VECTOR_NUM_COMPONENTS, t8_forest_vtk_vertices_vector_kernel,
+                                                 write_ghosts, data[idata].data);
       }
       if (!freturn) {
         goto t8_forest_vtk_cell_failure;
