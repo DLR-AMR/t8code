@@ -28,20 +28,20 @@
 
 #include <t8.h>
 #include <t8_vector/t8_vec.hxx>
-#include <unordered_map>
+#include <vector>
 
 /** A struct representing a node in the mesh for the deformation, containing its global ID, position, displacement and the mean distance to its neighbors. */
 struct t8_mesh_deformation_node
 {
-  /**The global ID of the node. */
-  t8_gloidx_t global_id;
+  /** The global ID of the node. */
+  t8_gloidx_t global_id {};
   /** The old position of the node. */
-  t8_3D_vec position;
+  t8_3D_vec position {};
   /** The displacement.
    * For boundary nodes this is known and calculated from the different coordinates of the CAD geometries.
    * For inner nodes this is the result of the interpolation. */
-  t8_3D_vec displacement;
-  /** Mean distance to neighbouring vertices (boundary nodes only). */
+  t8_3D_vec displacement {};
+  /** Mean distance to neighboring vertices (boundary nodes only). */
   double mean_neighbor_distance = 0.0;
 };
 
@@ -56,8 +56,8 @@ struct t8_mesh_deformation_method
   virtual ~t8_mesh_deformation_method () = default;
 
   /**
-   * Transfers the boundary node data to the internal data structure of the mesh defromation.
-   * \param [in] boundary_node_data Map of global vertex IDs to boundary nodes.
+   * Transfers the boundary node data to the internal data structure of the mesh deformation.
+   * \param [in] boundary_node_data Vector of boundary nodes.
    */
   virtual void
   set_boundary_nodes (const std::vector<t8_mesh_deformation_node>& boundary_node_data)

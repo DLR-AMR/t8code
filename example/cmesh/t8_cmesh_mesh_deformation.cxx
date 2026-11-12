@@ -155,10 +155,10 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 
     switch (deformation_type_int) {
 #if T8_ENABLE_EIGEN
-    case 0:
+    case T8_RBF_CPC2:
       deformation.set_deformation_method<t8_rbf> (T8_RBF_CPC2, scale_factor_support_radius);
       break;
-    case 1:
+    case T8_RBF_TPS:
       deformation.set_deformation_method<t8_rbf> (T8_RBF_TPS);
       break;
 #endif

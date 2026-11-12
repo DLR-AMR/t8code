@@ -50,13 +50,13 @@ struct t8_cmesh_mesh_deformation
   ~t8_cmesh_mesh_deformation () {};
 
   /** Create the deformation method of type method_type.
-   * \tparam method_type  Class derived from t8_mesh_deformation_method.
+   * \tparam TMethod  Class derived from t8_mesh_deformation_method.
    * \param [in] args     Arguments passed to the constructor of method_type. */
-  template <typename method_type, typename... args_t>
+  template <typename TMethod, typename... args_t>
   void
   set_deformation_method (args_t &&...args)
   {
-    deformation_method = std::make_unique<method_type> (std::forward<args_t> (args)...);
+    deformation_method = std::make_unique<TMethod> (std::forward<args_t> (args)...);
   }
 
   /**

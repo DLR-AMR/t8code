@@ -277,7 +277,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
     /* Check if the geometry attribute is available for this tree. */
     if (first_tree_geom_attribute == nullptr) {
       t8_errorf ("Error: Geometry attribute missing for tree %d.\n", first_tree.first);
-      SC_ABORT ("Geometry attribute is missing.");
+      SC_ABORT ("Geometry attribute is missing.\n");
     }
 
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
@@ -293,7 +293,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
     /* Check if the coordinates are available. */
     if (vertex_coords == nullptr) {
       t8_errorf ("Error: Coordinates attribute missing for tree %d.\n", first_tree.first);
-      SC_ABORT ("Vertex coordinates are missing.");
+      SC_ABORT ("Vertex coordinates are missing.\n");
     }
 
     /* Save the initial coordinates of the inner node. */
