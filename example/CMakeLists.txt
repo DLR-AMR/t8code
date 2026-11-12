@@ -76,6 +76,7 @@ add_t8_example( NAME t8_cmesh_mesh_deformation          SOURCES cmesh/t8_cmesh_m
 add_t8_example( NAME t8_test_ghost                      SOURCES forest/t8_test_ghost.cxx )
 add_t8_example( NAME t8_test_face_iterate               SOURCES forest/t8_test_face_iterate.cxx )
 add_t8_example( NAME t8_test_ghost_large_level_diff     SOURCES forest/t8_test_ghost_large_level_diff.cxx )
+add_t8_example( NAME t8_extruded_hex                    SOURCES forest/t8_extruded_hex.cxx )
 
 add_t8_example( NAME t8_example_geometries              SOURCES geometry/t8_example_geometries.cxx )
 
