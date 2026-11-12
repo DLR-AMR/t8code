@@ -53,7 +53,7 @@ namespace t8_mesh_handle
  * \return  True if successful, false if not (process local).
  */
 template <T8MeshType TMeshClass>
-int
+bool
 write_mesh_to_vtk (TMeshClass &mesh, const std::string &fileprefix)
 {
   return t8_forest_write_vtk (mesh.get_forest (), fileprefix.c_str ());
@@ -126,7 +126,7 @@ create_vtk_buffer (const TMeshClass &mesh, const vtk_data_field<TValueType> &fie
  */
 template <T8VtkDataValue TValueType>
 void
-fill_vtk_data_field (const vtk_data_field<TValueType> &field, std::vector<double> &buffer,
+fill_vtk_data_field (const vtk_data_field<TValueType> &field, const std::vector<double> &buffer,
                      t8_vtk_data_field_t &vtk_field)
 {
   constexpr bool is_scalar = std::same_as<TValueType, double>;
@@ -136,7 +136,7 @@ fill_vtk_data_field (const vtk_data_field<TValueType> &field, std::vector<double
                    sizeof (vtk_field.description) - 1);
   auto copy_result = std::ranges::copy (field.name, vtk_field.description);
   *copy_result.out = '\0';
-  vtk_field.data = buffer.data ();
+  vtk_field.data = const_cast<double *> (buffer.data ());
 }
 } /* Namespace detail */
 
@@ -154,8 +154,6 @@ struct vtk_write_options
 
 /**
  * Write the mesh in a parallel vtu format together with user-defined per element data fields.
- * Convenience wrapper around write_mesh_to_vtk that takes the data as named std::vectors,
- * so there is no need to allocate arrays or to fill t8_vtk_data_field_t structures manually.
  * The required size of the values vector in the vtk_scalar field is equal to the local number of elements for write_ghosts = false
  * and equal to the local number of elements plus ghost elements for write_ghosts = true. If the sizes do not match, the excess values get cut of
  * or the missing entries get filled with 0.
