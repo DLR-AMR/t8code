@@ -107,6 +107,9 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest);
  *
  * \note \a data_in has to be of size equal to the number of local elements of \a forest_from
  * \a data_out has to be already allocated and has to be of size equal to the number of local elements of \a forest_to.
+ * \a data_in and \a data_out may overlap; then the input is copied first.
+ * \see The C++ overload in t8_forest_partition.hxx repartitions a t8_vector_handler in place and also supports
+ * element data that has to be serialized.
 */
 void
 t8_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, const sc_array_t *data_in,

@@ -33,12 +33,17 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_partition.h>
+#include <t8_forest/t8_forest_partition.hxx>
+#include <t8_data/t8_vector_handler.hxx>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <example/common/t8_example_common.hxx>
 #include <t8_vector/t8_vec.hxx>
+#include <array>
+#include <cstring>
 
 /* This is the user defined data used to define the
  * region in which we partition.
@@ -108,11 +113,97 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
   return 0;
 }
 
+/** Element data that is repartitioned in every time step, see the options -B, -K and -V. */
+struct t8_time_element_data
+{
+  int data_bytes;           /**< The number of bytes per element, 0 to not repartition element data. */
+  bool keep = false;        /**< True if the arrays persist over the time steps, false if every step uses fresh ones. */
+  bool use_handler = false; /**< True to repartition a t8_vector_handler, false to repartition sc_arrays. */
+  sc_array_t *in = nullptr; /**< The persistent input array if \a keep is true. */
+  sc_array_t *out = nullptr; /**< The persistent output array if \a keep is true. */
+};
+
+/** Write to every byte of an array, so that its memory is resident. */
+static void
+t8_time_touch_array (sc_array_t *array)
+{
+  if (array->elem_count > 0) {
+    memset (array->array, 1, array->elem_size * array->elem_count);
+  }
+}
+
+/* Repartition element data of type TItem from forest_from to forest_to with a t8_vector_handler and return the
+ * runtime. The handler allocates the new storage and frees the old one inside the timed region. */
+template <typename TItem>
+static double
+t8_time_forest_partition_data_handler (t8_forest_t forest_from, t8_forest_t forest_to, sc_MPI_Comm comm)
+{
+  TItem item;
+  memset (&item, 1, sizeof (TItem));
+  t8_vector_handler<TItem> handler (std::vector<TItem> (t8_forest_get_local_num_leaf_elements (forest_from), item));
+  /* Start all processes together, so that a late partner does not count as exchange time. */
+  const int mpiret = sc_MPI_Barrier (comm);
+  SC_CHECK_MPI (mpiret);
+
+  double runtime = -sc_MPI_Wtime ();
+  t8_forest_partition_data (forest_from, forest_to, handler);
+  runtime += sc_MPI_Wtime ();
+  return runtime;
+}
+
+/* Repartition the element data from forest_from to forest_to with t8_forest_partition_data and return the runtime.
+ * Fresh arrays: The output array is allocated and the input array is freed inside the timed region, as most
+ * callers do. Persistent arrays: They are resized and touched before the timed region, so only the
+ * repartitioning itself is timed. */
+static double
+t8_time_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, t8_time_element_data &data,
+                               sc_MPI_Comm comm)
+{
+  if (data.use_handler) {
+    switch (data.data_bytes) {
+    case 8:
+      return t8_time_forest_partition_data_handler<double> (forest_from, forest_to, comm);
+    case 64:
+      return t8_time_forest_partition_data_handler<std::array<double, 8>> (forest_from, forest_to, comm);
+    case 512:
+      return t8_time_forest_partition_data_handler<std::array<double, 64>> (forest_from, forest_to, comm);
+    default:
+      SC_ABORTF ("The handler interface is only timed for 8, 64 or 512 bytes per element, not %i.", data.data_bytes);
+    }
+  }
+  const size_t num_old = t8_forest_get_local_num_leaf_elements (forest_from);
+  const size_t num_new = t8_forest_get_local_num_leaf_elements (forest_to);
+  sc_array_t *data_in = data.keep ? data.in : sc_array_new (data.data_bytes);
+  sc_array_resize (data_in, num_old);
+  t8_time_touch_array (data_in);
+  if (data.keep) {
+    sc_array_resize (data.out, num_new);
+    t8_time_touch_array (data.out);
+  }
+  /* Start all processes together, so that a late partner does not count as exchange time. */
+  const int mpiret = sc_MPI_Barrier (comm);
+  SC_CHECK_MPI (mpiret);
+
+  double runtime = -sc_MPI_Wtime ();
+  sc_array_t *data_out = data.keep ? data.out : sc_array_new_count (data.data_bytes, num_new);
+  t8_forest_partition_data (forest_from, forest_to, data_in, data_out);
+  if (!data.keep) {
+    sc_array_destroy (data_in);
+  }
+  runtime += sc_MPI_Wtime ();
+
+  if (!data.keep) {
+    sc_array_destroy (data_out);
+  }
+  return runtime;
+}
+
 /* Create a cmesh from a .msh files uniform level 0
  * partitioned. */
 static void
 t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_Comm comm, int init_level, int max_level,
-                              int no_vtk, double x_min_max[2], double T, double delta_t, int do_ghost, int do_balance)
+                              int no_vtk, double x_min_max[2], double T, double delta_t, int do_ghost, int do_balance,
+                              t8_time_element_data &data)
 {
   char forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
   adapt_data_t adapt_data;
@@ -121,7 +212,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   int cmesh_is_partitioned;
   int time_step;
   double adapt_time = 0, ghost_time = 0, partition_time = 0, new_time = 0, total_time = 0, balance_time = 0;
-  sc_statinfo_t times[6];
+  double partition_data_time = 0;
+  sc_statinfo_t times[7];
 
   t8_global_productionf ("Committed cmesh with %lli global trees.\n", (long long) t8_cmesh_get_num_trees (cmesh));
 
@@ -137,6 +229,11 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   sc_stats_init (&times[3], "partition");
   sc_stats_init (&times[4], "balance");
   sc_stats_init (&times[5], "total");
+  sc_stats_init (&times[6], "partition_data");
+  if (data.keep) {
+    data.in = sc_array_new (data.data_bytes);
+    data.out = sc_array_new (data.data_bytes);
+  }
   total_time -= sc_MPI_Wtime ();
 
   cmesh_is_partitioned = t8_cmesh_is_partitioned (cmesh);
@@ -208,6 +305,10 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
       t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
     }
     t8_forest_print_profile (forest_partition);
+    if (data.data_bytes > 0) {
+      /* Repartition element data of the adapted forest to the partitioned forest. */
+      partition_data_time += t8_time_forest_partition_data (forest_adapt, forest_partition, data, comm);
+    }
     /* clean-up */
     t8_forest_unref (&forest_adapt);
     /* TIME-LOOP ends here */
@@ -220,9 +321,14 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   sc_stats_accumulate (&times[3], partition_time);
   sc_stats_accumulate (&times[4], balance_time);
   sc_stats_accumulate (&times[5], total_time);
-  sc_stats_compute (comm, 6, times);
-  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 6, times, 1, 1);
+  sc_stats_accumulate (&times[6], partition_data_time);
+  sc_stats_compute (comm, 7, times);
+  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 7, times, 1, 1);
   t8_forest_unref (&forest_partition);
+  if (data.keep) {
+    sc_array_destroy (data.in);
+    sc_array_destroy (data.out);
+  }
 }
 
 #undef USE_CMESH_PARTITION
@@ -288,6 +394,9 @@ main (int argc, char *argv[])
   int dim, num_files;
   int test_tet, test_hybrid_cube, test_hex_cube;
   int stride;
+  /** The switches -K and -V, nonzero if given. sc_options needs an int, element_data stores them as bool. */
+  int keep_data, vector_handler;
+  t8_time_element_data element_data;
   double T, delta_t, cfl;
   sc_options_t *opt;
   t8_cmesh_t cmesh;
@@ -350,16 +459,30 @@ main (int argc, char *argv[])
                          "Overwrites any other delta_t setting.");
   sc_options_add_switch (opt, 'g', "ghost", &do_ghost, "Create ghost elements.");
   sc_options_add_switch (opt, 'b', "balance", &do_balance, "Establish a 2:1 balance in the forest.");
+  sc_options_add_int (opt, 'B', "data-bytes", &element_data.data_bytes, 0,
+                      "If > 0, repartition element data with this many bytes per element in every time step "
+                      "and report its runtime as partition_data.");
+  sc_options_add_switch (opt, 'K', "keep-data", &keep_data,
+                         "Together with -B: Keep the element data arrays over the time steps instead of allocating "
+                         "fresh ones in every time step.");
+  sc_options_add_switch (opt, 'V', "vector-handler", &vector_handler,
+                         "Together with -B: Repartition a t8_vector_handler instead of sc_arrays. "
+                         "Only for 8, 64 or 512 bytes per element and without -K.");
   sc_options_add_switch (opt, 'z', "use_cad", &use_cad,
                          "If used, meshes will be curved to original geometries (msh- and brep-files necessary).");
 
   /* parse command line options */
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
+  element_data.keep = keep_data != 0;
+  element_data.use_handler = vector_handler != 0;
   /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
       || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0 && test_hybrid_cube == 0
           && test_hex_cube == 0)
-      || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0
+      || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0 || element_data.data_bytes < 0
+      || (element_data.use_handler
+          && (element_data.keep
+              || (element_data.data_bytes != 8 && element_data.data_bytes != 64 && element_data.data_bytes != 512)))
       || test_tet + test_hybrid_cube + test_hex_cube > 1
       || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_tet || test_hybrid_cube || test_hex_cube))
       || (mshfileprefix == NULL && use_cad)) {
@@ -406,7 +529,7 @@ main (int argc, char *argv[])
       vtu_prefix = cmeshfileprefix;
     }
     t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix, sc_MPI_COMM_WORLD, level, level + level_diff, no_vtk, x_min_max, T,
-                                  delta_t, do_ghost, do_balance);
+                                  delta_t, do_ghost, do_balance, element_data);
   }
   sc_options_destroy (opt);
   sc_finalize ();

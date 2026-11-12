@@ -33,12 +33,16 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_partition.h>
+#include <t8_forest/t8_forest_partition.hxx>
+#include <t8_data/t8_vector_handler.hxx>
+#include <t8_data/t8_enlarged_stdtypes.hxx>
 #include <t8_gtest_schemes.hxx>
 
 #include <limits>
 #include <numeric>
 #include <type_traits>
 #include <string>
+#include <vector>
 #include <concepts>
 
 /**
@@ -200,6 +204,210 @@ TestPartitionData (const t8_forest_t initial_forest, const t8_forest_t partition
 }
 
 /**
+ * Data handler for element data of varying size: a vector of global ids per element.
+ * It is passed to the vector handler instead of specializing t8_data_handler, to test the serialized path
+ * with a user data handler.
+ */
+struct t8_test_gloidx_vector_handler
+{
+  /** Return the number of bytes needed to pack \a item. */
+  int
+  size (const std::vector<t8_gloidx_t>& item, sc_MPI_Comm comm) const
+  {
+    int count_size = 0;
+    int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &count_size);
+    SC_CHECK_MPI (mpiret);
+    int values_size = 0;
+    mpiret = sc_MPI_Pack_size (static_cast<int> (item.size ()), T8_MPI_GLOIDX, comm, &values_size);
+    SC_CHECK_MPI (mpiret);
+    return count_size + values_size;
+  }
+
+  /** Pack \a item: its number of values, followed by the values. */
+  void
+  pack (const std::vector<t8_gloidx_t>& item, void* buffer, const int buffer_size, int& position,
+        sc_MPI_Comm comm) const
+  {
+    const int num_values = static_cast<int> (item.size ());
+    int mpiret = sc_MPI_Pack (&num_values, 1, sc_MPI_INT, buffer, buffer_size, &position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (item.data (), num_values, T8_MPI_GLOIDX, buffer, buffer_size, &position, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+
+  /** Unpack an item packed with \ref pack. */
+  void
+  unpack (const void* buffer, const int buffer_size, int& position, std::vector<t8_gloidx_t>& item,
+          sc_MPI_Comm comm) const
+  {
+    int num_values = 0;
+    int mpiret = sc_MPI_Unpack (buffer, buffer_size, &position, &num_values, 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    item.resize (num_values);
+    mpiret = sc_MPI_Unpack (buffer, buffer_size, &position, item.data (), num_values, T8_MPI_GLOIDX, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+};
+
+/**
+ * Create the element data item of the element with global id \a global_id.
+ *
+ * \tparam T The type of the item.
+ * \param[in] global_id The global id of the element.
+ * \return The item.
+ */
+template <typename T>
+static T
+t8_test_item_from_global_id (const t8_gloidx_t global_id)
+{
+  if constexpr (std::is_same_v<T, std::vector<t8_gloidx_t>>) {
+    /* Varying size: between zero and three values. */
+    return std::vector<t8_gloidx_t> (global_id % 4, global_id);
+  }
+  else if constexpr (std::is_same_v<T, enlarged_data<int>>) {
+    return enlarged_data<int> (static_cast<int> (global_id), static_cast<int> (2 * global_id));
+  }
+  else {
+    return static_cast<T> (global_id);
+  }
+}
+
+/**
+ * Check that an element data item belongs to the element with global id \a global_id.
+ *
+ * \tparam T The type of the item.
+ * \param[in] item The item to check.
+ * \param[in] global_id The global id of the element.
+ * \return True if \a item was created from \a global_id, false otherwise.
+ */
+template <typename T>
+static bool
+t8_test_item_has_global_id (const T& item, const t8_gloidx_t global_id)
+{
+  if constexpr (std::is_same_v<T, std::vector<t8_gloidx_t>>) {
+    return item == t8_test_item_from_global_id<T> (global_id);
+  }
+  else if constexpr (std::is_same_v<T, enlarged_data<int>>) {
+    return item.data == global_id && item.check == 2 * global_id;
+  }
+  else {
+    return gTestCompareEQ (item, t8_test_item_from_global_id<T> (global_id));
+  }
+}
+
+/**
+ * Create a vector handler for element data. Vectors of global ids get the passed data handler
+ * \ref t8_test_gloidx_vector_handler, all other types their t8_data_handler.
+ *
+ * \tparam T The type of the element data.
+ * \param[in] data The element data.
+ * \return The handler owning \a data.
+ */
+template <typename T>
+static auto
+t8_test_make_handler (std::vector<T> data)
+{
+  if constexpr (std::is_same_v<T, std::vector<t8_gloidx_t>>) {
+    return t8_vector_handler (std::move (data), t8_test_gloidx_vector_handler {});
+  }
+  else {
+    return t8_vector_handler<T> (std::move (data));
+  }
+}
+
+/**
+ * Repartition element data with the C++ interface, a \ref t8_vector_handler, and check the result.
+ *
+ * \tparam T The type of the element data.
+ * \param[in] forest_from The forest before the partitioning step.
+ * \param[in] forest_to The forest after the partitioning step.
+ */
+template <typename T>
+static void
+TestPartitionDataHandler (const t8_forest_t forest_from, const t8_forest_t forest_to)
+{
+  const t8_locidx_t num_old = t8_forest_get_local_num_leaf_elements (forest_from);
+  const t8_gloidx_t first_old = t8_forest_get_first_local_leaf_element_id (forest_from);
+  std::vector<T> data;
+  data.reserve (num_old);
+  for (t8_locidx_t ielem = 0; ielem < num_old; ++ielem) {
+    data.push_back (t8_test_item_from_global_id<T> (first_old + ielem));
+  }
+  auto handler = t8_test_make_handler (std::move (data));
+
+  t8_forest_partition_data (forest_from, forest_to, handler);
+
+  const std::vector<T>& new_data = handler.get_data ();
+  ASSERT_EQ (new_data.size (), static_cast<size_t> (t8_forest_get_local_num_leaf_elements (forest_to)));
+  const t8_gloidx_t first_new = t8_forest_get_first_local_leaf_element_id (forest_to);
+  for (size_t ielem = 0; ielem < new_data.size (); ++ielem) {
+    EXPECT_TRUE (t8_test_item_has_global_id (new_data[ielem], first_new + static_cast<t8_gloidx_t> (ielem)))
+      << "element " << ielem;
+  }
+}
+
+/**
+ * Repartition element data with the C interface using one array for input and output. This is only possible
+ * on processes whose number of local elements does not change; the other processes use two arrays.
+ *
+ * \param[in] forest_from The forest before the partitioning step.
+ * \param[in] forest_to The forest after the partitioning step.
+ */
+static void
+TestPartitionDataInPlace (const t8_forest_t forest_from, const t8_forest_t forest_to)
+{
+  const t8_locidx_t num_old = t8_forest_get_local_num_leaf_elements (forest_from);
+  const t8_locidx_t num_new = t8_forest_get_local_num_leaf_elements (forest_to);
+  std::vector<double> data (std::max (num_old, num_new));
+  std::iota (data.begin (), data.begin () + num_old,
+             static_cast<double> (t8_forest_get_first_local_leaf_element_id (forest_from)));
+  sc_array_t* data_in = sc_array_new_data (data.data (), sizeof (double), num_old);
+
+  std::vector<double> separate_out;
+  sc_array_t* data_out;
+  if (num_old == num_new) {
+    /* Same array for input and output. */
+    data_out = data_in;
+  }
+  else {
+    separate_out.resize (num_new);
+    data_out = sc_array_new_data (separate_out.data (), sizeof (double), num_new);
+  }
+
+  t8_forest_partition_data (forest_from, forest_to, data_in, data_out);
+
+  const double* result = (double*) data_out->array;
+  const t8_gloidx_t first_new = t8_forest_get_first_local_leaf_element_id (forest_to);
+  for (t8_locidx_t ielem = 0; ielem < num_new; ++ielem) {
+    EXPECT_EQ (result[ielem], static_cast<double> (first_new + ielem)) << "element " << ielem;
+  }
+  if (data_out != data_in) {
+    sc_array_destroy (data_out);
+  }
+  sc_array_destroy (data_in);
+}
+
+/**
+ * Repartition element data of all tested types with the C and the C++ interface.
+ *
+ * \param[in] forest_from The forest before the partitioning step.
+ * \param[in] forest_to The forest after the partitioning step.
+ */
+static void
+TestPartitionDataAllTypes (const t8_forest_t forest_from, const t8_forest_t forest_to)
+{
+  TestPartitionData<int32_t> (forest_from, forest_to);
+  TestPartitionData<float> (forest_from, forest_to);
+  TestPartitionData<double> (forest_from, forest_to);
+  TestPartitionData<t8_test_partition_data_t> (forest_from, forest_to);
+  TestPartitionDataHandler<int32_t> (forest_from, forest_to);
+  TestPartitionDataHandler<double> (forest_from, forest_to);
+  TestPartitionDataHandler<t8_test_partition_data_t> (forest_from, forest_to);
+  TestPartitionDataHandler<enlarged_data<int>> (forest_from, forest_to);
+  TestPartitionDataHandler<std::vector<t8_gloidx_t>> (forest_from, forest_to);
+}
+
+/**
  * \brief An exemplary adaptation function which refines only the the first global tree in the forest
  * to a pre-set refinement level.
  */
@@ -264,11 +472,9 @@ TEST_P (t8_test_partition_data_test, test_partition_data)
   t8_forest_set_partition (partitioned_forest, initial_forest, partition_for_coarsening);
   t8_forest_commit (partitioned_forest);
 
-  /* Test the exemplary partition_data with some arithmetic data types as well as with a custom struct. */
-  TestPartitionData<int32_t> (initial_forest, partitioned_forest);
-  TestPartitionData<float> (initial_forest, partitioned_forest);
-  TestPartitionData<double> (initial_forest, partitioned_forest);
-  TestPartitionData<t8_test_partition_data_t> (initial_forest, partitioned_forest);
+  /* Test the exemplary partition_data with some arithmetic data types, a custom struct, and with the C++ interface
+   * also with serialized data of fixed and varying size. */
+  TestPartitionDataAllTypes (initial_forest, partitioned_forest);
 
   /* Destroy the forests. */
   t8_forest_unref (&initial_forest);
@@ -276,3 +482,47 @@ TEST_P (t8_test_partition_data_test, test_partition_data)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_partition_data, t8_test_partition_data_test, AllSchemes, print_all_schemes);
+
+/**
+ * Repartition element data for partitions with empty processes and a fixed shift of the process boundaries:
+ * gather on process 0 and scatter back, shift every boundary by five elements, and repartition a forest
+ * onto itself. With the shifted boundaries, the processes in the middle keep their number of elements and
+ * use one array for input and output of the C interface.
+ */
+TEST (t8_test_partition_data_shapes, gather_shift_identity)
+{
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
+  t8_forest_t initial_forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 2, 0, sc_MPI_COMM_WORLD);
+
+  /* Gather on process 0 and back. */
+  t8_forest_ref (initial_forest);
+  t8_forest_t gathered_forest = t8_forest_new_gather (initial_forest, 0);
+  TestPartitionDataAllTypes (initial_forest, gathered_forest);
+  TestPartitionDataAllTypes (gathered_forest, initial_forest);
+
+  /* Shift every process boundary by five elements. */
+  const t8_gloidx_t num_global = t8_forest_get_global_num_leaf_elements (initial_forest);
+  const t8_gloidx_t first_local = t8_forest_get_first_local_leaf_element_id (initial_forest);
+  int mpirank;
+  const int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  t8_forest_ref (initial_forest);
+  t8_forest_t shifted_forest;
+  t8_forest_init (&shifted_forest);
+  t8_forest_set_partition (shifted_forest, initial_forest, 0);
+  t8_forest_set_partition_offset (shifted_forest, mpirank == 0 ? 0 : std::min (first_local + 5, num_global));
+  t8_forest_commit (shifted_forest);
+  TestPartitionDataAllTypes (initial_forest, shifted_forest);
+  TestPartitionDataInPlace (initial_forest, shifted_forest);
+  TestPartitionDataInPlace (shifted_forest, initial_forest);
+
+  /* Nothing moves. */
+  TestPartitionDataAllTypes (initial_forest, initial_forest);
+  TestPartitionDataInPlace (initial_forest, initial_forest);
+
+  t8_forest_unref (&shifted_forest);
+  t8_forest_unref (&gathered_forest);
+  t8_forest_unref (&initial_forest);
+}
