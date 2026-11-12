@@ -23,7 +23,22 @@
 /**
  * \file t8_data_handler.hxx
  *
- * This file provides a templated class for handling single data items.
+ * This file provides the handler for packing and unpacking single data items.
+ *
+ * A handler for a type TType is a specialization of \ref t8_data_handler with the members
+ *  - int size (const TType &item, sc_MPI_Comm comm) const
+ *  - void pack (const TType &item, void *buffer, const int buffer_size, int &position, sc_MPI_Comm comm) const
+ *  - void unpack (const void *buffer, const int buffer_size, int &position, TType &item, sc_MPI_Comm comm) const
+ *  - t8_data_handler_type type () const
+ *
+ * Trivially copyable types are handled by a generic specialization and need no user code.
+ * Types that are not trivially copyable (e.g. types holding a std::vector) need an explicit specialization.
+ * An explicit specialization always takes precedence over the generic one. It has to be visible wherever
+ * the type is used with a handler, otherwise the generic specialization is silently used instead.
+ *
+ * Instead of specializing \ref t8_data_handler, any type with the members above (\ref T8DataHandler) can be passed to
+ * a container like \ref t8_vector_handler, e.g. a handler that depends on run time parameters. Its member type ()
+ * is optional for that purpose.
  */
 
 #ifndef T8_DATA_HANDLER_HXX
@@ -31,6 +46,14 @@
 
 #include <t8.h>
 #include <t8_types/t8_data_handler_type.hxx>
+#include <concepts>
+#include <type_traits>
+
+/**
+ * Type of handlers whose data cannot be identified by a type id, e.g. the generic handler of trivially
+ * copyable types. Data of such handlers cannot be restored from a type id inside heterogeneous containers.
+ */
+inline constexpr t8_data_handler_type t8_data_handler_type_unregistered { -1 };
 
 /**
  * Check if type is referring to a type that is already handled internally.
@@ -46,72 +69,131 @@ is_internal_data (const t8_data_handler_type type)
   default:
     return false;
   }
-};
+}
 
 /**
- * Template class for handling single data items.
+ * Handler for packing, unpacking and determining the size of single data items of type TType.
  *
- * This class implements methods for packing, unpacking, and determining the size of single data items.
+ * The primary template is intentionally undefined: Types that are not trivially copyable need an explicit
+ * specialization, trivially copyable types use the generic specialization below.
  *
  * \tparam TType The type of data to be handled.
  */
 template <typename TType>
-struct t8_data_handler
+struct t8_data_handler;
+
+/**
+ * Generic handler for trivially copyable types. The items are communicated as raw bytes.
+ *
+ * Containers like \ref t8_vector_handler detect this handler via \ref T8BytewiseData and communicate
+ * ranges of such items in bulk instead of item by item.
+ *
+ * \tparam TType A trivially copyable type.
+ */
+template <typename TType>
+  requires std::is_trivially_copyable_v<TType>
+struct t8_data_handler<TType>
 {
- public:
-  /**
-   * Construct a t8_data_handler.
-   *
-   */
-  t8_data_handler () {};
+  /** Marks this handler as bytewise: An item is exactly its sizeof (TType) bytes. */
+  using bytewise_tag = void;
 
   /**
-   * Returns the size of the data.
+   * Returns the number of bytes needed to pack an item.
    *
-   * \param[in] data The data to compute the size of.
+   * \param[in] item The data item to compute the size of.
    * \param[in] comm The MPI communicator used for communication.
-   * \return An integer representing the size of the data.
+   * \return The number of bytes needed to pack \a item.
    */
   int
-  size (const TType &data, sc_MPI_Comm comm);
+  size ([[maybe_unused]] const TType &item, sc_MPI_Comm comm) const
+  {
+    int pack_size = 0;
+    /* sc_MPI_BYTE (and not sc_MPI_PACKED) since the non-MPI version of libsc cannot handle sc_MPI_PACKED here. */
+    const int mpiret = sc_MPI_Pack_size (sizeof (TType), sc_MPI_BYTE, comm, &pack_size);
+    SC_CHECK_MPI (mpiret);
+    return pack_size;
+  }
 
   /**
-   * Packs the given data into a buffer for communication.
+   * Packs an item into a buffer.
    *
-   * \param[in] data The data to be packed.
-   * \param[in] pos The current position in the buffer where the data should be packed.
+   * \param[in] item The data item to be packed.
    * \param[in, out] buffer The buffer where the data will be packed.
-   * \param[in] num_bytes The number of bytes available in the buffer.
+   * \param[in] buffer_size The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the packed bytes.
    * \param[in] comm The MPI communicator used for communication.
    */
   void
-  pack (const TType &data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm);
+  pack (const TType &item, void *buffer, const int buffer_size, int &position, sc_MPI_Comm comm) const
+  {
+    const int mpiret = sc_MPI_Pack (&item, sizeof (TType), sc_MPI_BYTE, buffer, buffer_size, &position, comm);
+    SC_CHECK_MPI (mpiret);
+  }
 
   /**
-   * Unpacks data from a buffer.
+   * Unpacks an item from a buffer.
    *
-   * This function unpacks data from a given buffer into the provided data structure.
-   *
-   * \param[in] buffer A pointer to the buffer containing the packed data.
-   * \param[in] num_bytes The number of bytes in the buffer.
-   * \param[in] pos A reference to an integer representing the current position in the buffer.
-   * \param[in, out] data A pointer to the data structure where the unpacked data will be stored.
+   * \param[in] buffer The buffer containing the packed data.
+   * \param[in] buffer_size The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the unpacked bytes.
+   * \param[out] item The unpacked data item.
    * \param[in] comm The MPI communicator used for communication.
    */
   void
-  unpack (const void *buffer, const int num_bytes, int &pos, TType &data, sc_MPI_Comm comm);
+  unpack (const void *buffer, const int buffer_size, int &position, TType &item, sc_MPI_Comm comm) const
+  {
+    const int mpiret = sc_MPI_Unpack (buffer, buffer_size, &position, &item, sizeof (TType), sc_MPI_BYTE, comm);
+    SC_CHECK_MPI (mpiret);
+  }
 
   /**
    * Returns the type of the data handler.
    *
-   * This function returns the type of the data handler.
-   *
-   * \return An integer representing the type.
+   * \return \ref t8_data_handler_type_unregistered, generic data cannot be identified by a type id.
    */
   t8_data_handler_type
-  type ();
-
-  ~t8_data_handler () {};
+  type () const
+  {
+    return t8_data_handler_type_unregistered;
+  }
 };
+
+/**
+ * True if TDataHandler can pack, unpack and determine the packed size of single items of type TType,
+ * with the member signatures listed in the documentation of this file. The member type () is not required.
+ *
+ * \tparam TDataHandler The handler type.
+ * \tparam TType The type of the data items.
+ */
+template <typename TDataHandler, typename TType>
+concept T8DataHandler = requires (const TDataHandler &handler, const TType &item, TType &unpacked_item, void *buffer,
+                                  const void *packed_buffer, int buffer_size, int &position, sc_MPI_Comm comm) {
+  {
+    handler.size (item, comm)
+  } -> std::convertible_to<int>;
+  handler.pack (item, buffer, buffer_size, position, comm);
+  handler.unpack (packed_buffer, buffer_size, position, unpacked_item, comm);
+};
+
+/**
+ * True if TDataHandler communicates items of type TType as raw bytes, i.e. ranges of items can be
+ * sent in bulk without item-wise serialization.
+ * This holds for the generic handler of trivially copyable types and for other handlers of trivially copyable
+ * types that declare `using bytewise_tag = void;`.
+ *
+ * \tparam TDataHandler The handler type.
+ * \tparam TType The type of the data items.
+ */
+template <typename TDataHandler, typename TType>
+concept T8BytewiseDataHandler
+  = std::is_trivially_copyable_v<TType> && requires { typename TDataHandler::bytewise_tag; };
+
+/**
+ * True if the items of type TType are communicated as raw bytes by their \ref t8_data_handler.
+ *
+ * \tparam TType The type of the data items.
+ */
+template <typename TType>
+concept T8BytewiseData = T8BytewiseDataHandler<t8_data_handler<TType>, TType>;
 
 #endif /* T8_DATA_HANDLER_HXX */

@@ -51,7 +51,6 @@ enum pseudo_types {
 template <>
 struct t8_data_handler<enlarged_data<int>>
 {
- public:
   /**
    * Returns the size of an enlarged_int.
    *
@@ -59,8 +58,8 @@ struct t8_data_handler<enlarged_data<int>>
    * \param[in] comm The MPI communicator used for communication.
    * \return An integer representing the size of the data.
    */
-  inline int
-  size ([[maybe_unused]] const enlarged_data<int> &item, sc_MPI_Comm comm)
+  int
+  size ([[maybe_unused]] const enlarged_data<int> &item, sc_MPI_Comm comm) const
   {
     int size;
     const int mpiret = sc_MPI_Pack_size (2, sc_MPI_INT, comm, &size);
@@ -71,19 +70,19 @@ struct t8_data_handler<enlarged_data<int>>
   /**
    * Packs an enlarged_int into a buffer for communication.
    *
-   * \param[in] data The data to be packed.
-   * \param[in] pos The current position in the buffer where the data should be packed.
+   * \param[in] item The data to be packed.
    * \param[in, out] buffer The buffer where the data will be packed.
-   * \param[in] num_bytes The number of bytes available in the buffer.
+   * \param[in] buffer_size The number of bytes available in the buffer.
+   * \param[in, out] position The current position in the buffer. Advanced by the packed bytes.
    * \param[in] comm The MPI communicator used for communication.
    */
-  inline void
-  pack (const enlarged_data<int> &data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm)
+  void
+  pack (const enlarged_data<int> &item, void *buffer, const int buffer_size, int &position, sc_MPI_Comm comm) const
   {
-    int mpiret = sc_MPI_Pack (&(data.data), 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
+    int mpiret = sc_MPI_Pack (&(item.data), 1, sc_MPI_INT, buffer, buffer_size, &position, comm);
     SC_CHECK_MPI (mpiret);
 
-    mpiret = sc_MPI_Pack (&(data.check), 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
+    mpiret = sc_MPI_Pack (&(item.check), 1, sc_MPI_INT, buffer, buffer_size, &position, comm);
     SC_CHECK_MPI (mpiret);
   }
 
@@ -91,30 +90,28 @@ struct t8_data_handler<enlarged_data<int>>
    * Unpacks an enlarged_int from a buffer.
    *
    * \param[in] buffer A pointer to the buffer containing the packed data.
-   * \param[in] num_bytes The number of bytes in the buffer.
-   * \param[in] pos A reference to an integer representing the current position in the buffer.
-   * \param[in, out] data A pointer to the data structure where the unpacked data will be stored.
+   * \param[in] buffer_size The number of bytes in the buffer.
+   * \param[in, out] position The current position in the buffer. Advanced by the unpacked bytes.
+   * \param[out] item The unpacked data.
    * \param[in] comm The MPI communicator used for communication.
    */
-  inline void
-  unpack (const void *buffer, const int num_bytes, int &pos, enlarged_data<int> &data, sc_MPI_Comm comm)
+  void
+  unpack (const void *buffer, const int buffer_size, int &position, enlarged_data<int> &item, sc_MPI_Comm comm) const
   {
-    int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &(data.data), 1, sc_MPI_INT, comm);
+    int mpiret = sc_MPI_Unpack (buffer, buffer_size, &position, &(item.data), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
 
-    mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &(data.check), 1, sc_MPI_INT, comm);
+    mpiret = sc_MPI_Unpack (buffer, buffer_size, &position, &(item.check), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
   }
 
   /**
    * Returns the type of the data handler.
    *
-   * This function returns the type of the data handler.
-   *
-   * \return An integer representing the type.
+   * \return The type of the data handler.
    */
-  constexpr t8_data_handler_type
-  type ()
+  t8_data_handler_type
+  type () const
   {
     return t8_data_handler_type (T8_ENLARGED_INT);
   }
@@ -131,7 +128,6 @@ struct t8_data_handler<enlarged_data<int>>
 template <>
 struct t8_data_handler<enlarged_data<double>>
 {
- public:
   /**
    * Returns the size of an enlarged_double.
    *
@@ -139,8 +135,8 @@ struct t8_data_handler<enlarged_data<double>>
    * \param[in] comm The MPI communicator used for communication.
    * \return An integer representing the size of the data.
    */
-  inline int
-  size ([[maybe_unused]] const enlarged_data<double> &item, sc_MPI_Comm comm)
+  int
+  size ([[maybe_unused]] const enlarged_data<double> &item, sc_MPI_Comm comm) const
   {
     int int_size;
     int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &int_size);
@@ -154,19 +150,19 @@ struct t8_data_handler<enlarged_data<double>>
   /**
    * Packs an enlarged_double into a buffer for communication.
    *
-   * \param[in] data The data to be packed.
-   * \param[in] pos The current position in the buffer where the data should be packed.
+   * \param[in] item The data to be packed.
    * \param[in, out] buffer The buffer where the data will be packed.
-   * \param[in] num_bytes The number of bytes available in the buffer.
+   * \param[in] buffer_size The number of bytes available in the buffer.
+   * \param[in, out] position The current position in the buffer. Advanced by the packed bytes.
    * \param[in] comm The MPI communicator used for communication.
    */
-  inline void
-  pack (const enlarged_data<double> &data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm)
+  void
+  pack (const enlarged_data<double> &item, void *buffer, const int buffer_size, int &position, sc_MPI_Comm comm) const
   {
-    int mpiret = sc_MPI_Pack (&(data.data), 1, sc_MPI_DOUBLE, buffer, num_bytes, &pos, comm);
+    int mpiret = sc_MPI_Pack (&(item.data), 1, sc_MPI_DOUBLE, buffer, buffer_size, &position, comm);
     SC_CHECK_MPI (mpiret);
 
-    mpiret = sc_MPI_Pack (&(data.check), 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
+    mpiret = sc_MPI_Pack (&(item.check), 1, sc_MPI_INT, buffer, buffer_size, &position, comm);
     SC_CHECK_MPI (mpiret);
   }
 
@@ -174,30 +170,28 @@ struct t8_data_handler<enlarged_data<double>>
    * Unpacks an enlarged_double from a buffer.
    *
    * \param[in] buffer A pointer to the buffer containing the packed data.
-   * \param[in] num_bytes The number of bytes in the buffer.
-   * \param[in] pos A reference to an integer representing the current position in the buffer.
-   * \param[in, out] data A pointer to the data structure where the unpacked data will be stored.
+   * \param[in] buffer_size The number of bytes in the buffer.
+   * \param[in, out] position The current position in the buffer. Advanced by the unpacked bytes.
+   * \param[out] item The unpacked data.
    * \param[in] comm The MPI communicator used for communication.
    */
   void
-  unpack (const void *buffer, const int num_bytes, int &pos, enlarged_data<double> &data, sc_MPI_Comm comm)
+  unpack (const void *buffer, const int buffer_size, int &position, enlarged_data<double> &item, sc_MPI_Comm comm) const
   {
-    int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &(data.data), 1, sc_MPI_DOUBLE, comm);
+    int mpiret = sc_MPI_Unpack (buffer, buffer_size, &position, &(item.data), 1, sc_MPI_DOUBLE, comm);
     SC_CHECK_MPI (mpiret);
 
-    mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &(data.check), 1, sc_MPI_INT, comm);
+    mpiret = sc_MPI_Unpack (buffer, buffer_size, &position, &(item.check), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
   }
 
   /**
    * Returns the type of the data handler.
    *
-   * This function returns the type of the data handler.
-   *
-   * \return An integer representing the type.
+   * \return The type of the data handler.
    */
-  constexpr t8_data_handler_type
-  type ()
+  t8_data_handler_type
+  type () const
   {
     return t8_data_handler_type (T8_ENLARGED_DOUBLE);
   }
