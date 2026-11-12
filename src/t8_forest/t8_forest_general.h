@@ -517,6 +517,16 @@ t8_forest_get_global_num_leaf_elements (const t8_forest_t forest);
 t8_locidx_t
 t8_forest_get_num_ghosts (const t8_forest_t forest);
 
+/** Query whether a ghost layer was constructed for a forest.
+ * Unlike checking t8_forest_get_num_ghosts () > 0, this is also true on
+ * processes without local elements (and thus without ghosts).
+ * \param [in]  forest  The forest. Must be committed.
+ * \return      Non-zero if the forest has a ghost structure, 0 otherwise.
+ * \note On a single process no ghost layer is constructed, so this returns 0.
+ */
+int
+t8_forest_has_ghosts (const t8_forest_t forest);
+
 /** Return the element class of a forest local tree.
  * \param [in] forest    The forest.
  * \param [in] ltreeid   The local id of a tree in \a forest.
