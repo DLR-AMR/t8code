@@ -73,11 +73,14 @@ struct t8_data_partition_pattern
 {
   std::vector<t8_data_partition_chunk> sends; /**< Chunks of the old data to send, ascending ranks, without self. */
   std::vector<t8_data_partition_chunk> recvs; /**< Chunks of the new data to receive, ascending ranks, without self. */
-  size_t self_first_old = 0;           /**< Local index in the old data of the first item that stays on this process. */
-  size_t self_first_new = 0;           /**< Local index in the new data of the first item that stays on this process. */
-  size_t self_count = 0;               /**< The number of items that stay on this process. */
-  size_t num_old = 0;                  /**< The number of local items before the repartitioning. */
-  size_t num_new = 0;                  /**< The number of local items after the repartitioning. */
+  size_t self_first_old = 0; /**< Local index in the old data of the first item that stays on this process. */
+  size_t self_first_new = 0; /**< Local index in the new data of the first item that stays on this process. */
+  size_t self_count = 0;     /**< The number of items that stay on this process. */
+  size_t num_old = 0;        /**< The number of local items before the repartitioning. */
+  size_t num_new = 0;        /**< The number of local items after the repartitioning. */
+  /** The number of items that new storage for the new data has room for at least, e.g. to append the ghost items
+   * of the new forest without reallocation. Containers reserve max (num_new, min_capacity_new) items. */
+  size_t min_capacity_new = 0;
   sc_MPI_Comm comm = sc_MPI_COMM_NULL; /**< The communicator of the repartitioning. */
   int tag = 0;                         /**< The MPI tag of all messages. */
 };
