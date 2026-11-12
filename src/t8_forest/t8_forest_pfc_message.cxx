@@ -92,21 +92,20 @@ t8_forest_pfc_message::pack_size ()
 }
 
 void
-t8_forest_pfc_message::mpi_Isend (const t8_forest_t forest, sc_MPI_Request &request)
+t8_forest_pfc_message::mpi_Isend (const t8_forest_t forest, std::vector<char> &send_buffer, sc_MPI_Request &request)
 {
   /* Allocate buffer */
-  int buffer_size = pack_size ();
-  char *send_buffer = T8_ALLOC (char, buffer_size);
+  const int buffer_size = pack_size ();
+  send_buffer.resize (buffer_size);
 
   /* Pack message to buffer */
   int position = 0;
-  pack (send_buffer, buffer_size, &position);
+  pack (send_buffer.data (), buffer_size, &position);
 
-  /* Send buffer */
-  const int mpiret = sc_MPI_Isend (send_buffer, position, sc_MPI_PACKED, iproc, T8_MPI_PFC_TAG,
+  /* Send buffer. It is owned by the caller and must stay alive until the request has completed. */
+  const int mpiret = sc_MPI_Isend (send_buffer.data (), position, sc_MPI_PACKED, iproc, T8_MPI_PFC_TAG,
                                    t8_forest_get_mpicomm (forest), &request);
   SC_CHECK_MPI (mpiret);
-  T8_FREE (send_buffer);
 }
 
 void
