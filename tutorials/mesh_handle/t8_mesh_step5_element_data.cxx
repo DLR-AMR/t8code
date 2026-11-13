@@ -43,6 +43,7 @@
 #include "t8_mesh_tutorials_common.hxx" /** Adaption function definition used for this tutorial. */
 #include <memory>
 #include <span>
+#include <vector>
 
 /** The data that we want to store for each element.
  * In this example we want to store the element's level and volume. */
@@ -119,27 +120,22 @@ template <t8_mesh_handle::T8MeshType TMeshClass>
 static void
 output_data_to_vtu (const TMeshClass &mesh, const char *prefix)
 {
-  t8_locidx_t num_elements = mesh.get_num_local_elements ();
-  /* We need to allocate a new array to store the volumes on their own.
-   * This array has one entry per local element. */
-  double *element_volumes = T8_ALLOC (double, num_elements);
-  /* The number of user-defined data fields to write. */
-  int num_data = 1;
-  /* For each user-defined data field we need one t8_vtk_data_field_t variable */
-  t8_vtk_data_field_t vtk_data;
-  /* Set the type of this variable. Since we have one value per element, we pick T8_VTK_SCALAR. */
-  vtk_data.type = T8_VTK_SCALAR;
-  /* The name of the field as should be written to the file. */
-  strcpy (vtk_data.description, "Element volume");
-  vtk_data.data = element_volumes;
-  /* Copy the element's volumes from our data array to the output array. */
-  for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
-    element_volumes[ielem] = mesh[ielem].get_element_data ().volume;
+  const t8_locidx_t num_local_elements = mesh.get_num_local_elements ();
+  const t8_locidx_t num_ghosts = mesh.get_num_ghosts ();
+  /* We collect the volumes with one entry per local element and ghost element. */
+  std::vector<double> element_volumes;
+  element_volumes.reserve (num_local_elements + num_ghosts);
+  /* Copy the element's volumes from the element data. */
+  for (t8_locidx_t i = 0; i < num_local_elements + num_ghosts; ++i) {
+    element_volumes.push_back (mesh[i].get_element_data ().volume);
   }
-  /* To write user-defined data, we need the extended output function write_mesh_to_vtk_ext.
-   * Despite writing user data, it also offers more control over which properties to write. */
-  t8_mesh_handle::write_mesh_to_vtk_ext (mesh, prefix, num_data, &vtk_data);
-  T8_FREE (element_volumes);
+  /* To write user-defined data, we use the output function write_mesh_to_vtk.
+   * Each data field consists of its name, as it should be written to the file, and its values.
+   * Scalar fields are passed in the first list, vector fields in the optional second list.
+   * Further arguments offer more control over which properties to write.
+   */
+  t8_mesh_handle::write_mesh_to_vtk (mesh, prefix, { { "Element volume", element_volumes } }, {},
+                                     { .write_ghosts = true });
 }
 
 /** Entry point of the program. */
