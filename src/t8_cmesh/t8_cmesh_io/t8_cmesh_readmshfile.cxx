@@ -581,7 +581,7 @@ t8_store_element_node_data (t8_cmesh_t cmesh, t8_gloidx_t tree_count,
                           entity_dim_array, T8_ECLASS_MAX_CORNERS * 2 * sizeof (int), 0);
 
   t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (), T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY,
-                          parameter_array, T8_ECLASS_MAX_CORNERS * 2 * sizeof (int), 0);
+                          parameter_array, T8_ECLASS_MAX_CORNERS * 2 * sizeof (double), 0);
 }
 
 #if T8_ENABLE_OCC
