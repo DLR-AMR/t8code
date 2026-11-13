@@ -91,7 +91,8 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   [[maybe_unused]] const sc_statinfo_t* ghost_stats = t8_forest_profile_get_ghost_stats (profiling_forest);
 
   // Integers
-  int balance_rounds, ghosts_sent, procs_sent;
+  int balance_rounds, procs_sent;
+  t8_locidx_t ghosts_sent;
 
   // Runtimes
   const double time_adapt = t8_forest_profile_get_adapt_time (profiling_forest);
@@ -120,9 +121,6 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   EXPECT_GT (time_adapt, 0.0);
   EXPECT_GT (time_partition, 0.0);
   EXPECT_GT (time_balance, 0.0);
-  EXPECT_GT (time_cmesh_offsets, 0.0);
-  EXPECT_GT (time_first_descendant, 0.0);
-  EXPECT_GT (time_forest_offsets, 0.0);
 
   // Integers
   EXPECT_GT (balance_rounds, 0);
@@ -131,6 +129,22 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
 
   // Stats
   EXPECT_GT (commit_stats->average, 0.0);
+
+  // For the following timings we distinguish between MPI and non-MPI version.
+  // When compiled without MPI, the function MPI_Wtime used for the timings falls
+  // back to gettimeofday, which ticks only in microsecond steps. The offset
+  // computations are often faster than that in serial mode, so we may measure
+  // a zero runtime. With MPI, MPI_Wtime is used which usually ticks in nanoseconds,
+  // ensuring non-zero runtimes.
+#if T8_ENABLE_MPI
+  EXPECT_GT (time_cmesh_offsets, 0.0);
+  EXPECT_GT (time_first_descendant, 0.0);
+  EXPECT_GT (time_forest_offsets, 0.0);
+#else
+  EXPECT_GE (time_cmesh_offsets, 0.0);
+  EXPECT_GE (time_first_descendant, 0.0);
+  EXPECT_GE (time_forest_offsets, 0.0);
+#endif
 
   // The following statistics are only ensured to be non-zero for parallel execution.
   if (mpisize > 1) {
@@ -151,6 +165,15 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   EXPECT_LE (balance_rounds, balance_rounds_stats->max);
   EXPECT_GE (time_ghost, ghost_stats->min);
   EXPECT_LE (time_ghost, ghost_stats->max);
+  const sc_statinfo_t* cmesh_offsets_stats = &profiling_forest->stats[14];
+  const sc_statinfo_t* forest_offsets_stats = &profiling_forest->stats[15];
+  const sc_statinfo_t* first_desc_stats = &profiling_forest->stats[16];
+  EXPECT_GE (time_cmesh_offsets, cmesh_offsets_stats->min);
+  EXPECT_LE (time_cmesh_offsets, cmesh_offsets_stats->max);
+  EXPECT_GE (time_forest_offsets, forest_offsets_stats->min);
+  EXPECT_LE (time_forest_offsets, forest_offsets_stats->max);
+  EXPECT_GE (time_first_descendant, first_desc_stats->min);
+  EXPECT_LE (time_first_descendant, first_desc_stats->max);
 
   // (7) Memory clean up.
   // --------------------
