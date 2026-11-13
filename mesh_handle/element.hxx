@@ -629,18 +629,12 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
     const t8_cmesh_t cmesh = t8_forest_get_cmesh (m_mesh->m_forest);
 
-    // 1. There is no handler (nullopt)
+    // No boundary condition handler: no face has a boundary condition.
     if (::detail::t8_cmesh_get_boundary_condition_handler (cmesh) == nullptr) {
       return std::nullopt;
     }
-    // 2. Default case
-    const auto bc = t8_forest_get_boundary_condition (m_mesh->m_forest, m_tree_id, m_element, face);
-
-    // 3. Exception case: bc is a nullptr (e.g. for internal faces)
-    if (bc == nullptr) {
-      return std::nullopt;
-    }
-    return bc;
+    // The forest returns std::nullopt itself for faces without a boundary condition (e.g. internal faces).
+    return t8_forest_get_boundary_condition (m_mesh->m_forest, m_tree_id, m_element, face);
   }
 
   // --- Print for the element for debugging purpose. ---

@@ -273,12 +273,13 @@ TEST_P (t8_mesh_ghost_test, cache_neighbors)
 }
 
 /** Check that the boundary condition getters of the handle give the same results as the forest functions for ghost elements. */
-TEST_P (t8_mesh_ghost_test, compare_boundary_conditions)
+TEST (t8_mesh_ghost_boundary_conditions, compare_boundary_conditions)
 {
+  const int level = 1;
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   // Create a hypercube with boundary conditions.
-  t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, 1);
+  t8_cmesh_new_hypercube_hybrid_ext (cmesh, sc_MPI_COMM_WORLD, 0, 1);
   // Create the mesh handle with ghost elements.
   auto mesh = t8_mesh_handle::handle_new_uniform_default<t8_mesh_handle::mesh<>> (cmesh, level, sc_MPI_COMM_WORLD);
   mesh->set_ghost ();
@@ -321,13 +322,8 @@ TEST_P (t8_mesh_ghost_test, compare_boundary_conditions)
 
     // --- Boundary conditions of individual faces. ---
     for (int iface = 0; iface < ghost.get_num_faces (); ++iface) {
-      // The forest returns a nullptr for faces without boundary condition, the handle returns std::nullopt.
       const auto condition_forest = t8_forest_get_boundary_condition (forest, ltreeid, elem, iface);
-      std::optional<std::string_view> expected_condition = std::nullopt;
-      if (condition_forest != nullptr) {
-        expected_condition = condition_forest;
-      }
-      EXPECT_EQ (ghost.get_boundary_condition (iface), expected_condition) << "face = " << iface << " (ghost)";
+      EXPECT_EQ (ghost.get_boundary_condition (iface), condition_forest) << "face = " << iface << " (ghost)";
     }
   }
 }
