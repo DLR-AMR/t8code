@@ -54,7 +54,7 @@ namespace t8_mesh_handle
  */
 template <T8MeshType TMeshClass>
 bool
-write_mesh_to_vtk (TMeshClass &mesh, const std::string &fileprefix)
+write_mesh_to_vtk (const TMeshClass &mesh, const std::string &fileprefix)
 {
   return t8_forest_write_vtk (mesh.get_forest (), fileprefix.c_str ());
 }
@@ -143,7 +143,7 @@ fill_vtk_data_field (const vtk_data_field<TValueType> &field, const std::vector<
 /** Options for writing a mesh to VTK. */
 struct vtk_write_options
 {
-  bool write_treeid = false;    /**< Whether to write the tree id of the underlying forest. */
+  bool write_treeid = true;     /**< Whether to write the tree id of the underlying forest. */
   bool write_mpirank = true;    /**< Whether to write the MPI rank of the process owning the element. */
   bool write_level = true;      /**< Whether to write the level of the element. */
   bool write_element_id = true; /**< Whether to write the element id. */
@@ -154,8 +154,8 @@ struct vtk_write_options
 
 /**
  * Write the mesh in a parallel vtu format together with user-defined per element data fields.
- * The required size of the values vector in the vtk_scalar field is equal to the local number of elements for write_ghosts = false
- * and equal to the local number of elements plus ghost elements for write_ghosts = true. If the sizes do not match, the excess values get cut of
+ * The required size of the values span of each field is equal to the local number of elements for write_ghosts = false
+ * and equal to the local number of elements plus ghost elements for write_ghosts = true. If the sizes do not match, the excess values get cut off
  * or the missing entries get filled with 0.
  * \param [in] mesh       The mesh to write.
  * \param [in] fileprefix The prefix of the files where the vtk will be stored.
@@ -167,7 +167,8 @@ struct vtk_write_options
  */
 template <T8MeshType TMeshClass>
 bool
-write_mesh_to_vtk (TMeshClass &mesh, const std::string &fileprefix, const std::vector<vtk_scalar_field> &scalar_fields,
+write_mesh_to_vtk (const TMeshClass &mesh, const std::string &fileprefix,
+                   const std::vector<vtk_scalar_field> &scalar_fields,
                    const std::vector<vtk_vector_field> &vector_fields = {}, vtk_write_options options = {})
 {
   const int num_data = static_cast<int> (scalar_fields.size () + vector_fields.size ());
