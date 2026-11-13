@@ -27,13 +27,15 @@
 #ifndef T8_STANDALONE_IMPLEMENTATION_HXX
 #define T8_STANDALONE_IMPLEMENTATION_HXX
 
-#include <t8_schemes/t8_scheme.hxx>
 #include <t8_eclass/t8_eclass.h>
 #include <sc_functions.h>
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <utility>
 #include <algorithm>
+
+/* Forward declaration, since only used as pointer here. Do not include t8_scheme.hxx, since it includes this file. */
+struct t8_scheme;
 
 /** A templated implementation of the scheme interface based on cutting planes. */
 template <t8_eclass TEclass>
