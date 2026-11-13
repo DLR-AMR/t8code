@@ -27,13 +27,8 @@
 
 #include <array>
 #include <vector>
-#include <cmath>
-#include <limits>
-#include <memory>
-#include <unordered_map>
 #include <t8_vector/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation_method.hxx>
-#include <t8_cmesh/t8_cmesh.h>
 
 /**
  * Struct for mesh deformation using Delaunay Graph Mapping (DGM).
@@ -43,15 +38,9 @@
 struct t8_dgm: public t8_mesh_deformation_method
 {
  public:
-  /** Constructor. */
-  t8_dgm () {};
-
-  /** Destructor. */
-  ~t8_dgm () {};
-
   /**
    * Transfers the boundary node data to the internal data structure of the DGM.
-   * \param [in] boundary_node_data Map of global vertex IDs to boundary nodes.
+   * \param [in] boundary_node_data Vector of boundary nodes.
    */
   void
   set_boundary_nodes (const std::vector<t8_mesh_deformation_node>& boundary_node_data) override
@@ -74,8 +63,9 @@ struct t8_dgm: public t8_mesh_deformation_method
   interpolate (t8_mesh_deformation_node& inner_node) const override;
 
   /**
-   * Returns the Delaunay triangles of the boundary nodes.
-   * Each triangle holds three indices into the boundary node list.
+   * Returns the vector of Delaunay elements of the boundary nodes per substep.
+   * Each element holds four indices into the boundary node list.
+   * \return The vector of Delaunay elements.
    */
   const std::vector<std::vector<std::array<size_t, 4>>>&
   get_delaunay_elements () const
@@ -85,12 +75,20 @@ struct t8_dgm: public t8_mesh_deformation_method
 
  private:
   /**
-   * Computes the 2D Delaunay triangulation of the boundary nodes with the Bowyer-Watson algorithm
-   * and stores the resulting triangles in \a delaunay_elements.
+   * Computes the Delaunay triangulation/tetrahedralization of the boundary nodes.
+   * and stores the resulting tetrahedra/triangles in \a delaunay_elements.
+   * \param [in] boundary_nodes The boundary nodes of the mesh deformation.
+   * \param [in] substeps The number of substeps to perform.
+   * Each substep corresponds to a Delaunay triangulation of the boundary nodes at that substep.
    */
   void
   create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& boundary_nodes, double substeps);
 
+  /**
+   * Checks if all Delaunay elements are valid after the deformation.
+   * \param [in] substeps The number of substeps to perform.
+   * \return True if all Delaunay elements are valid, false otherwise.
+   */
   bool
   check_delaunay_elements (double substeps) const;
 

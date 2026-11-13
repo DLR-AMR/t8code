@@ -397,7 +397,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
     /* Check if the geometry attribute is available for this tree. */
     if (first_tree_geom_attribute == nullptr) {
       t8_errorf ("Error: Geometry attribute missing for tree %d.\n", first_tree.first);
-      SC_ABORT ("Geometry attribute is missing.");
+      SC_ABORT ("Geometry attribute is missing.\n");
     }
 
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
@@ -418,7 +418,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
     /* Check if the coordinates are available. */
     if (vertex_coords == nullptr) {
       t8_errorf ("Error: Coordinates attribute missing for tree %d.\n", first_tree.first);
-      SC_ABORT ("Vertex coordinates are missing.");
+      SC_ABORT ("Vertex coordinates are missing.\n");
     }
 
     /* Save the initial coordinates of the inner node. */
@@ -458,14 +458,14 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
       = { projected.X () - node.position[0], projected.Y () - node.position[1], projected.Z () - node.position[2] };
 
     /* The old (u,v)-parameters refer to the undeformed position, so update them in all trees. */
-    double u, v;
-    projection.LowerDistanceParameters (u, v);
+    double param_u, param_v;
+    projection.LowerDistanceParameters (param_u, param_v);
     for (const auto &[tree_id, local_corner_index] : tree_list) {
       double *uv_attribute = (double *) t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (),
                                                                 T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY, tree_id);
       if (uv_attribute != nullptr) {
-        uv_attribute[2 * local_corner_index] = u;
-        uv_attribute[2 * local_corner_index + 1] = v;
+        uv_attribute[2 * local_corner_index] = param_u;
+        uv_attribute[2 * local_corner_index + 1] = param_v;
       }
     }
   }
@@ -475,6 +475,11 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
     const t8_gloidx_t global_vertex_id = global_vertex.first;
     /* Get the list of trees where this vertex exists. */
     const auto &tree_list = global_vertex.second;
+
+    /* Check if a displacement exists for this vertex. */
+    SC_CHECK_ABORTF (vertex_displacements.count (global_vertex_id) == 1,
+                     "No displacement for global vertex %" T8_GLOIDX_FORMAT ".\n", global_vertex_id);
+
     /* Update the vertex coordinates in each tree. */
     for (const auto &[tree_id, local_vertex_index] : tree_list) {
       /* Get the vertex coordinates of the current tree. */
