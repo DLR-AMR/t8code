@@ -286,7 +286,7 @@ t8_dgm::interpolate (t8_mesh_deformation_node& inner_node) const
         break;
       }
     }
-    SC_CHECK_ABORTF (found, "Global vertex %" T8_GLOIDX_FORMAT " is not inside any Delaunay element in substep %zu.\n",
+    SC_CHECK_ABORTF (found, "Global vertex %" T8_GLOIDX_FORMAT " is not inside any Delaunay element in substep %d.\n",
                      inner_node.global_id, step);
   }
   // After the interpolation, update the inner node's displacement to the global displacement.
