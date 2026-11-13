@@ -251,14 +251,15 @@ TEST_P (t8_mesh_io_test, write_mesh_to_vtk_with_options)
  */
 TEST_P (t8_mesh_io_test, compare_output_to_forest)
 {
-  const std::string prefix_forest = "t8_gtest_mesh_io_forest";
-  const std::string prefix_ext_data = "t8_gtest_mesh_io_handle_ext_data";
+  const std::string prefix_forest = output_prefix ("forest");
+  const std::string prefix_handle = output_prefix ("handle");
   // Use different values for the options to detect if they are mixed up.
   const bool write_treeid = true;
   const bool write_mpirank = false;
   const bool write_level = true;
   const bool write_element_id = false;
   const bool write_curved = false;
+  // Use the ASCII writer so the files can be compared.
   const bool do_not_use_API = true;
   for (const bool write_ghosts : { false, true }) {
     // --- Write with the forest directly. ---
@@ -266,15 +267,20 @@ TEST_P (t8_mesh_io_test, compare_output_to_forest)
                                           write_level, write_element_id, write_ghosts, write_curved, do_not_use_API,
                                           num_vtk_data, vtk_data));
 
-    const t8_mesh_handle::vtk_write_options options { .write_ghosts = write_ghosts };
+    const t8_mesh_handle::vtk_write_options options { .write_treeid = write_treeid,
+                                                      .write_mpirank = write_mpirank,
+                                                      .write_level = write_level,
+                                                      .write_element_id = write_element_id,
+                                                      .write_ghosts = write_ghosts,
+                                                      .write_curved = write_curved,
+                                                      .do_not_use_API = do_not_use_API };
     // --- Write with the mesh handle. ---
-    EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_ext_data.c_str (),
-                                                    { { "level", levels }, { "volume", volumes } },
-                                                    { { "centroid", centroids } }, options));
+    EXPECT_TRUE (t8_mesh_handle::write_mesh_to_vtk (
+      *mesh, prefix_handle, { { "level", levels }, { "volume", volumes } }, { { "centroid", centroids } }, options));
     // --- Compare the process local files. ---
     const std::string forest_output = read_vtu_file (prefix_forest, mpirank);
     EXPECT_FALSE (forest_output.empty ());
-    EXPECT_EQ (forest_output, read_vtu_file (prefix_ext_data, mpirank)) << "write_ghosts = " << write_ghosts;
+    EXPECT_EQ (forest_output, read_vtu_file (prefix_handle, mpirank)) << "write_ghosts = " << write_ghosts;
   }
 }
 
