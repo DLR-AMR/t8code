@@ -75,8 +75,8 @@ struct t8_dgm: public t8_mesh_deformation_method
 
  private:
   /**
-   * Computes the 2D Delaunay triangulation of the boundary nodes.
-   * and stores the resulting triangles in \a delaunay_elements.
+   * Computes the Delaunay triangulation/tetrahedralization of the boundary nodes.
+   * and stores the resulting tetrahedra/triangles in \a delaunay_elements.
    * \param [in] boundary_nodes The boundary nodes of the mesh deformation.
    * \param [in] substeps The number of substeps to perform.
    * Each substep corresponds to a Delaunay triangulation of the boundary nodes at that substep.
@@ -84,6 +84,11 @@ struct t8_dgm: public t8_mesh_deformation_method
   void
   create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& boundary_nodes, double substeps);
 
+  /**
+   * Checks if all Delaunay elements are valid after the deformation.
+   * \param [in] substeps The number of substeps to perform.
+   * \return True if all Delaunay elements are valid, false otherwise.
+   */
   bool
   check_delaunay_elements (double substeps) const;
 

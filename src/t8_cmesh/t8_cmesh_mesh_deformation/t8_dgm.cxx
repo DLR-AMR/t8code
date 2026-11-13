@@ -22,7 +22,6 @@
 
 /** \file t8_dgm.cxx
  *  This file implements the Delaunay Graph Mapping for the mesh deformation.
- *  The Delaunay triangulation is computed with a simple 2D Bowyer-Watson algorithm.
  */
 
 #include <t8.h>
@@ -52,10 +51,10 @@ t8_dgm_position_at_step (const t8_mesh_deformation_node& node, const double step
 }
 
 /**
- * Computes the double signed volume/area of the tetraherda/triangle (point_a, point_b, point_c) in the xy-plane.
- * \param [in] point_a, point_b, point_c, point_d  The vertices of the tetraherda.
+ * Computes the double signed volume/area of the tetrahedron/triangle (point_a, point_b, point_c) in the xy-plane.
+ * \param [in] point_a, point_b, point_c, point_d  The vertices of the tetrahedron.
  * \param [in] dimension  The dimension of the element.
- * \return              The double signed volume/area of the tetraherda.
+ * \return              The double signed volume/area of the tetrahedron.
  */
 static inline double
 t8_dgm_signed_volume (const std::array<double, 3>& point_a, const std::array<double, 3>& point_b,
@@ -190,6 +189,7 @@ t8_dgm::create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& bound
 #if T8_ENABLE_DEBUG
     gmsh::write ("t8_dgm.msh");
 #endif /* T8_ENABLE_DEBUG */
+    gmsh::model::remove ();
 #else
     SC_ABORTF ("t8code was not configured with gmsh. The Delaunay graph mapping requires gmsh.\n");
 #endif
@@ -243,9 +243,9 @@ t8_dgm::interpolate (t8_mesh_deformation_node& inner_node) const
   t8_mesh_deformation_node inner_node_tmp = inner_node;
   // Implementation for finding the Delaunay element containing the inner node
   const double tolerance = 1e-12;
-  bool found = false;
   const double num_steps = delaunay_elements.size ();
-  for (double step = 0; step < num_steps; ++step) {
+  for (int step = 0; step < num_steps; ++step) {
+    bool found = false;
     for (const auto& element : delaunay_elements[step]) {
       const std::array<double, 3> inner_node_pos
         = { inner_node_tmp.position[0], inner_node_tmp.position[1], inner_node_tmp.position[2] };

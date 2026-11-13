@@ -171,7 +171,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
       method_name = "tps";
       break;
 #else       /* T8_ENABLE_EIGEN */
-      SC_ABORTF ("ERROR: This example requires Eigen to be enabled in t8code.\n");
+      SC_ABORT ("ERROR: This example requires Eigen to be enabled in t8code.\n");
 #endif      /* T8_ENABLE_EIGEN */
     case 2: /* Delaunay Graph Mapping */
 #if T8_ENABLE_GMSH
