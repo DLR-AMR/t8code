@@ -34,6 +34,9 @@
 #if T8_ENABLE_EIGEN
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx>
 #endif /* T8_ENABLE_EIGEN */
+#if T8_ENABLE_GMSH
+#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_dgm.hxx>
+#endif /* T8_ENABLE_GMSH */
 #endif /* T8_ENABLE_OCC */
 #include <t8_vtk/t8_vtk_writer.h>
 #include <sc_options.h>
@@ -67,7 +70,7 @@ findBrepFiles (const char *folder)
 int
 main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
-#if T8_ENABLE_OCC && T8_ENABLE_EIGEN
+#if T8_ENABLE_OCC
 
   char usage[BUFSIZ];
   /* Brief help message. */
@@ -103,7 +106,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
 
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   int helpme = 0;
   const char *msh_file = NULL;
@@ -121,7 +124,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   sc_options_add_int (opt, 'd', "dimension", &dim, 0, "Dimension of the mesh (1, 2 or 3)");
   sc_options_add_int (opt, 'l', "level", &level, 2, "Uniform refinement level for the input mesh. Default: 2");
   sc_options_add_int (opt, 't', "deformtype", &deformation_type_int, 0,
-                      "Deformation type (0 for RBF CPC2, 1 for RBF TPS). Default: 0");
+                      "Deformation type: 0 for RBF CPC2, 1 for RBF TPS, 2 for Delaunay Graph Mapping. Default: 0");
   sc_options_add_double (opt, 's', "scalefactor", &scale_factor_support_radius, 1.5,
                          "Scale factor for the support radius. Default: 1.5");
 
@@ -153,21 +156,42 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     /* Initialize the deformation object for the given mesh. */
     t8_cmesh_mesh_deformation deformation (cmesh);
 
+    /* Name of the deformation method, used in the output file names. */
+    const char *method_name = NULL;
     switch (deformation_type_int) {
+    case 0: /* RBF CPC2 */
 #if T8_ENABLE_EIGEN
-    case T8_RBF_CPC2:
       deformation.set_deformation_method<t8_rbf> (T8_RBF_CPC2, scale_factor_support_radius);
+      method_name = "cpc2";
       break;
-    case T8_RBF_TPS:
+#endif      /* T8_ENABLE_EIGEN */
+    case 1: /* RBF TPS */
+#if T8_ENABLE_EIGEN
       deformation.set_deformation_method<t8_rbf> (T8_RBF_TPS);
+      method_name = "tps";
       break;
-#endif
+#else       /* T8_ENABLE_EIGEN */
+      SC_ABORT ("ERROR: This example requires Eigen to be enabled in t8code.\n");
+#endif      /* T8_ENABLE_EIGEN */
+    case 2: /* Delaunay Graph Mapping */
+#if T8_ENABLE_GMSH
+      deformation.set_deformation_method<t8_dgm> ();
+      method_name = "dgm";
+      break;
+#else  /* T8_ENABLE_GMSH  */
+      SC_ABORT ("ERROR: This example requires GMSH to be enabled in t8code.\n");
+#endif /* T8_ENABLE_GMSH  */
+
     default:
       SC_ABORTF ("Unknown or unavailable deformation type %d.\n", deformation_type_int);
     }
 
+    t8_global_productionf ("Using deformation method: %s\n", method_name);
+
     /* Write output. */
-    t8_forest_vtk_write_file (forest, "deformed_forest_step_0000", 1, 1, 1, 1, 0, 0, NULL);
+    char output_name[BUFSIZ];
+    snprintf (output_name, BUFSIZ, "deformed_forest_%s_step_0000", method_name);
+    t8_forest_vtk_write_file (forest, output_name, 1, 1, 1, 1, 0, 0, NULL);
 
     auto brep_files = findBrepFiles (brep_folder);
     std::sort (brep_files.begin (), brep_files.end ());
@@ -188,8 +212,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 
       deformation.apply_vertex_displacements (displacements, cad_deformed);
 
-      char output_name[BUFSIZ];
-      snprintf (output_name, BUFSIZ, "deformed_forest_step_%04d", ++ifile);
+      snprintf (output_name, BUFSIZ, "deformed_forest_%s_step_%04d", method_name, ++ifile);
       t8_forest_vtk_write_file (forest, output_name, 1, 1, 1, 1, 0, 0, NULL);
     }
     /* Cleanup. */
@@ -204,9 +227,9 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
-#else  /* T8_ENABLE_OCC and T8_ENABLE_EIGEN */
-  t8_global_errorf ("ERROR: This example requires OpenCASCADE and Eigen support to be enabled in t8code.\n");
-#endif /* T8_ENABLE_OCC and T8_ENABLE_EIGEN */
+#else  /* T8_ENABLE_OCC  */
+  t8_global_errorf ("ERROR: This example requires OpenCASCADE to be enabled in t8code.\n");
+#endif /* T8_ENABLE_OCC  */
 
   return 0;
 }

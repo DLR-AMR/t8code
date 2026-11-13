@@ -20,6 +20,7 @@ set( T8CODE_BUILD_MESH_HANDLE @T8CODE_BUILD_MESH_HANDLE@ )
 set( T8CODE_ENABLE_VTK @T8CODE_ENABLE_VTK@ )
 set( T8CODE_ENABLE_OCC @T8CODE_ENABLE_OCC@ )
 set( T8CODE_ENABLE_EIGEN @T8CODE_ENABLE_EIGEN@ )
+set( T8CODE_ENABLE_GMSH @T8CODE_ENABLE_GMSH@ )
 
 set( T8CODE_USE_SYSTEM_SC @T8CODE_USE_SYSTEM_SC@ )
 set( T8CODE_USE_SYSTEM_P4EST @T8CODE_USE_SYSTEM_P4EST@ )
@@ -42,6 +43,11 @@ endif()
 # Ensure that Eigen was found
 if(T8CODE_ENABLE_EIGEN)
     find_dependency(Eigen3)
+endif()
+
+# Ensure that Gmsh was found
+if(T8CODE_ENABLE_GMSH)
+    find_dependency(gmsh CONFIG)
 endif()
 
 include( "${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake" )

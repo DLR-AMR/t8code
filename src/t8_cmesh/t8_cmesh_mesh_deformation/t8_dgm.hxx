@@ -1,0 +1,102 @@
+/*
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
+
+  Copyright (C) 2026 the developers
+
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
+/** \file t8_dgm.hxx
+ * Delaunay Graph Mapping (DGM) used to interpolate the boundary displacements of a mesh deformation to the inner nodes of each Delaunay element.
+ */
+#pragma once
+
+#include <array>
+#include <vector>
+#include <t8_vector/t8_vec.hxx>
+#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation_method.hxx>
+
+/**
+ * Struct for mesh deformation using Delaunay Graph Mapping (DGM).
+ * The boundary nodes are triangulated with a Delaunay triangulation (the Delaunay graph). Each inner node is
+ * located in a Delaunay element and its displacement is interpolated from the element's boundary nodes.
+ */
+struct t8_dgm: public t8_mesh_deformation_method
+{
+ public:
+  /**
+   * Transfers the boundary node data to the internal data structure of the DGM.
+   * \param [in] boundary_node_data Vector of boundary nodes.
+   */
+  void
+  set_boundary_nodes (const std::vector<t8_mesh_deformation_node>& boundary_node_data) override
+  {
+    boundary_nodes = boundary_node_data;
+  }
+
+  /**
+   * Builds the Delaunay graph of the boundary nodes.
+   * This step is mandatory to later be able to interpolate the inner nodes.
+   */
+  void
+  solve () override;
+
+  /**
+   * Interpolates the inner node.
+   * \param [in, out] inner_node   The inner node which will be interpolated.
+   */
+  void
+  interpolate (t8_mesh_deformation_node& inner_node) const override;
+
+  /**
+   * Returns the vector of Delaunay elements of the boundary nodes per substep.
+   * Each element holds four indices into the boundary node list.
+   * \return The vector of Delaunay elements.
+   */
+  const std::vector<std::vector<std::array<size_t, 4>>>&
+  get_delaunay_elements () const
+  {
+    return delaunay_elements;
+  }
+
+ private:
+  /**
+   * Computes the Delaunay triangulation/tetrahedralization of the boundary nodes.
+   * and stores the resulting tetrahedra/triangles in \a delaunay_elements.
+   * \param [in] boundary_nodes The boundary nodes of the mesh deformation.
+   * \param [in] substeps The number of substeps to perform.
+   * Each substep corresponds to a Delaunay triangulation of the boundary nodes at that substep.
+   */
+  void
+  create_delaunay_mesh (const std::vector<t8_mesh_deformation_node>& boundary_nodes, double substeps);
+
+  /**
+   * Checks if all Delaunay elements are valid after the deformation.
+   * \param [in] substeps The number of substeps to perform.
+   * \return True if all Delaunay elements are valid, false otherwise.
+   */
+  bool
+  check_delaunay_elements (double substeps) const;
+
+  /** List of all registered support nodes. */
+  std::vector<t8_mesh_deformation_node> boundary_nodes;
+  /** The Delaunay elements for each substep. Each entry holds dimension + 1 indices into \a boundary_nodes,
+   *  the remaining entries are unused. */
+  std::vector<std::vector<std::array<size_t, 4>>> delaunay_elements;
+  /** Elements with a smaller absolute signed volume are treated as degenerate. Set in \ref solve. */
+  double volume_tolerance = 0.0;
+};
