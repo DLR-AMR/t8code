@@ -36,10 +36,6 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_helper_functions/t8_vector_algorithms.hxx>
 #include <t8_cmesh/t8_cmesh.hxx>
-#if T8_ENABLE_METIS
-#include <metis.h>
-
-#endif
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 
 #include <t8_element/t8_element.h>
@@ -815,111 +811,6 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
 #endif
   return cmesh_out;
 }
-
-#if T8_ENABLE_METIS
-void
-t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
-{
-  int mpisize, mpiret;
-  idx_t idx_mpisize;
-  idx_t ncon = 1, elements;
-  idx_t volume, *partition, ipart, newpart;
-  int num_faces, iface, count_face;
-  idx_t *xadj, *adjncy;
-  int success;
-  t8_locidx_t *new_number, itree, *tree_per_part_off, *tree_per_part;
-  t8_locidx_t *face_neighbor;
-  t8_locidx_t neigh_id;
-  t8_ctree_t tree;
-
-  /* cmesh must be committed and not partitioned */
-  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
-  T8_ASSERT (!cmesh->set_partition);
-
-  mpiret = sc_MPI_Comm_size (comm, &mpisize);
-  idx_mpisize = mpisize;
-  SC_CHECK_MPI (mpiret);
-
-  elements = cmesh->num_trees;
-  T8_ASSERT ((t8_locidx_t) elements == cmesh->num_trees);
-
-  /* Count the number of tree-to-tree connections via a face */
-  num_faces = 0;
-  for (itree = 0; itree < cmesh->num_trees; itree++) {
-    tree = t8_cmesh_trees_get_tree_ext (cmesh->trees, itree, &face_neighbor, NULL);
-    for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
-      if (face_neighbor[iface] >= 0)
-        num_faces++;
-    }
-  }
-
-  /* xadj and adjncy store the face-connections in a CSR format
-   * xadj[treeid] = offset of the tree in adjncy
-   * adjncy[xadj[treeid]]...adjncy[xadj[treeid]-1] are the trees with which
-   * the tree has a face connection */
-  xadj = T8_ALLOC_ZERO (idx_t, elements + 1);
-  adjncy = T8_ALLOC (idx_t, num_faces);
-
-  /* fill xadj and adjncy arrays */
-  for (itree = 0, count_face = 0; itree < cmesh->num_trees; itree++) {
-    tree = t8_cmesh_get_tree (cmesh, itree);
-    xadj[itree + 1] = xadj[itree];
-    for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
-      if (face_neighbor[iface] >= 0) {
-        adjncy[count_face++] = face_neighbor[iface];
-        xadj[itree + 1]++;
-      }
-    }
-  }
-
-  /* partition stores the new partition number for each element */
-  partition = T8_ALLOC (idx_t, elements);
-  /* partition the elements in mpisize many partitions */
-  success = METIS_PartGraphRecursive (&elements, &ncon, xadj, adjncy, NULL, NULL, NULL, &idx_mpisize, NULL, NULL, NULL,
-                                      &volume, partition);
-  T8_ASSERT (success == METIS_OK);
-  /* memory to store the new treeid of a tree */
-  new_number = T8_ALLOC (t8_locidx_t, cmesh->num_trees);
-  /* Store the number of trees pointer partition */
-  tree_per_part = T8_ALLOC_ZERO (t8_locidx_t, mpisize);
-  /* Store the treeid offset of each partition. */
-  tree_per_part_off = T8_ALLOC_ZERO (t8_locidx_t, mpisize + 1);
-  tree_per_part_off[0] = 0;
-  /* compute tree_per_part and prepare tree_per_part_off */
-  for (itree = 0; itree < cmesh->num_trees; itree++) {
-    tree_per_part[partition[itree]]++;
-    tree_per_part_off[partition[itree] + 1]++;
-  }
-  /* compute tree_per_part_off */
-  for (ipart = 1; ipart <= mpisize; ipart++) {
-    tree_per_part_off[ipart] += tree_per_part_off[ipart - 1];
-  }
-  /* Compute for each tree its new treeid */
-  for (itree = 0; itree < cmesh->num_trees; itree++) {
-    newpart = partition[itree];
-    T8_ASSERT (tree_per_part[newpart] > 0);
-    new_number[itree] = tree_per_part_off[newpart + 1] - tree_per_part[newpart];
-    tree_per_part[newpart]--;
-  }
-  /* Set for each tree its new treeid and the new ids of its neighbors */
-  for (itree = 0; itree < cmesh->num_trees; itree++) {
-    tree = t8_cmesh_trees_get_tree_ext (cmesh->trees, itree, &face_neighbor, NULL);
-    tree->treeid = new_number[itree];
-    for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
-      neigh_id = face_neighbor[iface];
-      if (neigh_id >= 0) {
-        face_neighbor[iface] = new_number[neigh_id];
-      }
-    }
-  }
-  T8_FREE (partition);
-  T8_FREE (xadj);
-  T8_FREE (adjncy);
-  T8_FREE (new_number);
-  T8_FREE (tree_per_part);
-  T8_FREE (tree_per_part_off);
-}
-#endif
 
 int
 t8_cmesh_is_partitioned (const t8_cmesh_t cmesh)
