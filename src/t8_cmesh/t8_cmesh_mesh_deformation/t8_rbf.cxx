@@ -36,7 +36,7 @@
  * The interpolation matrix is sparse, so a sparse direct solver is used.
  * \param [in] boundary_nodes The boundary nodes of the RBF system.
  * \param [in] rbf_function The compactly supported radial basis function.
- * \param [in] displacements The matrix of the boundary node displacements. Each row corresponds to a 
+ * \param [in] displacements The matrix of the boundary node displacements. Each row corresponds to a
  *                          boundary node and the three columns correspond to the x, y, and z components of the displacement.
  * \return The matrix of the calculated weights alpha.
  */
@@ -48,7 +48,7 @@ t8_rbf_solve_compactly_supported (const std::vector<t8_rbf_boundary_node> &bound
   /* The RBF used is compactly supported so we can use a sparse matrix and a sparse direct solver. */
   typedef Eigen::Triplet<double> triplet;
   std::vector<triplet> coefficients;
-  /* Each row has at least one non-zero element on the diagonal. 
+  /* Each row has at least one non-zero element on the diagonal.
    * This only reserves memory for the triplet list. More entries are added automatically. */
   coefficients.reserve (num_boundary_nodes);
   /* Fill the interpolation matrix with the values of the radial basis function psi evaluated at the pairwise euclidean distances between all boundary nodes. */
@@ -84,7 +84,7 @@ t8_rbf_solve_compactly_supported (const std::vector<t8_rbf_boundary_node> &bound
  * The interpolation matrix is dense, so a dense solver is used.
  * \param [in] boundary_nodes The boundary nodes of the RBF system.
  * \param [in] rbf_function The globally supported radial basis function.
- * \param [in] displacements The matrix of the boundary node displacements. Each row corresponds to a 
+ * \param [in] displacements The matrix of the boundary node displacements. Each row corresponds to a
  *                          boundary node and the three columns correspond to the x, y, and z components of the displacement.
  * \return The matrix of the calculated weights alpha.
  */
@@ -99,7 +99,7 @@ t8_rbf_solve_globally_supported (const std::vector<t8_rbf_boundary_node> &bounda
   Eigen::MatrixXd interpolation_matrix (num_boundary_nodes, num_boundary_nodes);
   /* Fill the interpolation matrix with the values of the radial basis function psi evaluated at the pairwise euclidean distances between all boundary nodes. */
   for (size_t row = 0; row < num_boundary_nodes; ++row) {
-    /* Because of the symmetric property of the distance between nodes, we only need to compute the upper triangular part (including the diagonal) of the matrix 
+    /* Because of the symmetric property of the distance between nodes, we only need to compute the upper triangular part (including the diagonal) of the matrix
      * and can mirror the values to the lower triangular part. */
     for (size_t col = row; col < num_boundary_nodes; ++col) {
       /* Calculate the distance between the current pair of boundary nodes. */
@@ -121,7 +121,7 @@ t8_rbf_solve_globally_supported (const std::vector<t8_rbf_boundary_node> &bounda
 }
 
 /*
- * Solves the linear system A * alpha = displacements to find the weight. 
+ * Solves the linear system A * alpha = displacements to find the weight.
  * This step is mandatory to later be able to interpolate the inner nodes.
  */
 void
