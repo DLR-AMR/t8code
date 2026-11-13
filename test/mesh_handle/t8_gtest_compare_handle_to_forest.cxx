@@ -29,11 +29,13 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
+#include <mesh_handle/constructor_wrappers.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions.hxx>
 
 /** Tests that the functionality of the handle gives the same results as if worked with the forest directly.
  * Therefore, we compare the results of the mesh handle with the one accessed with the forest directly.
@@ -116,4 +118,45 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       mesh_iterator++;
     }
   }
+}
+/** Test that the boundary condition getters of the handle give the same results as the forest functions. */
+TEST (t8_gtest_compare_handle_to_forest, compare_boundary_conditions)
+{
+  // Define mesh handle on a cmesh with boundary conditions.
+  const int level = 2;
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_hybrid_ext (cmesh, sc_MPI_COMM_WORLD, false, true);
+  auto mesh = t8_mesh_handle::handle_new_uniform_default<t8_mesh_handle::mesh<>> (cmesh, level, sc_MPI_COMM_WORLD);
+  const t8_forest_t forest = mesh->get_forest ();
+
+  //Iterate over the elements of the forest and of the mesh handle simultaneously and compare the boundary conditions.
+  int found_boundary_condition = 0;
+  auto mesh_iterator = mesh->cbegin ();
+  for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
+    for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_leaf_elements (forest, itree); ++ielem) {
+      const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, itree, ielem);
+      // --- Boundary conditions of all faces at once. ---
+      const auto conditions_handle = mesh_iterator->get_boundary_conditions ();
+      const auto conditions_forest = t8_forest_get_boundary_conditions (forest, itree, elem);
+      EXPECT_EQ (conditions_handle.size (), conditions_forest.size ());
+      for (size_t iface = 0; iface < conditions_handle.size (); ++iface) {
+        EXPECT_EQ (conditions_handle[iface], conditions_forest[iface]) << "face = " << iface;
+      }
+      // --- Boundary conditions of individual faces. ---
+      for (int iface = 0; iface < mesh_iterator->get_num_faces (); ++iface) {
+        const auto condition_forest = t8_forest_get_boundary_condition (forest, itree, elem, iface);
+        EXPECT_EQ (mesh_iterator->get_boundary_condition (iface), condition_forest);
+        if (condition_forest.has_value ()) {
+          found_boundary_condition = 1;
+        }
+      }
+      mesh_iterator++;
+    }
+  }
+  int found_boundary_condition_global = 0;
+  const int mpiret = sc_MPI_Allreduce (&found_boundary_condition, &found_boundary_condition_global, 1, sc_MPI_INT,
+                                       sc_MPI_MAX, sc_MPI_COMM_WORLD);
+  SC_CHECK_MPI (mpiret);
+  EXPECT_TRUE (found_boundary_condition_global);
 }
