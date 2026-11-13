@@ -29,5 +29,8 @@ Partitioning, balancing and creating a ghost layer for a mesh.
 [step5](https://github.com/DLR-AMR/t8code/wiki/Step-5-Store-Element-Data-with-Mesh-Handle) - 
 Associating user data with the elements of a mesh. Exchanging ghost values for element user data. Writing element user data to vtu.
 
+step7 - 
+Interpolating user defined element data when adapting a mesh. Explaining interpolation callbacks. (We matched the step numbers of the general folder here but step6 is not sensible for the mesh handle which is why we skip step6 here.)
+
 [stepA](https://github.com/DLR-AMR/t8code/wiki/Step-A-Mesh-Competences) - 
 Going into more detail about mesh handle competence packs to use additional features accessible through the mesh handle competence architecture. Explaining element data competences and caching. Creating a custom competence. 
