@@ -298,7 +298,7 @@ struct t8_openfoam_reader
    * \param [in] faces              Array containing the face ids of the cell.
    * \param [in] face_orientations  Array containing the orientation of each face (t8 vertex 0 -> foam point id)
    */
-  template <size_t TNumFaces>
+  template <uint8_t TNumFaces>
   void
   compute_cell_neighbors (const size_t cell_id, const t8_eclass cell_eclass,
                           const std::array<std::optional<size_t>, TNumFaces> faces,
