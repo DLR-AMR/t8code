@@ -35,30 +35,17 @@
 #include <gmsh.h>
 #endif
 
-/**
- * Computes the position of a boundary node after \a step of \a num_steps equally sized substeps.
- * \param [in] node       The boundary node.
- * \param [in] step       The number of substeps that are already performed.
- * \param [in] num_steps  The total number of substeps.
- * \return                The position of the node after \a step substeps.
- */
-static inline std::array<double, 3>
-t8_dgm_position_at_step (const t8_mesh_deformation_node& node, const double step, const double num_steps)
+std::array<double, 3>
+t8_dgm::t8_dgm_position_at_step (const t8_mesh_deformation_node& node, const double step, const double num_steps)
 {
   return { node.position[0] + node.displacement[0] / num_steps * step,
            node.position[1] + node.displacement[1] / num_steps * step,
            node.position[2] + node.displacement[2] / num_steps * step };
 }
 
-/**
- * Computes the double signed volume/area of the tetrahedron/triangle (point_a, point_b, point_c) in the xy-plane.
- * \param [in] point_a, point_b, point_c, point_d  The vertices of the tetrahedron.
- * \param [in] dimension  The dimension of the element.
- * \return              The double signed volume/area of the tetrahedron.
- */
-static inline double
-t8_dgm_signed_volume (const std::array<double, 3>& point_a, const std::array<double, 3>& point_b,
-                      const std::array<double, 3>& point_c, const std::array<double, 3>& point_d, int dimension)
+double
+t8_dgm::t8_dgm_signed_volume (const std::array<double, 3>& point_a, const std::array<double, 3>& point_b,
+                              const std::array<double, 3>& point_c, const std::array<double, 3>& point_d, int dimension)
 {
   if (dimension == 2) {
     return (point_b[1] - point_c[1]) * (point_a[0] - point_c[0])

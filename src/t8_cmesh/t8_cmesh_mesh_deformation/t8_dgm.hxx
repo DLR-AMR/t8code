@@ -92,6 +92,26 @@ struct t8_dgm: public t8_mesh_deformation_method
   bool
   check_delaunay_elements (double substeps) const;
 
+  /**
+ * Computes the position of a boundary node after \a step of \a num_steps equally sized substeps.
+ * \param [in] node       The boundary node.
+ * \param [in] step       The number of substeps that are already performed.
+ * \param [in] num_steps  The total number of substeps.
+ * \return                The position of the node after \a step substeps.
+ */
+  static std::array<double, 3>
+  t8_dgm_position_at_step (const t8_mesh_deformation_node& node, const double step, const double num_steps);
+
+  /**
+ * Computes the double signed volume/area of the tetrahedron/triangle (point_a, point_b, point_c) in the xy-plane.
+ * \param [in] point_a, point_b, point_c, point_d  The vertices of the tetrahedron.
+ * \param [in] dimension  The dimension of the element.
+ * \return              The double signed volume/area of the tetrahedron.
+ */
+  static double
+  t8_dgm_signed_volume (const std::array<double, 3>& point_a, const std::array<double, 3>& point_b,
+                        const std::array<double, 3>& point_c, const std::array<double, 3>& point_d, int dimension);
+
   /** List of all registered support nodes. */
   std::vector<t8_mesh_deformation_node> boundary_nodes;
   /** The Delaunay elements for each substep. Each entry holds dimension + 1 indices into \a boundary_nodes,
@@ -99,4 +119,6 @@ struct t8_dgm: public t8_mesh_deformation_method
   std::vector<std::vector<std::array<size_t, 4>>> delaunay_elements;
   /** Elements with a smaller absolute signed volume are treated as degenerate. Set in \ref solve. */
   double volume_tolerance = 0.0;
+
+  friend class t8_dg_rbf;
 };
