@@ -113,6 +113,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   const char *brep_folder = NULL;
   int dim, level;
   int deformation_type_int = 0;
+  int project_nodes = 0;
   double scale_factor_support_radius = 1.5;
 
   /* Initialize command line argument parser. */
@@ -123,6 +124,9 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
                          "Path to the folder containing the deformation geometry files (.brep)");
   sc_options_add_int (opt, 'd', "dimension", &dim, 0, "Dimension of the mesh (1, 2 or 3)");
   sc_options_add_int (opt, 'l', "level", &level, 2, "Uniform refinement level for the input mesh. Default: 2");
+  sc_options_add_switch (opt, 'p', "project", &project_nodes,
+                         "Project the boundary nodes onto the new geometry instead of evaluating it at the old "
+                         "(u,v)-parameters. Use this for small shape changes which alter the parametrization.");
   sc_options_add_int (opt, 't', "deformtype", &deformation_type_int, 0,
                       "Deformation type: 0 for RBF CPC2, 1 for RBF TPS, 2 for Delaunay Graph Mapping. Default: 0");
   sc_options_add_double (opt, 's', "scalefactor", &scale_factor_support_radius, 1.5,
@@ -154,7 +158,8 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
     /* Initialize the deformation object for the given mesh. */
-    t8_cmesh_mesh_deformation deformation (cmesh);
+    t8_cmesh_mesh_deformation deformation (
+      cmesh, project_nodes ? t8_cad_parameter_mode::PROJECT : t8_cad_parameter_mode::EVALUATE);
 
     /* Name of the deformation method, used in the output file names. */
     const char *method_name = NULL;

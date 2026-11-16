@@ -197,9 +197,17 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
         SC_ABORT ("Vertex coordinates are missing.\n");
       }
 
+      /* Get the old coordinates before the deformation. */
+      const double old_x = old_coords[3 * local_corner_index + 0];
+      const double old_y = old_coords[3 * local_corner_index + 1];
+      const double old_z = old_coords[3 * local_corner_index + 2];
+      const gp_Pnt old_point (old_x, old_y, old_z);
+
       gp_Pnt new_coords;
 
-      /* Find the new coordinates of the vertex in the CAD file, based on the geometry it's lying on. */
+      /* Find the new coordinates of the vertex in the CAD file, based on the geometry it's lying on.
+       * In projection mode, the old parameters are only used as start value of the projection, since
+       * the parametrization of the new geometry may differ (e.g. chord length parametrized splines). */
       switch (first_tree_entity_dim) {
       case 0: {
         new_coords = cad->get_cad_point (first_tree_entity_tag);
@@ -207,7 +215,10 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       }
       case 1: {
         const Handle_Geom_Curve curve = cad->get_cad_curve (first_tree_entity_tag);
-        curve->D0 (uv_parameter[0], new_coords);
+        const double new_parameter = parameter_mode == t8_cad_parameter_mode::PROJECT
+                                       ? cad->project_point_on_edge (first_tree_entity_tag, old_point, uv_parameter[0])
+                                       : uv_parameter[0];
+        curve->D0 (new_parameter, new_coords);
         break;
       }
       case 2: {
@@ -217,17 +228,16 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
           continue;
         }
         const Handle_Geom_Surface surface = cad->get_cad_surface (first_tree_entity_tag);
-        surface->D0 (uv_parameter[0], uv_parameter[1], new_coords);
+        double new_parameters[2] = { uv_parameter[0], uv_parameter[1] };
+        if (parameter_mode == t8_cad_parameter_mode::PROJECT) {
+          cad->project_point_on_face (first_tree_entity_tag, old_point, uv_parameter, new_parameters);
+        }
+        surface->D0 (new_parameters[0], new_parameters[1], new_coords);
         break;
       }
       default:
         SC_ABORT_NOT_REACHED ();
       }
-
-      /* Get the old coordinates before the deformation. */
-      const double old_x = old_coords[3 * local_corner_index + 0];
-      const double old_y = old_coords[3 * local_corner_index + 1];
-      const double old_z = old_coords[3 * local_corner_index + 2];
 
       t8_mesh_deformation_node node;
 
@@ -245,6 +255,108 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
     }
   }
   return boundary_node_data;
+}
+
+void
+t8_cmesh_mesh_deformation::update_cad_parameters (const t8_cad_handle *cad)
+{
+  T8_ASSERT (t8_cmesh_is_committed (associated_cmesh));
+
+  const int mesh_dimension = t8_cmesh_get_dimension (associated_cmesh);
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (associated_cmesh);
+
+  for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
+    const double *vertex_coords = static_cast<const double *> (
+      t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, itree));
+    if (vertex_coords == nullptr) {
+      continue;
+    }
+    const t8_eclass_t eclass = t8_cmesh_get_tree_class (associated_cmesh, itree);
+    const int tree_dim = t8_eclass_to_dimension[eclass];
+
+    /* The current position of a tree vertex. */
+    const auto vertex_point = [vertex_coords] (const int vertex) {
+      return gp_Pnt (vertex_coords[3 * vertex], vertex_coords[3 * vertex + 1], vertex_coords[3 * vertex + 2]);
+    };
+
+    /* Update the parameters of the boundary nodes. The parameters of the old geometry serve as reference. */
+    const int *node_geometries = static_cast<const int *> (
+      t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (), T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY, itree));
+    double *node_parameters = static_cast<double *> (
+      t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (), T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY, itree));
+    if (node_geometries != nullptr && node_parameters != nullptr) {
+      for (int ivertex = 0; ivertex < t8_eclass_num_vertices[eclass]; ++ivertex) {
+        const int entity_dim = node_geometries[2 * ivertex];
+        const int entity_tag = node_geometries[2 * ivertex + 1];
+        double *parameters = &node_parameters[2 * ivertex];
+        if (entity_dim == 1 && entity_dim < mesh_dimension) {
+          parameters[0] = cad->project_point_on_edge (entity_tag, vertex_point (ivertex), parameters[0]);
+        }
+        else if (entity_dim == 2 && entity_dim < mesh_dimension) {
+          const double reference_parameters[2] = { parameters[0], parameters[1] };
+          cad->project_point_on_face (entity_tag, vertex_point (ivertex), reference_parameters, parameters);
+        }
+      }
+    }
+
+    /* Trees without CAD links have no edge geometries and nothing more to update. */
+    const int *edge_geometries = static_cast<const int *> (
+      t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, itree));
+    const int *face_geometries = static_cast<const int *> (
+      t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, itree));
+    if (edge_geometries == nullptr || face_geometries == nullptr) {
+      continue;
+    }
+
+    /* Update the parameters of the tree faces linked to a surface, used for curved elements.
+     * Same face and vertex numbering as in the msh reader. */
+    const int num_faces = tree_dim == 2 ? 1 : (tree_dim == 3 ? t8_eclass_num_faces[eclass] : 0);
+    for (int iface = 0; iface < num_faces; ++iface) {
+      const int surface_tag = face_geometries[iface];
+      if (surface_tag <= 0) {
+        continue;
+      }
+      double *face_parameters = static_cast<double *> (t8_cmesh_get_attribute (
+        associated_cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + iface, itree));
+      T8_ASSERT (face_parameters != nullptr);
+      const int face_eclass = tree_dim == 2 ? eclass : t8_eclass_face_types[eclass][iface];
+      for (int iface_vertex = 0; iface_vertex < t8_eclass_num_vertices[face_eclass]; ++iface_vertex) {
+        const int tree_vertex
+          = tree_dim == 2 ? iface_vertex : t8_face_vertex_to_tree_vertex[eclass][iface][iface_vertex];
+        const double reference_parameters[2]
+          = { face_parameters[2 * iface_vertex], face_parameters[2 * iface_vertex + 1] };
+        cad->project_point_on_face (surface_tag, vertex_point (tree_vertex), reference_parameters,
+                                    &face_parameters[2 * iface_vertex]);
+      }
+    }
+
+    /* Update the parameters of the tree edges linked to a curve or a surface, used for curved elements. */
+    const int num_edges = t8_eclass_num_edges[eclass];
+    for (int iedge = 0; iedge < num_edges; ++iedge) {
+      const int curve_tag = edge_geometries[iedge];
+      const int surface_tag = edge_geometries[iedge + num_edges];
+      if (curve_tag <= 0 && surface_tag <= 0) {
+        continue;
+      }
+      double *edge_parameters = static_cast<double *> (t8_cmesh_get_attribute (
+        associated_cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + iedge, itree));
+      T8_ASSERT (edge_parameters != nullptr);
+      for (int iedge_vertex = 0; iedge_vertex < 2; ++iedge_vertex) {
+        const int tree_vertex = tree_dim == 3 ? t8_edge_vertex_to_tree_vertex[eclass][iedge][iedge_vertex]
+                                              : t8_face_vertex_to_tree_vertex[eclass][iedge][iedge_vertex];
+        if (curve_tag > 0) {
+          edge_parameters[iedge_vertex]
+            = cad->project_point_on_edge (curve_tag, vertex_point (tree_vertex), edge_parameters[iedge_vertex]);
+        }
+        else {
+          const double reference_parameters[2]
+            = { edge_parameters[2 * iedge_vertex], edge_parameters[2 * iedge_vertex + 1] };
+          cad->project_point_on_face (surface_tag, vertex_point (tree_vertex), reference_parameters,
+                                      &edge_parameters[2 * iedge_vertex]);
+        }
+      }
+    }
+  }
 }
 
 void
@@ -320,6 +432,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
     inner_nodes.push_back (inner_node);
   }
 
+  deformation_method->set_dimension (mesh_dimension);
   /* Calculate the weights of the deformation method from the known boundary displacements. */
   deformation_method->set_dimension (mesh_dimension);
   deformation_method->set_boundary_nodes (boundary_node_data);
@@ -382,6 +495,11 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::vector<t8_mesh
         }
       }
     }
+  }
+
+  /* The vertices now lie on the new geometry, but the stored parameters may still refer to the old parametrization. */
+  if (parameter_mode == t8_cad_parameter_mode::PROJECT) {
+    update_cad_parameters (cad.get ());
   }
 
   /* Update the cad geometry. */
