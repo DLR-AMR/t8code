@@ -633,7 +633,7 @@ t8_openfoam_reader::reconstruct_tet_cell (size_t cell_id, std::vector<size_t> fa
    * same normal direction -> <orientation.same_normal_dir> = true, different normal direction -> false
    */
   t8_foam_face_orientation orientation;
-  /** Normal of the t8 face. 1 points outward, 0 inward. */
+  /** Normal of the t8 face. True points outward,  false inward. */
   bool t8_face_normal;
 
   /* ------------------------- 1. Assign face 0 ------------------------- */
