@@ -50,6 +50,7 @@
 /* indirectly also include sc.h */
 #include <sc_containers.h>
 
+#ifdef __cplusplus
 /** This macro opens the extern "C" brace needed in C headers.
  * It needs to be followed by a semicolon to look like a statement. */
 #define T8_EXTERN_C_BEGIN() SC_EXTERN_C_BEGIN
@@ -57,6 +58,12 @@
 /** This macro closes the extern "C" brace needed in C headers.
  * It needs to be followed by a semicolon to look like a statement. */
 #define T8_EXTERN_C_END() SC_EXTERN_C_END
+#else
+/* In C there is no extern "C"; the forward declarations only allow the trailing
+ * semicolon and, unlike SC's hack functions, do not trigger -Wredundant-decls. */
+#define T8_EXTERN_C_BEGIN() struct t8_extern_c_hack_1
+#define T8_EXTERN_C_END() struct t8_extern_c_hack_2
+#endif
 
 /** Call this after including all headers */
 T8_EXTERN_C_BEGIN ();

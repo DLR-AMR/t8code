@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/*
+/** \file t8_tutorial_build_scheme.cxx
  * In this tutorial we discuss how to use schemes in t8code.
  * Schemes are used to define the refinement and coarsening behavior of the forest. Upon building the forest from a cmesh,
  * the user can define a scheme that will be used for all tree-specific operations in the forest. That way the scheme
@@ -88,7 +88,7 @@ t8_scheme_default_build_mixed (void)
   return builder.build_scheme ();
 }
 
-/* The main function of this example. */
+/** The main function of this example. */
 int
 main (int argc, char **argv)
 {

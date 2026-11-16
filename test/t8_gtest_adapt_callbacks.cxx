@@ -24,7 +24,7 @@
 * Provide forest adapt callback functions that we use in our tests.
 */
 
-#include <test/t8_gtest_adapt_callbacks.hxx>
+#include <t8_gtest_adapt_callbacks.hxx>
 
 /* Adapt a forest such that always the first child of a
  * family is refined and no other elements. This results in a highly
