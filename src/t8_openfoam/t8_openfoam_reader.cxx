@@ -593,8 +593,8 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
 }
 
 int
-t8_openfoam_reader::compute_face_orientation (t8_eclass eclass1, u_int8_t face_id1, t8_foam_face_orientation orient1,
-                                              t8_eclass eclass2, u_int8_t face_id2, t8_foam_face_orientation orient2)
+t8_openfoam_reader::compute_face_orientation (const t8_eclass eclass1, const u_int8_t face_id1, const t8_foam_face_orientation orient1,
+                                              const t8_eclass eclass2, const u_int8_t face_id2, const t8_foam_face_orientation orient2)
 {
   const t8_eclass face_class = (t8_eclass) t8_eclass_face_types[eclass1][face_id1];
   const u_int8_t num_vertices = t8_eclass_num_vertices[face_class];
