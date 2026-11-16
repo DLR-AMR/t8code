@@ -114,4 +114,14 @@ struct t8_geometry_healpix: public t8_geometry
   */
   t8_geometry_type_t
   t8_geom_get_type () const override;
+
+  /**
+   * Override to suppress warning.
+   * \return                True if the currently loaded tree has a negative volume.
+   */
+  virtual bool
+  t8_geom_tree_negative_volume () const override
+  {
+    return 0;
+  };
 };
