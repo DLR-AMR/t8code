@@ -40,7 +40,10 @@
  * same cycle runs with p4est on the same hexahedral brick (variant p4est): adapt refines and then coarsens with the
  * same criterion (families created in the cycle are not coarsened, as in the single pass of t8code's adapt), followed
  * by p8est_balance, p8est_partition, p8est_ghost_new and p8est_ghost_exchange_custom, each timed like a commit. Its
- * ghost version and balance rounds are 0. One CSV line per cycle (appended to the file given with -o):
+ * ghost version and balance rounds are 0. With -s default, t8code uses its default scheme instead of the standalone
+ * one (faces only, since the default scheme has no boundaries of lower dimension); the variant gets the suffix
+ * "_default", e.g. offsets_default, t8code's existing face algorithms on its existing elements. One CSV line per
+ * cycle (appended to the file given with -o):
  * variant,eclass,trees,procs,min_level,max_level,ghost_type,ghost_version,balance_type,balance_algorithm,
  * partition_for_coarsening,cycle,elements,ghosts,adapt_time,balance_time,balance_rounds,partition_ghost_time,
  * partition_time,ghost_time,exchange_time,cycle_time
@@ -56,6 +59,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_profiling.h>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 
 #include <cmath>
@@ -227,6 +231,8 @@ struct settings_t
   std::string balance_algorithm;
   int for_coarsening;
   FILE *csv;
+  std::string scheme;  /* standalone or default */
+  std::string variant; /* T8_BENCH_VARIANT, with the suffix _default for the default scheme */
 };
 
 /* The cube of the element class: a brick of trees x trees x trees hexahedra, or the hypercube of the element class */
@@ -332,7 +338,8 @@ run (const settings_t &settings, const int min_level, const int max_level, const
   /* The initial forest: uniform, refined at the shell, balanced, partitioned with a ghost layer */
   sc_MPI_Barrier (comm);
   double start = sc_MPI_Wtime ();
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), min_level, 0, comm);
+  t8_forest_t forest = t8_forest_new_uniform (
+    cmesh, settings.scheme == "default" ? t8_scheme_new_default () : t8_scheme_new_standalone (), min_level, 0, comm);
   const double new_time = max_over_procs (sc_MPI_Wtime () - start, comm);
   sc_MPI_Barrier (comm);
   start = sc_MPI_Wtime ();
@@ -348,7 +355,7 @@ run (const settings_t &settings, const int min_level, const int max_level, const
   double partition_ghost_time;
   forest = partition_with_ghost (balanced, settings, comm, &partition_ghost_time);
   const double setup_time = max_over_procs (sc_MPI_Wtime () - start, comm);
-  t8_global_productionf ("amr_cycle %s %s: new %.4f s, setup %.4f s, %lld elements\n", T8_BENCH_VARIANT,
+  t8_global_productionf ("amr_cycle %s %s: new %.4f s, setup %.4f s, %lld elements\n", settings.variant.c_str (),
                          settings.eclass.c_str (), new_time, setup_time,
                          (long long) t8_forest_get_global_num_leaf_elements (forest));
 
@@ -389,14 +396,14 @@ run (const settings_t &settings, const int min_level, const int max_level, const
 
     const cycle_times_t times = { adapt_time,     balance_time, rounds,       partition_ghost_time,
                                   partition_time, ghost_time,   exchange_time };
-    const double cycle_time = report_cycle (settings, T8_BENCH_VARIANT, settings.ghost_version, size, min_level,
-                                            max_level, cycle, t8_forest_get_global_num_leaf_elements (forest),
-                                            sum_over_procs (num_ghosts, comm), times);
+    const double cycle_time
+      = report_cycle (settings, settings.variant.c_str (), settings.ghost_version, size, min_level, max_level, cycle,
+                      t8_forest_get_global_num_leaf_elements (forest), sum_over_procs (num_ghosts, comm), times);
     if (cycle > 0) {
       sum_cycle_time += cycle_time;
     }
   }
-  report_mean (settings, T8_BENCH_VARIANT, size, cycles, sum_cycle_time);
+  report_mean (settings, settings.variant.c_str (), size, cycles, sum_cycle_time);
   t8_forest_unref (&forest);
 }
 
@@ -491,11 +498,13 @@ main (int argc, char **argv)
 
   int help = 0, min_level, max_level, cycles, trees, ghost_version, for_coarsening = 0;
   double radius, velocity;
-  const char *eclass_arg, *ghost_arg, *balance_arg, *algorithm_arg, *csv_name, *backend_arg;
+  const char *eclass_arg, *ghost_arg, *balance_arg, *algorithm_arg, *csv_name, *backend_arg, *scheme_arg;
   sc_options_t *opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &help, "Display a short help message.");
   sc_options_add_string (opt, 'B', "backend", &backend_arg, "t8code",
                          "t8code, or p4est (hexahedra only, the same cycle with p8est).");
+  sc_options_add_string (opt, 's', "scheme", &scheme_arg, "standalone",
+                         "t8code's element scheme: standalone, or default (faces only).");
   sc_options_add_string (opt, 'e', "eclass", &eclass_arg, "hex",
                          "Element class: hex, tet, prism, pyramid or hybrid (comma separated list).");
   sc_options_add_int (opt, 't', "trees", &trees, 1, "For hex: the number of trees in each direction.");
@@ -525,8 +534,16 @@ main (int argc, char **argv)
     sc_MPI_Comm_rank (comm, &rank);
     settings_t settings
       = { "",  trees, parse_type (ghost_arg), parse_type (balance_arg), ghost_version, algorithm_arg, for_coarsening,
-          NULL };
+          NULL, scheme_arg, T8_BENCH_VARIANT };
     const std::string backend = backend_arg;
+    SC_CHECK_ABORT (settings.scheme == "standalone" || settings.scheme == "default",
+                    "Unknown scheme, use standalone or default.");
+    if (settings.scheme == "default") {
+      SC_CHECK_ABORT (backend == "t8code" && settings.ghost_type == T8_GHOST_FACES
+                        && settings.balance_type == T8_GHOST_FACES,
+                      "The default scheme only balances and creates ghosts across faces.");
+      settings.variant += "_default";
+    }
     SC_CHECK_ABORT (backend == "t8code" || backend == "p4est", "Unknown backend, use t8code or p4est.");
 #ifndef T8_FOREST_LOG_PARTITION
     SC_CHECK_ABORT (settings.balance_algorithm == "default",
