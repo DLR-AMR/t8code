@@ -1477,6 +1477,27 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   {
     T8_ASSERT (element_is_valid (elem));
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass] && T8_ELEMENT_DIM[TEclass] > 0) {
+      /* Hypercubes: the child id at each level is the cube id, so the linear id interleaves the bits of the
+       * coordinates above the level (Morton order). */
+      const t8_linearidx_t id = morton_linear_id (el, level);
+      T8_ASSERT (id == element_get_linear_id_by_levels (elem, level));
+      return id;
+    }
+    else {
+      return element_get_linear_id_by_levels (elem, level);
+    }
+  }
+
+  /** The linear id of an element at a level, computed level by level from the child ids of its ancestors.
+   * \param [in] elem     The element whose id we compute.
+   * \param [in] level    The level of the uniform refinement to consider.
+   * eturn              The linear id of the element.
+   */
+  static constexpr t8_linearidx_t
+  element_get_linear_id_by_levels (const t8_element_t *elem, const t8_element_level level) noexcept
+  {
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
     t8_standalone_element<TEclass> ancestor;
 
     /* Determine the starting element for the iterative linear id computation. */
@@ -1516,6 +1537,41 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       }
     }
     T8_ASSERT (id < (size_t) element_count_leaves ((t8_element_t *) &ancestor, level));
+    return id;
+  }
+
+  /** The Morton index of the anchor of a hypercube element at a level: bit b of coordinate i (counted from the
+   * level) goes to bit dim * b + i.
+   * \param [in] el       The element.
+   * \param [in] level    The level of the uniform refinement to consider.
+   * \return              The linear id of the element at \a level.
+   */
+  static constexpr t8_linearidx_t
+  morton_linear_id (const t8_standalone_element<TEclass> *el, const t8_element_level level) noexcept
+  {
+    constexpr int dim = T8_ELEMENT_DIM[TEclass];
+    const int shift = T8_ELEMENT_MAXLEVEL[TEclass] - level;
+    t8_linearidx_t id = 0;
+    for (int i = 0; i < dim; i++) {
+      uint64_t x = (uint64_t) (el->coords[i] >> shift) & ((uint64_t (1) << level) - 1);
+      if constexpr (dim == 3) {
+        /* Spread the bits to every third position */
+        x = (x | (x << 32)) & 0x1f00000000ffffULL;
+        x = (x | (x << 16)) & 0x1f0000ff0000ffULL;
+        x = (x | (x << 8)) & 0x100f00f00f00f00fULL;
+        x = (x | (x << 4)) & 0x10c30c30c30c30c3ULL;
+        x = (x | (x << 2)) & 0x1249249249249249ULL;
+      }
+      else if constexpr (dim == 2) {
+        /* Spread the bits to every second position */
+        x = (x | (x << 16)) & 0x0000ffff0000ffffULL;
+        x = (x | (x << 8)) & 0x00ff00ff00ff00ffULL;
+        x = (x | (x << 4)) & 0x0f0f0f0f0f0f0f0fULL;
+        x = (x | (x << 2)) & 0x3333333333333333ULL;
+        x = (x | (x << 1)) & 0x5555555555555555ULL;
+      }
+      id |= x << i;
+    }
     return id;
   }
 
@@ -2339,6 +2395,34 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     }
   }
 
+  /** Whether an element lies in the interior of the root, so that none of its boundaries lies in a boundary of the
+   * root: its cube has a positive distance from the boundary of the root cube, and from each hyperplane x_i = x_j of an
+   * equation of the root type (x_i >= x_j).
+   * \param [in] el   The element.
+   * \return          True if the element is strictly inside the root (false does not imply the opposite).
+   */
+  static inline bool
+  element_is_strictly_inside_root (const t8_standalone_element<TEclass> *el) noexcept
+  {
+    const t8_element_coord h = element_get_len (el->level);
+    const t8_element_coord root_len = get_root_len ();
+    for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
+      if (el->coords[i] <= 0 || el->coords[i] + h >= root_len) {
+        return false;
+      }
+    }
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
+        const int i = t8_type_edge_equations<TEclass>[e][0];
+        const int j = t8_type_edge_equations<TEclass>[e][1];
+        if (el->coords[i] <= el->coords[j] + h) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   /** Compute the lowest-dimensional boundary of the root that contains a boundary of an element.
    * \param [in] elem       The element.
    * \param [in] bdy_dim    The dimension of the boundary.
@@ -2357,6 +2441,9 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     *root_id = -1;
     if constexpr (T8_ELEMENT_DIM[TEclass] > 0) {
       const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+      if (element_is_strictly_inside_root (el)) {
+        return;
+      }
       t8_element_coord corners[T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[TEclass]][T8_ELEMENT_DIM[TEclass]];
       const int num_corners = boundary_corners (el, bdy_dim, bdy_id, corners);
       for (int rdim = bdy_dim; rdim < T8_ELEMENT_DIM[TEclass]; rdim++) {
