@@ -65,8 +65,18 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 
+#include <t8_forest/t8_forest_types.h>
+#ifdef T8_BENCH_UPSTREAM
+#include <t8_misc/t8_version.h>
+#else
+#include <t8_version.h>
+#endif
+#include <sys/resource.h>
+
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
+#include <ctime>
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -209,14 +219,71 @@ sum_over_procs (long long n, sc_MPI_Comm comm)
   return result;
 }
 
-/* Commit a forest and return the wall time, the maximum over the processes */
+/* The maximum and the mean of a value over the processes */
+struct proc_stats_t
+{
+  double max, mean;
+};
+
+proc_stats_t
+stats_over_procs (const double value, sc_MPI_Comm comm)
+{
+  int size;
+  sc_MPI_Comm_size (comm, &size);
+  proc_stats_t result;
+  double sum;
+  sc_MPI_Allreduce (&value, &result.max, 1, sc_MPI_DOUBLE, sc_MPI_MAX, comm);
+  sc_MPI_Allreduce (&value, &sum, 1, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
+  result.mean = sum / size;
+  return result;
+}
+
+/* The version for the CSV: t8code's version and, if the build passes them (build.sh of the cluster scripts), the
+ * commit of the t8code tree that was built and of the benchmark source, e.g. 4.0.0/lib=0b227552d/bench=00a05eee7
+ * (suffix _dirty for uncommitted changes) */
+#define T8_BENCH_STRINGIFY2(x) #x
+#define T8_BENCH_STRINGIFY(x) T8_BENCH_STRINGIFY2 (x)
+std::string
+version_string ()
+{
+  std::string version = t8_get_version_number ();
+#ifdef T8_BENCH_LIB_COMMIT
+  version += "/lib=" T8_BENCH_STRINGIFY (T8_BENCH_LIB_COMMIT);
+#endif
+#ifdef T8_BENCH_SOURCE_COMMIT
+  version += "/bench=" T8_BENCH_STRINGIFY (T8_BENCH_SOURCE_COMMIT);
+#endif
+  return version;
+}
+
+/* The peak resident set size of this process in MB */
 double
+peak_rss_mb ()
+{
+  struct rusage usage;
+  getrusage (RUSAGE_SELF, &usage);
+  return usage.ru_maxrss / 1024.0; /* kilobytes on Linux */
+}
+
+/* The time a commit spent on the partition data of all processes (the offsets of the elements, of the first
+ * descendants and of the trees), as profiled by t8code; zero if they were not computed (log variant) */
+double
+offsets_runtime (const t8_forest_t forest)
+{
+  const t8_profile_t *profile = forest->profile;
+  return profile == NULL ? 0
+                         : profile->cmesh_offsets_runtime + profile->forest_offsets_runtime
+                             + profile->first_descendant_runtime;
+}
+
+/* Commit a forest and return the wall time, the maximum and the mean over the processes */
+proc_stats_t
 timed_commit (t8_forest_t forest, sc_MPI_Comm comm)
 {
   sc_MPI_Barrier (comm);
   const double start = sc_MPI_Wtime ();
   t8_forest_commit (forest);
-  return max_over_procs (sc_MPI_Wtime () - start, comm);
+  return stats_over_procs (sc_MPI_Wtime () - start, comm);
 }
 
 const char *type_names[4] = { "none", "faces", "edges", "vertices" };
@@ -247,6 +314,7 @@ struct settings_t
   FILE *csv;
   std::string scheme;  /* standalone or default */
   std::string variant; /* T8_BENCH_VARIANT, with the suffix _default for the default scheme */
+  std::string run_info = ""; /* the last CSV columns: job_id,nodes,t8code_version,date */
 };
 
 /* The hybrid cube with all four element classes, from t8code's hybrid cube (committed and not partitioned: 6
@@ -379,13 +447,35 @@ set_balance (t8_forest_t forest, t8_forest_t from, const settings_t &settings)
 #endif
 }
 
-/* The times of the steps of a cycle, maxima over the processes */
+/* The times of the steps of a cycle, maxima over the processes, and further measurements (NAN: not available) */
 struct cycle_times_t
 {
   double adapt, balance;
   int balance_rounds;
   double partition_ghost, partition, ghost, exchange;
+  /* the times of the initial forest, the same in each cycle */
+  double new_time, setup_time;
+  /* means over the processes of the step times */
+  double adapt_mean, balance_mean, partition_ghost_mean, exchange_mean;
+  /* load balance: the maximum over the processes of the local elements and ghosts */
+  double elements_max, ghosts_max;
+  /* the partition data of all processes computed in the commits of the cycle (maximum over the processes) */
+  double offsets_time;
+  /* communication of partition and ghost: maxima (and a mean) over the processes */
+  double partition_procs_max, partition_elements_shipped_max, partition_bytes_max;
+  double ghost_remotes_max, ghost_remotes_mean, ghosts_shipped_max, ghost_waittime_max;
+  /* the peak resident set size so far */
+  double rss_max_mb, rss_mean_mb;
 };
+
+/* The columns of the CSV file */
+const char *csv_header
+  = "variant,eclass,trees,procs,min_level,max_level,ghost_type,ghost_version,balance_type,balance_algorithm,"
+    "partition_for_coarsening,cycle,elements,ghosts,adapt_time,balance_time,balance_rounds,partition_ghost_time,"
+    "partition_time,ghost_time,exchange_time,cycle_time,new_time,setup_time,adapt_mean,balance_mean,"
+    "partition_ghost_mean,exchange_mean,cycle_mean,elements_max,ghosts_max,offsets_time,partition_procs_max,"
+    "partition_elements_shipped_max,partition_bytes_max,ghost_remotes_max,ghost_remotes_mean,ghosts_shipped_max,"
+    "ghost_waittime_max,rss_max_mb,rss_mean_mb,job_id,nodes,t8code_version,date\n";
 
 /* Write the CSV line and the summary of a cycle, return the time of the cycle */
 double
@@ -394,12 +484,19 @@ report_cycle (const settings_t &settings, const char *variant, const int ghost_v
               const long long ghosts, const cycle_times_t &t)
 {
   const double cycle_time = t.adapt + t.balance + t.partition_ghost + t.exchange;
+  const double cycle_mean = t.adapt_mean + t.balance_mean + t.partition_ghost_mean + t.exchange_mean;
   if (settings.csv != NULL) {
-    fprintf (settings.csv, "%s,%s,%d,%d,%d,%d,%s,%d,%s,%s,%d,%d,%lld,%lld,%g,%g,%d,%g,%g,%g,%g,%g\n", variant,
+    fprintf (settings.csv, "%s,%s,%d,%d,%d,%d,%s,%d,%s,%s,%d,%d,%lld,%lld,%g,%g,%d,%g,%g,%g,%g,%g", variant,
              settings.eclass.c_str (), settings.trees, procs, min_level, max_level, type_names[settings.ghost_type],
              ghost_version, type_names[settings.balance_type], settings.balance_algorithm.c_str (),
              settings.for_coarsening, cycle, elements, ghosts, t.adapt, t.balance, t.balance_rounds, t.partition_ghost,
              t.partition, t.ghost, t.exchange, cycle_time);
+    /* counts with %.0f: exact up to 2^53, and nan if not available */
+    fprintf (settings.csv, ",%g,%g,%g,%g,%g,%g,%g,%.0f,%.0f,%g,%.0f,%.0f,%.0f,%.0f,%g,%.0f,%g,%.1f,%.1f,%s\n",
+             t.new_time, t.setup_time, t.adapt_mean, t.balance_mean, t.partition_ghost_mean, t.exchange_mean,
+             cycle_mean, t.elements_max, t.ghosts_max, t.offsets_time, t.partition_procs_max,
+             t.partition_elements_shipped_max, t.partition_bytes_max, t.ghost_remotes_max, t.ghost_remotes_mean,
+             t.ghosts_shipped_max, t.ghost_waittime_max, t.rss_max_mb, t.rss_mean_mb, settings.run_info.c_str ());
     fflush (settings.csv);
   }
   t8_global_productionf ("amr_cycle %s cycle %d: %lld elements %lld ghosts, adapt %.4f balance %.4f (%d rounds) "
@@ -421,7 +518,7 @@ report_mean (const settings_t &settings, const char *variant, const int procs, c
 
 /* Partition a forest with a ghost layer as in the settings */
 t8_forest_t
-partition_with_ghost (t8_forest_t from, const settings_t &settings, sc_MPI_Comm comm, double *time)
+partition_with_ghost (t8_forest_t from, const settings_t &settings, sc_MPI_Comm comm, proc_stats_t *time)
 {
   t8_forest_t forest;
   t8_forest_init (&forest);
@@ -465,7 +562,7 @@ run (const settings_t &settings, const int min_level, const int max_level, const
   t8_forest_init (&balanced);
   set_balance (balanced, refined, settings);
   t8_forest_commit (balanced);
-  double partition_ghost_time;
+  proc_stats_t partition_ghost_time;
   forest = partition_with_ghost (balanced, settings, comm, &partition_ghost_time);
   const double setup_time = max_over_procs (sc_MPI_Wtime () - start, comm);
   t8_global_productionf ("amr_cycle %s %s: new %.4f s, setup %.4f s, %lld elements\n", settings.variant.c_str (),
@@ -477,25 +574,30 @@ run (const settings_t &settings, const int min_level, const int max_level, const
     for (int i = 0; i < 3; ++i) {
       shell.center[i] += velocity;
     }
-    /* Adapt by one level */
+    /* Adapt by one level. Each commit is profiled, and its profile read before the next commit consumes it. */
     t8_forest_t adapted;
     t8_forest_init (&adapted);
     t8_forest_set_user_data (adapted, &shell);
     t8_forest_set_adapt (adapted, forest, adapt_shell, 0);
-    const double adapt_time = timed_commit (adapted, comm);
+    t8_forest_set_profiling (adapted, 1);
+    const proc_stats_t adapt_time = timed_commit (adapted, comm);
+    double offsets_time = offsets_runtime (adapted);
     /* Balance without repartitioning */
     t8_forest_init (&balanced);
     set_balance (balanced, adapted, settings);
     t8_forest_set_profiling (balanced, 1);
-    const double balance_time = timed_commit (balanced, comm);
+    const proc_stats_t balance_time = timed_commit (balanced, comm);
+    offsets_time += offsets_runtime (balanced);
     int rounds = 0;
     t8_forest_profile_get_balance_time (balanced, &rounds);
     /* Partition with a ghost layer */
     forest = partition_with_ghost (balanced, settings, comm, &partition_ghost_time);
+    offsets_time += offsets_runtime (forest);
     int procs_sent;
     const double partition_time = max_over_procs (t8_forest_profile_get_partition_time (forest, &procs_sent), comm);
     t8_locidx_t ghosts_sent;
     const double ghost_time = max_over_procs (t8_forest_profile_get_ghost_time (forest, &ghosts_sent), comm);
+    const t8_profile_t *profile = forest->profile;
     /* Exchange one double per element with the ghosts */
     const t8_locidx_t num_local = t8_forest_get_local_num_leaf_elements (forest);
     const t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
@@ -504,11 +606,42 @@ run (const settings_t &settings, const int min_level, const int max_level, const
     sc_MPI_Barrier (comm);
     start = sc_MPI_Wtime ();
     t8_forest_ghost_exchange_data (forest, data);
-    const double exchange_time = max_over_procs (sc_MPI_Wtime () - start, comm);
+    const proc_stats_t exchange_time = stats_over_procs (sc_MPI_Wtime () - start, comm);
     sc_array_destroy (data);
 
-    const cycle_times_t times = { adapt_time,     balance_time, rounds,       partition_ghost_time,
-                                  partition_time, ghost_time,   exchange_time };
+    cycle_times_t times = {};
+    times.adapt = adapt_time.max;
+    times.balance = balance_time.max;
+    times.balance_rounds = rounds;
+    times.partition_ghost = partition_ghost_time.max;
+    times.partition = partition_time;
+    times.ghost = ghost_time;
+    times.exchange = exchange_time.max;
+    times.new_time = new_time;
+    times.setup_time = setup_time;
+    times.adapt_mean = adapt_time.mean;
+    times.balance_mean = balance_time.mean;
+    times.partition_ghost_mean = partition_ghost_time.mean;
+    times.exchange_mean = exchange_time.mean;
+    times.elements_max = max_over_procs (num_local, comm);
+    times.ghosts_max = max_over_procs (num_ghosts, comm);
+    times.offsets_time = max_over_procs (offsets_time, comm);
+    times.partition_procs_max = max_over_procs (procs_sent, comm);
+    times.partition_elements_shipped_max = max_over_procs (profile->partition_elements_shipped, comm);
+    times.partition_bytes_max = max_over_procs (profile->partition_bytes_sent, comm);
+    /* the ranks this rank sends ghosts to, from the ghost layer itself: the profile of the offsets variant does not
+     * record them for every ghost algorithm */
+    const double num_remotes
+      = forest->ghosts != NULL && forest->ghosts->remote_processes != NULL ? forest->ghosts->remote_processes->elem_count
+                                                                           : 0;
+    const proc_stats_t remotes = stats_over_procs (num_remotes, comm);
+    times.ghost_remotes_max = remotes.max;
+    times.ghost_remotes_mean = remotes.mean;
+    times.ghosts_shipped_max = max_over_procs (profile->ghosts_shipped, comm);
+    times.ghost_waittime_max = max_over_procs (profile->ghost_waittime, comm);
+    const proc_stats_t rss = stats_over_procs (peak_rss_mb (), comm);
+    times.rss_max_mb = rss.max;
+    times.rss_mean_mb = rss.mean;
     const double cycle_time
       = report_cycle (settings, settings.variant.c_str (), settings.ghost_version, size, min_level, max_level, cycle,
                       t8_forest_get_global_num_leaf_elements (forest), sum_over_procs (num_ghosts, comm), times);
@@ -556,26 +689,48 @@ run_p4est (const settings_t &settings, const int min_level, const int max_level,
     }
     shell.cycle = cycle;
     cycle_times_t times = {};
+    times.new_time = new_time;
+    times.setup_time = setup_time;
     /* Adapt by one level, including the destruction of the old ghost layer as in t8code's commit */
     sc_MPI_Barrier (comm);
     start = sc_MPI_Wtime ();
     p8est_ghost_destroy (ghost);
     p8est_refine (p8est, 0, refine_shell, init_quadrant);
     p8est_coarsen (p8est, 0, coarsen_shell, init_quadrant);
-    times.adapt = max_over_procs (sc_MPI_Wtime () - start, comm);
+    const proc_stats_t adapt_time = stats_over_procs (sc_MPI_Wtime () - start, comm);
+    times.adapt = adapt_time.max;
+    times.adapt_mean = adapt_time.mean;
     sc_MPI_Barrier (comm);
     start = sc_MPI_Wtime ();
     p8est_balance (p8est, p8est_types[settings.balance_type], init_quadrant);
-    times.balance = max_over_procs (sc_MPI_Wtime () - start, comm);
+    const proc_stats_t balance_time = stats_over_procs (sc_MPI_Wtime () - start, comm);
+    times.balance = balance_time.max;
+    times.balance_mean = balance_time.mean;
     sc_MPI_Barrier (comm);
     start = sc_MPI_Wtime ();
     p8est_partition (p8est, settings.for_coarsening, NULL);
-    times.partition = max_over_procs (sc_MPI_Wtime () - start, comm);
+    const proc_stats_t partition_time = stats_over_procs (sc_MPI_Wtime () - start, comm);
+    times.partition = partition_time.max;
     sc_MPI_Barrier (comm);
     start = sc_MPI_Wtime ();
     ghost = p8est_ghost_new (p8est, p8est_types[settings.ghost_type]);
-    times.ghost = max_over_procs (sc_MPI_Wtime () - start, comm);
+    const proc_stats_t ghost_time = stats_over_procs (sc_MPI_Wtime () - start, comm);
+    times.ghost = ghost_time.max;
     times.partition_ghost = times.partition + times.ghost;
+    times.partition_ghost_mean = partition_time.mean + ghost_time.mean;
+    /* p4est keeps its partition as the offsets of all processes (global_first_quadrant), computed in partition */
+    times.offsets_time = NAN;
+    times.partition_procs_max = times.partition_elements_shipped_max = times.partition_bytes_max = NAN;
+    times.ghosts_shipped_max = times.ghost_waittime_max = NAN;
+    int remotes = 0;
+    for (int q = 0; q < p8est->mpisize; ++q) {
+      remotes += ghost->proc_offsets[q + 1] > ghost->proc_offsets[q];
+    }
+    const proc_stats_t remote_stats = stats_over_procs (remotes, comm);
+    times.ghost_remotes_max = remote_stats.max;
+    times.ghost_remotes_mean = remote_stats.mean;
+    times.elements_max = max_over_procs (p8est->local_num_quadrants, comm);
+    times.ghosts_max = max_over_procs (ghost->ghosts.elem_count, comm);
     /* Exchange one double per element with the ghosts */
     std::vector<double> values (p8est->local_num_quadrants, 1.0), ghost_values (ghost->ghosts.elem_count);
     sc_MPI_Barrier (comm);
@@ -585,7 +740,12 @@ run_p4est (const settings_t &settings, const int min_level, const int max_level,
       mirror_data[imirror] = &values[p8est_quadrant_array_index (&ghost->mirrors, imirror)->p.piggy3.local_num];
     }
     p8est_ghost_exchange_custom (p8est, ghost, sizeof (double), mirror_data.data (), ghost_values.data ());
-    times.exchange = max_over_procs (sc_MPI_Wtime () - start, comm);
+    const proc_stats_t exchange_time = stats_over_procs (sc_MPI_Wtime () - start, comm);
+    times.exchange = exchange_time.max;
+    times.exchange_mean = exchange_time.mean;
+    const proc_stats_t rss = stats_over_procs (peak_rss_mb (), comm);
+    times.rss_max_mb = rss.max;
+    times.rss_mean_mb = rss.mean;
 
     const double cycle_time
       = report_cycle (settings, "p4est", 0, size, min_level, max_level, cycle, p8est->global_num_quadrants,
@@ -674,11 +834,18 @@ main (int argc, char **argv)
       SC_CHECK_ABORT (settings.csv != NULL, "Cannot open the CSV file.");
       fseek (settings.csv, 0, SEEK_END);
       if (ftell (settings.csv) == 0) {
-        fprintf (settings.csv, "variant,eclass,trees,procs,min_level,max_level,ghost_type,ghost_version,balance_type,"
-                               "balance_algorithm,partition_for_coarsening,cycle,elements,ghosts,adapt_time,"
-                               "balance_time,balance_rounds,partition_ghost_time,partition_time,ghost_time,"
-                               "exchange_time,cycle_time\n");
+        fputs (csv_header, settings.csv);
       }
+    }
+    /* The run: Slurm job and nodes (commas would split the CSV column), t8code version (git describe), date */
+    {
+      const char *job = getenv ("SLURM_JOB_ID");
+      std::string nodes = getenv ("SLURM_JOB_NODELIST") != NULL ? getenv ("SLURM_JOB_NODELIST") : "";
+      std::replace (nodes.begin (), nodes.end (), ',', ';');
+      char date[32];
+      const std::time_t now = std::time (nullptr);
+      std::strftime (date, sizeof (date), "%Y-%m-%dT%H:%M:%S", std::localtime (&now));
+      settings.run_info = std::string (job != NULL ? job : "") + "," + nodes + "," + version_string () + "," + date;
     }
     std::string eclasses = eclass_arg;
     size_t start = 0;
