@@ -42,8 +42,9 @@
  * by p8est_balance, p8est_partition, p8est_ghost_new and p8est_ghost_exchange_custom, each timed like a commit. Its
  * ghost version and balance rounds are 0. With -s default, t8code uses its default scheme instead of the standalone
  * one (faces only, since the default scheme has no boundaries of lower dimension); the variant gets the suffix
- * "_default", e.g. offsets_default, t8code's existing face algorithms on its existing elements. One CSV line per
- * cycle (appended to the file given with -o):
+ * "_default", e.g. offsets_default, t8code's existing face algorithms on its existing elements. Built against
+ * upstream t8code with -DT8_BENCH_UPSTREAM, the variant is upstream (faces only). One CSV line per cycle (appended
+ * to the file given with -o):
  * variant,eclass,trees,procs,min_level,max_level,ghost_type,ghost_version,balance_type,balance_algorithm,
  * partition_for_coarsening,cycle,elements,ghosts,adapt_time,balance_time,balance_rounds,partition_ghost_time,
  * partition_time,ghost_time,exchange_time,cycle_time
@@ -67,7 +68,11 @@
 #include <string>
 #include <vector>
 
-#ifdef T8_FOREST_LOG_PARTITION
+#if defined(T8_BENCH_UPSTREAM)
+/* Upstream t8code (built with -DT8_BENCH_UPSTREAM): ghost layer and balance across faces only */
+#define T8_BENCH_VARIANT "upstream"
+#define T8_BENCH_GHOST_VERSION 3
+#elif defined(T8_FOREST_LOG_PARTITION)
 #define T8_BENCH_VARIANT "log"
 #define T8_BENCH_GHOST_VERSION 4
 #else
@@ -240,21 +245,41 @@ t8_cmesh_t
 new_cmesh (const settings_t &settings, sc_MPI_Comm comm, double *tree_size)
 {
   *tree_size = 1;
+  const double boundary[24] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
+  const t8_eclass_t eclass = settings.eclass == "hex"     ? T8_ECLASS_HEX
+                             : settings.eclass == "tet"   ? T8_ECLASS_TET
+                             : settings.eclass == "prism" ? T8_ECLASS_PRISM
+                                                          : T8_ECLASS_PYRAMID;
+#ifdef T8_BENCH_UPSTREAM
+  /* Upstream fills an initialized cmesh in place */
+  t8_cmesh_t cmesh;
+  if (settings.eclass == "hybrid") {
+    *tree_size = 0.5;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube_hybrid (cmesh, comm, 0);
+  }
+  else if (settings.eclass == "hex" && settings.trees > 1) {
+    *tree_size = 1.0 / settings.trees;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube_pad (cmesh, T8_ECLASS_HEX, comm, boundary, settings.trees, settings.trees, settings.trees,
+                                0);
+  }
+  else {
+    t8_cmesh_new_hypercube (&cmesh, eclass, comm, 0, 0, 0);
+  }
+  return cmesh;
+#else
   if (settings.eclass == "hybrid") {
     *tree_size = 0.5;
     return t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   }
   if (settings.eclass == "hex" && settings.trees > 1) {
-    const double boundary[24] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
     *tree_size = 1.0 / settings.trees;
     return t8_cmesh_new_hypercube_pad (T8_ECLASS_HEX, comm, boundary, settings.trees, settings.trees, settings.trees,
                                        0);
   }
-  const t8_eclass_t eclass = settings.eclass == "hex"     ? T8_ECLASS_HEX
-                             : settings.eclass == "tet"   ? T8_ECLASS_TET
-                             : settings.eclass == "prism" ? T8_ECLASS_PRISM
-                                                          : T8_ECLASS_PYRAMID;
   return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
+#endif
 }
 
 /* Set the balance of a forest as in the settings */
@@ -262,7 +287,9 @@ void
 set_balance (t8_forest_t forest, t8_forest_t from, const settings_t &settings)
 {
   t8_forest_set_balance (forest, from, 1);
+#ifndef T8_BENCH_UPSTREAM
   t8_forest_set_balance_type (forest, settings.balance_type);
+#endif
 #ifdef T8_FOREST_LOG_PARTITION
   t8_forest_set_balance_algorithm (forest, settings.balance_algorithm == "ripple"    ? T8_BALANCE_RIPPLE
                                            : settings.balance_algorithm == "onepass" ? T8_BALANCE_ONE_PASS
@@ -317,7 +344,11 @@ partition_with_ghost (t8_forest_t from, const settings_t &settings, sc_MPI_Comm 
   t8_forest_t forest;
   t8_forest_init (&forest);
   t8_forest_set_partition (forest, from, settings.for_coarsening);
+#ifdef T8_BENCH_UPSTREAM
+  t8_forest_set_ghost (forest, 1, settings.ghost_type);
+#else
   t8_forest_set_ghost_ext (forest, 1, settings.ghost_type, settings.ghost_version);
+#endif
   t8_forest_set_profiling (forest, 1);
   *time = timed_commit (forest, comm);
   return forest;
@@ -538,6 +569,12 @@ main (int argc, char **argv)
     const std::string backend = backend_arg;
     SC_CHECK_ABORT (settings.scheme == "standalone" || settings.scheme == "default",
                     "Unknown scheme, use standalone or default.");
+#ifdef T8_BENCH_UPSTREAM
+    SC_CHECK_ABORT (backend == "p4est"
+                      || (settings.ghost_type == T8_GHOST_FACES && settings.balance_type == T8_GHOST_FACES
+                          && settings.ghost_version == 3),
+                    "Upstream t8code only balances and creates ghosts across faces (ghost version 3).");
+#endif
     if (settings.scheme == "default") {
       SC_CHECK_ABORT (backend == "t8code" && settings.ghost_type == T8_GHOST_FACES
                         && settings.balance_type == T8_GHOST_FACES,
