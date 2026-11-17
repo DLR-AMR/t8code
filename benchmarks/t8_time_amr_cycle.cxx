@@ -150,6 +150,19 @@ adapt_shell (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree
   return 0;
 }
 
+/* The setup: refine the elements touching the shell, never coarsen (as the recursive adaptation of a uniform forest,
+   which passes only the children of refined elements to the callback again, one by one) */
+int
+adapt_shell_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                    t8_locidx_t, const t8_scheme_c *scheme, const int, const int, t8_element_t *elements[])
+{
+  const shell_t &shell = *(const shell_t *) t8_forest_get_user_data (forest);
+  const int level = scheme->element_get_level (tree_class, elements[0]);
+  double x[3];
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], x);
+  return touches_shell (shell, x, level) && level < shell.max_level ? 1 : 0;
+}
+
 /* p4est: the centroid of a quadrant in the unit cube */
 void
 quadrant_centroid (p8est_t *p8est, const p4est_topidx_t which_tree, const p8est_quadrant_t *q, double x[3])
@@ -553,11 +566,21 @@ run (const settings_t &settings, const int min_level, const int max_level, const
   const double new_time = max_over_procs (sc_MPI_Wtime () - start, comm);
   sc_MPI_Barrier (comm);
   start = sc_MPI_Wtime ();
-  t8_forest_t refined;
-  t8_forest_init (&refined);
-  t8_forest_set_user_data (refined, &shell);
-  t8_forest_set_adapt (refined, forest, adapt_shell, 1);
-  t8_forest_commit (refined);
+  /* Refine one level at a time and repartition after each level: refined recursively and balanced before
+     partitioning, all elements at the shell (and the balance work) stay on the few processes that own it, and the
+     setup grows with each level and process count (up to 13 cycles at 128 processes in the calibration of
+     2026-11-17). The forest is the same. */
+  t8_forest_t refined = forest;
+  for (int level = min_level; level < max_level; ++level) {
+    t8_forest_t adapted;
+    t8_forest_init (&adapted);
+    t8_forest_set_user_data (adapted, &shell);
+    t8_forest_set_adapt (adapted, refined, adapt_shell_refine, 0);
+    t8_forest_commit (adapted);
+    t8_forest_init (&refined);
+    t8_forest_set_partition (refined, adapted, 0);
+    t8_forest_commit (refined);
+  }
   t8_forest_t balanced;
   t8_forest_init (&balanced);
   set_balance (balanced, refined, settings);
