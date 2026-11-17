@@ -86,6 +86,12 @@
 namespace
 {
 
+/* The initial center of the shell, the same for all meshes: off the middle of the cube and without symmetry, so that
+ * the shell is not aligned with the trees, but with radius 0.25 it passes through all 8 octants of side 0.5 (the
+ * farthest one, [0.5,1]^3, is at distance 0.059), so it refines all element classes of the hybrid cubes and all
+ * trees of the 2x2x2 brick. It stays inside the unit cube (c +- 0.25 in [0.2, 0.74]). */
+constexpr double SHELL_CENTER[3] = { 0.45, 0.47, 0.49 };
+
 /* The moving shell and the levels, the user data of the adaptation */
 struct shell_t
 {
@@ -436,7 +442,7 @@ run (const settings_t &settings, const int min_level, const int max_level, const
 {
   int size;
   sc_MPI_Comm_size (comm, &size);
-  shell_t shell = { { 0.3, 0.3, 0.3 }, radius, 1, min_level, max_level, 0 };
+  shell_t shell = { { SHELL_CENTER[0], SHELL_CENTER[1], SHELL_CENTER[2] }, radius, 1, min_level, max_level, 0 };
   t8_cmesh_t cmesh = new_cmesh (settings, comm, &shell.tree_size);
   if (velocity <= 0) {
     velocity = shell.tree_size * std::ldexp (1.0, -max_level);
@@ -521,7 +527,8 @@ run_p4est (const settings_t &settings, const int min_level, const int max_level,
 {
   int size;
   sc_MPI_Comm_size (comm, &size);
-  shell_t shell = { { 0.3, 0.3, 0.3 }, radius, 1.0 / settings.trees, min_level, max_level, -1 };
+  shell_t shell
+    = { { SHELL_CENTER[0], SHELL_CENTER[1], SHELL_CENTER[2] }, radius, 1.0 / settings.trees, min_level, max_level, -1 };
   if (velocity <= 0) {
     velocity = shell.tree_size * std::ldexp (1.0, -max_level);
   }
