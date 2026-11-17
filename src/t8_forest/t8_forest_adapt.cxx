@@ -29,6 +29,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_data/t8_containers.h>
+#include <vector>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -378,6 +379,87 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_ec
 }
 
 /* TODO: optimize this when we own forest_from */
+/** Refine an element recursively, depth first, as long as the adapt callback returns 1 (refine-only adaptation),
+ * and append the resulting leaves to \a telements. The children of each depth are computed into \a buffers.
+ * \param [in] forest       The forest that is adapted.
+ * \param [in] ltree_id     The local tree of the element.
+ * \param [in] eclass       The eclass of the tree.
+ * \param [in] lelement_id  The index of the element of the source forest that is refined.
+ * \param [in] scheme       The scheme of the forest.
+ * \param [in] element      The element to refine.
+ * \param [in] depth        The recursion depth, the index of the buffers of the children.
+ * \param [in,out] buffers  Allocated elements for the children of each depth, \a max_children per depth.
+ * \param [in] max_children The maximum number of children of the eclass.
+ * \param [in,out] telements The new leaf elements of the tree.
+ */
+static void
+t8_forest_adapt_refine_only_recursive (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_eclass_t eclass,
+                                       const t8_locidx_t lelement_id, const t8_scheme *scheme,
+                                       const t8_element_t *element, const int depth,
+                                       std::vector<t8_element_t *> &buffers, const int max_children,
+                                       t8_element_array_t *telements)
+{
+  T8_ASSERT ((size_t) (depth + 1) * max_children <= buffers.size ());
+  t8_element_t **children = buffers.data () + (size_t) depth * max_children;
+  const int num_children = scheme->element_get_num_children (eclass, element);
+  scheme->element_get_children (eclass, element, num_children, children);
+  for (int ichild = 0; ichild < num_children; ichild++) {
+    const int refine
+      = forest->set_adapt_fn (forest, forest->set_from, ltree_id, eclass, lelement_id, scheme, 0, 1, children + ichild);
+    T8_ASSERT (refine == 0 || refine == 1);
+    if (refine == 1 && scheme->element_get_level (eclass, children[ichild]) < forest->maxlevel
+        && scheme->element_is_refinable (eclass, children[ichild])) {
+      t8_forest_adapt_refine_only_recursive (forest, ltree_id, eclass, lelement_id, scheme, children[ichild],
+                                             depth + 1, buffers, max_children, telements);
+    }
+    else {
+      scheme->element_copy (eclass, children[ichild], t8_element_array_push (telements));
+    }
+  }
+}
+
+/** Adapt one tree with a callback that only refines (\ref t8_forest_struct::set_adapt_refine_only): no families are
+ * formed and refined elements are refined recursively.
+ * \param [in] forest          The forest that is adapted.
+ * \param [in] ltree_id        The local tree.
+ * \param [in] eclass          The eclass of the tree.
+ * \param [in] scheme          The scheme of the forest.
+ * \param [in] telements_from  The leaves of the tree in the source forest.
+ * \param [in,out] telements   The new leaves of the tree.
+ * \return                     The number of new leaves.
+ */
+static t8_locidx_t
+t8_forest_adapt_tree_refine_only (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_eclass_t eclass,
+                                  const t8_scheme *scheme, t8_element_array_t *telements_from,
+                                  t8_element_array_t *telements)
+{
+  const t8_locidx_t num_el_from = (t8_locidx_t) t8_element_array_get_count (telements_from);
+  const int max_children = scheme->get_max_num_children (eclass);
+  /* The children of each recursion depth, allocated on the first refinement (the depth is below the maxlevel) */
+  std::vector<t8_element_t *> buffers;
+  for (t8_locidx_t ielement = 0; ielement < num_el_from; ielement++) {
+    t8_element_t *element = t8_element_array_index_locidx_mutable (telements_from, ielement);
+    const int refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id, eclass, ielement, scheme, 0, 1, &element);
+    T8_ASSERT (refine == 0 || refine == 1);
+    if (refine == 1 && scheme->element_get_level (eclass, element) < forest->maxlevel
+        && scheme->element_is_refinable (eclass, element)) {
+      if (buffers.empty ()) {
+        buffers.resize ((size_t) (forest->maxlevel + 1) * max_children);
+        scheme->element_new (eclass, (int) buffers.size (), buffers.data ());
+      }
+      t8_forest_adapt_refine_only_recursive (forest, ltree_id, eclass, ielement, scheme, element, 0, buffers,
+                                             max_children, telements);
+    }
+    else {
+      scheme->element_copy (eclass, element, t8_element_array_push (telements));
+    }
+  }
+  if (!buffers.empty ()) {
+    scheme->element_destroy (eclass, (int) buffers.size (), buffers.data ());
+  }
+  return (t8_locidx_t) t8_element_array_get_count (telements);
+}
+
 void
 t8_forest_adapt (t8_forest_t forest)
 {
@@ -448,7 +530,17 @@ t8_forest_adapt (t8_forest_t forest)
     T8_ASSERT (num_el_from == t8_forest_get_tree_num_leaf_elements (forest_from, ltree_id));
     /* Continue only if tree_from is not empty.
      * Otherwise there is nothing to adapt, since elements can't be inserted. */
-    if (num_el_from > 0) {
+    if (num_el_from > 0 && forest->set_adapt_refine_only) {
+      /* The callback only refines: no families, recursive refinement into reused buffers */
+      T8_ASSERT (forest->set_adapt_recursive);
+      el_inserted
+        = t8_forest_adapt_tree_refine_only (forest, ltree_id, tree->eclass, t8_forest_get_scheme (forest_from),
+                                            telements_from, telements);
+      tree->elements_offset = el_offset;
+      el_offset += el_inserted;
+      forest->local_num_leaf_elements += el_inserted;
+    }
+    else if (num_el_from > 0) {
       const t8_element_t *first_element_from = t8_element_array_index_locidx (telements_from, 0);
       /* Get the element scheme for this tree */
       const t8_scheme *scheme = t8_forest_get_scheme (forest_from);

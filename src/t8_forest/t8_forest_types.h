@@ -99,6 +99,9 @@ typedef struct t8_forest
                                              is set to T8_FOREST_FROM_ADAPT. */
   int set_adapt_recursive;        /**< Flag to decide whether coarsen and refine
                                                 are carried out recursive */
+  int set_adapt_refine_only;      /**< Internal (balance): the adapt callback only refines (1) or keeps (0) single
+                                             elements, so adapt forms no families and refines recursively into
+                                             reused buffers. Default 0. */
   int set_balance;                /**< Flag to decide whether to forest will be balance in \ref t8_forest_commit.
                                              See \ref t8_forest_set_balance.
                                              If 0, no balance. If 1 balance with repartitioning, if 2 balance without
