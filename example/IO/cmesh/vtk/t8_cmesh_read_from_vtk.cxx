@@ -90,7 +90,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm, const int va
       vtk_data[ivalues].data = cell_values[ivalues];
       /*TODO: Arbitrary type of data */
       vtk_data[ivalues].type = T8_VTK_SCALAR;
-      snprintf (vtk_data[ivalues].description, BUFSIZ, "cell_data_%i", ivalues);
+      snprintf (vtk_data[ivalues].description, T8_VTK_MAX_STRING_LENGTH, "cell_data_%i", ivalues);
     }
 
     for (t8_locidx_t itree = 0; itree < num_trees; itree++) {

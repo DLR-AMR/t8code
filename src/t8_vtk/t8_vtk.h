@@ -47,6 +47,8 @@
 #endif
 
 #define T8_VTK_FORMAT_STRING "ascii" /**< Format string for vtk */
+#define T8_VTK_MAX_STRING_LENGTH \
+  1024 /**< Maximal string length for the description in t8_vtk_data_field_t. Arbitrary, but fixed. */
 
 #if T8_ENABLE_VTK
 #define t8_vtk_locidx_array_type_t vtkTypeInt32Array /**< VTK array type for local indices */
@@ -65,8 +67,8 @@ typedef enum {
  */
 typedef struct
 {
-  t8_vtk_data_type_t type;  /**< Describes of which type the data array is */
-  char description[BUFSIZ]; /**< String that describes the data. */
+  t8_vtk_data_type_t type;                    /**< Describes of which type the data array is */
+  char description[T8_VTK_MAX_STRING_LENGTH]; /**< String that describes the data. */
   double *data;
   /**< An array of length n*num_local_elements doubles with
                       n = 1 if type = T8_VTK_SCALAR, n = 3 if type = T8_VTK_VECTOR */

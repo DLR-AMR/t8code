@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/DLR-AMR/t8code/wiki/Feature---Curved-meshes
+/** \file t8_features_curved_meshes.cxx
+ * See also: https://github.com/DLR-AMR/t8code/wiki/Feature---Curved-meshes
  *
  * This is a feature tutorial about curved meshes.
  * In the following we will generate an input mesh and input geometry in Gmsh.
@@ -35,14 +36,13 @@
  *   - Refine the mesh at different geometries.
  *  */
 
-#include <t8.h>                                        /* General t8code header, always include this. */
-#include <sc_options.h>                                /* CLI parser */
-#include <t8_cmesh/t8_cmesh.h>                         /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h> /* For the attribute keys.  */
-#include <t8_forest/t8_forest_general.h>               /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>                    /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>           /* geometrical information of the forest */
-#include <t8_schemes/t8_default/t8_default.hxx>        /* default refinement scheme. */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <sc_options.h>                         /* CLI parser */
+#include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>             /* save forest */
+#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
+#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* Linear geometry calculation of trees */
 #if T8_ENABLE_OCC
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx> /* Curved geometry calculation of trees */
@@ -51,14 +51,14 @@
 #include <string>                                      /* std::string */
 #include <array>                                       /* std::array */
 
-/* We use this data to control to which level the elements at which
+/** We use this data to control to which level the elements at which
  * geometry get refined. */
 struct t8_naca_geometry_adapt_data
 {
-  int level;        /** Uniform refinement level of the forest */
-  int n_geometries; /** Amount of geometries we want to refine */
-  int *geometries;  /** Array with geometry indices */
-  int *levels;      /** Array with refinement levels */
+  int level;        /**< Uniform refinement level of the forest */
+  int n_geometries; /**< Amount of geometries we want to refine */
+  int *geometries;  /**< Array with geometry indices */
+  int *levels;      /**< Array with refinement levels */
 };
 
 #if T8_ENABLE_OCC
@@ -81,6 +81,7 @@ struct t8_naca_geometry_adapt_data
  * \param [in] forest       The current forest that is in construction.
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
+ * \param [in] tree_class   The eclass of \a which_tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
  * \param [in] scheme           The refinement scheme for this tree's element class.
  * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
@@ -114,9 +115,10 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
       const int element_dim = t8_eclass_to_dimension[tree_class];
       /* We retrieve the geometry information of the tree.
        * In the 3D case, we look for linked surfaces, but in 2D, we look for linked edges. */
-      const int attribute_key = element_dim == 3 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
-      const int *linked_geometries = (const int *) t8_cmesh_get_attribute (
-        t8_forest_get_cmesh (forest), t8_get_package_id (), attribute_key, cmesh_ltreeid);
+      const int geom_dim = element_dim == 3 ? 2 : 1;
+      const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest_from);
+      const int *linked_geometries = t8_geometry_cad::get_tree_geometries (cmesh, cmesh_ltreeid, geom_dim);
+
       /* If the tree face has a linked surface and it is in the list we refine it */
       for (int igeom = 0; igeom < adapt_data->n_geometries; ++igeom) {
         if (linked_geometries[tree_face] == adapt_data->geometries[igeom]
@@ -142,6 +144,7 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
  * \param [in] level            The uniform refinement level of the forest.
  * \param [in] rlevel_dorsal    The refinement level of the elements touching the dorsal side of the wing.
  * \param [in] rlevel_ventral   The refinement level of the elements touching the ventral side of the wing.
+ * \param [in] dim              The dimension.
  */
 int
 t8_naca_geometry_refinement (t8_forest_t forest, const std::string &fileprefix, int level, int rlevel_dorsal,
@@ -197,15 +200,16 @@ t8_naca_geometry_refinement (t8_forest_t forest, const std::string &fileprefix, 
 }
 #endif
 
+/** Adaption parameter class used to specify the refinement in \ref t8_naca_plane_adapt_callback. */
 struct t8_naca_plane_adapt_data
 {
-  int t;        /* The time step we are in */
-  int steps;    /* The amount of time steps */
-  double x_min; /* The minimum x-coordinate of the profile */
-  double x_max; /* The maximum x-coordinate of the profile */
-  double dist;  /* The distance an element can have from the plane to still be refined */
-  int level;    /* The uniform refinement level */
-  int rlevel;   /* The max refinement level */
+  int t;        /**< The time step we are in */
+  int steps;    /**< The amount of time steps */
+  double x_min; /**< The minimum x-coordinate of the profile */
+  double x_max; /**< The maximum x-coordinate of the profile */
+  double dist;  /**< The distance an element can have from the plane to still be refined */
+  int level;    /**< The uniform refinement level */
+  int rlevel;   /**< The max refinement level */
 };
 
 /**
@@ -228,6 +232,7 @@ struct t8_naca_plane_adapt_data
  * \param [in] forest       The current forest that is in construction.
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
+ * \param [in] tree_class   The eclass of \a which_tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
  * \param [in] scheme           The refinement scheme for this tree's element class.
  * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.

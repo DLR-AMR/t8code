@@ -23,378 +23,669 @@
 /**
  * \file t8_vector_handler.hxx
  *
- * This file provides functions to pack and unpack data for communication and to send and receive it using MPI.
- *
+ * Vector handlers own a vector of data items (e.g. one item per element) and pack, unpack and
+ * communicate it via MPI. Single items are handled by a data handler, see \ref t8_data_handler.
  */
 
 #ifndef T8_VECTOR_HANDLER_HXX
 #define T8_VECTOR_HANDLER_HXX
 
 #include <t8.h>
-#include <vector>
+#include <t8_data/t8_data_exchange.hxx>
 #include <t8_data/t8_data_handler.hxx>
 #include <algorithm>
 #include <memory>
-#include <numeric>
+#include <utility>
+#include <vector>
 
 /**
  * A base class for vector handlers.
+ *
+ * A vector handler owns a vector of data items and can pack, unpack and communicate it via MPI.
+ * Derived classes implement the item-type dependent packing; sending and receiving is implemented
+ * once in this base class on top of it.
  */
 struct t8_abstract_vector_handler
 {
- public:
+  /** Default destructor. */
+  virtual ~t8_abstract_vector_handler () = default;
+
   /**
-   * Pure virtual function to determine the buffer size.
-   *
-   * This function must be implemented by derived classes to calculate
-   * the size of the buffer required for communication.
+   * Compute an upper bound of the number of bytes needed by \ref pack_vector_prefix.
    *
    * \param[in] comm The MPI communicator.
    * \return The size of the buffer.
    */
   virtual int
-  buffer_size (sc_MPI_Comm comm)
+  buffer_size (sc_MPI_Comm comm) const
     = 0;
 
   /**
-   * Packs a vector into a buffer. The vector data will be prefixed with the number of elements in the vector.
+   * Packs the vector into a buffer. The data is prefixed with the number of items in the vector.
    *
-   * This pure virtual function is responsible for packing a vector prefix into the provided buffer.
-   *
-   * \param[in, out] buffer A pointer to the buffer where the vector prefix will be packed.
-   * \param[in] num_bytes The number of bytes to be packed.
-   * \param[in, out] pos A reference to an integer representing the current position in the buffer. This will be updated as bytes are packed.
+   * \param[in, out] buffer The buffer to pack the vector into.
+   * \param[in] num_bytes The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the packed bytes.
    * \param[in] comm The MPI communicator used for the operation.
    */
   virtual void
-  pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm)
+  pack_vector_prefix (void *buffer, const int num_bytes, int &position, sc_MPI_Comm comm) const
     = 0;
 
   /**
-   * Unpacks a vector from a buffer. Expected to be prefixed with the number of elements in the vector.
+   * Unpacks a vector from a buffer and replaces the data of this handler.
+   * The data is expected to be prefixed with the number of items in the vector.
    *
-   * This pure virtual function is responsible for unpacking a vector prefix from the provided buffer.
-   *
-   * \param[in] buffer Pointer to the buffer containing the packed data.
-   * \param[in] num_bytes The number of bytes in the buffer.
-   * \param[in] pos Reference to an integer representing the current position in the buffer. This will be updated as data is unpacked.
-   * \param[in] outcount Reference to an integer where the count of unpacked elements will be stored.
+   * \param[in] buffer The buffer containing the packed data.
+   * \param[in] num_bytes The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the unpacked bytes.
+   * \param[out] outcount The number of unpacked items.
    * \param[in] comm The MPI communicator used for the operation.
    */
   virtual void
-  unpack_vector_prefix (const void *buffer, const int num_bytes, int &pos, int &outcount, sc_MPI_Comm comm)
+  unpack_vector_prefix (const void *buffer, const int num_bytes, int &position, int &outcount, sc_MPI_Comm comm)
     = 0;
 
   /**
-   * Pure virtual function to send data to a specified destination.
+   * Get the type of the handled data.
    *
-   * This function is responsible for packing and sending data to a given destination
-   * with a specific tag using the provided MPI communicator.
-   *
-   * \param[in] dest The destination rank to which the data will be sent.
-   * \param[in] tag The tag associated with the message to be sent.
-   * \param[in] comm The MPI communicator used for the communication.
-   * \return An integer indicating the status of the send operation.
-   */
-  virtual int
-  send (const int dest, const int tag, sc_MPI_Comm comm)
-    = 0;
-
-  /**
-   * Receives a message from a specified source.
-   *
-   * This pure virtual function is responsible for receiving and unpacking a message from a given source
-   * with a specific tag within the provided MPI communicator. The function will also
-   * update the status and output count of the received message.
-   *
-   * \param[in] source The rank of the source process from which the message is received.
-   * \param[in] tag The tag of the message to be received.
-   * \param[in] comm The MPI communicator within which the message is received.
-   * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
-   * \param[in] outcount A reference to an integer that will be updated with the count of received elements.
-   * \return An integer indicating the success or failure of the receive operation.
-   */
-  virtual int
-  recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
-    = 0;
-
-  /**
-   * Sends and receives messages to and from specified destinations.
-   *
-   * This pure virtual function is responsible for packing, sending, receiving and unpacking a message from and
-   * to a given source and destination with a specific tag within the provided MPI communicator. The function will also
-   * update the status and output count of the received message.
-   *
-   * \param[in] dest The destination rank to which the data will be sent.
-   * \param[in] source The rank of the source process from which the message is received.
-   * \param[in] tag The tag associated with the messages to be sent.
-   * \param[in] comm The MPI communicator used for the communication.
-   * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
-   * \param[in] outcount A reference to an integer that will be updated with the count of received elements.
-   * \return An integer indicating the status of the send operation.
-   */
-  virtual int
-  sendrecv (const int dest, const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
-    = 0;
-
-  /**
-   * Pure virtual function to get the type.
-   *
-   * This function must be overridden in derived classes to return the type.
-   *
-   * \return An integer representing the type.
+   * \return The type of the data handler.
    */
   virtual t8_data_handler_type
-  type ()
+  type () const
     = 0;
 
-  virtual ~t8_abstract_vector_handler () {};
+  /**
+   * Repartition the data: Before the call, the handler holds the \a pattern.num_old items of this process in the
+   * old distribution, possibly followed by further entries, e.g. of ghost elements, which are dropped. Afterwards it
+   * holds the \a pattern.num_new items in the new distribution.
+   * Every process of \a pattern.comm calls this with its pattern of the same repartitioning.
+   *
+   * \param[in] pattern The partition pattern of this process, e.g. from \ref t8_data_partition_pattern_from_offsets.
+   */
+  virtual void
+  partition (const t8_data_partition_pattern &pattern)
+    = 0;
+
+  /**
+   * Exchange the data of the ghost items: Before the call, the handler holds the \a pattern.num_local local items,
+   * possibly followed by further entries, e.g. outdated ghost items, which are dropped. Afterwards it holds the local
+   * items followed by the \a pattern.num_ghosts ghost items, received from their owners.
+   * Every process of \a pattern.comm calls this with its pattern of the same ghost exchange.
+   *
+   * \param[in] pattern The ghost pattern of this process.
+   * \param[in,out] send_buffer The buffer for the outgoing items, e.g. kept across the ghost exchanges of a forest.
+   */
+  virtual void
+  exchange_ghosts (const t8_data_ghost_pattern &pattern, t8_data_buffer &send_buffer)
+    = 0;
+
+  /**
+   * Pack the vector and send it to a process (blocking). Requires MPI.
+   *
+   * \param[in] dest The rank to send to.
+   * \param[in] tag The tag of the message.
+   * \param[in] comm The MPI communicator used for the communication.
+   */
+  void
+  send (const int dest, const int tag, sc_MPI_Comm comm) const;
+
+  /**
+   * Receive a vector from a process (blocking) and replace the data of this handler with it. Requires MPI.
+   *
+   * \param[in] source The rank to receive from.
+   * \param[in] tag The tag of the message.
+   * \param[in] comm The MPI communicator used for the communication.
+   * \param[out] status The MPI status of the received message.
+   * \param[out] outcount The number of received items.
+   */
+  void
+  recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount);
+
+  /**
+   * Send the vector to one process and replace the data of this handler with the vector received from
+   * another process. Requires MPI.
+   *
+   * \param[in] dest The rank to send to.
+   * \param[in] source The rank to receive from.
+   * \param[in] tag The tag of the messages.
+   * \param[in] comm The MPI communicator used for the communication.
+   * \param[out] status The MPI status of the received message.
+   * \param[out] outcount The number of received items.
+   */
+  void
+  sendrecv (const int dest, const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount);
 };
 
 /**
- * A template class for handling data in a distributed environment.
+ * A vector handler for a std::vector with one item of type TType per entry.
  *
- * This class inherits from t8_abstract_data_handler and provides methods for
- * packing, unpacking, sending, and receiving data using MPI.
+ * Single items are packed and unpacked by a data handler of type TDataHandler. By default this is the
+ * \ref t8_data_handler of TType, which handles trivially copyable types without user code. For data that has
+ * to be serialized, e.g. items holding a std::vector, pass a handler that describes how one item is packed.
+ * Ranges of items with a bytewise data handler (\ref T8BytewiseDataHandler) are packed in bulk, all other items
+ * are serialized one by one.
  *
- * \tparam TType The type of data to be handled.
+ * \tparam TType The type of the data items.
+ * \tparam TDataHandler The type of the handler for single items, see \ref T8DataHandler.
  */
-template <typename TType>
+template <typename TType, typename TDataHandler = t8_data_handler<TType>>
+  requires T8DataHandler<TDataHandler, TType>
 struct t8_vector_handler: public t8_abstract_vector_handler
 {
- public:
   /**
-   * Construct a t8_vector_handler.
-   * m_data is initialized to nullptr.
-   */
-  t8_vector_handler (): single_handler ()
-  {
-    m_data = nullptr;
-  }
-
-  /**
-   * Construct a t8_vector_handler with the given data.
+   * Construct a t8_vector_handler that owns the given data.
    *
-   * \param[in] data The data to be handled.
+   * \param[in] data The data to be handled. Pass an rvalue (e.g. via std::move) to avoid a copy.
+   * \param[in] data_handler The handler for single items, e.g. one that depends on run time parameters.
    */
-  t8_vector_handler (const std::vector<TType> &data)
-    : m_data (std::make_shared<std::vector<TType>> (data)), single_handler ()
+  explicit t8_vector_handler (std::vector<TType> data = {}, TDataHandler data_handler = {})
+    : m_data (std::move (data)), m_data_handler (std::move (data_handler))
   {
   }
 
   /**
    * Get the data.
    *
-   * \return The data.
+   * \return A reference to the data.
    */
-  std::shared_ptr<std::vector<TType>>
+  const std::vector<TType> &
   get_data () const
   {
     return m_data;
   }
 
   /**
-   * Compute the size of the buffer that is needed to pack the data.
+   * Replace the data.
+   *
+   * \param[in] data The new data. Pass an rvalue (e.g. via std::move) to avoid a copy.
+   */
+  void
+  set_data (std::vector<TType> data)
+  {
+    m_data = std::move (data);
+  }
+
+  /**
+   * Move the data out of the handler. The handler is empty afterwards.
+   *
+   * \return The data.
+   */
+  std::vector<TType>
+  take_data ()
+  {
+    return std::exchange (m_data, {});
+  }
+
+  /**
+   * Choose whether a repartitioning keeps the storage it replaces for the next repartitioning.
+   * If enabled, the storage of the old data is kept as a buffer and receives the new data of the next
+   * repartitioning, if its capacity suffices. Otherwise new storage with at least the capacity of the old storage is
+   * allocated, so both storages grow to the largest number of items so far. Then no fresh memory is needed after
+   * the first repartitionings, as long as the number of items stays within the capacities. This costs the memory
+   * of a second vector between repartitionings, see \ref release_buffer.
+   * Disabled by default: The old storage is freed and every repartitioning allocates new storage.
+   *
+   * \param[in] reuse True to keep the replaced storage, false to free it, including a kept buffer.
+   */
+  void
+  set_buffer_reuse (const bool reuse)
+  {
+    m_reuse_buffer = reuse;
+    if (!reuse) {
+      release_buffer ();
+    }
+  }
+
+  /**
+   * Free the buffer kept for buffer reuse, see \ref set_buffer_reuse. The setting is not changed.
+   */
+  void
+  release_buffer ()
+  {
+    m_buffer = std::vector<TType> ();
+  }
+
+  /**
+   * Compute an upper bound of the number of bytes needed by \ref pack_vector_prefix.
    *
    * \param[in] comm The MPI communicator used for the operation.
    * \return The size of the buffer.
    */
   int
-  buffer_size (sc_MPI_Comm comm) override
+  buffer_size (sc_MPI_Comm comm) const override
   {
-    int total_size = 0;
-    const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
+    int prefix_size = 0;
+    const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &prefix_size);
     SC_CHECK_MPI (mpiret);
-    if (m_data) {
-      total_size += std::accumulate (m_data->begin (), m_data->end (), 0, [&] (int sum, const TType &item) {
-        return sum + single_handler.size (item, comm);
-      });
-    }
-    return total_size;
+    return t8_mpi_int (prefix_size + range_buffer_size (0, m_data.size (), comm));
   }
 
   /**
-   * Packs a vector into a buffer. The vector data will be prefixed with the number of elements in the vector.
+   * Packs the vector into a buffer. The data is prefixed with the number of items in the vector.
    *
-   * \param[in, out] buffer A pointer to the buffer where the vector prefix will be packed.
-   * \param[in] num_bytes The number of bytes to be packed.
-   * \param[in, out] pos A reference to an integer representing the current position in the buffer. This will be updated as bytes are packed.
+   * \param[in, out] buffer The buffer to pack the vector into.
+   * \param[in] num_bytes The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the packed bytes.
    * \param[in] comm The MPI communicator used for the operation.
    */
   void
-  pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm) override
+  pack_vector_prefix (void *buffer, const int num_bytes, int &position, sc_MPI_Comm comm) const override
   {
-    const int num_data = m_data->size ();
-    const int mpiret = sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
+    const int num_items = t8_mpi_int (m_data.size ());
+    const int mpiret = sc_MPI_Pack (&num_items, 1, sc_MPI_INT, buffer, num_bytes, &position, comm);
     SC_CHECK_MPI (mpiret);
-
-    std::for_each (m_data->begin (), m_data->end (),
-                   [&] (const TType &item) { single_handler.pack (item, pos, buffer, num_bytes, comm); });
+    pack_range (0, m_data.size (), buffer, num_bytes, position, comm);
   }
 
   /**
-   * Unpacks a vector from a buffer. Expected to be prefixed with the number of elements in the vector.
+   * Unpacks a vector from a buffer and replaces the data of this handler.
+   * The data is expected to be prefixed with the number of items in the vector.
    *
-   * \param[in] buffer Pointer to the buffer containing the packed data.
-   * \param[in] num_bytes The number of bytes in the buffer.
-   * \param[in] pos Reference to an integer representing the current position in the buffer. This will be updated as data is unpacked.
-   * \param[in] outcount Reference to an integer where the count of unpacked elements will be stored.
+   * \param[in] buffer The buffer containing the packed data.
+   * \param[in] num_bytes The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the unpacked bytes.
+   * \param[out] outcount The number of unpacked items.
    * \param[in] comm The MPI communicator used for the operation.
    */
   void
-  unpack_vector_prefix (const void *buffer, const int num_bytes, int &pos, int &outcount, sc_MPI_Comm comm) override
+  unpack_vector_prefix (const void *buffer, const int num_bytes, int &position, int &outcount,
+                        sc_MPI_Comm comm) override
   {
-    const int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &outcount, 1, sc_MPI_INT, comm);
+    const int mpiret = sc_MPI_Unpack (buffer, num_bytes, &position, &outcount, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (outcount >= 0);
 
-    if (!m_data) {
-      m_data = std::make_shared<std::vector<TType>> (outcount);
-    }
-    else {
-      m_data->clear ();
-      m_data->resize (outcount);
-    }
-    std::for_each (m_data->begin (), m_data->end (),
-                   [&] (TType &item) { single_handler.unpack (buffer, num_bytes, pos, item, comm); });
-  }
-
-  /**
-   * Sends a message to a specified destination.
-   *
-   * This function is responsible for packing and sending data to a given destination
-   * with a specific tag using the provided MPI communicator.
-   *
-   * \param[in] dest The destination rank to which the data will be sent.
-   * \param[in] tag The tag associated with the message to be sent.
-   * \param[in] comm The MPI communicator used for the communication.
-   * \return An integer indicating the status of the send operation.
-   */
-  int
-  send (const int dest, const int tag, sc_MPI_Comm comm) override
-  {
-    int pos = 0;
-    const int num_bytes = buffer_size (comm);
-    std::vector<char> buffer (num_bytes);
-    pack_vector_prefix (buffer.data (), num_bytes, pos, comm);
-
-    const int mpiret = sc_MPI_Send (buffer.data (), num_bytes, sc_MPI_PACKED, dest, tag, comm);
-    SC_CHECK_MPI (mpiret);
-    return mpiret;
-  }
-
-  /**
-   * Receives a message from a specified source.
-   *
-   * This function is responsible for receiving and unpacking a message from a given source
-   * with a specific tag within the provided MPI communicator. The function will also
-   * update the status and output count of the received message.
-   *
-   * \param[in] source The rank of the source process from which the message is received.
-   * \param[in] tag The tag of the message to be received.
-   * \param[in] comm The MPI communicator within which the message is received.
-   * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
-   * \param[in] outcount A reference to an integer that will be updated with the count of received elements.
-   * \return An integer indicating the success or failure of the receive operation.
-   */
-  int
-  recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount) override
-  {
-    int pos = 0;
-    int mpiret = sc_MPI_Probe (source, tag, comm, status);
-    SC_CHECK_MPI (mpiret);
-
-    int num_bytes;
-    mpiret = sc_MPI_Get_count (status, sc_MPI_PACKED, &num_bytes);
-    SC_CHECK_MPI (mpiret);
-    std::vector<char> buffer (num_bytes);
-
-    mpiret = sc_MPI_Recv (buffer.data (), num_bytes, sc_MPI_PACKED, source, tag, comm, status);
-    SC_CHECK_MPI (mpiret);
-    unpack_vector_prefix (buffer.data (), num_bytes, pos, outcount, comm);
-    return mpiret;
-  }
-
-  /**
-   * Sends and receives messages to and from specified destinations.
-   *
-   * This function is responsible for packing, sending and receiving data to and from given destinations
-   * with a specific tag using the provided MPI communicator.
-   *
-   * \param[in] dest The destination rank to which the data will be sent.
-   * \param[in] source The rank of the source process from which the message is received.
-   * \param[in] tag The tag associated with the messages to be sent.
-   * \param[in] comm The MPI communicator used for the communication.
-   * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
-   * \param[in] outcount A reference to an integer that will be updated with the count of received elements.
-   * \return An integer indicating the status of the send operation.
-   */
-  int
-  sendrecv ([[maybe_unused]] const int dest, [[maybe_unused]] const int source, [[maybe_unused]] const int tag,
-            [[maybe_unused]] sc_MPI_Comm comm, [[maybe_unused]] sc_MPI_Status *status,
-            [[maybe_unused]] int &outcount) override
-  {
-    {
-#if T8_ENABLE_MPI
-      /* Compute sizes of outgoing and incoming messages */
-      const int send_num_bytes = buffer_size (comm);
-      int recv_num_bytes = 0;
-      int mpiret = sc_MPI_Sendrecv (&send_num_bytes, 1, sc_MPI_INT, dest, tag, &recv_num_bytes, 1, sc_MPI_INT, source,
-                                    tag, comm, status);
-      SC_CHECK_MPI (mpiret);
-
-      /* Prepare send buffer */
-      std::vector<char> send_buffer (send_num_bytes);
-      int send_pos = 0;
-      pack_vector_prefix (send_buffer.data (), send_num_bytes, send_pos, comm);
-
-      /* Prepare receive buffer using size received */
-      std::vector<char> recv_buffer (recv_num_bytes);
-
-      /* Actual sendrecv of data */
-      mpiret = sc_MPI_Sendrecv (
-        /* send payload */
-        send_buffer.data (), send_num_bytes, sc_MPI_PACKED, dest, tag,
-        /* receive payload */
-        recv_buffer.data (), recv_num_bytes, sc_MPI_PACKED, source, tag,
-        /* communicator + status */
-        comm, status);
-      SC_CHECK_MPI (mpiret);
-
-      /* Unpack received data */
-      int recv_pos = 0;
-      unpack_vector_prefix (recv_buffer.data (), recv_num_bytes, recv_pos, outcount, comm);
-
-      return mpiret;
-#else
-      SC_ABORT ("MPI_Sendrecv not available without MPI");
-      return 0;
-#endif
-    }
+    m_data.resize (outcount);
+    unpack_range (buffer, num_bytes, position, m_data.data (), m_data.size (), comm);
   }
 
   /**
    * Get the type of the data handler.
    *
-   * \return The type of the data handler.
+   * \return The type of the data handler, \ref t8_data_handler_type_unregistered if the data handler has no
+   *         member type ().
    */
-  constexpr t8_data_handler_type
-  type () override
+  t8_data_handler_type
+  type () const override
   {
-    return t8_data_handler_type (single_handler.type ());
+    if constexpr (requires { m_data_handler.type (); }) {
+      return m_data_handler.type ();
+    }
+    else {
+      return t8_data_handler_type_unregistered;
+    }
+  }
+
+  /**
+   * Repartition the data, see \ref t8_abstract_vector_handler::partition.
+   * Items with a bytewise data handler are exchanged without packing, all other items are serialized chunk by chunk.
+   * Items that stay on this process are copied or moved, never packed.
+   *
+   * \param[in] pattern The partition pattern of this process.
+   */
+  void
+  partition (const t8_data_partition_pattern &pattern) override
+  {
+    T8_ASSERT (t8_data_partition_pattern_is_valid (pattern));
+    T8_ASSERT (m_data.size () >= pattern.num_old);
+    if (pattern.sends.empty () && pattern.recvs.empty ()) {
+      /* No item changes the process, so every item keeps its index. Only trailing entries are dropped. */
+      T8_ASSERT (pattern.num_old == pattern.num_new && pattern.self_count == pattern.num_old);
+      T8_ASSERT (pattern.self_count == 0 || (pattern.self_first_old == 0 && pattern.self_first_new == 0));
+      m_data.resize (pattern.num_new);
+      return;
+    }
+    if constexpr (T8BytewiseDataHandler<TDataHandler, TType>) {
+      partition_bytewise (pattern);
+    }
+    else {
+      partition_serialized (pattern);
+    }
+  }
+
+  /**
+   * Exchange the items of the ghosts, see \ref t8_abstract_vector_handler::exchange_ghosts.
+   * Items with a bytewise data handler are gathered into \a send_buffer and received directly into their slots
+   * without packing. All other items are serialized, one message per process.
+   *
+   * \param[in] pattern The ghost pattern of this process.
+   * \param[in,out] send_buffer The buffer for the outgoing items.
+   */
+  void
+  exchange_ghosts (const t8_data_ghost_pattern &pattern, t8_data_buffer &send_buffer) override
+  {
+    T8_ASSERT (t8_data_ghost_pattern_is_valid (pattern));
+    T8_ASSERT (m_data.size () >= pattern.num_local);
+    m_data.resize (pattern.num_local + pattern.num_ghosts);
+    if constexpr (T8BytewiseDataHandler<TDataHandler, TType>) {
+      t8_data_ghost_bytes_exchange exchange (pattern, m_data.data (), sizeof (TType), send_buffer);
+      exchange.wait ();
+    }
+    else {
+      exchange_ghosts_serialized (pattern, send_buffer);
+    }
   }
 
  private:
   /**
-  * A shared pointer to a vector of data.
-  * This data will be packed, unpacked, and communicated via MPI.
-  */
-  std::shared_ptr<std::vector<TType>> m_data;
-  /**
-   * A single data handler for the data type T.
-   * This handler will be used to pack and unpack individual data items.
+   * Compute the number of bytes needed to pack a range of items (without count prefix).
+   *
+   * \param[in] first The index of the first item of the range.
+   * \param[in] count The number of items in the range.
+   * \param[in] comm The MPI communicator used for the operation.
+   * \return The number of bytes needed to pack the items [first, first + count).
    */
-  t8_data_handler<TType> single_handler;
+  size_t
+  range_buffer_size (const size_t first, const size_t count, sc_MPI_Comm comm) const
+  {
+    T8_ASSERT (first + count <= m_data.size ());
+    if constexpr (T8BytewiseDataHandler<TDataHandler, TType>) {
+      /* Bytewise items are packed in bulk. */
+      int pack_size = 0;
+      const int mpiret = sc_MPI_Pack_size (t8_mpi_int (count * sizeof (TType)), sc_MPI_BYTE, comm, &pack_size);
+      SC_CHECK_MPI (mpiret);
+      return pack_size;
+    }
+    else {
+      size_t pack_size = 0;
+      for (size_t iitem = first; iitem < first + count; ++iitem) {
+        pack_size += m_data_handler.size (m_data[iitem], comm);
+      }
+      return pack_size;
+    }
+  }
+
+  /**
+   * Pack a range of items into a buffer (without count prefix).
+   *
+   * \param[in] first The index of the first item of the range.
+   * \param[in] count The number of items in the range.
+   * \param[in, out] buffer The buffer to pack the items into.
+   * \param[in] num_bytes The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the packed bytes.
+   * \param[in] comm The MPI communicator used for the operation.
+   */
+  void
+  pack_range (const size_t first, const size_t count, void *buffer, const int num_bytes, int &position,
+              sc_MPI_Comm comm) const
+  {
+    T8_ASSERT (first + count <= m_data.size ());
+    if constexpr (T8BytewiseDataHandler<TDataHandler, TType>) {
+      /* Bytewise items are packed in bulk. */
+      const int mpiret = sc_MPI_Pack (m_data.data () + first, t8_mpi_int (count * sizeof (TType)), sc_MPI_BYTE, buffer,
+                                      num_bytes, &position, comm);
+      SC_CHECK_MPI (mpiret);
+    }
+    else {
+      for (size_t iitem = first; iitem < first + count; ++iitem) {
+        m_data_handler.pack (m_data[iitem], buffer, num_bytes, position, comm);
+      }
+    }
+  }
+
+  /**
+   * Unpack a range of items from a buffer (without count prefix).
+   *
+   * \param[in] buffer The buffer containing the packed items.
+   * \param[in] num_bytes The number of bytes of \a buffer.
+   * \param[in, out] position The current position in \a buffer. Advanced by the unpacked bytes.
+   * \param[out] items Array of at least \a count items to unpack into.
+   * \param[in] count The number of items to unpack.
+   * \param[in] comm The MPI communicator used for the operation.
+   */
+  void
+  unpack_range (const void *buffer, const int num_bytes, int &position, TType *items, const size_t count,
+                sc_MPI_Comm comm) const
+  {
+    if constexpr (T8BytewiseDataHandler<TDataHandler, TType>) {
+      /* Bytewise items are unpacked in bulk. */
+      const int mpiret
+        = sc_MPI_Unpack (buffer, num_bytes, &position, items, t8_mpi_int (count * sizeof (TType)), sc_MPI_BYTE, comm);
+      SC_CHECK_MPI (mpiret);
+    }
+    else {
+      for (size_t iitem = 0; iitem < count; ++iitem) {
+        m_data_handler.unpack (buffer, num_bytes, position, items[iitem], comm);
+      }
+    }
+  }
+
+  /**
+   * Check whether the buffer kept for buffer reuse can hold the new data of a repartitioning.
+   *
+   * \param[in] capacity The number of items the storage of the new data needs room for.
+   * \return True if buffer reuse is enabled and the capacity of the kept buffer suffices, false otherwise.
+   */
+  bool
+  can_reuse_buffer (const size_t capacity) const
+  {
+    return m_reuse_buffer && m_buffer.capacity () >= capacity;
+  }
+
+  /**
+   * Compute the capacity of new storage for the new data of a repartitioning. With buffer reuse, it is at least the
+   * capacity of the old storage, which becomes the kept buffer, so that both storages grow to the largest number of
+   * items so far instead of alternating between too small sizes.
+   *
+   * \param[in] capacity The number of items the storage of the new data needs room for.
+   * \return The capacity to reserve for the new storage.
+   */
+  size_t
+  new_storage_capacity (const size_t capacity) const
+  {
+    return m_reuse_buffer ? std::max (capacity, m_data.capacity ()) : capacity;
+  }
+
+  /**
+   * Replace the data by the new data of a repartitioning. The storage of the old data is kept as buffer for the
+   * next repartitioning if buffer reuse is enabled, and freed otherwise.
+   *
+   * \param[in] new_data The new data.
+   */
+  void
+  replace_data (std::vector<TType> &&new_data)
+  {
+    if (m_reuse_buffer) {
+      m_buffer = std::exchange (m_data, std::move (new_data));
+    }
+    else {
+      m_data = std::move (new_data);
+    }
+  }
+
+  /**
+   * Repartition items with a bytewise data handler, without packing.
+   * If the kept buffer can hold the new data, all receives are posted directly into their final slots of this
+   * resident memory first. Otherwise new storage is needed, and the outgoing items are sent directly from the old
+   * storage first, so that the other processes do not wait while the new storage is set up; only the slots of
+   * incoming items are value-initialized. Either way, the staying items are copied once, directly to their final
+   * position.
+   *
+   * \param[in] pattern The partition pattern of this process.
+   */
+  void
+  partition_bytewise (const t8_data_partition_pattern &pattern)
+    requires T8BytewiseDataHandler<TDataHandler, TType>
+  {
+    const size_t capacity = std::max (pattern.num_new, pattern.min_capacity_new);
+    t8_data_messages messages (pattern.comm, pattern.tag);
+    const auto self_begin = m_data.cbegin () + pattern.self_first_old;
+    if (can_reuse_buffer (capacity)) {
+      std::vector<TType> new_data = std::move (m_buffer);
+      new_data.resize (pattern.num_new);
+      for (const auto &chunk : pattern.recvs) {
+        messages.receive (chunk.rank, new_data.data () + chunk.first, chunk.count * sizeof (TType));
+      }
+      for (const auto &chunk : pattern.sends) {
+        messages.send (chunk.rank, m_data.data () + chunk.first, chunk.count * sizeof (TType));
+      }
+      std::copy_n (self_begin, pattern.self_count, new_data.begin () + pattern.self_first_new);
+      messages.wait_all ();
+      replace_data (std::move (new_data));
+      return;
+    }
+
+    for (const auto &chunk : pattern.sends) {
+      messages.send (chunk.rank, m_data.data () + chunk.first, chunk.count * sizeof (TType));
+    }
+    std::vector<TType> new_data;
+    new_data.reserve (new_storage_capacity (capacity));
+    new_data.resize (pattern.self_first_new);
+    new_data.insert (new_data.end (), self_begin, self_begin + pattern.self_count);
+    new_data.resize (pattern.num_new);
+    for (const auto &chunk : pattern.recvs) {
+      messages.receive (chunk.rank, new_data.data () + chunk.first, chunk.count * sizeof (TType));
+    }
+    messages.wait_all ();
+    replace_data (std::move (new_data));
+  }
+
+  /**
+   * Repartition items that are serialized by the data handler.
+   * Each outgoing chunk is packed into its own buffer and sent. The items that stay on this process are moved.
+   * The size of an incoming chunk depends on its items, so the sources are probed in rank order and each
+   * receive is posted as soon as its size is known; the transfers overlap. The chunks are unpacked directly
+   * into their final position when all of them have arrived.
+   *
+   * \param[in] pattern The partition pattern of this process.
+   */
+  void
+  partition_serialized (const t8_data_partition_pattern &pattern)
+  {
+    const sc_MPI_Comm comm = pattern.comm;
+
+    /* The send buffers have to live until the sends are complete. */
+    const size_t num_sends = pattern.sends.size ();
+    std::vector<std::unique_ptr<char[]>> send_buffers (num_sends);
+    std::vector<sc_MPI_Request> send_requests (num_sends);
+    for (size_t isend = 0; isend < num_sends; ++isend) {
+      const t8_data_partition_chunk &chunk = pattern.sends[isend];
+      const int num_bytes = t8_mpi_int (range_buffer_size (chunk.first, chunk.count, comm));
+      send_buffers[isend].reset (new char[num_bytes]);
+      int position = 0;
+      pack_range (chunk.first, chunk.count, send_buffers[isend].get (), num_bytes, position, comm);
+      const int mpiret = sc_MPI_Isend (send_buffers[isend].get (), position, sc_MPI_PACKED, chunk.rank, pattern.tag,
+                                       comm, &send_requests[isend]);
+      SC_CHECK_MPI (mpiret);
+    }
+
+    /* The storage of the new data is the kept buffer if possible. */
+    const size_t capacity = std::max (pattern.num_new, pattern.min_capacity_new);
+    std::vector<TType> new_data;
+    if (can_reuse_buffer (capacity)) {
+      new_data = std::move (m_buffer);
+    }
+    else {
+      new_data.reserve (new_storage_capacity (capacity));
+    }
+    new_data.resize (pattern.num_new);
+    const auto self_begin = m_data.begin () + pattern.self_first_old;
+    std::move (self_begin, self_begin + pattern.self_count, new_data.begin () + pattern.self_first_new);
+
+    receive_serialized (pattern.recvs, pattern.tag, comm, new_data.data ());
+
+    if (num_sends > 0) {
+      const int mpiret = sc_MPI_Waitall (t8_mpi_int (num_sends), send_requests.data (), sc_MPI_STATUSES_IGNORE);
+      SC_CHECK_MPI (mpiret);
+    }
+    replace_data (std::move (new_data));
+  }
+
+  /**
+   * Receive chunks of items that are serialized by the data handler and unpack them directly into their position.
+   * The size of an incoming chunk depends on its items, so the sources are probed in order and each receive is
+   * posted as soon as its size is known; the transfers overlap. The chunks are unpacked when all of them have
+   * arrived. All sends of this communication step have to be posted before, so that no process blocks in a probe
+   * while its own messages do not exist yet.
+   *
+   * \param[in] recvs The chunks to receive, one message each.
+   * \param[in] tag The MPI tag of the messages.
+   * \param[in] comm The MPI communicator.
+   * \param[out] items The array that the chunks are unpacked into, at their index \a first.
+   */
+  void
+  receive_serialized (const std::vector<t8_data_partition_chunk> &recvs, const int tag, sc_MPI_Comm comm,
+                      TType *items) const
+  {
+    const size_t num_recvs = recvs.size ();
+    std::vector<std::unique_ptr<char[]>> recv_buffers (num_recvs);
+    std::vector<int> recv_num_bytes (num_recvs);
+    std::vector<sc_MPI_Request> recv_requests (num_recvs);
+    for (size_t irecv = 0; irecv < num_recvs; ++irecv) {
+      const t8_data_partition_chunk &chunk = recvs[irecv];
+      sc_MPI_Status status;
+      int mpiret = sc_MPI_Probe (chunk.rank, tag, comm, &status);
+      SC_CHECK_MPI (mpiret);
+      mpiret = sc_MPI_Get_count (&status, sc_MPI_PACKED, &recv_num_bytes[irecv]);
+      SC_CHECK_MPI (mpiret);
+      recv_buffers[irecv].reset (new char[recv_num_bytes[irecv]]);
+      mpiret = sc_MPI_Irecv (recv_buffers[irecv].get (), recv_num_bytes[irecv], sc_MPI_PACKED, chunk.rank, tag, comm,
+                             &recv_requests[irecv]);
+      SC_CHECK_MPI (mpiret);
+    }
+    if (num_recvs > 0) {
+      const int mpiret = sc_MPI_Waitall (t8_mpi_int (num_recvs), recv_requests.data (), sc_MPI_STATUSES_IGNORE);
+      SC_CHECK_MPI (mpiret);
+    }
+    for (size_t irecv = 0; irecv < num_recvs; ++irecv) {
+      const t8_data_partition_chunk &chunk = recvs[irecv];
+      int position = 0;
+      unpack_range (recv_buffers[irecv].get (), recv_num_bytes[irecv], position, items + chunk.first, chunk.count,
+                    comm);
+      T8_ASSERT (position == recv_num_bytes[irecv]);
+    }
+  }
+
+  /**
+   * Exchange the items of the ghosts if they are serialized by the data handler. The items for all processes are
+   * packed into \a send_buffer, one message per process, and each message is sent as soon as it is packed.
+   *
+   * \param[in] pattern The ghost pattern of this process.
+   * \param[in,out] send_buffer The buffer for the packed outgoing items.
+   */
+  void
+  exchange_ghosts_serialized (const t8_data_ghost_pattern &pattern, t8_data_buffer &send_buffer)
+  {
+    const sc_MPI_Comm comm = pattern.comm;
+
+    /* The message for process send_ranks[i] occupies the bytes [message_offsets[i], message_offsets[i + 1]). */
+    const size_t num_sends = pattern.send_ranks.size ();
+    std::vector<size_t> message_offsets (num_sends + 1, 0);
+    for (size_t isend = 0; isend < num_sends; ++isend) {
+      size_t num_bytes = 0;
+      for (size_t iitem = pattern.send_offsets[isend]; iitem < pattern.send_offsets[isend + 1]; ++iitem) {
+        num_bytes += m_data_handler.size (m_data[pattern.send_indices[iitem]], comm);
+      }
+      message_offsets[isend + 1] = message_offsets[isend] + num_bytes;
+    }
+
+    char *const packed = send_buffer.get (message_offsets.back ());
+    std::vector<sc_MPI_Request> send_requests (num_sends);
+    for (size_t isend = 0; isend < num_sends; ++isend) {
+      char *const message = packed + message_offsets[isend];
+      const int num_bytes = t8_mpi_int (message_offsets[isend + 1] - message_offsets[isend]);
+      int position = 0;
+      for (size_t iitem = pattern.send_offsets[isend]; iitem < pattern.send_offsets[isend + 1]; ++iitem) {
+        m_data_handler.pack (m_data[pattern.send_indices[iitem]], message, num_bytes, position, comm);
+      }
+      const int mpiret = sc_MPI_Isend (message, position, sc_MPI_PACKED, pattern.send_ranks[isend], pattern.tag, comm,
+                                       &send_requests[isend]);
+      SC_CHECK_MPI (mpiret);
+    }
+
+    receive_serialized (pattern.recvs, pattern.tag, comm, m_data.data ());
+
+    if (num_sends > 0) {
+      const int mpiret = sc_MPI_Waitall (t8_mpi_int (num_sends), send_requests.data (), sc_MPI_STATUSES_IGNORE);
+      SC_CHECK_MPI (mpiret);
+    }
+  }
+
+  std::vector<TType> m_data;   /**< The data that is packed, unpacked and communicated via MPI. */
+  TDataHandler m_data_handler; /**< Handler to pack and unpack single items. */
+  std::vector<TType> m_buffer; /**< Storage kept from the last repartitioning if buffer reuse is enabled, else empty. */
+  bool m_reuse_buffer = false; /**< True if a repartitioning keeps the storage it replaces, false if it frees it. */
 };
 
 /**
@@ -402,10 +693,10 @@ struct t8_vector_handler: public t8_abstract_vector_handler
  * data structures implemented by t8code.
  *
  * \param[in] type The type of the data handler to create.
- * \return A handler for the given data type.
+ * \return A handler for the given data type, nullptr if \a type is not an internal type.
  */
-inline t8_abstract_vector_handler *
-create_internal_handler (const t8_data_handler_type type)
+inline std::unique_ptr<t8_abstract_vector_handler>
+t8_create_internal_handler (const t8_data_handler_type type)
 {
   switch (type.get ()) {
     /* Place holder to create a handler for internal data structures */
