@@ -201,11 +201,12 @@ struct t8_balance_scratch
   bool ready = false;                    /**< Whether the elements are allocated. */
   int num_children = 0;                  /**< The number of children of every element, or 0 if it varies. */
   t8_element_t *parent = NULL;           /**< An element. */
-  t8_element_t *neigh = NULL;            /**< A face neighbor. */
-  std::vector<t8_element_t *> children;  /**< Children at or touching a boundary. */
-  std::vector<int> child_bdy_dims;       /**< The dimensions of their contact with the boundary. */
+  t8_element_t *neigh = NULL;            /**< The previous parent of a leaf. */
+  t8_element_t *child = NULL;            /**< A child. */
   std::vector<t8_element_t *> neighbors; /**< Same-level neighbors at a boundary. */
   std::vector<int> neighbor_bdy_ids;     /**< Their boundaries. */
+  std::vector<int> touched_bdy_dims;     /**< The minimal boundaries touched by a child: dimensions. */
+  std::vector<int> touched_bdy_ids;      /**< Their ids. */
 };
 
 /** The elements that the leaves of this rank force balance to refine, in all trees: the strict ancestors of the
@@ -215,8 +216,11 @@ struct t8_balance_scratch
  * The elements are stored with their keys, so they are not reconstructed from linear ids, and the elements that are
  * computed are reused per eclass. For eclasses whose elements all have the same number n of children (all but the
  * pyramid), the linear ids follow by arithmetic: the children of an element with id i at the next level have the ids
- * n i + (child id), since the linear id at a level is the index in the uniform refinement of that level. Neighbors
- * inside the tree come directly from the scheme; only boundaries at the root boundary use the coarse mesh.
+ * n i + (child id), since the linear id at a level is the index in the uniform refinement of that level. For each
+ * refined child, only the neighbors at the minimal boundaries that it touches with dimension at least \a min_dim are
+ * computed (\ref t8_scheme::element_get_child_touched_boundaries), since they contain the neighbors at the other
+ * touched boundaries. Neighbors inside the tree come directly from the scheme; only boundaries at the root boundary
+ * use the coarse mesh. The scheme must implement the boundaries (\ref t8_scheme::has_boundaries).
  * \param [in] forest   A committed forest with a replicated coarse mesh.
  * \param [in] min_dim  The minimal dimension of the boundaries of balance, only faces if it is the dimension minus one.
  * \return For each level, the refined elements, each with whether one of its children is refined.
@@ -227,7 +231,6 @@ t8_forest_balance_closure (t8_forest_t forest, const int min_dim)
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   const int dim = forest->dimension;
-  const bool faces_only = min_dim == dim - 1;
 
   /* Elements of all eclasses fit into the tables */
   size_t element_size = 0;
@@ -242,30 +245,15 @@ t8_forest_balance_closure (t8_forest_t forest, const int min_dim)
       scratch.num_children = eclass == T8_ECLASS_PYRAMID ? 0 : scheme->get_max_num_children (eclass);
       scheme->element_new (eclass, 1, &scratch.parent);
       scheme->element_new (eclass, 1, &scratch.neigh);
-      const int max_children
-        = faces_only ? scheme->get_max_num_children (eclass) : scheme->get_max_num_boundary_touching_children (eclass);
-      scratch.children.resize (max_children);
-      scratch.child_bdy_dims.resize (max_children);
-      scheme->element_new (eclass, max_children, scratch.children.data ());
-      if (!faces_only) {
-        scratch.neighbors.resize (scheme->get_max_num_boundary_neighbors (eclass));
-        scratch.neighbor_bdy_ids.resize (scratch.neighbors.size ());
-        scheme->element_new (eclass, scratch.neighbors.size (), scratch.neighbors.data ());
-      }
+      scheme->element_new (eclass, 1, &scratch.child);
+      scratch.neighbors.resize (scheme->get_max_num_boundary_neighbors (eclass));
+      scratch.neighbor_bdy_ids.resize (scratch.neighbors.size ());
+      scheme->element_new (eclass, scratch.neighbors.size (), scratch.neighbors.data ());
+      scratch.touched_bdy_dims.resize (scheme->get_max_num_child_touched_boundaries (eclass));
+      scratch.touched_bdy_ids.resize (scratch.touched_bdy_dims.size ());
     }
     return scratch;
   };
-  /* The key of a child at level from the key of its parent */
-  const auto child_key = [&] (const t8_balance_key &parent_key, const t8_eclass_t eclass, const t8_element_t *child,
-                              const int level) -> t8_balance_key {
-    const int num_children = scratch_of (eclass).num_children;
-    const t8_linearidx_t id = num_children > 0
-                                ? parent_key.id * num_children + scheme->element_get_child_id (eclass, child)
-                                : scheme->element_get_linear_id (eclass, child, level);
-    T8_ASSERT (id == scheme->element_get_linear_id (eclass, child, level));
-    return { parent_key.gtreeid, id };
-  };
-
   /* The parents of the leaves, their ancestors follow as parents of refined elements. Consecutive leaves of the same
    * parent give it once. */
   t8_balance_refined_t refined;
@@ -334,7 +322,7 @@ t8_forest_balance_closure (t8_forest_t forest, const int min_dim)
     };
     /* The neighbors of these parents at the boundaries touched by a refined child. New entries are neighbors without a
      * refined child, which the loop skips. */
-    for (size_t entry = 0; entry < coarse.size (); entry++) {
+    for (size_t entry = 0; entry < coarse.size () && min_dim < dim; entry++) {
       if (!coarse.flag (entry)) {
         continue;
       }
@@ -345,70 +333,54 @@ t8_forest_balance_closure (t8_forest_t forest, const int min_dim)
       t8_element_t *parent = scratch.parent;
       scheme->element_copy (eclass, coarse.element (entry), parent);
       const t8_locidx_t lctreeid = t8_cmesh_get_local_id (cmesh, key.gtreeid);
-      /* Whether one of the children (touching with at least min_dim) is refined */
-      const auto any_refined = [&] (const int num_children, const int *child_bdy_dims) {
-        for (int ichild = 0; ichild < num_children; ichild++) {
-          if ((child_bdy_dims == NULL || child_bdy_dims[ichild] >= min_dim)
-              && fine.find (child_key (key, eclass, scratch.children[ichild], level)) >= 0) {
-            return true;
-          }
+      /* The minimal boundaries touched by the refined children with dimension at least min_dim, as bitsets per
+       * dimension: the neighbors at the other touched boundaries are among the neighbors at these. */
+      uint64_t touched[T8_ECLASS_MAX_DIM] = {};
+      const int num_children = scheme->element_get_num_children (eclass, parent);
+      for (int child_id = 0; child_id < num_children; child_id++) {
+        t8_balance_key key_child;
+        if (scratch.num_children > 0) {
+          key_child = { key.gtreeid, key.id * scratch.num_children + child_id };
         }
-        return false;
-      };
-      if (faces_only) {
-        const int num_faces = scheme->element_get_num_faces (eclass, parent);
-        for (int face = 0; face < num_faces; face++) {
-          const int num_children = scheme->element_get_num_face_children (eclass, parent, face);
-          scheme->element_get_children_at_face (eclass, parent, face, scratch.children.data (), num_children, NULL);
-          if (!any_refined (num_children, NULL)) {
-            continue;
-          }
-          int dual_face;
-          if (scheme->element_get_face_neighbor_inside (eclass, parent, scratch.neigh, face, &dual_face)) {
-            insert_neighbor (key.gtreeid, eclass, scratch.neigh);
-            continue;
-          }
-          const t8_eclass_t neigh_eclass
-            = t8_forest_element_neighbor_eclass_cmesh (forest, lctreeid, eclass, parent, face);
-          t8_element_t *neigh = scratch_of (neigh_eclass).neigh;
-          const t8_gloidx_t neigh_gtreeid = t8_forest_element_face_neighbor_cmesh (
-            forest, lctreeid, key.gtreeid, eclass, parent, neigh, neigh_eclass, face, &dual_face);
-          if (neigh_gtreeid >= 0) {
-            insert_neighbor (neigh_gtreeid, neigh_eclass, neigh);
-          }
+        else {
+          scheme->element_get_child (eclass, parent, child_id, scratch.child);
+          key_child = { key.gtreeid, scheme->element_get_linear_id (eclass, scratch.child, level) };
+        }
+#if T8_ENABLE_DEBUG
+        scheme->element_get_child (eclass, parent, child_id, scratch.child);
+        T8_ASSERT (key_child.id == scheme->element_get_linear_id (eclass, scratch.child, level));
+#endif
+        if (fine.find (key_child) < 0) {
+          continue;
+        }
+        const int num_touched = scheme->element_get_child_touched_boundaries (
+          eclass, parent, child_id, min_dim, scratch.touched_bdy_dims.data (), scratch.touched_bdy_ids.data ());
+        for (int itouched = 0; itouched < num_touched; itouched++) {
+          touched[scratch.touched_bdy_dims[itouched]] |= (uint64_t) 1 << scratch.touched_bdy_ids[itouched];
         }
       }
-      else {
-        for (int bdy_dim = min_dim; bdy_dim < dim; bdy_dim++) {
-          const int num_boundaries = scheme->element_get_num_boundaries (eclass, parent, bdy_dim);
-          for (int bdy_id = 0; bdy_id < num_boundaries; bdy_id++) {
-            const int num_children
-              = scheme->element_get_num_boundary_touching_children (eclass, parent, bdy_dim, bdy_id);
-            scheme->element_get_children_touching_boundary (eclass, parent, bdy_dim, bdy_id, scratch.children.data (),
-                                                            num_children, scratch.child_bdy_dims.data (), NULL);
-            if (!any_refined (num_children, scratch.child_bdy_dims.data ())) {
-              continue;
-            }
-            /* The neighbors inside the tree, then those across the root boundary that contains the boundary, as
-             * t8_forest_element_boundary_neighbors_cmesh computes them, but into the scratch elements */
-            const int num_inside = scheme->element_get_boundary_neighbors_inside (eclass, parent, bdy_dim, bdy_id,
-                                                                                  scratch.neighbors.data (), NULL);
-            for (int ineigh = 0; ineigh < num_inside; ineigh++) {
-              insert_neighbor (key.gtreeid, eclass, scratch.neighbors[ineigh]);
-            }
-            int root_dim, root_id;
-            scheme->element_get_root_boundary (eclass, parent, bdy_dim, bdy_id, &root_dim, &root_id);
-            if (root_dim < 0) {
-              continue;
-            }
-            for (const t8_cmesh_boundary_neighbor &tree_neighbor : tree_neighbors_of (lctreeid, root_dim, root_id)) {
-              t8_balance_scratch &neigh_scratch = scratch_of (tree_neighbor.eclass);
-              const int num_across = scheme->element_get_boundary_neighbors_across_root (
-                eclass, parent, bdy_dim, bdy_id, root_dim, root_id, tree_neighbor.eclass, tree_neighbor.bdy_id,
-                tree_neighbor.perm, neigh_scratch.neighbors.data (), neigh_scratch.neighbor_bdy_ids.data ());
-              for (int ineigh = 0; ineigh < num_across; ineigh++) {
-                insert_neighbor (tree_neighbor.gtreeid, tree_neighbor.eclass, neigh_scratch.neighbors[ineigh]);
-              }
+      for (int bdy_dim = min_dim; bdy_dim < dim; bdy_dim++) {
+        for (uint64_t bits = touched[bdy_dim]; bits != 0; bits &= bits - 1) {
+          const int bdy_id = __builtin_ctzll (bits);
+          /* The neighbors inside the tree, then those across the root boundary that contains the boundary, as
+           * t8_forest_element_boundary_neighbors_cmesh computes them, but into the scratch elements */
+          const int num_inside = scheme->element_get_boundary_neighbors_inside (eclass, parent, bdy_dim, bdy_id,
+                                                                                scratch.neighbors.data (), NULL);
+          for (int ineigh = 0; ineigh < num_inside; ineigh++) {
+            insert_neighbor (key.gtreeid, eclass, scratch.neighbors[ineigh]);
+          }
+          int root_dim, root_id;
+          scheme->element_get_root_boundary (eclass, parent, bdy_dim, bdy_id, &root_dim, &root_id);
+          if (root_dim < 0) {
+            continue;
+          }
+          for (const t8_cmesh_boundary_neighbor &tree_neighbor : tree_neighbors_of (lctreeid, root_dim, root_id)) {
+            t8_balance_scratch &neigh_scratch = scratch_of (tree_neighbor.eclass);
+            const int num_across = scheme->element_get_boundary_neighbors_across_root (
+              eclass, parent, bdy_dim, bdy_id, root_dim, root_id, tree_neighbor.eclass, tree_neighbor.bdy_id,
+              tree_neighbor.perm, neigh_scratch.neighbors.data (), neigh_scratch.neighbor_bdy_ids.data ());
+            for (int ineigh = 0; ineigh < num_across; ineigh++) {
+              insert_neighbor (tree_neighbor.gtreeid, tree_neighbor.eclass, neigh_scratch.neighbors[ineigh]);
             }
           }
         }
@@ -420,10 +392,8 @@ t8_forest_balance_closure (t8_forest_t forest, const int min_dim)
     if (scratch.ready) {
       scheme->element_destroy ((t8_eclass_t) eclass, 1, &scratch.parent);
       scheme->element_destroy ((t8_eclass_t) eclass, 1, &scratch.neigh);
-      scheme->element_destroy ((t8_eclass_t) eclass, scratch.children.size (), scratch.children.data ());
-      if (!scratch.neighbors.empty ()) {
-        scheme->element_destroy ((t8_eclass_t) eclass, scratch.neighbors.size (), scratch.neighbors.data ());
-      }
+      scheme->element_destroy ((t8_eclass_t) eclass, 1, &scratch.child);
+      scheme->element_destroy ((t8_eclass_t) eclass, scratch.neighbors.size (), scratch.neighbors.data ());
     }
   }
   return refined;
@@ -983,6 +953,21 @@ t8_forest_balance_ripple (t8_forest_t forest, int repartition)
   }
 }
 
+/** Whether the scheme of a forest implements the boundaries for the eclasses of all trees of its (replicated) coarse
+ * mesh, which the one pass balance needs. */
+static bool
+t8_forest_balance_has_boundaries (t8_forest_t forest)
+{
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+  for (t8_locidx_t itree = 0; itree < t8_cmesh_get_num_local_trees (cmesh); itree++) {
+    if (!scheme->has_boundaries (t8_cmesh_get_tree_class (cmesh, itree))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /** Balance a forest with \ref T8_BALANCE_ONE_PASS. */
 static void
 t8_forest_balance_one_pass (t8_forest_t forest, int repartition)
@@ -990,6 +975,8 @@ t8_forest_balance_one_pass (t8_forest_t forest, int repartition)
   t8_forest_t forest_from = forest->set_from;
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest_from);
   SC_CHECK_ABORT (!t8_cmesh_is_partitioned (cmesh), "Balance in one pass needs a replicated coarse mesh.\n");
+  SC_CHECK_ABORT (t8_forest_balance_has_boundaries (forest_from),
+                  "Balance in one pass needs a scheme with boundaries (the standalone scheme).\n");
   t8_global_productionf ("Into t8_forest_balance (one pass) with %lli global elements.\n",
                          (long long) t8_forest_get_global_num_leaf_elements (forest_from));
   t8_log_indent_push ();
@@ -1127,8 +1114,10 @@ t8_forest_balance (t8_forest_t forest, int repartition)
 {
   t8_forest_balance_algorithm_t algorithm = (t8_forest_balance_algorithm_t) forest->balance_algorithm;
   if (algorithm == T8_BALANCE_DEFAULT) {
-    algorithm
-      = t8_cmesh_is_partitioned (t8_forest_get_cmesh (forest->set_from)) ? T8_BALANCE_RIPPLE : T8_BALANCE_ONE_PASS;
+    algorithm = !t8_cmesh_is_partitioned (t8_forest_get_cmesh (forest->set_from))
+                    && t8_forest_balance_has_boundaries (forest->set_from)
+                  ? T8_BALANCE_ONE_PASS
+                  : T8_BALANCE_RIPPLE;
   }
   if (algorithm == T8_BALANCE_ONE_PASS) {
     t8_forest_balance_one_pass (forest, repartition);
