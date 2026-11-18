@@ -43,7 +43,8 @@
  * ghost version and balance rounds are 0. With -s default, t8code uses its default scheme instead of the standalone
  * one (faces only, since the default scheme has no boundaries of lower dimension); the variant gets the suffix
  * "_default", e.g. offsets_default, t8code's existing face algorithms on its existing elements. Built against
- * upstream t8code with -DT8_BENCH_UPSTREAM, the variant is upstream (faces only). One CSV line per cycle (appended
+ * upstream t8code with -DT8_BENCH_UPSTREAM, the variant is upstream (faces only); built against an earlier commit of the
+ * log variant with -DT8_BENCH_LOG_BASE, it is log_base. One CSV line per cycle (appended
  * to the file given with -o):
  * variant,eclass,trees,procs,min_level,max_level,ghost_type,ghost_version,balance_type,balance_algorithm,
  * partition_for_coarsening,cycle,elements,ghosts,adapt_time,balance_time,balance_rounds,partition_ghost_time,
@@ -85,6 +86,10 @@
 /* Upstream t8code (built with -DT8_BENCH_UPSTREAM): ghost layer and balance across faces only */
 #define T8_BENCH_VARIANT "upstream"
 #define T8_BENCH_GHOST_VERSION 3
+#elif defined(T8_FOREST_LOG_PARTITION) && defined(T8_BENCH_LOG_BASE)
+/* An earlier commit of the log variant (built with -DT8_BENCH_LOG_BASE), to compare it with the current one */
+#define T8_BENCH_VARIANT "log_base"
+#define T8_BENCH_GHOST_VERSION 4
 #elif defined(T8_FOREST_LOG_PARTITION)
 #define T8_BENCH_VARIANT "log"
 #define T8_BENCH_GHOST_VERSION 4
