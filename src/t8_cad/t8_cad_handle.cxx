@@ -125,7 +125,7 @@ t8_cad_handle::~t8_cad_handle ()
 int
 t8_cad_handle::is_line (const int curve_index) const
 {
-  const Handle_Geom_Curve curve = get_cad_curve (curve_index);
+  const Handle (Geom_Curve) curve = get_cad_curve (curve_index);
   const GeomAdaptor_Curve curve_adaptor (curve);
   return curve_adaptor.GetType () == GeomAbs_Line;
 }
@@ -133,7 +133,7 @@ t8_cad_handle::is_line (const int curve_index) const
 int
 t8_cad_handle::is_plane (const int surface_index) const
 {
-  const Handle_Geom_Surface surface = get_cad_surface (surface_index);
+  const Handle (Geom_Surface) surface = get_cad_surface (surface_index);
   const GeomAdaptor_Surface surface_adaptor (surface);
   return surface_adaptor.GetType () == GeomAbs_Plane;
 }
@@ -165,15 +165,13 @@ t8_cad_handle::get_cad_point (const int index) const
   return BRep_Tool::Pnt (get_cad_vertex (index));
 }
 
-const Handle_Geom_Curve
-t8_cad_handle::get_cad_curve (const int index) const
+const Handle (Geom_Curve) t8_cad_handle::get_cad_curve (const int index) const
 {
   Standard_Real first, last;
   return BRep_Tool::Curve (get_cad_edge (index), first, last);
 }
 
-const Handle_Geom_Surface
-t8_cad_handle::get_cad_surface (const int index) const
+const Handle (Geom_Surface) t8_cad_handle::get_cad_surface (const int index) const
 {
   return BRep_Tool::Surface (get_cad_face (index));
 }
@@ -460,7 +458,7 @@ t8_cad_handle::get_parameters_of_vertex_on_face (const int vertex_index, const i
           Why also on the face and not only on the edge? I really don't know but I had all information to call this function and it seems to work. */
           Standard_Real first, last;
           const double curve_param = BRep_Tool::Parameter (vertex, current_edge, face);
-          const Handle_Geom2d_Curve pcurve_on_surface = BRep_Tool::CurveOnSurface (current_edge, face, first, last);
+          const Handle (Geom2d_Curve) pcurve_on_surface = BRep_Tool::CurveOnSurface (current_edge, face, first, last);
           /* We can now insert the queried parameter on the curve into the pcurve (the curve on the surface).
           If this is the first point we found uv is empty and we fill it. Otherwise, we define another point to
           store our parameters and we save the parameters in uv which are closer to the reference parameters. */
@@ -509,7 +507,7 @@ t8_cad_handle::edge_parameter_to_face_parameters (const int edge_index, const in
       const TopoDS_Edge current_edge = TopoDS::Edge (dora.Current ());
       /* Check if edge is one of the seams. */
       if (edge.IsSame (current_edge)) {
-        Handle_Geom2d_Curve curve_on_surface = BRep_Tool::CurveOnSurface (edge, face, first, last);
+        Handle (Geom2d_Curve) curve_on_surface = BRep_Tool::CurveOnSurface (edge, face, first, last);
         /* If it is the first seam we compute the parameters. */
         if (!uv.has_value ()) {
           uv.emplace ();
@@ -529,7 +527,7 @@ t8_cad_handle::edge_parameter_to_face_parameters (const int edge_index, const in
     /* If the edge is not a seam or if no reference parameters were provided we just
        use the normal edge. */
     uv.emplace ();
-    Handle_Geom2d_Curve curve_on_surface = BRep_Tool::CurveOnSurface (edge, face, first, last);
+    Handle (Geom2d_Curve) curve_on_surface = BRep_Tool::CurveOnSurface (edge, face, first, last);
     curve_on_surface->D0 (edge_param, uv.value ());
   }
   if (!uv.has_value ()) {
@@ -542,14 +540,14 @@ t8_cad_handle::edge_parameter_to_face_parameters (const int edge_index, const in
 void
 t8_cad_handle::get_face_parametric_bounds (const int surface_index, double *bounds) const
 {
-  const Handle_Geom_Surface cad_surface = get_cad_surface (surface_index);
+  const Handle (Geom_Surface) cad_surface = get_cad_surface (surface_index);
   cad_surface->Bounds (bounds[0], bounds[1], bounds[2], bounds[3]);
 }
 
 void
 t8_cad_handle::get_edge_parametric_bounds (const int edge_index, double *bounds) const
 {
-  const Handle_Geom_Curve cad_edge = get_cad_curve (edge_index);
+  const Handle (Geom_Curve) cad_edge = get_cad_curve (edge_index);
   bounds[0] = cad_edge->FirstParameter ();
   bounds[1] = cad_edge->LastParameter ();
 }
@@ -557,21 +555,21 @@ t8_cad_handle::get_edge_parametric_bounds (const int edge_index, double *bounds)
 int
 t8_cad_handle::edge_is_closed (int edge_index) const
 {
-  const Handle_Geom_Curve cad_edge = get_cad_curve (edge_index);
+  const Handle (Geom_Curve) cad_edge = get_cad_curve (edge_index);
   return cad_edge->IsClosed ();
 }
 
 bool
 t8_cad_handle::surface_is_closed (int geometry_index) const
 {
-  const Handle_Geom_Surface cad_surface = get_cad_surface (geometry_index);
+  const Handle (Geom_Surface) cad_surface = get_cad_surface (geometry_index);
   return cad_surface->IsUClosed () || cad_surface->IsVClosed ();
 }
 
 bool
 t8_cad_handle::surface_is_closed (int geometry_index, int direction) const
 {
-  const Handle_Geom_Surface cad_surface = get_cad_surface (geometry_index);
+  const Handle (Geom_Surface) cad_surface = get_cad_surface (geometry_index);
   switch (direction) {
   case 0:
     return cad_surface->IsUClosed ();

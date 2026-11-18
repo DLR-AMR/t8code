@@ -735,7 +735,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_global_productionf ("Creating uniform level %i forests with an cad triangle geometry.\n", level);
 
     /* Constructing a triangle with one curved edge (f1) */
-    Handle_Geom_BSplineCurve cad_curve;
+    Handle (Geom_BSplineCurve) cad_curve;
     TColgp_Array1OfPnt point_array (1, 3);
     TopoDS_Shape shape;
 
@@ -784,8 +784,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     /* Create two cad bsplines which oscillate along the x-axis.
        * For this we need to define two arrays from which we create the bsplines. */
-    Handle_Geom_Curve cad_curve0;
-    Handle_Geom_Curve cad_curve1;
+    Handle (Geom_Curve) cad_curve0;
+    Handle (Geom_Curve) cad_curve1;
     TColgp_Array1OfPnt point_array0 (1, 5);
     TColgp_Array1OfPnt point_array1 (1, 5);
     TopoDS_Shape shape;
@@ -858,7 +858,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_global_productionf ("Creating uniform level %i forests with a cad surface geometry.\n", level);
 
     /* Create a cad bspline surface with 2D array of knots */
-    Handle_Geom_Surface cad_surface;
+    Handle (Geom_Surface) cad_surface;
     TColgp_Array2OfPnt point_array (1, 5, 1, 3);
     TopoDS_Shape shape;
 
@@ -1007,11 +1007,11 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     BRepBuilderAPI_MakeEdge make_outer_edge (circle_outer);
     TopoDS_Edge edge_outer = make_outer_edge.Edge ();
     TopoDS_Face face_outer = TopoDS::Face (BRepPrimAPI_MakePrism (edge_outer, height));
-    Handle_Geom_Surface cylinder_outer = BRep_Tool::Surface (face_outer);
+    Handle (Geom_Surface) cylinder_outer = BRep_Tool::Surface (face_outer);
     BRepBuilderAPI_MakeEdge make_inner_edge (circle_inner);
     TopoDS_Edge edge_inner = make_inner_edge.Edge ();
     TopoDS_Face face_inner = TopoDS::Face (BRepPrimAPI_MakePrism (edge_inner, height));
-    Handle_Geom_Surface cylinder_inner = BRep_Tool::Surface (face_inner);
+    Handle (Geom_Surface) cylinder_inner = BRep_Tool::Surface (face_inner);
     TopoDS_Shape shape = BRepBuilderAPI_MakeFace (cylinder_outer, 1e-6).Face ();
 
     /* Fill shape with mantles so that we can create a geometry with this shape. */
