@@ -221,13 +221,19 @@ if( T8CODE_ENABLE_VTK )
 endif( T8CODE_ENABLE_VTK )
 
 if( T8CODE_ENABLE_OCC )
-    find_package( OpenCASCADE REQUIRED COMPONENTS
-    TKBO TKPrim TKTopAlgo
-    TKGeomAlgo TKBRep TKShHealing
-    TKG3d TKG2d TKMath TKernel )
-    if(OpenCASCADE_FOUND)
-        message("Found OpenCASCADE")
-    endif (OpenCASCADE_FOUND)
+    find_package( OpenCASCADE CONFIG NO_CMAKE_PACKAGE_REGISTRY
+        COMPONENTS FoundationClasses ModelingData ModelingAlgorithms )
+    if( NOT OpenCASCADE_FOUND )
+        message( FATAL_ERROR "OpenCASCADE not found. If it is installed in a custom location, "
+            "pass its installation prefix with -DOpenCASCADE_ROOT=<prefix> or -DCMAKE_PREFIX_PATH=<prefix>. "
+            "To build t8code without OpenCASCADE, set -DT8CODE_ENABLE_OCC=OFF." )
+    endif()
+    # Checked here and not via find_package, since OpenCASCADE's version file only accepts exact version matches.
+    # 7.2 is the first version we support.
+    if( OpenCASCADE_VERSION VERSION_LESS 7.2 )
+        message( FATAL_ERROR "t8code requires OpenCASCADE 7.2 or newer, but found ${OpenCASCADE_VERSION} in ${OpenCASCADE_DIR}." )
+    endif()
+    message("Found OpenCASCADE ${OpenCASCADE_VERSION}: ${OpenCASCADE_DIR}")
 endif( T8CODE_ENABLE_OCC )
 
 if ( T8CODE_USE_SYSTEM_SC )
