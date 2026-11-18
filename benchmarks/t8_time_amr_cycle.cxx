@@ -48,7 +48,9 @@
  * to the file given with -o):
  * variant,eclass,trees,procs,min_level,max_level,ghost_type,ghost_version,balance_type,balance_algorithm,
  * partition_for_coarsening,cycle,elements,ghosts,adapt_time,balance_time,balance_rounds,partition_ghost_time,
- * partition_time,ghost_time,exchange_time,cycle_time
+ * partition_time,ghost_time,exchange_time,cycle_time, followed by means, load balance, partition data, communication,
+ * memory, the closure and routing counters of the one-pass balance (balance_closure_max, ..., see csv_header) and
+ * the run (job_id,nodes,t8code_version,date).
  * Times are the maxima over the processes, counts are global sums.
  */
 
@@ -484,6 +486,11 @@ struct cycle_times_t
   double ghost_remotes_max, ghost_remotes_mean, ghosts_shipped_max, ghost_waittime_max;
   /* the peak resident set size so far */
   double rss_max_mb, rss_mean_mb;
+  /* the one-pass balance: the local closure, its elements outside the own part, and the routed items (maxima and
+   * means over the processes; nan without these counters, e.g. for the ripple, p4est or other t8code versions) */
+  double balance_closure_max, balance_closure_outside_max, balance_closure_outside_mean;
+  double balance_items_routed_max, balance_items_sent_max, balance_items_sent_mean;
+  double balance_items_received_max, balance_items_held_max, balance_items_owned_max;
 };
 
 /* The columns of the CSV file */
@@ -493,7 +500,37 @@ const char *csv_header
     "partition_time,ghost_time,exchange_time,cycle_time,new_time,setup_time,adapt_mean,balance_mean,"
     "partition_ghost_mean,exchange_mean,cycle_mean,elements_max,ghosts_max,offsets_time,partition_procs_max,"
     "partition_elements_shipped_max,partition_bytes_max,ghost_remotes_max,ghost_remotes_mean,ghosts_shipped_max,"
-    "ghost_waittime_max,rss_max_mb,rss_mean_mb,job_id,nodes,t8code_version,date\n";
+    "ghost_waittime_max,rss_max_mb,rss_mean_mb,balance_closure_max,balance_closure_outside_max,balance_closure_outside_mean,balance_items_routed_max,"
+    "balance_items_sent_max,balance_items_sent_mean,balance_items_received_max,balance_items_held_max,balance_items_owned_max,job_id,nodes,t8code_version,date\n";
+
+/* The closure and routing counters of the one-pass balance, from the profile of the balanced forest (collective);
+ * nan if this t8code has no such counters or balance ran in rounds */
+void
+set_balance_counters ([[maybe_unused]] const t8_profile_t *profile, [[maybe_unused]] sc_MPI_Comm comm,
+                      cycle_times_t &t)
+{
+  t.balance_closure_max = t.balance_closure_outside_max = t.balance_closure_outside_mean = NAN;
+  t.balance_items_routed_max = t.balance_items_sent_max = t.balance_items_sent_mean = NAN;
+  t.balance_items_received_max = t.balance_items_held_max = t.balance_items_owned_max = NAN;
+#ifdef T8_PROFILE_BALANCE_ROUTING
+  /* the ripple balance leaves the counters at zero; one pass reports one round */
+  const int one_pass = max_over_procs (profile != NULL && profile->balance_closure_elements > 0, comm) > 0;
+  if (!one_pass) {
+    return;
+  }
+  t.balance_closure_max = max_over_procs (profile->balance_closure_elements, comm);
+  const proc_stats_t outside = stats_over_procs (profile->balance_closure_outside, comm);
+  t.balance_closure_outside_max = outside.max;
+  t.balance_closure_outside_mean = outside.mean;
+  t.balance_items_routed_max = max_over_procs (profile->balance_items_routed, comm);
+  const proc_stats_t sent = stats_over_procs (profile->balance_items_sent, comm);
+  t.balance_items_sent_max = sent.max;
+  t.balance_items_sent_mean = sent.mean;
+  t.balance_items_received_max = max_over_procs (profile->balance_items_received, comm);
+  t.balance_items_held_max = max_over_procs (profile->balance_items_held_max, comm);
+  t.balance_items_owned_max = max_over_procs (profile->balance_items_owned, comm);
+#endif
+}
 
 /* Write the CSV line and the summary of a cycle, return the time of the cycle */
 double
@@ -510,11 +547,15 @@ report_cycle (const settings_t &settings, const char *variant, const int ghost_v
              settings.for_coarsening, cycle, elements, ghosts, t.adapt, t.balance, t.balance_rounds, t.partition_ghost,
              t.partition, t.ghost, t.exchange, cycle_time);
     /* counts with %.0f: exact up to 2^53, and nan if not available */
-    fprintf (settings.csv, ",%g,%g,%g,%g,%g,%g,%g,%.0f,%.0f,%g,%.0f,%.0f,%.0f,%.0f,%g,%.0f,%g,%.1f,%.1f,%s\n",
+    fprintf (settings.csv, ",%g,%g,%g,%g,%g,%g,%g,%.0f,%.0f,%g,%.0f,%.0f,%.0f,%.0f,%g,%.0f,%g,%.1f,%.1f",
              t.new_time, t.setup_time, t.adapt_mean, t.balance_mean, t.partition_ghost_mean, t.exchange_mean,
              cycle_mean, t.elements_max, t.ghosts_max, t.offsets_time, t.partition_procs_max,
              t.partition_elements_shipped_max, t.partition_bytes_max, t.ghost_remotes_max, t.ghost_remotes_mean,
-             t.ghosts_shipped_max, t.ghost_waittime_max, t.rss_max_mb, t.rss_mean_mb, settings.run_info.c_str ());
+             t.ghosts_shipped_max, t.ghost_waittime_max, t.rss_max_mb, t.rss_mean_mb);
+    fprintf (settings.csv, ",%.0f,%.0f,%.1f,%.0f,%.0f,%.1f,%.0f,%.0f,%.0f,%s\n", t.balance_closure_max,
+             t.balance_closure_outside_max, t.balance_closure_outside_mean, t.balance_items_routed_max,
+             t.balance_items_sent_max, t.balance_items_sent_mean, t.balance_items_received_max,
+             t.balance_items_held_max, t.balance_items_owned_max, settings.run_info.c_str ());
     fflush (settings.csv);
   }
   t8_global_productionf ("amr_cycle %s cycle %d: %lld elements %lld ghosts, adapt %.4f balance %.4f (%d rounds) "
@@ -618,6 +659,9 @@ run (const settings_t &settings, const int min_level, const int max_level, const
     offsets_time += offsets_runtime (balanced);
     int rounds = 0;
     t8_forest_profile_get_balance_time (balanced, &rounds);
+    /* read before the partition, which may release the balanced forest */
+    cycle_times_t times = {};
+    set_balance_counters (balanced->profile, comm, times);
     /* Partition with a ghost layer */
     forest = partition_with_ghost (balanced, settings, comm, &partition_ghost_time);
     offsets_time += offsets_runtime (forest);
@@ -637,7 +681,6 @@ run (const settings_t &settings, const int min_level, const int max_level, const
     const proc_stats_t exchange_time = stats_over_procs (sc_MPI_Wtime () - start, comm);
     sc_array_destroy (data);
 
-    cycle_times_t times = {};
     times.adapt = adapt_time.max;
     times.balance = balance_time.max;
     times.balance_rounds = rounds;
@@ -750,6 +793,7 @@ run_p4est (const settings_t &settings, const int min_level, const int max_level,
     times.offsets_time = NAN;
     times.partition_procs_max = times.partition_elements_shipped_max = times.partition_bytes_max = NAN;
     times.ghosts_shipped_max = times.ghost_waittime_max = NAN;
+    set_balance_counters (NULL, comm, times);
     int remotes = 0;
     for (int q = 0; q < p8est->mpisize; ++q) {
       remotes += ghost->proc_offsets[q + 1] > ghost->proc_offsets[q];
