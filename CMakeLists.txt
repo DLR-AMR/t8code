@@ -226,6 +226,8 @@ if( T8CODE_ENABLE_OCC )
     if( NOT OpenCASCADE_FOUND )
         message( FATAL_ERROR "OpenCASCADE not found. If it is installed in a custom location, "
             "pass its installation prefix with -DOpenCASCADE_ROOT=<prefix> or -DCMAKE_PREFIX_PATH=<prefix>. "
+            "On Debian and Ubuntu, OpenCASCADE's CMake configuration is part of the package occt-misc, "
+            "which has to be installed in addition to the libocct-*-dev packages. "
             "To build t8code without OpenCASCADE, set -DT8CODE_ENABLE_OCC=OFF." )
     endif()
     # Checked here and not via find_package, since OpenCASCADE's version file only accepts exact version matches.
