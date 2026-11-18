@@ -34,6 +34,8 @@
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_helpers.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
@@ -785,6 +787,70 @@ t8_test_pad (const t8_eclass_t eclass, const int num)
   return t8_cmesh_new_hypercube_pad (eclass, sc_MPI_COMM_WORLD, boundary, num, dim > 1 ? num : 0, dim > 2 ? num : 0, 0);
 }
 
+/* The hybrid cube with all four element classes of the cycle benchmark (t8_time_amr_cycle -e hybrid4): t8code's
+ * hybrid cube (6 tetrahedra, 6 prisms and 4 hexahedra in the octants of side 0.5) with the hexahedron of the octant
+ * [0.5,1]^3 replaced by 6 pyramids, one per face of the octant with the apex at its center. The trees are joined by
+ * their vertices; the vertices of each pyramid are ordered so that its volume is positive. */
+static t8_cmesh_t
+t8_test_hybrid4 ()
+{
+  t8_cmesh_t hybrid = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+  const int max_values = T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM;
+  const double lower = 0.5, side = 0.5, center = lower + 0.5 * side;
+  std::vector<t8_eclass_t> eclasses;
+  std::vector<double> vertices;
+  /* The trees of the hybrid cube except the hexahedron with its first vertex at (0.5, 0.5, 0.5) */
+  int replaced = 0;
+  for (t8_gloidx_t itree = 0; itree < t8_cmesh_get_num_trees (hybrid); ++itree) {
+    const t8_eclass_t eclass = t8_cmesh_get_tree_class (hybrid, itree);
+    const double *tree_vertices = t8_cmesh_get_tree_vertices (hybrid, itree);
+    if (eclass == T8_ECLASS_HEX && std::fabs (tree_vertices[0] - lower) < 1e-12
+        && std::fabs (tree_vertices[1] - lower) < 1e-12 && std::fabs (tree_vertices[2] - lower) < 1e-12) {
+      ++replaced;
+      continue;
+    }
+    eclasses.push_back (eclass);
+    vertices.resize (eclasses.size () * max_values, 0);
+    std::copy (tree_vertices, tree_vertices + 3 * t8_eclass_num_vertices[eclass], vertices.end () - max_values);
+  }
+  t8_cmesh_destroy (&hybrid);
+  SC_CHECK_ABORT (replaced == 1, "The hybrid cube has no hexahedron at (0.5, 0.5, 0.5).");
+  /* One pyramid per face of the octant: the face normal to axis a at x_a = lower + s * side */
+  for (int a = 0; a < 3; ++a) {
+    for (int s = 0; s < 2; ++s) {
+      const int b = (a + 1) % 3, c = (a + 2) % 3;
+      double v0[3], e1[3] = { 0, 0, 0 }, e2[3] = { 0, 0, 0 };
+      v0[a] = lower + s * side;
+      v0[b] = v0[c] = lower;
+      /* e1 x e2 points along +a (cyclic axes), towards the apex for s = 0: swap the edges for s = 1 */
+      e1[s ? c : b] = side;
+      e2[s ? b : c] = side;
+      eclasses.push_back (T8_ECLASS_PYRAMID);
+      vertices.resize (eclasses.size () * max_values, 0);
+      double *pyramid = vertices.data () + vertices.size () - max_values;
+      for (int i = 0; i < 3; ++i) {
+        pyramid[0 + i] = v0[i];
+        pyramid[3 + i] = v0[i] + e1[i];
+        pyramid[6 + i] = v0[i] + e2[i];
+        pyramid[9 + i] = v0[i] + e1[i] + e2[i];
+        pyramid[12 + i] = center;
+      }
+    }
+  }
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  const t8_gloidx_t num_trees = eclasses.size ();
+  for (t8_gloidx_t itree = 0; itree < num_trees; ++itree) {
+    t8_cmesh_set_tree_class (cmesh, itree, eclasses[itree]);
+    t8_cmesh_set_tree_vertices (cmesh, itree, vertices.data () + itree * max_values,
+                                t8_eclass_num_vertices[eclasses[itree]]);
+  }
+  t8_cmesh_register_geometry (cmesh, t8_geometry_linear_new ());
+  t8_cmesh_set_join_by_vertices (cmesh, num_trees, eclasses.data (), vertices.data (), NULL, 0);
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  return cmesh;
+}
+
 static const t8_test_cmesh t8_test_cmeshes[] = {
   { "Line", [] () { return t8_cmesh_new_from_class (T8_ECLASS_LINE, sc_MPI_COMM_WORLD); } },
   { "Quad", [] () { return t8_cmesh_new_from_class (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD); } },
@@ -801,6 +867,7 @@ static const t8_test_cmesh t8_test_cmeshes[] = {
   { "Prisms", [] () { return t8_test_pad (T8_ECLASS_PRISM, 2); } },
   { "Pyramids", [] () { return t8_cmesh_new_hypercube (T8_ECLASS_PYRAMID, sc_MPI_COMM_WORLD, 0, 0, 0); } },
   { "Hybrid", [] () { return t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0); } },
+  { "Hybrid4", t8_test_hybrid4 },
   /* Meshes whose trees are connected with non-trivial orientations */
   { "FullHybrid", [] () { return t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD); } },
   { "PrismCake", [] () { return t8_cmesh_new_prism_cake (sc_MPI_COMM_WORLD, 5); } },
