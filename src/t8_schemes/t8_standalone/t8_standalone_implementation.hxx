@@ -45,6 +45,94 @@
 #include "t8_schemes/t8_standalone/t8_standalone_lut/t8_standalone_lut_pyra.hxx"
 #include "t8_standalone_elements.hxx"
 
+/** For each type, minimal dimension m and child of an element, the minimal boundaries of the element that the child
+ * touches with an intersection of dimension at least m: every such boundary contains one of them, and none of them
+ * contains another. Since a same-level neighbor at a boundary contains every boundary in it, the neighbors at the
+ * minimal boundaries are all neighbors that touch the child with dimension at least m. */
+template <t8_eclass TEclass>
+struct t8_standalone_child_touched_boundaries
+{
+  /** The number of types. */
+  static constexpr int num_types = 1 << T8_ELEMENT_NUM_EQUATIONS[TEclass];
+  /** The size of the array dimension of the minimal dimensions (at least 1). */
+  static constexpr int num_dims = T8_ELEMENT_DIM[TEclass] > 0 ? T8_ELEMENT_DIM[TEclass] : 1;
+  /** An upper bound for the number of boundaries of all dimensions below the element dimension (at least 1). */
+  static constexpr int max_bdys
+    = num_dims * (T8_ELEMENT_MAX_BOUNDARIES[TEclass] > 0 ? T8_ELEMENT_MAX_BOUNDARIES[TEclass] : 1);
+
+  int8_t num[num_types][num_dims][T8_ELEMENT_NUM_CHILDREN[TEclass]] = {};            /**< The number of boundaries. */
+  int8_t dims[num_types][num_dims][T8_ELEMENT_NUM_CHILDREN[TEclass]][max_bdys] = {}; /**< Their dimensions. */
+  int8_t ids[num_types][num_dims][T8_ELEMENT_NUM_CHILDREN[TEclass]][max_bdys] = {};  /**< Their ids. */
+  int max_num = 0;                                                                    /**< The maximum of \a num. */
+};
+
+/** Compute the minimal boundaries touched by the children from the tables of the touching children. A boundary
+ * contains another if it contains all its corners. */
+template <t8_eclass TEclass>
+constexpr t8_standalone_child_touched_boundaries<TEclass>
+t8_standalone_compute_child_touched_boundaries ()
+{
+  t8_standalone_child_touched_boundaries<TEclass> table {};
+  constexpr int dim = T8_ELEMENT_DIM[TEclass];
+  if constexpr (dim > 0) {
+    constexpr int max_corners = T8_ELEMENT_MAX_NUM_BOUNDARY_CORNERS[TEclass];
+    const auto contains = [] (const int type, const int dim_a, const int id_a, const int dim_b, const int id_b) {
+      const int8_t *corners_a = t8_standalone_lut_type_bdy_dim_id_to_corners<TEclass>[type][dim_a][id_a];
+      const int8_t *corners_b = t8_standalone_lut_type_bdy_dim_id_to_corners<TEclass>[type][dim_b][id_b];
+      for (int ib = 0; ib < max_corners && corners_b[ib] >= 0; ib++) {
+        bool found = false;
+        for (int ia = 0; ia < max_corners && corners_a[ia] >= 0; ia++) {
+          found = found || corners_a[ia] == corners_b[ib];
+        }
+        if (!found) {
+          return false;
+        }
+      }
+      return true;
+    };
+    for (int type = 0; type < table.num_types; type++) {
+      for (int min_dim = 0; min_dim < dim; min_dim++) {
+        for (int child = 0; child < T8_ELEMENT_NUM_CHILDREN[TEclass]; child++) {
+          int num = 0;
+          /* By increasing dimension, so that the boundaries contained in a boundary are listed before it */
+          for (int bdy_dim = min_dim; bdy_dim < dim; bdy_dim++) {
+            for (int bdy_id = 0; bdy_id < t8_standalone_lut_type_bdy_dim_to_num_boundaries<TEclass>[type][bdy_dim];
+                 bdy_id++) {
+              const int8_t *childids
+                = t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childid<TEclass>[type][bdy_dim][bdy_id];
+              const int8_t *childdims
+                = t8_standalone_lut_type_bdy_dim_id_touchchildid_to_childbdydim<TEclass>[type][bdy_dim][bdy_id];
+              bool minimal = false;
+              for (int ichild = 0;
+                   ichild < T8_ELEMENT_MAX_NUM_BOUNDARY_TOUCHING_CHILDREN[TEclass] && childids[ichild] >= 0; ichild++) {
+                minimal = minimal || (childids[ichild] == child && childdims[ichild] >= min_dim);
+              }
+              for (int i = 0; i < num && minimal; i++) {
+                minimal = !(table.dims[type][min_dim][child][i] < bdy_dim
+                            && contains (type, bdy_dim, bdy_id, table.dims[type][min_dim][child][i],
+                                         table.ids[type][min_dim][child][i]));
+              }
+              if (minimal) {
+                table.dims[type][min_dim][child][num] = bdy_dim;
+                table.ids[type][min_dim][child][num] = bdy_id;
+                num++;
+              }
+            }
+          }
+          table.num[type][min_dim][child] = num;
+          table.max_num = num > table.max_num ? num : table.max_num;
+        }
+      }
+    }
+  }
+  return table;
+}
+
+/** The minimal boundaries touched by the children of each element class. */
+template <t8_eclass TEclass>
+constexpr t8_standalone_child_touched_boundaries<TEclass> t8_standalone_lut_child_touched_boundaries
+  = t8_standalone_compute_child_touched_boundaries<TEclass> ();
+
 /** A templated implementation of the scheme interface based on cutting planes. */
 template <t8_eclass TEclass>
 struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_scheme<TEclass>>
@@ -1492,7 +1580,8 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   /** The linear id of an element at a level, computed level by level from the child ids of its ancestors.
    * \param [in] elem     The element whose id we compute.
    * \param [in] level    The level of the uniform refinement to consider.
-   * eturn              The linear id of the element.
+   * 
+eturn              The linear id of the element.
    */
   static constexpr t8_linearidx_t
   element_get_linear_id_by_levels (const t8_element_t *elem, const t8_element_level level) noexcept
@@ -2239,6 +2328,61 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       for (int ichild = num_children - 1; ichild >= 0; ichild--) {
         element_get_child (elem, childids[ichild], children[ichild]);
       }
+    }
+  }
+
+  /** Whether the boundary functions are implemented.
+   * \return  True.
+   */
+  static constexpr bool
+  has_boundaries () noexcept
+  {
+    return true;
+  }
+
+  /** Return the maximum number of minimal boundaries touched by a child, see
+   * \ref element_get_child_touched_boundaries.
+   * \return  The maximum over all types, children and minimal dimensions.
+   */
+  static constexpr int
+  get_max_num_child_touched_boundaries () noexcept
+  {
+    return t8_standalone_lut_child_touched_boundaries<TEclass>.max_num;
+  }
+
+  /** Compute the minimal boundaries of an element that one of its children touches with dimension at least \a min_dim:
+   * every boundary that the child touches with an intersection of dimension at least \a min_dim contains one of
+   * them, and none of them contains another. The same-level neighbors of the element at these boundaries are all
+   * same-level neighbors that touch the child with dimension at least \a min_dim.
+   * \param [in] elem       The element.
+   * \param [in] child_id   The child id of the child.
+   * \param [in] min_dim    The minimal dimension, between 0 and the dimension minus one.
+   * \param [out] bdy_dims  At least \ref get_max_num_child_touched_boundaries integers. On output, the dimensions of
+   *                        the boundaries, ascending.
+   * \param [out] bdy_ids   As \a bdy_dims, the boundary ids.
+   * \return                The number of boundaries.
+   */
+  static constexpr int
+  element_get_child_touched_boundaries ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int child_id,
+                                        [[maybe_unused]] const int min_dim, [[maybe_unused]] int *bdy_dims,
+                                        [[maybe_unused]] int *bdy_ids) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    if constexpr (T8_ELEMENT_DIM[TEclass] == 0) {
+      SC_ABORT ("A vertex has no boundaries.");
+      return 0;
+    }
+    else {
+      T8_ASSERT (0 <= child_id && child_id < element_get_num_children (elem));
+      T8_ASSERT (0 <= min_dim && min_dim < T8_ELEMENT_DIM[TEclass]);
+      const int type = element_get_lut_type ((const t8_standalone_element<TEclass> *) elem);
+      const auto &table = t8_standalone_lut_child_touched_boundaries<TEclass>;
+      const int num = table.num[type][min_dim][child_id];
+      for (int ibdy = 0; ibdy < num; ibdy++) {
+        bdy_dims[ibdy] = table.dims[type][min_dim][child_id][ibdy];
+        bdy_ids[ibdy] = table.ids[type][min_dim][child_id][ibdy];
+      }
+      return num;
     }
   }
 

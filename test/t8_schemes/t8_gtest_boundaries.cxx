@@ -106,6 +106,74 @@ struct class_boundaries: public TestDFS
         check_neighbors (bdy_dim, bdy_id);
       }
     }
+    for (int min_dim = 0; min_dim < dim; min_dim++) {
+      check_child_touched_boundaries (min_dim);
+    }
+  }
+
+  /* Whether a child touches a boundary with an intersection of dimension at least min_dim. */
+  bool
+  child_touches (const int child_id, const int bdy_dim, const int bdy_id, const int min_dim)
+  {
+    const int num_touching = scheme->element_get_num_boundary_touching_children (eclass, element, bdy_dim, bdy_id);
+    int touching_dims[T8_TEST_MAX_CHILDREN];
+    scheme->element_get_children_touching_boundary (eclass, element, bdy_dim, bdy_id, touching_children, num_touching,
+                                                    touching_dims, NULL);
+    for (int ichild = 0; ichild < num_touching; ichild++) {
+      if (scheme->element_get_child_id (eclass, touching_children[ichild]) == child_id
+          && touching_dims[ichild] >= min_dim) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /* The minimal boundaries touched by a child are touched by it with dimension at least min_dim, and the neighbors at
+   * every boundary that the child touches with dimension at least min_dim are neighbors at one of them. */
+  void
+  check_child_touched_boundaries (const int min_dim)
+  {
+    if (scheme->element_get_level (eclass, element) >= scheme->get_maxlevel (eclass)) {
+      return;
+    }
+    const int dim = t8_eclass_to_dimension[eclass];
+    const int max_touched = scheme->get_max_num_child_touched_boundaries (eclass);
+    ASSERT_LE (max_touched, T8_TEST_MAX_BOUNDARIES);
+    const int num_children = scheme->element_get_num_children (eclass, element);
+    for (int child_id = 0; child_id < num_children; child_id++) {
+      int touched_dims[T8_TEST_MAX_BOUNDARIES], touched_ids[T8_TEST_MAX_BOUNDARIES];
+      const int num_touched = scheme->element_get_child_touched_boundaries (eclass, element, child_id, min_dim,
+                                                                            touched_dims, touched_ids);
+      ASSERT_LE (num_touched, max_touched);
+      for (int itouched = 0; itouched < num_touched; itouched++) {
+        ASSERT_GE (touched_dims[itouched], min_dim);
+        ASSERT_LT (touched_dims[itouched], dim);
+        EXPECT_TRUE (itouched == 0 || touched_dims[itouched - 1] <= touched_dims[itouched]);
+        EXPECT_TRUE (child_touches (child_id, touched_dims[itouched], touched_ids[itouched], min_dim));
+      }
+      for (int bdy_dim = min_dim; bdy_dim < dim; bdy_dim++) {
+        const int num_boundaries = scheme->element_get_num_boundaries (eclass, element, bdy_dim);
+        for (int bdy_id = 0; bdy_id < num_boundaries; bdy_id++) {
+          if (!child_touches (child_id, bdy_dim, bdy_id, min_dim)) {
+            continue;
+          }
+          const int num_neighbors
+            = scheme->element_get_boundary_neighbors_inside (eclass, element, bdy_dim, bdy_id, neighbors, NULL);
+          for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
+            bool found = false;
+            for (int itouched = 0; itouched < num_touched && !found; itouched++) {
+              const int num_other = scheme->element_get_boundary_neighbors_inside (
+                eclass, element, touched_dims[itouched], touched_ids[itouched], back_neighbors, NULL);
+              for (int iother = 0; iother < num_other && !found; iother++) {
+                found = scheme->element_is_equal (eclass, neighbors[ineigh], back_neighbors[iother]);
+              }
+            }
+            EXPECT_TRUE (found) << "Neighbor " << ineigh << " at boundary " << bdy_id << " of dimension " << bdy_dim
+                                << " of child " << child_id << " is missing for min_dim " << min_dim;
+          }
+        }
+      }
+    }
   }
 
   /* The children at a boundary are children of the element in SFC order, and a child boundary is not more than
@@ -223,6 +291,7 @@ struct class_boundaries: public TestDFS
  protected:
   static constexpr int T8_TEST_MAX_CHILDREN = 10;
   static constexpr int T8_TEST_MAX_NEIGHBORS = 32;
+  static constexpr int T8_TEST_MAX_BOUNDARIES = 32;
 
   void
   SetUp () override

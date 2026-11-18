@@ -364,6 +364,26 @@ struct t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEc
     SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
   }
 
+  inline bool
+  has_boundaries () const
+  {
+    return false;
+  }
+
+  inline int
+  get_max_num_child_touched_boundaries () const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
+  inline int
+  element_get_child_touched_boundaries ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int child_id,
+                                        [[maybe_unused]] const int min_dim, [[maybe_unused]] int *bdy_dims,
+                                        [[maybe_unused]] int *bdy_ids) const
+  {
+    SC_ABORT ("Boundaries are only implemented for the standalone scheme\n");
+  }
+
   inline void
   element_get_first_descendant_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int bdy_dim,
                                          [[maybe_unused]] const int bdy_id, [[maybe_unused]] t8_element_t *desc,

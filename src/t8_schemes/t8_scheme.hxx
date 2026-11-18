@@ -1301,6 +1301,54 @@ struct t8_scheme
       eclass_schemes[tree_class]);
   }
 
+  /** Whether the scheme of an eclass implements the boundaries of all dimensions (element_get_num_boundaries up to
+   * element_get_boundary_neighbors_across_root and element_get_child_touched_boundaries).
+   * \param [in] tree_class  The eclass of the current tree.
+   * \return                 True if the boundary functions are implemented.
+   */
+  inline bool
+  has_boundaries (const t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.has_boundaries (); }, eclass_schemes[tree_class]);
+  }
+
+  /** Return the maximum number of minimal boundaries touched by a child, see
+   * \ref element_get_child_touched_boundaries.
+   * \param [in] tree_class  The eclass of the current tree.
+   * \return                 The maximum over all children and minimal dimensions.
+   */
+  inline int
+  get_max_num_child_touched_boundaries (const t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.get_max_num_child_touched_boundaries (); },
+                       eclass_schemes[tree_class]);
+  }
+
+  /** Compute the minimal boundaries of an element that one of its children touches with dimension at least \a min_dim:
+   * every boundary that the child touches with an intersection of dimension at least \a min_dim contains one of
+   * them, and none of them contains another. The same-level neighbors of the element at these boundaries are all
+   * same-level neighbors that touch the child with dimension at least \a min_dim, since a neighbor at a boundary
+   * contains the boundaries in it.
+   * \param [in] tree_class  The eclass of the current tree.
+   * \param [in] element     The element.
+   * \param [in] child_id    The child id of the child.
+   * \param [in] min_dim     The minimal dimension, between 0 and the dimension minus one.
+   * \param [out] bdy_dims   At least \ref get_max_num_child_touched_boundaries integers. On output, the dimensions
+   *                         of the boundaries, ascending.
+   * \param [out] bdy_ids    As \a bdy_dims, the boundary ids.
+   * \return                 The number of boundaries.
+   */
+  inline int
+  element_get_child_touched_boundaries (const t8_eclass_t tree_class, const t8_element_t *element, const int child_id,
+                                        const int min_dim, int *bdy_dims, int *bdy_ids) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) {
+        return scheme.element_get_child_touched_boundaries (element, child_id, min_dim, bdy_dims, bdy_ids);
+      },
+      eclass_schemes[tree_class]);
+  }
+
   /** Compute the first descendant of an element at a given level that touches a boundary with a boundary of the
    * same dimension.
    * \param [in] tree_class  The eclass of the current tree.
