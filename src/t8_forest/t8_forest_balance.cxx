@@ -1001,7 +1001,9 @@ t8_forest_balance_one_pass (t8_forest_t forest, int repartition)
   const t8_scheme *scheme = t8_forest_get_scheme (forest_from);
   t8_balance_refined_t refine (refined.size ());
   std::vector<t8_balance_item> items;
+  int64_t closure_elements = 0, closure_outside = 0;
   for (int level = 0; level < (int) refined.size (); level++) {
+    closure_elements += refined[level].size ();
     for (size_t entry = 0; entry < refined[level].size (); entry++) {
       const t8_balance_key &key = refined[level].key (entry);
       const t8_eclass_t eclass = refined[level].eclass (entry);
@@ -1011,8 +1013,10 @@ t8_forest_balance_one_pass (t8_forest_t forest, int repartition)
                                    &item.last);
       if (splitters.has_elements && splitters.first_position <= item.first && item.last < splitters.next_position) {
         refine[level].insert (key, eclass, scheme, NULL);
+        continue;
       }
-      else if (!has_refined_child
+      closure_outside++;
+      if (!has_refined_child
                && (!splitters.has_elements || item.last < splitters.first_position
                    || !(item.first < splitters.next_position))) {
         item.id = key.id;
@@ -1021,12 +1025,23 @@ t8_forest_balance_one_pass (t8_forest_t forest, int repartition)
       }
     }
   }
+  const int64_t items_routed = items.size ();
+  t8_forest_route_stats route_stats;
   t8_forest_route (
     forest_from, items,
     [] (const t8_balance_item &item, const t8_forest_bisection &level) {
       return t8_forest_route_halves_positions (level, item.first, item.last, true);
     },
-    t8_forest_balance_merge_items);
+    t8_forest_balance_merge_items, &route_stats);
+  if (forest->profile != NULL) {
+    forest->profile->balance_closure_elements = closure_elements;
+    forest->profile->balance_closure_outside = closure_outside;
+    forest->profile->balance_items_routed = items_routed;
+    forest->profile->balance_items_sent = route_stats.sent;
+    forest->profile->balance_items_received = route_stats.received;
+    forest->profile->balance_items_held_max = route_stats.held_max;
+    forest->profile->balance_items_owned = items.size ();
+  }
 
   /* The received elements and their ancestors are refined as well */
   for (const t8_balance_item &item : items) {

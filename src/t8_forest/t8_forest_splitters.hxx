@@ -50,6 +50,7 @@
 #include <t8.h>
 #include <t8_element.h>
 #include <t8_forest/t8_forest_general.h>
+#include <algorithm>
 #include <compare>
 #include <cstring>
 #include <type_traits>
@@ -190,6 +191,14 @@ void
 t8_forest_route_exchange (const t8_forest_t forest, const t8_forest_bisection &level, const std::vector<char> &send,
                           std::vector<char> &recv);
 
+/** Statistics of \ref t8_forest_route on this process. */
+struct t8_forest_route_stats
+{
+  size_t sent = 0;     /**< The items sent, summed over the rounds. */
+  size_t received = 0; /**< The items received, summed over the rounds. */
+  size_t held_max = 0; /**< The largest number of items held after the merge of a round. */
+};
+
 /** Route items to the processes that own them: in each bisection interval containing this process, from [0, P)
  * inwards, the items are split by \a halves, and those for the other half are sent to the partner there.
  * \tparam TItem  A trivially copyable type, which is sent as bytes.
@@ -199,11 +208,13 @@ t8_forest_route_exchange (const t8_forest_t forest, const t8_forest_bisection &l
  *                        the \ref t8_forest_route_halves to route the item to.
  * \param [in] merge      Called as merge (items) after each round, with the kept items followed by the received
  *                        ones. May reorder, combine or remove items, e.g. duplicates.
+ * \param [in,out] stats  If not NULL, the statistics of this call are added.
  * \note This function is collective.
  */
 template <typename TItem, typename THalves, typename TMerge>
 void
-t8_forest_route (const t8_forest_t forest, std::vector<TItem> &items, THalves &&halves, TMerge &&merge)
+t8_forest_route (const t8_forest_t forest, std::vector<TItem> &items, THalves &&halves, TMerge &&merge,
+                 t8_forest_route_stats *stats = nullptr)
 {
   static_assert (std::is_trivially_copyable_v<TItem>, "Routed items are sent as bytes");
   const t8_forest_splitters &splitters = t8_forest_get_splitters (forest);
@@ -233,6 +244,11 @@ t8_forest_route (const t8_forest_t forest, std::vector<TItem> &items, THalves &&
     }
     items.swap (keep);
     merge (items);
+    if (stats != nullptr) {
+      stats->sent += send.size () / sizeof (TItem);
+      stats->received += recv.size () / sizeof (TItem);
+      stats->held_max = std::max (stats->held_max, items.size ());
+    }
   }
 }
 

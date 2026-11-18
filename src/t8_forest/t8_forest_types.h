@@ -61,6 +61,9 @@ typedef int8_t t8_forest_from_t;
 #define T8_FOREST_BALANCE_REPART 1    /**< Value of forest->set_balance if balancing with repartitioning */
 #define T8_FOREST_BALANCE_NO_REPART 2 /**< Value of forest->set_balance if balancing without repartitioning */
 
+/** Defined if the profile has the closure and routing counters of the one-pass balance. */
+#define T8_PROFILE_BALANCE_ROUTING 1
+
 /** The number of statistics collected by a profile struct. */
 #define T8_PROFILE_NUM_STATS 17
 
@@ -208,6 +211,14 @@ typedef struct t8_profile
   double cmesh_offsets_runtime;    /**< The runtime of the last call to \a t8_forest_partition_create_tree_offsets. */
   double forest_offsets_runtime;   /**< The runtime of the last call to \a t8_forest_partition_create_offsets. */
   double first_descendant_runtime; /**< The runtime of the last call to \a t8_forest_partition_create_first_desc. */
+  /* The last one-pass balance (T8_BALANCE_ONE_PASS) of this process (T8_PROFILE_BALANCE_ROUTING): */
+  int64_t balance_closure_elements; /**< The elements of the local closure, in all trees and levels. */
+  int64_t balance_closure_outside;  /**< Of them, the elements that are not in the part of this process. */
+  int64_t balance_items_routed;     /**< Of those, the items this process routes (without a refined child). */
+  int64_t balance_items_sent;       /**< The items this process sent, summed over the rounds of the routing. */
+  int64_t balance_items_received;   /**< The items this process received, summed over the rounds. */
+  int64_t balance_items_held_max;   /**< The largest number of items this process held after a round. */
+  int64_t balance_items_owned;      /**< The items routed to this process, after the last round. */
 
 } t8_profile_struct_t;
 
