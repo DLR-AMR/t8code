@@ -562,7 +562,8 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_distributed_cm
 TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_no_boundary_conditions)
 {
   t8_cmesh_t cmesh = NULL;
-  t8_cmesh_new_empty (cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_from_class (cmesh, T8_ECLASS_VERTEX, sc_MPI_COMM_WORLD);
   EXPECT_FALSE (t8_cmesh_has_boundary_conditions (cmesh));
 
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, sc_MPI_COMM_WORLD);
