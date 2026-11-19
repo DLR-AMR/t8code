@@ -30,13 +30,9 @@ name: t8code indentation check
 # The script runs the scripts/check_if_all_files_indented.sh script of t8code.
 # The output is uploaded as an artifact to the github page.
 
+# DEBUG BRANCH: all triggers except manual dispatch disabled, see debug_macos_permute_hole.yml
 on:
-  merge_group:
-  pull_request:
-  workflow_dispatch: # Be able to trigger this manually on github.com
-  # Run every night at 1:05
-  schedule:
-      - cron:  '05 1 * * *'
+  workflow_dispatch:
 
 jobs:
   indent:

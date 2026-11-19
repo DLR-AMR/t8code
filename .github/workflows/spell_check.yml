@@ -20,10 +20,9 @@ name: spell_check
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+# DEBUG BRANCH: all triggers except manual dispatch disabled, see debug_macos_permute_hole.yml
 on:
-  merge_group:
-  pull_request:
-  workflow_dispatch: # Be able to trigger this manually on github.com
+  workflow_dispatch:
 
 jobs:
   typos-check:

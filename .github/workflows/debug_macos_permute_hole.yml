@@ -1,0 +1,266 @@
+name: DEBUG macOS permute_hole hang
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2026 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+#  Temporary debugging workflow (NOT meant to be merged).
+#
+#  Since 2026-11-13 the macOS job of the testsuite hangs in t8_gtest_permute_hole_serial
+#  until the job timeout. Code, runner image, open-mpi, gcc and all thirdparty refs are
+#  identical between the last green run (43249077640) and the first hanging run (43388508517);
+#  the only observed difference is the Homebrew cmake upgrade 4.4.5 -> 4.5.0.
+#
+#  This workflow
+#   - builds only the permute_hole test with the exact CI configuration,
+#   - runs it via ctest, directly, and once per element class, each under a watchdog,
+#   - on a hang, collects `ps`, two `sample` profiles and an lldb backtrace of the hanging
+#     process (spinning vs. blocked, and where),
+#   - compares the generated build commands of cmake 4.5 (brew) and cmake 4.4.5 (pip).
+
+on:
+  push:
+    branches:
+      - debug-macos-permute-hole-hang
+  workflow_dispatch:
+
+env:
+  # Seconds before a run counts as hanging. On 2026-11-12 the whole test took 24 s.
+  HANG_TIMEOUT_FULL: 180
+  HANG_TIMEOUT_SINGLE: 60
+
+jobs:
+  permute_hole:
+    name: ${{ matrix.name }}
+    runs-on: macos-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Exact reproduction of the CI job (cmake from brew, i.e. 4.5.x, flags -O1).
+          - name: cmake-brew_O1
+            CMAKE_SOURCE: brew
+            DEBUG_FLAGS: "-O1"
+          # Same, with debug info so that lldb can show source lines and variables.
+          - name: cmake-brew_O1-g
+            CMAKE_SOURCE: brew
+            DEBUG_FLAGS: "-O1 -g"
+          # Does the hang depend on optimization?
+          - name: cmake-brew_O0-g
+            CMAKE_SOURCE: brew
+            DEBUG_FLAGS: "-O0 -g"
+          # Control group: the last cmake version with which the job was green.
+          - name: cmake-pip-4.4.5_O1
+            CMAKE_SOURCE: pip
+            CMAKE_PIP_VERSION: "4.4.5"
+            DEBUG_FLAGS: "-O1"
+          - name: cmake-pip-4.4.5_O1-g
+            CMAKE_SOURCE: pip
+            CMAKE_PIP_VERSION: "4.4.5"
+            DEBUG_FLAGS: "-O1 -g"
+    env:
+      DIAG: ${{ github.workspace }}/diag
+      TEST_NAME: t8_gtest_permute_hole_serial
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    #
+    # Part 1: Environment, identical to test_t8code_macos.yml except for cmake
+    # -------------------------------------------------------------------------
+    - name: Update packages
+      run: brew update
+    - name: Install packages via Homebrew (incl. cmake)
+      if: ${{ matrix.CMAKE_SOURCE == 'brew' }}
+      run: brew install open-mpi ninja cmake openssl gfortran
+    - name: Install packages via Homebrew (without cmake)
+      if: ${{ matrix.CMAKE_SOURCE == 'pip' }}
+      run: brew install open-mpi ninja openssl gfortran
+    - name: Install cmake ${{ matrix.CMAKE_PIP_VERSION }} via pip
+      if: ${{ matrix.CMAKE_SOURCE == 'pip' }}
+      run: |
+        python3 -m venv "$RUNNER_TEMP/cmake-venv"
+        "$RUNNER_TEMP/cmake-venv/bin/pip" install "cmake==${{ matrix.CMAKE_PIP_VERSION }}"
+        echo "$RUNNER_TEMP/cmake-venv/bin" >> "$GITHUB_PATH"
+    - name: Export OpenMPI path
+      run: echo OPENMPI_BIN="/opt/homebrew/opt/open-mpi/bin" >> $GITHUB_ENV
+    - name: Print tool versions
+      run: |
+        mkdir -p "$DIAG"
+        {
+          echo "### sw_vers"; sw_vers; uname -a
+          echo "### cmake";   which -a cmake; cmake --version; ctest --version
+          echo "### ninja";   which ninja; ninja --version
+          echo "### mpicc";   $OPENMPI_BIN/mpicc --version; $OPENMPI_BIN/mpicc --showme
+          echo "### mpicxx";  $OPENMPI_BIN/mpicxx --showme
+          echo "### mpifort"; $OPENMPI_BIN/mpifort --version
+          echo "### xcode";   xcode-select -p; xcrun --show-sdk-path; xcrun --show-sdk-version
+          echo "### brew";    brew list --versions
+        } 2>&1 | tee "$DIAG/versions.txt"
+    #
+    # Part 2: Configure and build only the permute_hole test (same options as CI)
+    # ----------------------------------------------------------------------------
+    - name: cmake
+      run: |
+        mkdir build && cd build
+        cmake ../ -GNinja -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
+          -DT8CODE_ENABLE_MPI=ON -DCMAKE_BUILD_TYPE=Debug -DT8CODE_TEST_LEVEL=T8_TEST_LEVEL_FULL \
+          -DCMAKE_C_FLAGS_DEBUG="${{ matrix.DEBUG_FLAGS }}" -DCMAKE_CXX_FLAGS_DEBUG="${{ matrix.DEBUG_FLAGS }}" \
+          -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON \
+          -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON \
+          -DT8CODE_ENABLE_OCC=OFF -DT8CODE_ENABLE_VTK=OFF \
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+          -DT8CODE_CUSTOM_PARALLEL_TEST_COMMAND="mpirun --oversubscribe -np 4" 2>&1 | tee "$DIAG/cmake_configure.txt"
+    - name: build ${{ env.TEST_NAME }}
+      run: |
+        cd build
+        ninja -t commands "$TEST_NAME" > "$DIAG/ninja_commands.txt"
+        ninja "$TEST_NAME"
+        echo "### Compile and link commands of the test itself:"
+        grep -E "t8_gtest_permute_hole|-o test/t8_forest_incomplete/$TEST_NAME" "$DIAG/ninja_commands.txt" || true
+        echo "### Compile command of t8_forest_adapt.cxx:"
+        grep -E "t8_forest_adapt\.cxx" "$DIAG/ninja_commands.txt" || true
+    - name: Inspect test binary
+      run: |
+        BIN=$(find build -type f -name "$TEST_NAME" -perm -u+x | head -1)
+        echo "TEST_BIN=$GITHUB_WORKSPACE/$BIN" >> $GITHUB_ENV
+        {
+          echo "### binary: $BIN"
+          echo "### otool -L"; otool -L "$BIN"
+          echo "### LC_RPATH"; otool -l "$BIN" | grep -A2 LC_RPATH
+          echo "### ctest command"; (cd build && ctest -R permute_hole -N -V | grep -E "Test command|Environment|permute" || true)
+        } 2>&1 | tee "$DIAG/binary.txt"
+    #
+    # Part 3: Run the test under a watchdog and collect stack traces on a hang
+    # -------------------------------------------------------------------------
+    - name: Create watchdog script
+      run: |
+        cat > "$RUNNER_TEMP/watchdog.sh" << 'EOF'
+        #!/bin/bash
+        # Usage: watchdog.sh <label> <timeout in s> <command...>
+        # Runs <command>, and if a t8_gtest_permute_hole_serial process is still alive after <timeout>,
+        # collects ps/sample/lldb output for it, then kills everything. Exit code 124 means hang.
+        label=$1; timeout=$2; shift 2
+        out="$DIAG/$label"; mkdir -p "$out"
+        echo "=== [$label] start: $*"
+        start=$(date +%s)
+        "$@" > "$out/output.txt" 2>&1 &
+        cpid=$!
+        while kill -0 $cpid 2>/dev/null && [ $(( $(date +%s) - start )) -lt "$timeout" ]; do sleep 2; done
+        if ! kill -0 $cpid 2>/dev/null; then
+          wait $cpid; rc=$?
+          echo "=== [$label] finished after $(( $(date +%s) - start )) s with exit code $rc"
+          tail -n 40 "$out/output.txt"
+          exit $rc
+        fi
+        echo "::error::[$label] still running after ${timeout}s -> collecting diagnostics"
+        echo "--- last output lines:"; tail -n 20 "$out/output.txt"
+        # Anchor at the start of the command line, otherwise this script (whose arguments contain the
+        # binary path) would match as well.
+        pattern="^${TEST_BIN}( |\$)"
+        echo "--- process tree"; ps -o pid,ppid,stat,%cpu,time,command -ax | grep -E "ctest|mpirun|prte|$TEST_NAME" | grep -v grep
+        pids=$(pgrep -f "$pattern")
+        if [ -z "$pids" ]; then
+          # Fallback: any process mentioning the test binary, except this script itself.
+          pids=$(pgrep -f "/${TEST_NAME}( |\$)" | grep -vx "$$")
+        fi
+        for pid in $pids; do
+          echo "--- ps (pid $pid) - check whether it burns CPU (spin) or sleeps (blocked)"
+          ps -o pid,ppid,stat,%cpu,time,rss,command -p $pid | tee "$out/ps_${pid}_1.txt"
+          sudo sample $pid 5 -file "$out/sample_${pid}_1.txt" > /dev/null 2>&1
+          sleep 15
+          ps -o pid,ppid,stat,%cpu,time,rss,command -p $pid | tee "$out/ps_${pid}_2.txt"
+          sudo sample $pid 5 -file "$out/sample_${pid}_2.txt" > /dev/null 2>&1
+          echo "--- sample #2 (call graph)"
+          sed -n '/Call graph:/,/Total number in stack/p' "$out/sample_${pid}_2.txt" | head -n 120
+          lldb_cmds=(-o "thread backtrace all")
+          for f in 0 1 2 3 4 5 6 7 8 9 10 11 12; do
+            lldb_cmds+=(-o "frame select $f" -o "frame variable")
+          done
+          lldb_cmds+=(-o "detach")
+          sudo lldb --batch -p $pid "${lldb_cmds[@]}" > "$out/lldb_${pid}.txt" 2>&1
+          echo "--- lldb"; cat "$out/lldb_${pid}.txt"
+        done
+        pkill -TERM -f "$pattern"; kill -TERM $cpid 2>/dev/null; sleep 2
+        pkill -KILL -f "$pattern"; kill -KILL $cpid 2>/dev/null
+        exit 124
+        EOF
+        chmod +x "$RUNNER_TEMP/watchdog.sh"
+        # Make sure lldb may attach.
+        sudo DevToolsSecurity -enable || true
+    - name: Run via ctest (exactly as in CI)
+      id: run_ctest
+      continue-on-error: true
+      run: cd build && "$RUNNER_TEMP/watchdog.sh" ctest "$HANG_TIMEOUT_FULL" ctest -R permute_hole -V
+    - name: Run test binary directly (all element classes)
+      id: run_direct
+      continue-on-error: true
+      run: cd build && "$RUNNER_TEMP/watchdog.sh" direct "$HANG_TIMEOUT_FULL" "$TEST_BIN" --gtest_print_time=1
+    - name: Run test binary once per element class
+      continue-on-error: true
+      run: |
+        cd build
+        # gtest lists "suite." lines followed by "  name  # GetParam() = x" lines; ignore sc/t8 log lines.
+        tests=$("$TEST_BIN" --gtest_list_tests | awk '/^[^ \[].*\.$/{suite=$1} /^  .*GetParam/{print suite $1}')
+        echo "Found tests:"; echo "$tests"
+        summary=""
+        for t in $tests; do
+          label="single_$(echo "$t" | tr '/.' '__')"
+          rc=0
+          "$RUNNER_TEMP/watchdog.sh" "$label" "$HANG_TIMEOUT_SINGLE" "$TEST_BIN" --gtest_filter="$t" --gtest_print_time=1 || rc=$?
+          summary="$summary\n$t -> exit $rc"
+        done
+        echo "### Summary (124 = hang)"; printf "$summary\n" | tee "$DIAG/single_summary.txt"
+    - name: Upload diagnostics
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: diag-${{ matrix.name }}
+        path: |
+          diag/
+          build/compile_commands.json
+          build/CMakeCache.txt
+          build/build.ninja
+          build/Testing/Temporary/LastTest.log
+
+  # Diff the generated build commands of cmake 4.5 (brew) and cmake 4.4.5 (pip).
+  compare_cmake_versions:
+    needs: permute_hole
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v8
+      with:
+        path: artifacts
+    - name: Diff compile/link commands (brew vs pip-4.4.5)
+      run: |
+        for flags in O1 O1-g; do
+          a=artifacts/diag-cmake-brew_$flags
+          b=artifacts/diag-cmake-pip-4.4.5_$flags
+          echo "################ $flags: cmake versions"
+          grep -A1 "^### cmake" $a/diag/versions.txt $b/diag/versions.txt || true
+          echo "################ $flags: diff of ninja commands for the test target"
+          diff -u $b/diag/ninja_commands.txt $a/diag/ninja_commands.txt | head -n 300 || true
+          echo "################ $flags: diff of CMakeCache.txt"
+          diff -u <(grep -v "^#\|^$\|CMAKE_COMMAND\|CMAKE_CTEST_COMMAND\|CMAKE_CPACK_COMMAND\|CMAKE_ROOT\|CMAKE_CACHE_" $b/build/CMakeCache.txt) \
+                  <(grep -v "^#\|^$\|CMAKE_COMMAND\|CMAKE_CTEST_COMMAND\|CMAKE_CPACK_COMMAND\|CMAKE_ROOT\|CMAKE_CACHE_" $a/build/CMakeCache.txt) | head -n 200 || true
+          echo "################ $flags: ctest summaries"
+          cat $a/diag/single_summary.txt $b/diag/single_summary.txt 2>/dev/null || true
+        done
