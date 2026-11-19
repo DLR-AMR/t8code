@@ -36,6 +36,9 @@
 #endif /* T8_ENABLE_EIGEN */
 #if T8_ENABLE_GMSH
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_dgm.hxx>
+#if T8_ENABLE_EIGEN
+#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_dg_rbf.hxx>
+#endif /* T8_ENABLE_EIGEN */
 #endif /* T8_ENABLE_GMSH */
 #endif /* T8_ENABLE_OCC */
 #include <t8_vtk/t8_vtk_writer.h>
@@ -114,6 +117,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   int dim, level;
   int deformation_type_int = 0;
   double scale_factor_support_radius = 1.5;
+  int substepping = 0;
 
   /* Initialize command line argument parser. */
   sc_options_t *opt = sc_options_new (argv[0]);
@@ -124,9 +128,11 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   sc_options_add_int (opt, 'd', "dimension", &dim, 0, "Dimension of the mesh (1, 2 or 3)");
   sc_options_add_int (opt, 'l', "level", &level, 2, "Uniform refinement level for the input mesh. Default: 2");
   sc_options_add_int (opt, 't', "deformtype", &deformation_type_int, 0,
-                      "Deformation type: 0 for RBF CPC2, 1 for RBF TPS, 2 for Delaunay Graph Mapping. Default: 0");
+                      "Deformation type: 0 for RBF CPC2, 1 for RBF TPS, 2 for Delaunay Graph Mapping, 3 for Delaunay "
+                      "Graph based RBF. Default: 0");
   sc_options_add_double (opt, 's', "scalefactor", &scale_factor_support_radius, 1.5,
                          "Scale factor for the support radius. Default: 1.5");
+  sc_options_add_switch (opt, 'st', "substepping", &substepping, "Enable substepping for the DG-RBF method.");
 
   const int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
@@ -178,9 +184,15 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
       deformation.set_deformation_method<t8_dgm> ();
       method_name = "dgm";
       break;
-#else  /* T8_ENABLE_GMSH  */
+#else       /* T8_ENABLE_GMSH  */
       SC_ABORT ("ERROR: This example requires GMSH to be enabled in t8code.\n");
-#endif /* T8_ENABLE_GMSH  */
+#endif      /* T8_ENABLE_GMSH  */
+    case 3: /* DG-RBF */
+#if T8_ENABLE_GMSH && T8_ENABLE_EIGEN
+      deformation.set_deformation_method<t8_dg_rbf> (scale_factor_support_radius, substepping);
+      method_name = "dg-rbf";
+      break;
+#endif /*T8_ENABLE_GMSH && T8_ENABLE_EIGEN*/
 
     default:
       SC_ABORTF ("Unknown or unavailable deformation type %d.\n", deformation_type_int);
