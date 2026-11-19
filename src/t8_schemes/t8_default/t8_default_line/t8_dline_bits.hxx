@@ -20,18 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dline_bits.h
+/** \file t8_dline_bits.hxx
  * Definitions of line-specific functions.
  */
 
-#ifndef T8_DLINE_BITS_H
-#define T8_DLINE_BITS_H
+#pragma once
 
 #include <t8_element/t8_element.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline.h>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_dvertex.h>
-
-T8_EXTERN_C_BEGIN ();
 
 /** Compute the level of a line.
  * \param [in] line    Line whose level is computed.
@@ -245,7 +242,7 @@ t8_dline_last_descendant (const t8_dline_t *line, t8_dline_t *desc, int level);
 void
 t8_dline_vertex_integer_coords (const t8_dline_t *line, const int vertex, int coords[]);
 
-/** Compute the coordinates of a vertex of a line when the 
+/** Compute the coordinates of a vertex of a line when the
  * tree (level 0 line) is embedded in [0,1]^1.
  * \param [in] line         Input line.
  * \param [in] vertex       The number of the vertex.
@@ -295,7 +292,3 @@ t8_dline_is_valid (const t8_dline_t *line);
  */
 void
 t8_dline_init (t8_dline_t *line);
-
-T8_EXTERN_C_END ();
-
-#endif /* T8_DLINE_BITS_H */

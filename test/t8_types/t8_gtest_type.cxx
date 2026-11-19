@@ -79,7 +79,7 @@ using int_and_double = T8Type<int_and_double_struct, int_and_double_tag>;
 
 /**
  * Test if the the strong types are different.
- * 
+ *
  */
 TEST (t8_gtest_type, strong_type_equality)
 {
@@ -111,7 +111,7 @@ TEST (t8_gtest_type, strong_type_size)
 
 /**
  * Test if each strong type holds the correct values (e.g. the get operator works).
- * 
+ *
  */
 TEST (t8_gtest_type, strong_type_get)
 {

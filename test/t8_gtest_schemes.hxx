@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_gtest_schemes.hxx 
+/** \file t8_gtest_schemes.hxx
  * File to provide different schemes for testing purposes.
  */
 

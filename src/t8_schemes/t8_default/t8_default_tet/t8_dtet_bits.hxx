@@ -20,20 +20,17 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtet_bits.h
+/** \file t8_dtet_bits.hxx
  * Definitions of tet-specific functions.
  * TODO: Run make doxygen and grep for files.
  *       Also document all arguments of functions.
  * TODO: Group the dtet_is functions together.
  */
 
-#ifndef T8_DTET_BITS_H
-#define T8_DTET_BITS_H
+#pragma once
 
 #include <t8_element/t8_element.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
-
-T8_EXTERN_C_BEGIN ();
 
 /** Compute the coordinates of a vertex of a tetrahedron.
  * \param [in] elem    Input tetrahedron.
@@ -43,7 +40,7 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_dtet_compute_integer_coords (const t8_dtet_t *elem, int vertex, t8_dtet_coord_t coordinates[3]);
 
-/** Compute the coordinates of a vertex of a tetrahedron when the 
+/** Compute the coordinates of a vertex of a tetrahedron when the
  * tree (level 0 tetrahedron) is embedded in \f$ [0,1]^3 \f$.
  * \param [in] elem         Input tetrahedron.
  * \param [in] vertex       The number of the vertex.
@@ -138,7 +135,7 @@ t8_dtet_is_familypv (const t8_dtet_t *f[]);
 
 /** Compute a specific sibling of a tetrahedron.
  * \param [in]     tet      Input tetrahedron.
- * \param [in,out] sibling  Existing tetrahedron whose data will be filled with the data of sibling no. sibling_id of 
+ * \param [in,out] sibling  Existing tetrahedron whose data will be filled with the data of sibling no. sibling_id of
  *                          \a tet.
  * \param [in]     sibid    The id of the sibling computed, 0..7 in Bey order.
  */
@@ -168,7 +165,7 @@ t8_dtet_nearest_common_ancestor (const t8_dtet_t *tet1, const t8_dtet_t *tet2, t
  * \param [in] face     A face of \a tet.
  * \param [in,out] children Allocated tetrahedra, in which the children of \a tet that share a face with \a face are
  *                      stored. They will be stored in order of their child_id.
- * \param [in] num_children The number of tetrahedra in \a children. Must match the number of children that touch 
+ * \param [in] num_children The number of tetrahedra in \a children. Must match the number of children that touch
  *                      \a face.
  * \param [in,out] child_indices The indices of the children in \a children. Only filled if this is null previously.
  */
@@ -189,13 +186,13 @@ t8_dtet_face_child_face (const t8_dtet_t *tet, int face, int face_child);
  * no face of the parent matches the face.
  * \param [in]  tet   The tet.
  * \param [in]  face  Then number of the face.
- * \return            If \a face of \a tet is also a face of \a tet's parent, the face number of this face. 
+ * \return            If \a face of \a tet is also a face of \a tet's parent, the face number of this face.
  *                    Otherwise -1.
  */
 int
 t8_dtet_face_parent_face (const t8_dtet_t *tet, int face);
 
-/** Given a tetrahedron and a face of this tetrahedron. If the face lies on the tree boundary, return the face number 
+/** Given a tetrahedron and a face of this tetrahedron. If the face lies on the tree boundary, return the face number
  * of the tree face. If not the return value is arbitrary.
  * \param [in] tet    The tetrahedron.
  * \param [in] face   The index of a face of \a tet.
@@ -206,7 +203,7 @@ t8_dtet_face_parent_face (const t8_dtet_t *tet, int face);
 int
 t8_dtet_tree_face (t8_dtet_t *tet, int face);
 
-/** Given a tetrahedron and a face of the root tetrahedron. If the tetrahedron lies on the tree boundary, 
+/** Given a tetrahedron and a face of the root tetrahedron. If the tetrahedron lies on the tree boundary,
  * return the corresponding face number of the tetrahedron. If not the return value is arbitrary.
  * \param [in] tet       The tetrahedron.
  * \param [in] root_face The index of a face of the root tetrahedron.
@@ -379,7 +376,7 @@ t8_dtet_is_valid (const t8_dtet_t *tet);
 void
 t8_dtet_init (t8_dtet_t *tet);
 
-/** Packs an array of tet elements into contiguous memory. 
+/** Packs an array of tet elements into contiguous memory.
  * Tets are packed as x, y, z coordinates, type and level.
  * Compare MPI_Pack function.
  * \param [in] elements     The element array to be packed.
@@ -414,7 +411,3 @@ t8_dtet_element_pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack
 void
 t8_dtet_element_unpack (void *recvbuf, const int buffer_size, int *position, t8_dtet_t **elements,
                         const unsigned int count, sc_MPI_Comm comm);
-
-T8_EXTERN_C_END ();
-
-#endif /* T8_DTET_BITS_H */

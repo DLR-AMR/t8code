@@ -20,9 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtri_to_dtet.h 
+/** \file t8_dtri_to_dtet.h
  * In this file, we redefine macros, types,... of the code for triangles
- * to use the  default implementation also for tetrahedra in 3D to 
+ * to use the  default implementation also for tetrahedra in 3D to
  * avoid code duplication.
  */
 
@@ -33,8 +33,8 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Define macro used in the default triangle implementation to check 
- * if we are in the case where the tri implementation is used for tets. 
+/** Define macro used in the default triangle implementation to check
+ * if we are in the case where the tri implementation is used for tets.
  */
 #define T8_DTRI_TO_DTET
 
@@ -70,7 +70,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_type_cid_to_Iloc t8_dtet_type_cid_to_Iloc               /**< Wrapper of tri variable to tet.*/
 #define t8_dtri_face_corner t8_dtet_face_corner                         /**< Wrapper of tri variable to tet.*/
 
-/** Functions in t8_dtri_bits.h. */
+/** Functions in t8_dtri_bits.hxx. */
 #define t8_dtri_is_equal t8_dtet_is_equal                                   /**< Wrapper of tri function to tet.*/
 #define t8_dtri_copy t8_dtet_copy                                           /**< Wrapper of tri function to tet.*/
 #define t8_dtri_compare t8_dtet_compare                                     /**< Wrapper of tri function to tet.*/

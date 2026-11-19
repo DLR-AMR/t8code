@@ -348,8 +348,8 @@ t8_element_array_find (const t8_element_array_t *element_array, const t8_element
   }
 
   /* Several elements may share the same linear id (e.g. all subelements of one transition cell).
-   * They are stored contiguously and we found the last one in the block (if the element_id exists in the array). 
-   * Therefore, we walk backwards over all elements with the same id and level and compare each of them. 
+   * They are stored contiguously and we found the last one in the block (if the element_id exists in the array).
+   * Therefore, we walk backwards over all elements with the same id and level and compare each of them.
    * For schemes without subelements this loop runs at most once. */
   while (search_result >= 0) {
     const t8_element_t *check_element = t8_element_array_index_locidx (element_array, search_result);

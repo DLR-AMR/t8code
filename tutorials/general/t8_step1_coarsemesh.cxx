@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-1---Creating-a-coarse-mesh
+/** \file t8_step1_coarsemesh.cxx
+ * See also: https://github.com/DLR-AMR/t8code/wiki/Step-1---Creating-a-coarse-mesh
  *
  * In this example we build a coarse mesh with a cube geometry.
  * The cube is meshed with 6 coarse tetrahedra.
@@ -92,6 +93,7 @@ t8_step1_destroy_cmesh (t8_cmesh_t cmesh)
   t8_cmesh_destroy (&cmesh);
 }
 
+/** Entry point of the program. */
 int
 main (int argc, char **argv)
 {

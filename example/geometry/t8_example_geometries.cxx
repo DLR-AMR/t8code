@@ -74,10 +74,10 @@ typedef enum {
   T8_GEOM_COUNT
 } t8_example_geom_type;
 
-/** This geometry maps a point (x,y) in R^2 
+/** This geometry maps a point (x,y) in R^2
  * to the point (x,y, 0.2 * sin(2PI X) * cos(2PI Y)).
  * It should only be used for 2 dimensional forests.
- * 
+ *
  * This geometry does not provide a jacobian.
  */
 struct t8_geometry_sincos: public t8_geometry
@@ -89,9 +89,9 @@ struct t8_geometry_sincos: public t8_geometry
   }
 
   /**
-   * Maps points (x,y) in R^2 
+   * Maps points (x,y) in R^2
    * to the point (x,y, 0.2 * sin(2PI X) * cos(2PI Y)).
-   * It is specifically designed to work on two tree cmeshes and 
+   * It is specifically designed to work on two tree cmeshes and
    * models the rectangle [0,2] x [0,1].
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
@@ -163,7 +163,7 @@ struct t8_geometry_sincos: public t8_geometry
 
 /** This geometry maps the unit square \f$ [0,1]^2 \f$ to the moebius strip.
  * The unit square can be modelled with any cmesh (consisting of any number of trees).
- * 
+ *
  * It inherits from the w_vertices geometry since we use the tree's vertex coordinates.
  * This geometry does not provide a jacobian.
  */
@@ -246,7 +246,7 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
 
 /** This geometry maps the unit square to a cylinder.
  * It should only be used for cmeshes with a single quad tree.
- * 
+ *
  * This geometry does not provide a jacobian.
  */
 struct t8_geometry_cylinder: public t8_geometry
@@ -326,7 +326,7 @@ struct t8_geometry_cylinder: public t8_geometry
  * and radius 1.
  * This geometry massively distorts elements near the boundary and should not be
  * used for actual numerical experiments.
- * 
+ *
  * This geometry does not provide a jacobian.
  */
 struct t8_geometry_circle: public t8_geometry_with_vertices
@@ -414,7 +414,7 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
  * sincos function and multiplied with the current time.
  * To use this, a pointer to a double variable time is added to the geometry.
  * This variable can be modified from outside.
- * 
+ *
  * The geometry can only be used with single tree cmeshes (unit square).
  */
 
@@ -595,11 +595,10 @@ t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
                         [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                         t8_element_t *elements[])
 {
-  t8_cmesh_t cmesh = t8_forest_get_cmesh (forest_from);
   /* Get the number of faces of the element. */
   const int num_faces = scheme->element_get_num_faces (tree_class, elements[0]);
   int iface;
-  /* Get the maximum level from the forest's user data 
+  /* Get the maximum level from the forest's user data
    * (must be set before using the callback). */
   int maxlevel = *(int *) t8_forest_get_user_data (forest);
 
@@ -608,18 +607,11 @@ t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
     return 0;
   }
 
-  /* Check for each face of the element whether it lies on the 
+  /* Check for each face of the element whether it lies on the
    * domain boundary. If so, the element is refined. */
   for (iface = 0; iface < num_faces; ++iface) {
-    if (scheme->element_is_root_boundary (tree_class, elements[0], iface)) {
-      /* This element's face is at its tree boundary. Check whether
-         the tree's face is at the domain boundary. */
-      int tree_face = scheme->element_get_tree_face (tree_class, elements[0], iface);
-      t8_locidx_t lctreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest_from, ltree_id);
-      if (t8_cmesh_tree_face_is_boundary (cmesh, lctreeid, tree_face)) {
-        /* The tree's face is at the domain boundary, we refine the element. */
-        return 1;
-      }
+    if (t8_forest_leaf_is_boundary (forest_from, ltree_id, elements[0], iface)) {
+      return 1;
     }
   }
   /* All other elements remain unchanged. */
@@ -761,8 +753,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     /* Create a cad geometry. */
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
 
-    /* The arrays indicate which face/edge carries a geometry. 
-       * 0 means no geometry and any other number indicates the position of the geometry 
+    /* The arrays indicate which face/edge carries a geometry.
+       * 0 means no geometry and any other number indicates the position of the geometry
        * in the global geometry array. Here edge 1 carries the created cad_curve. */
     int faces[1] = { 0 };
     int edges[6] = { 0, 1, 0, 0, 0, 0 };
@@ -774,14 +766,11 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     /* The valid parameter range for bsplines is [0, 1]. Therefore, we define the parameter range accordingly. */
     double parameters_edge[2] = { 0, 1 };
 
-    /* Give the tree information about its curves and the parameters of the vertices. 
-       * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 1 * sizeof (int),
-                            0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 6 * sizeof (int),
-                            0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 1,
-                            parameters_edge, 2 * sizeof (double), 0);
+    // Give the tree information about its curves and the parameters of the vertices.
+    t8_geometry_cad::set_tree_geometries (cmesh, 0, 1, edges, 6);
+    t8_geometry_cad::set_tree_geometries (cmesh, 0, 2, faces, 1);
+
+    t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, 1, 1, parameters_edge, 2);
 
     snprintf (vtuname, BUFSIZ, "forest_cad_triangle_lvl_%i", level);
     break;
@@ -793,7 +782,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 #if T8_ENABLE_OCC
     t8_global_productionf ("Creating uniform level %i forests with cad curve geometries.\n", level);
 
-    /* Create two cad bsplines which oscillate along the x-axis. 
+    /* Create two cad bsplines which oscillate along the x-axis.
        * For this we need to define two arrays from which we create the bsplines. */
     Handle_Geom_Curve cad_curve0;
     Handle_Geom_Curve cad_curve1;
@@ -825,8 +814,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     /* Create a cad geometry. */
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
 
-    /* The arrays indicate which face/edge carries a geometry. 
-     * 0 means no geometry and any other number indicates the position of the geometry 
+    /* The arrays indicate which face/edge carries a geometry.
+     * 0 means no geometry and any other number indicates the position of the geometry
      * in the global geometry array. Here edge 0 carries cad_curve0 and edge 3 carries cad_curve1.
      * We add them in the next step. */
     int faces[6] = { 0, 0, 0, 0, 0, 0 };
@@ -837,20 +826,26 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     double vertices[24] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
     t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 8);
 
-    /* The valid parameter range for bsplines is [0, 1]. We defined the bsplines in such a way, 
+    /* The valid parameter range for bsplines is [0, 1]. We defined the bsplines in such a way,
        * that parameter 0 and 1 resemble the two vertices of the connected edge. */
     double parameters[2] = { 0, 1 };
 
-    /* Give the tree information about its curves and the parameters of the vertices. 
-       * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
-                            0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
-                            0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 0, parameters,
-                            2 * sizeof (double), 0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 3, parameters,
-                            2 * sizeof (double), 0);
+    // Give the tree information about its curves and the parameters of the vertices.
+    const int dim_faces = 2;
+    const int num_faces = 6;
+    t8_geometry_cad::set_tree_geometries (cmesh, 0, dim_faces, faces, num_faces);
+    const int dim_edges = 1;
+    const int num_edges = 24;
+    t8_geometry_cad::set_tree_geometries (cmesh, 0, dim_edges, edges, num_edges);
+
+    /* Set the parameters for the edges 0 and 3. */
+    const int edge_parameter_index_a = 0;
+    const int num_edge_parameters = 2;
+    t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, dim_edges, edge_parameter_index_a, parameters,
+                                                   num_edge_parameters);
+    const int edge_parameter_index_b = 3;
+    t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, dim_edges, edge_parameter_index_b, parameters,
+                                                   num_edge_parameters);
 
     snprintf (vtuname, BUFSIZ, "forest_cad_curve_cube_lvl_%i", level);
     break;
@@ -867,10 +862,10 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     TColgp_Array2OfPnt point_array (1, 5, 1, 3);
     TopoDS_Shape shape;
 
-    /* Filling the 2D surface array with knots. The resulting surface resembles 
+    /* Filling the 2D surface array with knots. The resulting surface resembles
      * a surface at the top (face 5) of the trees.
-     * Some of the knots have the same position as the vertices of the trees. 
-     * These knots are marked with the tree id and vertex index. 
+     * Some of the knots have the same position as the vertices of the trees.
+     * These knots are marked with the tree id and vertex index.
      * We also marked the direction of the u- and v-parameter.
      *
      *  x--> u-parameter
@@ -916,9 +911,9 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     cad_surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
     shape = BRepBuilderAPI_MakeFace (cad_surface, 1e-6).Face ();
 
-    /* The arrays indicate which face/edge carries a geometry. 
-     * 0 means no geometry and any other number indicates the position of the geometry 
-     * in the global geometry array. Here face 5 carries the surface, we add it in the next step. 
+    /* The arrays indicate which face/edge carries a geometry.
+     * 0 means no geometry and any other number indicates the position of the geometry
+     * in the global geometry array. Here face 5 carries the surface, we add it in the next step.
      * There are no geometries linked to the edges, hence all entries are 0. */
     int faces[6] = { 0, 0, 0, 0, 0, 1 };
     int edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -936,20 +931,26 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     };
     t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 8);
 
-    /* The valid parameter range for bspline surfaces is [0,1]^2. We defined the bspline surface in such a way, 
+    /* The valid parameter range for bspline surfaces is [0,1]^2. We defined the bspline surface in such a way,
        * that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
     double parameters0[8] = { 0, 0, 0.5, 0, 0, 1, 0.5, 1 };
 
-    /* Give tree 0 information about its surface and the parameters of the vertices. 
-     * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
-     */
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
-                            0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
-                            0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 5, parameters0,
-                            8 * sizeof (double), 0);
+    // Give tree 0 information about its surface and the parameters of the vertices.
 
+    {
+      const int dim_faces = 2;
+      const int num_faces = 6;
+      t8_geometry_cad::set_tree_geometries (cmesh, 0, dim_faces, faces, num_faces);
+
+      const int dim_edges = 1;
+      const int num_edges = 24;
+      t8_geometry_cad::set_tree_geometries (cmesh, 0, dim_edges, edges, num_edges);
+      const int attribute_param_dimension = 2;
+      const int num_parameters = 8;
+      const int parameter_index = 5;
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, attribute_param_dimension, parameter_index, parameters0,
+                                                     num_parameters);
+    }
     /* Create tree 1 */
     t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_HEX);
     double vertices1[24] = {
@@ -964,16 +965,19 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
      * that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
     double parameters1[8] = { 0.5, 0, 1, 0, 0.5, 1, 1, 1 };
 
-    /* Give tree 1 information about its surface and the parameters of the vertices. 
-     *  Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
-     *  We can use the same edges and faces array, because we link the surface to the same face on tree 1. */
-    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
-                            0);
-    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
-                            0);
-    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 5, parameters1,
-                            8 * sizeof (double), 0);
-
+    // Give tree 1 information about its surface and the parameters of the vertices.
+    {
+      const int face_dim = 2;
+      const int num_faces = 6;
+      t8_geometry_cad::set_tree_geometries (cmesh, 1, face_dim, faces, num_faces);
+      const int edge_dim = 1;
+      const int num_edges = 24;
+      t8_geometry_cad::set_tree_geometries (cmesh, 1, edge_dim, edges, num_edges);
+      const int param_dim = 2;
+      const int param_index = 5;
+      const int num_parameters = 8;
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, 1, param_dim, param_index, parameters1, num_parameters);
+    }
     /* Join tree 0 and tree 1 together */
     t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
 
@@ -1013,8 +1017,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     /* Fill shape with mantles so that we can create a geometry with this shape. */
     shape = BRepAlgoAPI_Fuse (shape, BRepBuilderAPI_MakeFace (cylinder_inner, 1e-6).Face ());
 
-    /* The arrays indicate which face/edge carries a geometry. 
-     * 0 means no geometry and any other number indicates the position of the geometry 
+    /* The arrays indicate which face/edge carries a geometry.
+     * 0 means no geometry and any other number indicates the position of the geometry
      * in the global geometry array. Here face 0 carries the outer cylinder and face 1 carries the inner cylinder.
      * We add them in the next step. The edges do not have any geometries, hence all entries are 0. */
     int faces[6] = { 1, 2, 0, 0, 0, 0 };
@@ -1023,7 +1027,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     /* Create a cad geometry. */
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
 
-    /* Create corresponding trees and parameters. 
+    /* Create corresponding trees and parameters.
      * Here we create num trees by a coordinate transformation from cylinder to cartesian coordinates. */
     int num = 4;
     double *vertices, *parameters;
@@ -1058,7 +1062,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       vertices[i * 24 + 23] = 1;
       t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 24, 8);
 
-      /* Create corresponding parameters for the cylinders. 
+      /* Create corresponding parameters for the cylinders.
        * The parameter range of the cylinders is u ∈ [0, 2 * M_PI] and v ∈ ]inf, -inf[ */
       parameters[i * 8 + 0] = (i + 1) * 2 * M_PI / num;
       parameters[i * 8 + 1] = 0;
@@ -1069,17 +1073,22 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       parameters[i * 8 + 6] = i * 2 * M_PI / num;
       parameters[i * 8 + 7] = -1;
 
-      /* Give the trees information about their surfaces and the parameters of the vertices. 
-       * Each parameter set is given to the tree via its attribute key + face index it corresponds with. 
+      /* Give the trees information about their surfaces and the parameters of the vertices.
        * We can use the same edges and faces array, because we link the surface to the same faces on every tree.*/
-      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
-                              1);
-      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
-                              1);
-      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 0,
-                              parameters + i * 8, 8 * sizeof (double), 0);
-      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 1,
-                              parameters + i * 8, 8 * sizeof (double), 0);
+      const int face_dim = 2;
+      const int num_faces = 6;
+      t8_geometry_cad::set_tree_geometries (cmesh, i, face_dim, faces, num_faces);
+      const int edge_dim = 1;
+      const int num_edges = 24;
+      t8_geometry_cad::set_tree_geometries (cmesh, i, edge_dim, edges, num_edges);
+
+      const int param_dim = 2;
+      const int param_index_a = 0;
+      const int num_params = 8;
+      const double *params = parameters + i * 8;
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, i, param_dim, param_index_a, params, num_params);
+      const int param_index_b = 1;
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, i, param_dim, param_index_b, params, num_params);
     }
 
     T8_FREE (vertices);
@@ -1104,8 +1113,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, sc_MPI_COMM_WORLD);
   if (geom_type == T8_GEOM_CIRCLE) {
     t8_forest_t forest_adapt;
-    /* Create a forest that is only refined at the tree boundaries. 
-     * We pass the input level as user pointer and use it in the adapt 
+    /* Create a forest that is only refined at the tree boundaries.
+     * We pass the input level as user pointer and use it in the adapt
      * callback to stop refinement after this level. */
     forest_adapt = t8_forest_new_adapt (forest, t8_geom_adapt_boundary, 1, 1, &level);
     forest = forest_adapt;

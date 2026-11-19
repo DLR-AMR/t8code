@@ -34,7 +34,7 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** 
+/**
  * Create a new linear, axis-aligned geometry of a given dimension.
  * The geometry is only viable for line/quad/hex elements and uses two
  * vertices (min and max coords) per tree. The vertices are saved via

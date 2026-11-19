@@ -50,6 +50,7 @@
 /* indirectly also include sc.h */
 #include <sc_containers.h>
 
+#ifdef __cplusplus
 /** This macro opens the extern "C" brace needed in C headers.
  * It needs to be followed by a semicolon to look like a statement. */
 #define T8_EXTERN_C_BEGIN() SC_EXTERN_C_BEGIN
@@ -57,6 +58,12 @@
 /** This macro closes the extern "C" brace needed in C headers.
  * It needs to be followed by a semicolon to look like a statement. */
 #define T8_EXTERN_C_END() SC_EXTERN_C_END
+#else
+/* In C there is no extern "C"; the forward declarations only allow the trailing
+ * semicolon and, unlike SC's hack functions, do not trigger -Wredundant-decls. */
+#define T8_EXTERN_C_BEGIN() struct t8_extern_c_hack_1
+#define T8_EXTERN_C_END() struct t8_extern_c_hack_2
+#endif
 
 /** Call this after including all headers */
 T8_EXTERN_C_BEGIN ();
@@ -164,6 +171,7 @@ typedef enum {
   T8_MPI_CMESH_UNIFORM_BOUNDS_END,      /**< Used for cmesh uniform bounds computation. */
   T8_MPI_TEST_ELEMENT_PACK_TAG,         /**< Used for testing mpi pack and unpack functionality */
   T8_MPI_PFC_TAG,                       /**< Used for data exchange during partition for coarsening. */
+  T8_MPI_BOUNDARY_CONDITION_SYNC_TAG,   /**< Used for the global synchronization of boundary conditions. */
   T8_MPI_TAG_LAST                       /**< Dummy last MPI tag. */
 } t8_MPI_tag_t;
 

@@ -39,7 +39,7 @@ t8_forest_get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
   /* Get some stuff */
   const t8_cmesh_t forest_cmesh = t8_forest_get_cmesh (forest);
-  T8_ASSERT (t8_cmesh_is_committed (forest_cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (forest_cmesh, 0));
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const int num_faces = scheme->element_get_num_faces (tree_class, element);
@@ -71,7 +71,7 @@ t8_forest_get_boundary_condition (t8_forest_t forest, t8_locidx_t ltreeid, const
 
   /* Get some stuff */
   const t8_cmesh_t forest_cmesh = t8_forest_get_cmesh (forest);
-  T8_ASSERT (t8_cmesh_is_committed (forest_cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (forest_cmesh, 0));
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const detail::t8_cmesh_boundary_condition_handler *handler

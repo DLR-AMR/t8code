@@ -36,7 +36,7 @@ t8_geom_linear_interpolation (const double *coefficients, const double *corner_v
   T8_ASSERT (0 <= corner_value_dim && corner_value_dim <= 3);
   T8_ASSERT (1 <= interpolation_dim && interpolation_dim <= 3);
 
-  /* Temporary storage for result. Using this allows evaluated_function to use the same space as  
+  /* Temporary storage for result. Using this allows evaluated_function to use the same space as
    * coefficients or corner_values if needed. */
   double temp[3] = { 0 };
   for (int i_dim = 0; i_dim < corner_value_dim; i_dim++) {
@@ -74,7 +74,7 @@ t8_geom_triangular_interpolation (const double *coefficients, const double *corn
    * scalar, which in this case are the reference coordinates (ref_coords).
    */
 
-  /* Temporary storage for result. Using this allows evaluated_function to use the same space as  
+  /* Temporary storage for result. Using this allows evaluated_function to use the same space as
    * coefficients or corner_values if needed. */
   double temp[3] = { 0 };
 
@@ -346,9 +346,9 @@ t8_geom_get_ref_intersection (int edge_index, const double *ref_coords, double r
        *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
        * intersectionY = (x1y2-y1x2)(y3-y4)-(y1-y2)(x3y4-y3x4)
        *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
-       * 
+       *
        * x1=0 y1=0 x2=1 y2=0 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
-       * 
+       *
        * Since the intersection point lies on edge 2, which has a slope of 1 in the reference space, the x and the y value has to be equal
        */
       ref_intersection[0] = (ref_coords[0] * ref_opposite_vertex[1] - ref_coords[1] * ref_opposite_vertex[0])
@@ -393,7 +393,7 @@ double
 t8_geom_get_scaling_factor_of_edge_on_face_tet (const int edge, const int face, const double *ref_coords)
 {
   /* Save the orthogonal direction and the maximum of that direction
-   * of a tetrahedron edge in reference space on one of the neighbouring faces. 
+   * of a tetrahedron edge in reference space on one of the neighbouring faces.
    *           /|
    *          / |
    *         /  |
@@ -453,7 +453,7 @@ t8_geom_get_tet_face_intersection (const int face, const double *ref_coords, dou
   t8_diff (ref_coords, ref_opposite_vertex, vector);
 
   /* Calculate t to get the point on the ray (extension of vector), which lies on the face.
-   * The vector will later be multiplied by t to get the exact distance from the opposite vertex to the face intersection. 
+   * The vector will later be multiplied by t to get the exact distance from the opposite vertex to the face intersection.
    * t = ((point on face - point on vector) * normal of face) / (vector * normal of face) */
   double denominator = 0;
   double numerator = 0;
@@ -481,7 +481,7 @@ double
 t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face, const double *ref_coords)
 {
   /* Save the orthogonal direction and the maximum of that direction
-   * of an edge in reference space on one of the neighbouring faces. 
+   * of an edge in reference space on one of the neighbouring faces.
    *           /|
    *          / |
    *         /  |
@@ -532,7 +532,7 @@ double
 t8_geom_get_scaling_factor_face_through_volume_prism (const int face, const double *ref_coords)
 {
   /* The function computes the scaling factor of any displacement of a prism face, throughout the
-   * volume of the element. The scaling factor is calculated accordingly to 
+   * volume of the element. The scaling factor is calculated accordingly to
    * t8_geom_get_scaling_factor_of_edge_on_face_prism with 1 - (orthogonal_direction / max_orthogonal_direction) */
 
   const double orthogonal_direction[5]

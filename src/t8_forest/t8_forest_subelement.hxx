@@ -31,12 +31,15 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_element/t8_element.h>
 
-/** Remove hanging nodes from the forest by transitioning elements with hanging nodes into subelements. 
- * \param [in] forest The input forest, which may contain hanging nodes. 
- *        \a forest must be committed before calling this function. Please note that the scheme provided with the 
+/** Remove hanging nodes from the forest by transitioning elements with hanging nodes into subelements.
+ * \param [in] forest The input forest, which may contain hanging nodes.
+ *        \a forest must be committed before calling this function. Please note that the scheme provided with the
  *         forest has to be a fitting subelement scheme.
- * \return A new forest with the same number of trees and the same connectivity, but conformal without hanging nodes. 
- * \note \a forest is unreferenced during this. 
+ *         Every tree class of \a forest must have a subelement implementation in the scheme, see
+ *         \ref t8_eclass_scheme_is_subelement. For \ref t8_scheme_new_subelement these are quadrilaterals and
+ *         triangles. This is checked in debug mode.
+ * \return A new forest with the same number of trees and the same connectivity, but conformal without hanging nodes.
+ * \note \a forest is unreferenced during this.
  */
 t8_forest_t
 t8_forest_remove_hanging_nodes (t8_forest_t forest);
@@ -44,8 +47,8 @@ t8_forest_remove_hanging_nodes (t8_forest_t forest);
 /** Check if the forest is conforming (so it has no hanging nodes).
  * \note Currently this only works for forests without subelements as the neighbor
  * logic is not yet implemented for subelements.
- * \param [in] forest The input forest, which may contain hanging nodes. 
- *        \a forest must be committed before calling this function. It the forest is partitioned, 
+ * \param [in] forest The input forest, which may contain hanging nodes.
+ *        \a forest must be committed before calling this function. It the forest is partitioned,
  *         a ghost layer is needed.
  * \return true if the forest is conforming (no hanging nodes) and false if it contains hanging nodes.
  */
@@ -55,11 +58,11 @@ t8_forest_is_conforming (const t8_forest_t forest);
 /** Remove all subelements from a forest. This is required to restore the original mesh using only recursive refinement
  *    and to be able to adapt again.
  * \note If you partitioned the forest, you should make sure that all subelements of one parent element are on the
- *    same rank. Otherwise, subelements at process boundaries cannot be discarded. 
- *    You can achieve this by setting the flag set_for_coarsening of \ref t8_forest_set_partition to true. 
+ *    same rank. Otherwise, subelements at process boundaries cannot be discarded.
+ *    You can achieve this by setting the flag set_for_coarsening of \ref t8_forest_set_partition to true.
  * \param [in] forest The input forest which may contain subelements.
- * \return A new forest with the same number of trees and the same connectivity, but without subelements. 
- * \note \a forest is unreferenced during this. 
+ * \return A new forest with the same number of trees and the same connectivity, but without subelements.
+ * \note \a forest is unreferenced during this.
  */
 t8_forest_t
 t8_forest_discard_subelements (t8_forest_t forest);

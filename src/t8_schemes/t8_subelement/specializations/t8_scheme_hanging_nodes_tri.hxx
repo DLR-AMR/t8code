@@ -117,9 +117,9 @@ struct t8_subelem_scheme_hanging_nodes_tri:
 
   /** This defines how an element is refined into subelements using a specified subelement type.
    * \param [in] elem          The element to be refined.
-   * \param [in] length        The length of the output array \a c must match the number of subelements.   
+   * \param [in] length        The length of the output array \a c must match the number of subelements.
    *                           See \ref element_get_num_children.
-   * \param [in, out] c        An array of allocated elements that will be filled with the subelements of \a elem. 
+   * \param [in, out] c        An array of allocated elements that will be filled with the subelements of \a elem.
    * \param [in] subelem_type  The subelement type to be used for refinement. This is a binary encoding of the
    *                           hanging faces.
    */
@@ -210,7 +210,7 @@ struct t8_subelem_scheme_hanging_nodes_tri:
    *   - The common point \c m_c is the midpoint of the main face. Every subelement contains it.
    *   - Let \c v_a < \c v_b be the two end vertices of the main face fA. The \b path walks the parent
    *      boundary from \c v_a to \c v_b the way that does not traverse the main face fA (so the other way around
-   *      such that we go over all other faces). That walk passes through exactly one other vertex, \c v_c, and 
+   *      such that we go over all other faces). That walk passes through exactly one other vertex, \c v_c, and
    *      traverses exactly two faces: the edge (\c v_a, \c v_c) and the edge (\c v_c, \c v_b). The midpoint of
    *      each traversed face that is hanging is inserted at its position on the walk.
    *   - The subelement with id \c i is then defined through the vertices:

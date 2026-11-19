@@ -39,7 +39,7 @@ struct t8_data_handler_tag
 
 /**
  * Strong type to describe the data handler type.
- * 
+ *
  */
 using t8_data_handler_type = T8Type<int, t8_data_handler_tag, EqualityComparable>;
 

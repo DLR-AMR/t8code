@@ -33,7 +33,7 @@
 T8_EXTERN_C_BEGIN ();
 /**
  *  Adapt a forest.
- * 
+ *
  *  \param[in, out] forest The forest to be adapted
  */
 void

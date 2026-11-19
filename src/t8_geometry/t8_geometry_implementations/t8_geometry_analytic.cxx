@@ -126,7 +126,7 @@ t8_geometry_analytic_new (const char *name, t8_geom_analytic_fn analytical, t8_g
 void
 t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const void **user_data)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   t8_locidx_t const ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   *user_data = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 }

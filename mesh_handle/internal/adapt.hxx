@@ -42,7 +42,7 @@ namespace detail
 {
 
 /** Virtual base class for mesh adaptation contexts.
- * We need this base class and not only \ref mesh_adapt_context for the \ref adapt_registry. 
+ * We need this base class and not only \ref mesh_adapt_context for the \ref adapt_registry.
  * adapt_registry should not be templated because we need to access registered contexts in \ref mesh_adapt_callback_wrapper,
  * where we do not know the type of the mesh. Therefore, we work with a map of forests to instances of this base class to remain template free.
  */
@@ -54,7 +54,7 @@ struct mesh_adapt_context_base
 
   /** Pure virtual callback for mesh adaptation.
    * \param [in] lelement_handle_id Local flat element ID in the mesh handle of the first element selected for adaptation.
-   * \param [in] num_elements       The number of elements that should be considered. 
+   * \param [in] num_elements       The number of elements that should be considered.
    *              If >1, the elements are expected to form a family that can be coarsened.
    * \return 1 if the element with index \a lelement_handle_id should be refined,
    *        -1 if the family shall be coarsened,
@@ -83,7 +83,7 @@ struct mesh_adapt_context final: mesh_adapt_context_base
 
   /** Callback for mesh adaptation using the user-defined adapt callback.
    * \param [in] lelement_handle_id Local flat element ID in the mesh handle of the first element.
-   * \param [in] num_elements       The number of elements that should be considered. 
+   * \param [in] num_elements       The number of elements that should be considered.
    *              If >1, the elements are expected to form a family that can be coarsened.
    * \return 1 if the element with index \a lelement_handle_id should be refined,
    *        -1 if the family shall be coarsened,
@@ -104,15 +104,15 @@ struct mesh_adapt_context final: mesh_adapt_context_base
 };
 
 /** Registry pattern is used to register contexts, which provides access to the adapt callback and the mesh handle.
- * This globally accessible static class is required to get the handle and the callback in the forest callback, 
- * as the predefined header permits to give these as function arguments. 
+ * This globally accessible static class is required to get the handle and the callback in the forest callback,
+ * as the predefined header permits to give these as function arguments.
  */
 struct adapt_registry
 {
  public:
-  /** Static function to register \a context using \a forest as identifier. 
+  /** Static function to register \a context using \a forest as identifier.
    * This makes the context publicly available using the registry.
-   * \param [in] forest  The forest identifier. In our case, this is the forest from which we adapt the mesh because 
+   * \param [in] forest  The forest identifier. In our case, this is the forest from which we adapt the mesh because
    *                     we do not change this forest during adaptation such that it is valid unique identifier.
    * \param [in] context The context to register. Use unique pointer to ensure proper memory management and ownership.
    */
@@ -124,7 +124,7 @@ struct adapt_registry
     SC_CHECK_ABORT (inserted, "ERROR: Context already registered!");
   }
 
-  /** Static function to unregister a context using \a forest as identifier. 
+  /** Static function to unregister a context using \a forest as identifier.
    * \param [in] forest The forest identifier. In our case, this is the forest from which we adapt.
    */
   static void
@@ -135,7 +135,7 @@ struct adapt_registry
     T8_ASSERT (erased == 1);
   }
 
-  /** Getter for a context using \a forest as identifier. 
+  /** Getter for a context using \a forest as identifier.
    * \param [in] forest The forest identifier. In our case, this is the forest from which we adapt.
    * \return Pointer to the context registered with the id \a forest if found, nullptr otherwise.
    */
@@ -160,7 +160,7 @@ struct adapt_registry
   }
 };
 
-/** Wrapper around the mesh handle adapt functionality to be able to pass the callback to the classic adapt routine of a forest. 
+/** Wrapper around the mesh handle adapt functionality to be able to pass the callback to the classic adapt routine of a forest.
  * The function header fits the definition of \ref t8_forest_adapt_t.
  * \param [in] forest       Unused; forest to which the new elements belong.
  * \param [in] forest_from  Forest that is adapted.

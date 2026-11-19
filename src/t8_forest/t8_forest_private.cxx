@@ -60,7 +60,7 @@ t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_loci
 /* TODO: does the search fail when element_level is smaller then levels in the array?
          For example entering the search with the root element or a level 1 element
          and the array contains much finer elements.
-         Will it still return the largest index, or just any index? 
+         Will it still return the largest index, or just any index?
  */
 /* TODO: This may be implementable with std::partition_point, which would yield an easier implementation.
          Need to check.
@@ -156,7 +156,7 @@ t8_forest_bin_search_first_descendant_ancestor (const t8_element_array_t *elemen
                                                 const t8_element_t **element_found)
 {
   /* This search works as follows:
-  
+
   Let E denote the element with element_id at level L.
   If an ancestor or descendant of E exists in the array then they are either:
     A: The search result of t8_forest_bin_search_lower
@@ -176,7 +176,7 @@ t8_forest_bin_search_first_descendant_ancestor (const t8_element_array_t *elemen
           But since F is the first it will be the search result of t8_forest_bin_search_upper.
   Case C: There is no descendant or ancestor of E in the array. In both cases t8_forest_bin_search_lower and
           t8_forest_bin_search_upper may find elements but the results will not be ancestors/descendants of E.
- 
+
    From this, we determine the following algorithm:
 
     1. Query t8_forest_bin_search_lower with N.

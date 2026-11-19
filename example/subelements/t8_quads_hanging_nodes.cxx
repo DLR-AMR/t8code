@@ -21,7 +21,7 @@
 */
 
 /** \file t8_quads_hanging_nodes.cxx
- * This is an example to demonstrate hanging node-resolution for quads. 
+ * This is an example to demonstrate hanging node-resolution for quads.
  */
 
 #include <t8.h>                                       /* General t8code header, always include this. */

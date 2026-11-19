@@ -95,12 +95,8 @@ t8_cmesh_new_from_p4est_ext (t8_cmesh_t cmesh, void *conn, int dim, sc_MPI_Comm 
   int8_t ttf;
   p4est_topidx_t ttt;
 
-  /* Make sure that p4est is properly initialized. If not, do it here
-   * and raise a warning. */
-  if (!sc_package_is_registered (p4est_package_id)) {
-    t8_global_errorf ("WARNING: p4est is not yet initialized. Doing it now for you.\n");
-    p4est_init (nullptr, SC_LP_ESSENTIAL);
-  }
+  /* Make sure that p4est is properly initialized. */
+  SC_CHECK_ABORT (p4est_is_initialized (), "p4est was not initialized!");
 
   T8_ASSERT (dim == 2 || dim == 3);
   T8_ASSERT (dim == 3 || p4est_connectivity_is_valid ((p4est_connectivity_t *) (conn)));

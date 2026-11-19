@@ -65,11 +65,11 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
 }
 
 /** Build a uniform mesh on a cmesh using the default refinement scheme.
- * 
+ *
  *  The mesh type is constrained by the \ref t8_mesh_handle::T8MeshType concept,
- *  which ensures that TMeshClass provides the required mesh handle interface. 
- * 
- * \tparam TMeshClass the mesh handle type to construct. It must satisfy the \ref t8_mesh_handle::T8MeshType concept. 
+ *  which ensures that TMeshClass provides the required mesh handle interface.
+ *
+ * \tparam TMeshClass the mesh handle type to construct. It must satisfy the \ref t8_mesh_handle::T8MeshType concept.
  * \param [in] comm   MPI Communicator to use.
  * \param [in] cmesh  The coarse mesh to build the uniform mesh on.
  * \param [in] level  The initial uniform refinement level.
@@ -121,15 +121,15 @@ main (int argc, char **argv)
   /** Create the cmesh. */
   t8_cmesh_t cmesh = t8_step2_build_prismcube_coarse_mesh (comm);
   /**
-   * We will put the mesh in a separate scope here, 
-   * because it will be destroyed automatically at the end of this scope. 
-   * This is only needed because SC_CHECK_MPI checks for leftover references. 
+   * We will put the mesh in a separate scope here,
+   * because it will be destroyed automatically at the end of this scope.
+   * This is only needed because SC_CHECK_MPI checks for leftover references.
    * Otherwise, it would be destroyed at the end of the main function.
   */
   {
     /** Build the uniform mesh using a mesh type that satisfies the T8MeshType concept.
      *  The mesh class is templated so that further capabilities and features that not needed by default can be added.
-     *  In this case, the default mesh class is sufficient. 
+     *  In this case, the default mesh class is sufficient.
      */
     using mesh_class = t8_mesh_handle::mesh<>;
 

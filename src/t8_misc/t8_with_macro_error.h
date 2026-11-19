@@ -40,9 +40,9 @@
 // Since we use a symbol that is not part of C/C++ syntax, clang-format would not indent the file.
 /** This macro defines the macro "T8_THROW_ERROR_WITH" to cause an error
  * whenever it is evaluated. Including \#if usage. (But not including \#ifdef usage).
- * Example usage: 
+ * Example usage:
  *  \#define T8_WITH_DEBUG T8_THROW_ERROR_WITH
- * 
+ *
  * Using this with
  * \#if T8_WITH_DEBUG
  * will throw a compile-time error.

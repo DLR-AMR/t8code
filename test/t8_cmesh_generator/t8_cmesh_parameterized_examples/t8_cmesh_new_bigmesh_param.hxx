@@ -20,14 +20,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_bigmesh_param.hxx 
+/** \file t8_cmesh_new_bigmesh_param.hxx
  * Parameterized example cmeshes providing a big mesh for test purpose.
  */
 #ifndef T8_CMESH_NEW_BIGMESH_PARAM_HXX
 #define T8_CMESH_NEW_BIGMESH_PARAM_HXX
 
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx"
+#include <t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx>
+#include <t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx>
 #include "t8_cmesh/t8_cmesh_examples.h"
 #include <t8_eclass/t8_eclass.h>
 

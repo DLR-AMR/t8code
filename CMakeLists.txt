@@ -64,6 +64,8 @@ cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's docume
 set(T8CODE_CUSTOM_PARALLEL_TEST_COMMAND "" CACHE STRING "Define a custom command for parallel tests , e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
 set(T8CODE_CUSTOM_SERIAL_TEST_COMMAND "" CACHE STRING "Define a custom command for serial tests.")
 
+include(cmake/PostInstallTests.cmake)
+
 # Reading the option T8CODE_TEST_LEVEL: Possible choices are T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC. Default is T8_TEST_LEVEL_FULL.
 set(T8CODE_TEST_LEVEL "T8_TEST_LEVEL_FULL" CACHE STRING "Test level: T8_TEST_LEVEL_FULL for full tests, T8_TEST_LEVEL_MEDIUM for less thorough tests, T8_TEST_LEVEL_BASIC for minimal tests. (WARNING: Use with care.)")
 set_property(CACHE T8CODE_TEST_LEVEL PROPERTY STRINGS "T8_TEST_LEVEL_FULL" "T8_TEST_LEVEL_MEDIUM" "T8_TEST_LEVEL_BASIC")
@@ -230,15 +232,21 @@ endif( T8CODE_ENABLE_OCC )
 
 if ( T8CODE_USE_SYSTEM_SC )
     find_package( SC REQUIRED )
-else()
+elseif( T8CODE_ENABLE_MPI )
     ########################## Fix for OpenMPI ############################################
     # OpenMPI sometimes has a mismatch between their C and CXX interface which produces a warning in SC.
     # The warning makes t8codes build fail when Werror is activated. This fix checks if t8code
     # is linked against OpenMPI and then suppresses that Werror treats this warning as error.
     # The warning is still displayed while compiling.
     # We compile a test program mich checks if a OpenMPI specific macro is defined and then apply the fix.
+    # The checks link MPI::MPI_C, so that they find mpi.h also without an MPI compiler wrapper.
+    # They skip the MPI C++ bindings, which MPI::MPI_C does not provide.
 
     include(CheckIncludeFile)
+    include(CMakePushCheckState)
+    cmake_push_check_state()
+    set(CMAKE_REQUIRED_LIBRARIES MPI::MPI_C)
+    set(CMAKE_REQUIRED_DEFINITIONS -DOMPI_SKIP_MPICXX=1 -DMPICH_SKIP_MPICXX=1)
 
     # Check if mpi.h is available
     check_include_file("mpi.h" MPI_HEADER_FOUND)
@@ -261,6 +269,7 @@ else()
     else()
         message(WARNING "mpi.h not found!")
     endif()
+    cmake_pop_check_state()
     ########################## End of fix for OpenMPI ############################################
 endif()
 

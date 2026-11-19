@@ -39,7 +39,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 /** Dummy user data for the interpolation. */
 struct interpolate_user_data
 {
-  int level_step; /**< Levels added when refining and subtracted when coarsening (1 in the standard case). 
+  int level_step; /**< Levels added when refining and subtracted when coarsening (1 in the standard case).
                        This is to be applied to the level entry of the dummy user data. */
 };
 
@@ -111,7 +111,7 @@ TEST (t8_gtest_handle_interpolate, test_interpolate_data)
 
   // Adapt the mesh and set all options.
   mesh->set_adapt (adapt_callback_coarsen_left_refine_middle<mesh_class>);
-  mesh->set_balance (true);
+  mesh->set_balance ();
   mesh->set_partition ();
   mesh->set_ghost ();
   mesh->set_interpolate_callback (mesh_class::mesh_interpolate_callback_wrapper<interpolate_user_data> (

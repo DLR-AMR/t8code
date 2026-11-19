@@ -22,20 +22,20 @@
 
 /** \file t8_gtest_is_ancestor.cxx
  * This test checks the element_is_ancestor function of the scheme interface.
- * Starting from an element we build up all its ancestor up to root level and 
+ * Starting from an element we build up all its ancestor up to root level and
  * test whether the element_is_ancestor function returns true.
  * We also test sone cases where the function returns false, namely when putting
  * in an element and an ancestor in reverse order.
- * 
+ *
  * This test is modified from the ancestor_id test.
  */
 
 #include <gtest/gtest.h>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_custom_assertion.hxx>
 #include "t8_gtest_dfs_base.hxx"
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 class class_is_ancestor: public TestDFS {
   void

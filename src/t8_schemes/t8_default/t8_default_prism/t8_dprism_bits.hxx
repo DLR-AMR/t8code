@@ -20,17 +20,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dprism_bits.h
+/** \file t8_dprism_bits.hxx
  * Definition if prism-specific functions.
  */
 
-#ifndef T8_DPRISM_BITS_H
-#define T8_DPRISM_BITS_H
+#pragma once
 
 #include <t8_element/t8_element.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
-
-T8_EXTERN_C_BEGIN ();
 
 /** Look-up table for the corners of each face. */
 extern int t8_dprism_face_corners[5][4];
@@ -217,7 +214,7 @@ void
 t8_dprism_children_at_face (const t8_dprism_t *p, int face, t8_dprism_t **children, int num_children,
                             int *child_indices);
 
-/** Given a face of a prism and a child number of a child of that face, return the face number of the child of the 
+/** Given a face of a prism and a child number of a child of that face, return the face number of the child of the
  * prism that matches the child face.
  * \param [in]  face        The number of the face.
  * \return                  The face number of the face of a child of \a p that coincides with \a face_child.
@@ -225,17 +222,17 @@ t8_dprism_children_at_face (const t8_dprism_t *p, int face, t8_dprism_t **childr
 int
 t8_dprism_face_child_face (int face);
 
-/** Given a face of a prism return the face number of the parent of the prism that matches the prism's face. 
+/** Given a face of a prism return the face number of the parent of the prism that matches the prism's face.
  * Or return -1 if no face of the parent matches the face.
  * \param [in]  prism   The prism.
  * \param [in]  face    Then number of the face.
- * \return              If \a face of \a prism is also a face of \a prism's parent, the face number of this face. 
+ * \return              If \a face of \a prism is also a face of \a prism's parent, the face number of this face.
  *                      Otherwise -1.
  */
 int
 t8_dprism_face_parent_face (const t8_dprism_t *prism, int face);
 
-/** Given a prism and a face of this prism. If the face lies on the tree boundary, return the face number of the tree 
+/** Given a prism and a face of this prism. If the face lies on the tree boundary, return the face number of the tree
  * face. If not the return value is arbitrary.
  * \param [in] face The index of a face of \a elem.
  * \return          The index of the tree face that \a face is a subface of, if \a face is on a tree boundary.
@@ -244,7 +241,7 @@ t8_dprism_face_parent_face (const t8_dprism_t *prism, int face);
 int
 t8_dprism_tree_face (int face);
 
-/** Given a boundary face inside a root tree's face construct the element inside the root tree that has the given face 
+/** Given a boundary face inside a root tree's face construct the element inside the root tree that has the given face
  * as a face.
  * \param [in] face       A face element.
  * \param [in,out] elem   An allocated element. The entries will be filled with
@@ -255,7 +252,7 @@ t8_dprism_tree_face (int face);
 void
 t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, const int root_face);
 
-/** Compute the last descendant of a prism at a given level. This is the descendant of the prism in a uniform level 
+/** Compute the last descendant of a prism at a given level. This is the descendant of the prism in a uniform level
  * refinement that has the largest id.
  * \param [in] p      Prism whose descendant is computed.
  * \param [out] s     Existing prism whose data will be filled with the data
@@ -284,7 +281,7 @@ t8_dprism_corner_descendant (const t8_dprism_t *p, t8_dprism_t *s, int corner, i
 void
 t8_dprism_vertex_integer_coords (const t8_dprism_t *elem, int vertex, int coords[3]);
 
-/** Compute the reference coordinates of a vertex of a prism when the 
+/** Compute the reference coordinates of a vertex of a prism when the
  * tree (level 0) is embedded in \f$ [0,1]^3 \f$.
  * \param [in] elem         Input prism.
  * \param [in] vertex       The number of the vertex.
@@ -316,7 +313,7 @@ t8_dprism_compute_reference_coords (const t8_dprism_t *elem, const double *ref_c
 t8_linearidx_t
 t8_dprism_linear_id (const t8_dprism_t *p, int level);
 
-/** Query whether all entries of a prism are in valid ranges. A prism is valid if and only if its triangle and 
+/** Query whether all entries of a prism are in valid ranges. A prism is valid if and only if its triangle and
  * line member are valid.
  * \param [in] p  prism to be considered.
  * \return        True, if \a p is a valid prism and it is safe to call any function in this file on \a p.
@@ -324,7 +321,3 @@ t8_dprism_linear_id (const t8_dprism_t *p, int level);
  */
 int
 t8_dprism_is_valid (const t8_dprism_t *p);
-
-T8_EXTERN_C_END ();
-
-#endif /* T8_DPRISM_BITS_H */

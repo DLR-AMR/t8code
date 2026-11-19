@@ -72,13 +72,13 @@ typedef uint8_t t8_cube_id;
 /** Type for the child id. */
 typedef uint8_t t8_child_id;
 
-/** Define type for the element type. 
+/** Define type for the element type.
  * \tparam TEclass The shape of the element as an eclass.
  */
 template <t8_eclass_t TEclass>
 using t8_element_type = std::bitset<T8_ELEMENT_NUM_EQUATIONS[TEclass]>;
 
-/** Define type for the element coordinates. 
+/** Define type for the element coordinates.
  * \tparam TEclass The shape of the element as an eclass.
  */
 template <t8_eclass_t TEclass>

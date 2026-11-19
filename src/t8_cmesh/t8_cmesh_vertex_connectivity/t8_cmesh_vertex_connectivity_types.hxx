@@ -21,11 +21,11 @@
 */
 
 /* This file is part of the public interface, while
- * src/t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx 
+ * src/t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx
  * is not. */
 
 /** \file t8_cmesh_vertex_connectivity_types.hxx
- * In this file we collect the data types required for cmesh 
+ * In this file we collect the data types required for cmesh
  * global vertex id storage.
  */
 
