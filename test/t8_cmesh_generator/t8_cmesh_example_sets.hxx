@@ -89,7 +89,7 @@ std::vector<example_set *> cart_prod_vec = { new_from_class::cmesh_example,
                                              new_hypercube_cmesh::cmesh_example,
                                              new_hypercube_cmesh::cmesh_example_pyra,
                                              new_disjoint_bricks::cmesh_example,
-                                             new_empty::cmesh_example,
+                                             empty::cmesh_example,
                                              new_periodic::cmesh_example };
 
 /** Constructs cmeshes according to \ref cart_prod_vec. */
