@@ -221,6 +221,9 @@ if( T8CODE_ENABLE_VTK )
 endif( T8CODE_ENABLE_VTK )
 
 if( T8CODE_ENABLE_OCC )
+    # We have to exclude the CMake package registry, because OpenCASCADE decided the build folder
+    # in the registry and not the install directory. Therefore, t8code would try to link against the
+    # build directory, which does not work and crashes.
     find_package( OpenCASCADE CONFIG NO_CMAKE_PACKAGE_REGISTRY
         COMPONENTS FoundationClasses ModelingData ModelingAlgorithms )
     if( NOT OpenCASCADE_FOUND )
