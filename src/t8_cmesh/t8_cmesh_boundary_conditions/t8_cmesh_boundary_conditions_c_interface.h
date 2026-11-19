@@ -50,6 +50,7 @@ t8_cmesh_set_boundary_conditions (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const c
  * Indicates if a cmesh has boundary conditions.
  * If this is true, \ref t8_cmesh_get_boundary_conditions and \ref t8_cmesh_get_boundary_condition
  * are safe to use. The cmesh has to be committed.
+ * \param [in] cmesh    The cmesh to query.
  *
  * \return True if the cmesh has boundary conditions. False otherwise.
  */
