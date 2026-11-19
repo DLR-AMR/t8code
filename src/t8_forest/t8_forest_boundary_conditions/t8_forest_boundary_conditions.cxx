@@ -37,7 +37,6 @@ T8_EXTERN_C_BEGIN ();
 int
 t8_forest_has_boundary_conditions (t8_forest_t forest)
 {
-
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_cmesh_t forest_cmesh = t8_forest_get_cmesh (forest);
   return t8_cmesh_has_boundary_conditions (forest_cmesh);
