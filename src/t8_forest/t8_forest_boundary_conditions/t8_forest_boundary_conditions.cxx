@@ -26,6 +26,7 @@
  */
 
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions.hxx>
 #include "t8_forest_boundary_conditions.hxx"
 #include "t8_forest_boundary_conditions_c_interface.h"
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
@@ -39,7 +40,7 @@ t8_forest_has_boundary_conditions (t8_forest_t forest)
 
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_cmesh_t forest_cmesh = t8_forest_get_cmesh (forest);
-  return detail::t8_cmesh_get_boundary_condition_handler (forest_cmesh) != NULL;
+  return t8_cmesh_has_boundary_conditions (forest_cmesh);
 }
 T8_EXTERN_C_END ();
 
