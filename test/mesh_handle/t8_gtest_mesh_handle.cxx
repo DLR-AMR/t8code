@@ -160,6 +160,7 @@ TEST_P (t8_mesh_handle_test, test_cache_face_competences)
       for (const auto& coordinate : it->get_face_normal (iface)) {
         EXPECT_TRUE (coordinate >= -1 && coordinate <= 1);
       }
+      EXPECT_EQ (it->get_boundary_conditions ()[iface], std::nullopt);
     }
   }
   // Check if caches are set. If caches are accessed correctly is checked in another test.

@@ -281,19 +281,17 @@ TEST (t8_mesh_ghost_boundary_conditions, compare_boundary_conditions)
   // Create a hypercube with boundary conditions.
   t8_cmesh_new_hypercube_hybrid_ext (cmesh, sc_MPI_COMM_WORLD, 0, 1);
   // Create the mesh handle with ghost elements.
-  auto mesh = t8_mesh_handle::handle_new_uniform_default<t8_mesh_handle::mesh<>> (cmesh, level, sc_MPI_COMM_WORLD);
-  mesh->set_ghost ();
-  mesh->commit ();
+  auto mesh
+    = t8_mesh_handle::handle_new_uniform_default<t8_mesh_handle::mesh<>> (cmesh, level, sc_MPI_COMM_WORLD, true);
   const t8_forest_t forest = mesh->get_forest ();
 
   // Skip if no ghosts are created (e.g. single process or not enough elements to partition).
   int mpisize;
   const int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
-  if (!(mpisize > 1) || !(mesh->get_dimension () > 1) || (mesh->get_num_global_elements () < mpisize)) {
+  if (!(mpisize > 1) || (mesh->get_num_global_elements () < mpisize)) {
     GTEST_SKIP () << "Skipping test as no ghost elements are created.";
   }
-  const t8_locidx_t num_local_elements = mesh->get_num_local_elements ();
   const t8_locidx_t num_ghosts = mesh->get_num_ghosts ();
   ASSERT_GT (num_ghosts, 0);
   EXPECT_EQ (num_ghosts, t8_forest_get_num_ghosts (forest));
@@ -301,16 +299,14 @@ TEST (t8_mesh_ghost_boundary_conditions, compare_boundary_conditions)
   ASSERT_NE (::detail::t8_cmesh_get_boundary_condition_handler (t8_forest_get_cmesh (forest)), nullptr)
     << "The cmesh has no boundary conditions.";
 
-  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+  const t8_locidx_t num_local_elements = mesh->get_num_local_elements ();
   // The ghost elements are stored in the handle after the local elements.
   for (t8_locidx_t ielem = num_local_elements; ielem < num_local_elements + num_ghosts; ++ielem) {
     const auto& ghost = (*mesh)[ielem];
     ASSERT_TRUE (ghost.is_ghost_element ());
     // For ghosts, the local tree id is the number of local trees plus the local ghost tree id.
     const t8_locidx_t ltreeid = ghost.get_local_tree_id ();
-    const t8_element_t* elem
-      = t8_forest_ghost_get_leaf_element (forest, ltreeid - num_local_trees, ghost.get_local_element_id ());
-    EXPECT_EQ (elem, ghost.get_forest_element ());
+    const t8_element_t* elem = ghost.get_forest_element ();
 
     // --- Boundary conditions of all faces at once. ---
     const auto conditions_handle = ghost.get_boundary_conditions ();

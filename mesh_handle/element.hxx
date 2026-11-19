@@ -36,7 +36,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_vector/t8_vec.hxx>
-#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_c_helper.cxx>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_c_helper.h>
 #include <vector>
 #include <span>
 #include <optional>
@@ -615,6 +615,13 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   t8_boundary_conditions<std::optional<std::string_view>>
   get_boundary_conditions () const
   {
+    const t8_cmesh_t cmesh = t8_forest_get_cmesh (m_mesh->m_forest);
+
+    // No boundary condition handler: no face has a boundary condition.
+    if (::detail::t8_cmesh_get_boundary_condition_handler (cmesh) == nullptr) {
+      return t8_boundary_conditions<std::optional<std::string_view>> (get_num_faces (), std::nullopt);
+    }
+    // The forest returns std::nullopt itself for faces without a boundary condition (e.g. internal faces).
     return t8_forest_get_boundary_conditions (m_mesh->m_forest, m_tree_id, m_element);
   }
 
@@ -624,7 +631,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
    * \return The boundary condition of the face with id \a face, or std::nullopt if the face has none.
    */
   std::optional<std::string_view>
-  get_boundary_condition (int face) const
+  get_boundary_condition (const int face) const
   {
     T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
     const t8_cmesh_t cmesh = t8_forest_get_cmesh (m_mesh->m_forest);

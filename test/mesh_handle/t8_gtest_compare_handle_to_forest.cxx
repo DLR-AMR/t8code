@@ -119,6 +119,7 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
     }
   }
 }
+
 /** Test that the boundary condition getters of the handle give the same results as the forest functions. */
 TEST (t8_gtest_compare_handle_to_forest, compare_boundary_conditions)
 {
@@ -130,7 +131,7 @@ TEST (t8_gtest_compare_handle_to_forest, compare_boundary_conditions)
   auto mesh = t8_mesh_handle::handle_new_uniform_default<t8_mesh_handle::mesh<>> (cmesh, level, sc_MPI_COMM_WORLD);
   const t8_forest_t forest = mesh->get_forest ();
 
-  //Iterate over the elements of the forest and of the mesh handle simultaneously and compare the boundary conditions.
+  // Iterate over the elements of the forest and of the mesh handle simultaneously and compare the boundary conditions.
   int found_boundary_condition = 0;
   auto mesh_iterator = mesh->cbegin ();
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
