@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_empty.hxx
+/** \file t8_cmesh_new_hypercube_param.hxx
  * Parameterized hypercube example cmeshes from one primitive tree class.
  */
 #ifndef T8_CMESH_NEW_HYPERCUBE_PARAM_HXX
