@@ -138,13 +138,15 @@ struct t8_cad_handle
    * \param [in] index      The index of the curve in the cad_shape.
    * \return                The cad curve.
    */
-  const Handle (Geom_Curve) get_cad_curve (const int index) const;
+  const Handle (Geom_Curve)
+  get_cad_curve (const int index) const;
 
   /** Get a cad surface from the cad_shape.
    * \param [in] index      The index of the surface in the cad_shape.
    * \return                The cad surface.
    */
-  const Handle (Geom_Surface) get_cad_surface (const int index) const;
+  const Handle (Geom_Surface)
+  get_cad_surface (const int index) const;
 
   /** Get the cad_shape_vertex2edge_map.
    * \return                The cad_shape_vertex_map.

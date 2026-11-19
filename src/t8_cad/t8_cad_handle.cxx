@@ -165,13 +165,15 @@ t8_cad_handle::get_cad_point (const int index) const
   return BRep_Tool::Pnt (get_cad_vertex (index));
 }
 
-const Handle (Geom_Curve) t8_cad_handle::get_cad_curve (const int index) const
+const Handle (Geom_Curve)
+t8_cad_handle::get_cad_curve (const int index) const
 {
   Standard_Real first, last;
   return BRep_Tool::Curve (get_cad_edge (index), first, last);
 }
 
-const Handle (Geom_Surface) t8_cad_handle::get_cad_surface (const int index) const
+const Handle (Geom_Surface)
+t8_cad_handle::get_cad_surface (const int index) const
 {
   return BRep_Tool::Surface (get_cad_face (index));
 }
