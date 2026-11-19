@@ -108,7 +108,7 @@ if( T8CODE_ENABLE_OCC )
     target_compile_definitions( T8 PUBLIC T8_OCC_VERSION_USED="${T8CODE_OCC_VERSION_USED}" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_OCC=1 )
     target_link_libraries( T8 PUBLIC TKBO TKPrim TKTopAlgo TKGeomAlgo TKBRep TKShHealing TKG3d TKG2d TKMath TKernel )
-    # Some OCCT packages, such as the one in Ubuntu 24.04, don not add the include directory to OpenCASCADE's targets.
+    # Some OCCT packages, such as the one in Ubuntu 24.04, do not add the include directory to OpenCASCADE's targets.
     get_target_property( T8CODE_OCC_TARGET_INCLUDE_DIRS TKernel INTERFACE_INCLUDE_DIRECTORIES )
     if( NOT T8CODE_OCC_TARGET_INCLUDE_DIRS )
         find_path( T8CODE_OCC_INCLUDE_DIR Standard.hxx
