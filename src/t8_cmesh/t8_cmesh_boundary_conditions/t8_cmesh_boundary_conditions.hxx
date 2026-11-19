@@ -57,6 +57,11 @@ t8_cmesh_set_boundary_conditions (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, TString
   handler->add_boundary_conditions (gtreeid, std::forward<TStringRange> (boundary_conditions));
 }
 
+/* To have this function in the c and cpp interface we have to declare the same definition twice.
+ * This means that the definition needs C linkage and therefore also this cpp declaration.
+ * We cannot have the same function twice, since the function signature is the same in c and cpp.
+ * The other boundary conditions are always distinguishable by their arguments and are therefore
+ * declared and defined twice. */
 T8_EXTERN_C_BEGIN ();
 /**
  * Indicates if a cmesh has boundary conditions.
