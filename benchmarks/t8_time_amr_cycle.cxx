@@ -276,10 +276,35 @@ version_string ()
   return version;
 }
 
-/* The peak resident set size of this process in MB */
+/* Reset the peak resident set size of this process (VmHWM; Linux, by writing 5 to /proc/self/clear_refs), so that
+ * peak_rss_mb measures the cycles without the setup. Returns false if that is not supported. */
+bool
+reset_peak_rss ()
+{
+  FILE *f = std::fopen ("/proc/self/clear_refs", "w");
+  if (f == NULL) {
+    return false;
+  }
+  const bool written = std::fputs ("5", f) >= 0;
+  return std::fclose (f) == 0 && written;
+}
+
+/* The peak resident set size of this process in MB since reset_peak_rss (VmHWM in /proc/self/status), or, if that
+ * cannot be read, since the start (getrusage, which is not reset) */
 double
 peak_rss_mb ()
 {
+  if (FILE *f = std::fopen ("/proc/self/status", "r")) {
+    char line[256];
+    long kilobytes = -1;
+    while (kilobytes < 0 && std::fgets (line, sizeof (line), f) != NULL) {
+      std::sscanf (line, "VmHWM: %ld kB", &kilobytes);
+    }
+    std::fclose (f);
+    if (kilobytes >= 0) {
+      return kilobytes / 1024.0;
+    }
+  }
   struct rusage usage;
   getrusage (RUSAGE_SELF, &usage);
   return usage.ru_maxrss / 1024.0; /* kilobytes on Linux */
@@ -484,7 +509,7 @@ struct cycle_times_t
   /* communication of partition and ghost: maxima (and a mean) over the processes */
   double partition_procs_max, partition_elements_shipped_max, partition_bytes_max;
   double ghost_remotes_max, ghost_remotes_mean, ghosts_shipped_max, ghost_waittime_max;
-  /* the peak resident set size so far */
+  /* the peak resident set size in the cycles so far (without the setup) */
   double rss_max_mb, rss_mean_mb;
   /* the one-pass balance: the local closure, its elements outside the own part, and the routed items (maxima and
    * means over the processes; nan without these counters, e.g. for the ripple, p4est or other t8code versions) */
@@ -638,6 +663,11 @@ run (const settings_t &settings, const int min_level, const int max_level, const
                          settings.eclass.c_str (), new_time, setup_time,
                          (long long) t8_forest_get_global_num_leaf_elements (forest));
 
+  /* The memory columns measure the cycles: the setup (refinement of the uniform forest) is not part of them */
+  if (!reset_peak_rss ()) {
+    t8_global_errorf ("Cannot reset the peak memory, rss_max_mb and rss_mean_mb include the setup\n");
+  }
+
   double sum_cycle_time = 0;
   for (int cycle = 0; cycle < cycles; ++cycle) {
     for (int i = 0; i < 3; ++i) {
@@ -745,13 +775,24 @@ run_p4est (const settings_t &settings, const int min_level, const int max_level,
   const double new_time = max_over_procs (sc_MPI_Wtime () - start, comm);
   sc_MPI_Barrier (comm);
   start = sc_MPI_Wtime ();
-  p8est_refine (p8est, 1, refine_shell, init_quadrant);
+  /* Refine one level at a time and repartition after each level, as the t8code setup: refined recursively before
+     the first partition, the few processes owning the shell at the uniform level would hold a large part of the
+     global forest (and the peak memory of the setup). The forest is the same. */
+  for (int level = min_level; level < max_level; ++level) {
+    p8est_refine (p8est, 0, refine_shell, init_quadrant);
+    p8est_partition (p8est, 0, NULL);
+  }
   p8est_balance (p8est, p8est_types[settings.balance_type], init_quadrant);
   p8est_partition (p8est, settings.for_coarsening, NULL);
   p8est_ghost_t *ghost = p8est_ghost_new (p8est, p8est_types[settings.ghost_type]);
   const double setup_time = max_over_procs (sc_MPI_Wtime () - start, comm);
   t8_global_productionf ("amr_cycle p4est %s: new %.4f s, setup %.4f s, %lld elements\n", settings.eclass.c_str (),
                          new_time, setup_time, (long long) p8est->global_num_quadrants);
+
+  /* The memory columns measure the cycles: the setup (refinement of the uniform forest) is not part of them */
+  if (!reset_peak_rss ()) {
+    t8_global_errorf ("Cannot reset the peak memory, rss_max_mb and rss_mean_mb include the setup\n");
+  }
 
   double sum_cycle_time = 0;
   for (int cycle = 0; cycle < cycles; ++cycle) {
