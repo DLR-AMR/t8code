@@ -111,15 +111,8 @@ jobs:
       run: cd build && ninja install $MAKEFLAGS
     - name: post-installation sanity tests
       run: cd build && ninja post_install_tests
-    - name: serial tests (if MPI is enabled)
-      run: cd build && ctest $MAKEFLAGS -R _serial
-      if: ${{ inputs.MPI == 'ON' }}
-    - name: parallel tests (if MPI is enabled)
-      run: cd build && ctest -R _parallel
-      if: ${{ inputs.MPI == 'ON' }}
-    - name: tests (if MPI is disabled)
+    - name: tests
       run: cd build && ctest $MAKEFLAGS
-      if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v7
