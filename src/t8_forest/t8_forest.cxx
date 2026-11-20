@@ -1971,8 +1971,6 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
   if (pneighbor_leaves != NULL) {
     for (int ineigh = 0; ineigh < *num_neighbors; ++ineigh) {
       T8_ASSERT (scheme->element_is_valid (neigh_class, (*pneighbor_leaves)[ineigh]));
-      t8_debugf ("Face neighbor %p is valid.\n", (void *) (*pneighbor_leaves)[ineigh]);
-      scheme->element_debug_print (neigh_class, (*pneighbor_leaves)[ineigh]);
     }
   }
 #endif  // T8_ENABLE_DEBUG
