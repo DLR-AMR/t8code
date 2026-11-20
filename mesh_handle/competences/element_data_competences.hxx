@@ -146,6 +146,7 @@ class element_data_mesh_competence_impl: public t8_crtp_basic<TUnderlying> {
     sc_array_destroy (sc_array_wrapper);
   }
 
+ protected:
   /** Repartition the element data so it follows a newly partitioned forest.
    * The element data currently belongs to \a forest_from; this moves it to the layout of \a forest_to, which must
    * have been created by partitioning \a forest_from.
@@ -179,7 +180,6 @@ class element_data_mesh_competence_impl: public t8_crtp_basic<TUnderlying> {
     set_element_data (std::move (partitioned_data));
   }
 
- protected:
   std::vector<TElementDataType> m_element_data; /**< Vector storing the (local) element data. */
 };
 

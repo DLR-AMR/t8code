@@ -52,6 +52,8 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
   set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
 
   target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG=1 )
+else ()
+  target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG=0 )
 endif()
 
 if( T8CODE_EXPORT_COMPILE_COMMANDS )

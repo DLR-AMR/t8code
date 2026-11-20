@@ -20,13 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This file is part of the step6 example of t8code.
+/** \file t8_step6_main.cxx
+ * This file is part of the step6 example of t8code.
  * Here, we only wrap the main function. See t8_step6_stencil.cxx for the documentation of
  * the step6 example.
  */
 
 #include <tutorials/general/t8_step6.h>
 
+/** Entry point of the program. */
 int
 main (int argc, char **argv)
 {
