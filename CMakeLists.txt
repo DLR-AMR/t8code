@@ -61,8 +61,10 @@ option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
-set(T8CODE_CUSTOM_PARALLEL_TEST_COMMAND "" CACHE STRING "Define a custom command for parallel tests , e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
-set(T8CODE_CUSTOM_SERIAL_TEST_COMMAND "" CACHE STRING "Define a custom command for serial tests.")
+# Parallel tests are launched as
+#   ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${T8CODE_NUM_PROCS_PARALLEL_TESTS} ${MPIEXEC_PREFLAGS} <test> ${MPIEXEC_POSTFLAGS}
+# The launcher can be customized via the standard FindMPI variables, e.g. -DMPIEXEC_PREFLAGS=--oversubscribe.
+set(T8CODE_NUM_PROCS_PARALLEL_TESTS 4 CACHE STRING "Number of MPI processes used by the parallel tests (only relevant if build with MPI). CTest reserves this many slots of the ctest -j budget for each parallel test.")
 
 include(cmake/PostInstallTests.cmake)
 
