@@ -68,7 +68,7 @@ struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, i
     t8_forest_ref (forest);
     int maxlevel = level + 2;
     const int recursive_adapt = 1;
-    forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_first_child, recursive_adapt, 0, &maxlevel);
+    forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_first_child, recursive_adapt, 1, &maxlevel);
   }
 
   void
@@ -178,7 +178,7 @@ TEST_P (element_is_leaf_or_ghost, element_is_ghost)
 
 TEST_P (element_is_leaf_or_ghost, element_is_ghost_adapt)
 {
-  t8_test_element_is_leaf_for_forest (forest_adapt);
+  t8_test_element_is_ghost_for_forest (forest_adapt);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf_or_ghost, element_is_leaf_or_ghost,
