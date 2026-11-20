@@ -37,8 +37,8 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   /* Initialize sc and t8code */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
-  t8_init (SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  t8_init (SC_LP_PRODUCTION);
 
   /* Register a package id for the testsuite */
   t8_testsuite_register_package_id ();
