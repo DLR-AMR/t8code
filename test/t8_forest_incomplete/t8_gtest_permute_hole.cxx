@@ -26,6 +26,8 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <bitset>
+#include <random>
+#include <vector>
 #include <t8_gtest_macros.hxx>
 
 #define MAX_NUM_ELEMENTS 32 /* number of digits for binary representation */
@@ -55,6 +57,8 @@
  *      15   -  ...0 0 0 1 1 1 1
  * We remove every element with id i if the i`th bit (right to left)
  * in the current instances is 0.
+ *
+ * If there are more than 1024 ways, we only test 1024 randomly chosen ones.
  *
  * Note, this test runs only on one rank.
  */
@@ -152,8 +156,30 @@ TEST_P (forest_permute, test_permute_hole)
   T8_ASSERT (num_elements < MAX_NUM_ELEMENTS);
   const uint32_t num_permutation = 1 << num_elements;
 
-  for (uint32_t permutation = 1; permutation < num_permutation; permutation++) {
-    std::bitset<MAX_NUM_ELEMENTS> remove (permutation);
+  /** Maximum number of removal patterns that are tested per element class. */
+  const uint32_t max_num_patterns = 1024;
+  /** The removal patterns to test. Bit i of a pattern is 0 if element i is removed. */
+  std::vector<uint32_t> patterns;
+  if (num_permutation - 1 <= max_num_patterns) {
+    /* Few patterns: test all of them.
+     * Start at 1, since removing all elements of a tree is not supported. */
+    for (uint32_t permutation = 1; permutation < num_permutation; permutation++) {
+      patterns.push_back (permutation);
+    }
+  }
+  else {
+    /* Too many patterns to test all of them in reasonable time: test random ones.
+     * The fixed seed makes the test reproducible. */
+    std::mt19937 random_generator (42);
+    std::uniform_int_distribution<uint32_t> random_pattern (1, num_permutation - 1);
+    for (uint32_t ipattern = 0; ipattern < max_num_patterns; ipattern++) {
+      const uint32_t pattern = random_pattern (random_generator);
+      patterns.push_back (pattern);
+    }
+  }
+
+  for (const uint32_t pattern : patterns) {
+    std::bitset<MAX_NUM_ELEMENTS> remove (pattern);
 
     struct t8_elements data
     {
