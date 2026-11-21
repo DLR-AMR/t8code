@@ -20,18 +20,17 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_empty.hxx
- * Parameterized empty example cmeshes.
+/** \file t8_cmesh_empty.hxx
+ * Parameterized empty cmeshes.
  */
-#ifndef T8_CMESH_NEW_EMPTY_HXX
-#define T8_CMESH_NEW_EMPTY_HXX
+#pragma once
 
 #include <t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx>
 #include <t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_eclass/t8_eclass.h>
 
-namespace new_empty
+namespace empty
 {
 /** Function to convert parameter values to a string.
  * \param [in] comm  Mpi communicator to be used with the new cmesh.
@@ -50,15 +49,13 @@ make_param_string (const sc_MPI_Comm &comm, const int do_partition, const int di
 /** Wrapper function for \ref make_param_string. */
 std::function<std::string (const sc_MPI_Comm &, const int, const int)> print_function = make_param_string;
 
-/** Wrapper function for t8_cmesh_new_empty.
- * \a do_partition is unused since t8_cmesh_new_empty no longer takes a (dead) partition flag;
- * \a dim is applied via \ref t8_cmesh_set_dimension before committing. */
+/** Creates an empty cmesh. */
 std::function<t8_cmesh_t (sc_MPI_Comm, const int, const int)> new_from_class_wrapper
   = [] (sc_MPI_Comm comm, [[maybe_unused]] const int do_partition, const int dim) {
       t8_cmesh_t cmesh;
       t8_cmesh_init (&cmesh);
       t8_cmesh_set_dimension (cmesh, dim);
-      t8_cmesh_new_empty (cmesh, comm);
+      t8_cmesh_commit (cmesh, comm);
       return cmesh;
     };
 
@@ -70,7 +67,5 @@ example_set *cmesh_example
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
     std::make_pair (cmesh_params::partition.begin (), cmesh_params::partition.end ()),
     std::make_pair (cmesh_params::do_bcast.begin (), cmesh_params::do_bcast.end ()), new_from_class_wrapper,
-    print_function, "t8_cmesh_new_empty");
-} /* namespace new_empty */
-
-#endif /* T8_CMESH_NEW_EMPTY_HXX */
+    print_function, "t8_cmesh_empty");
+}  // namespace empty

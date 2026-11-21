@@ -461,18 +461,6 @@ t8_cmesh_new_from_class (t8_cmesh_t cmesh, const t8_eclass_t eclass, const sc_MP
 }
 
 void
-t8_cmesh_new_empty (t8_cmesh_t cmesh, sc_MPI_Comm comm)
-{
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
-  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
-
-  t8_cmesh_commit (cmesh, comm);
-  T8_ASSERT (t8_cmesh_is_empty (cmesh));
-}
-
-void
 t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic)
 {
   return t8_cmesh_new_hypercube_hybrid_ext (cmesh, comm, periodic, false);
