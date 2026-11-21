@@ -34,7 +34,9 @@ struct t8_abstract_vector_handler;
 /** \brief Repartition element data accordingly to a partitioned forest.
  *
  * The data is repartitioned in place: Before the call, \a handler holds one item per local leaf element of
- * \a forest_from, afterwards one item per local leaf element of \a forest_to.
+ * \a forest_from, possibly followed by entries for its ghost elements, which are dropped. Afterwards it holds one
+ * item per local leaf element of \a forest_to. New storage has room for the ghost elements of \a forest_to, so
+ * that appending their entries, e.g. for a ghost exchange, does not reallocate.
  * Items with a bytewise data handler, e.g. trivially copyable types with their default t8_data_handler, are
  * exchanged without packing or intermediate buffers. All other items are serialized by the data handler of
  * \a handler, e.g. one passed to the t8_vector_handler constructor.

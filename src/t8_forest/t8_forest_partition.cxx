@@ -1341,7 +1341,10 @@ t8_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, t8_abs
   t8_global_productionf ("Enter forest partition data.\n");
   t8_log_indent_push ();
 
-  handler.partition (t8_forest_partition_data_pattern (forest_from, forest_to));
+  t8_data_partition_pattern pattern = t8_forest_partition_data_pattern (forest_from, forest_to);
+  /* Leave room for the ghost elements of forest_to, so that a following ghost exchange does not reallocate. */
+  pattern.min_capacity_new = pattern.num_new + t8_forest_get_num_ghosts (forest_to);
+  handler.partition (pattern);
 
   t8_log_indent_pop ();
   t8_global_productionf ("Done forest partition data.\n");

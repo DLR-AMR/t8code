@@ -97,7 +97,8 @@ struct t8_abstract_vector_handler
 
   /**
    * Repartition the data: Before the call, the handler holds the \a pattern.num_old items of this process in the
-   * old distribution, afterwards the \a pattern.num_new items in the new distribution.
+   * old distribution, possibly followed by further entries, e.g. of ghost elements, which are dropped. Afterwards it
+   * holds the \a pattern.num_new items in the new distribution.
    * Every process of \a pattern.comm calls this with its pattern of the same repartitioning.
    *
    * \param[in] pattern The partition pattern of this process, e.g. from \ref t8_data_partition_pattern_from_offsets.
@@ -204,6 +205,35 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   }
 
   /**
+   * Choose whether a repartitioning keeps the storage it replaces for the next repartitioning.
+   * If enabled, the storage of the old data is kept as a buffer and receives the new data of the next
+   * repartitioning, if its capacity suffices. Otherwise new storage with at least the capacity of the old storage is
+   * allocated, so both storages grow to the largest number of items so far. Then no fresh memory is needed after
+   * the first repartitionings, as long as the number of items stays within the capacities. This costs the memory
+   * of a second vector between repartitionings, see \ref release_buffer.
+   * Disabled by default: The old storage is freed and every repartitioning allocates new storage.
+   *
+   * \param[in] reuse True to keep the replaced storage, false to free it, including a kept buffer.
+   */
+  void
+  set_buffer_reuse (const bool reuse)
+  {
+    m_reuse_buffer = reuse;
+    if (!reuse) {
+      release_buffer ();
+    }
+  }
+
+  /**
+   * Free the buffer kept for buffer reuse, see \ref set_buffer_reuse. The setting is not changed.
+   */
+  void
+  release_buffer ()
+  {
+    m_buffer = std::vector<TType> ();
+  }
+
+  /**
    * Compute an upper bound of the number of bytes needed by \ref pack_vector_prefix.
    *
    * \param[in] comm The MPI communicator used for the operation.
@@ -285,11 +315,12 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   partition (const t8_data_partition_pattern &pattern) override
   {
     T8_ASSERT (t8_data_partition_pattern_is_valid (pattern));
-    T8_ASSERT (m_data.size () == pattern.num_old);
+    T8_ASSERT (m_data.size () >= pattern.num_old);
     if (pattern.sends.empty () && pattern.recvs.empty ()) {
-      /* No item changes the process, so every item keeps its index. */
+      /* No item changes the process, so every item keeps its index. Only trailing entries are dropped. */
       T8_ASSERT (pattern.num_old == pattern.num_new && pattern.self_count == pattern.num_old);
       T8_ASSERT (pattern.self_count == 0 || (pattern.self_first_old == 0 && pattern.self_first_new == 0));
+      m_data.resize (pattern.num_new);
       return;
     }
     if constexpr (T8BytewiseDataHandler<TDataHandler, TType>) {
@@ -385,10 +416,55 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   }
 
   /**
+   * Check whether the buffer kept for buffer reuse can hold the new data of a repartitioning.
+   *
+   * \param[in] capacity The number of items the storage of the new data needs room for.
+   * \return True if buffer reuse is enabled and the capacity of the kept buffer suffices, false otherwise.
+   */
+  bool
+  can_reuse_buffer (const size_t capacity) const
+  {
+    return m_reuse_buffer && m_buffer.capacity () >= capacity;
+  }
+
+  /**
+   * Compute the capacity of new storage for the new data of a repartitioning. With buffer reuse, it is at least the
+   * capacity of the old storage, which becomes the kept buffer, so that both storages grow to the largest number of
+   * items so far instead of alternating between too small sizes.
+   *
+   * \param[in] capacity The number of items the storage of the new data needs room for.
+   * \return The capacity to reserve for the new storage.
+   */
+  size_t
+  new_storage_capacity (const size_t capacity) const
+  {
+    return m_reuse_buffer ? std::max (capacity, m_data.capacity ()) : capacity;
+  }
+
+  /**
+   * Replace the data by the new data of a repartitioning. The storage of the old data is kept as buffer for the
+   * next repartitioning if buffer reuse is enabled, and freed otherwise.
+   *
+   * \param[in] new_data The new data.
+   */
+  void
+  replace_data (std::vector<TType> &&new_data)
+  {
+    if (m_reuse_buffer) {
+      m_buffer = std::exchange (m_data, std::move (new_data));
+    }
+    else {
+      m_data = std::move (new_data);
+    }
+  }
+
+  /**
    * Repartition items with a bytewise data handler, without packing.
-   * The outgoing items are sent directly from the old storage first, so that the other processes do not wait while
-   * the new storage is set up. Only the slots of incoming items are value-initialized, the staying items are copied
-   * once, directly to their final position. The incoming items are received directly into their final slots.
+   * If the kept buffer can hold the new data, all receives are posted directly into their final slots of this
+   * resident memory first. Otherwise new storage is needed, and the outgoing items are sent directly from the old
+   * storage first, so that the other processes do not wait while the new storage is set up; only the slots of
+   * incoming items are value-initialized. Either way, the staying items are copied once, directly to their final
+   * position.
    *
    * \param[in] pattern The partition pattern of this process.
    */
@@ -396,23 +472,37 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   partition_bytewise (const t8_data_partition_pattern &pattern)
     requires T8BytewiseDataHandler<TDataHandler, TType>
   {
+    const size_t capacity = std::max (pattern.num_new, pattern.min_capacity_new);
     t8_data_messages messages (pattern.comm, pattern.tag);
+    const auto self_begin = m_data.cbegin () + pattern.self_first_old;
+    if (can_reuse_buffer (capacity)) {
+      std::vector<TType> new_data = std::move (m_buffer);
+      new_data.resize (pattern.num_new);
+      for (const auto &chunk : pattern.recvs) {
+        messages.receive (chunk.rank, new_data.data () + chunk.first, chunk.count * sizeof (TType));
+      }
+      for (const auto &chunk : pattern.sends) {
+        messages.send (chunk.rank, m_data.data () + chunk.first, chunk.count * sizeof (TType));
+      }
+      std::copy_n (self_begin, pattern.self_count, new_data.begin () + pattern.self_first_new);
+      messages.wait_all ();
+      replace_data (std::move (new_data));
+      return;
+    }
+
     for (const auto &chunk : pattern.sends) {
       messages.send (chunk.rank, m_data.data () + chunk.first, chunk.count * sizeof (TType));
     }
-
     std::vector<TType> new_data;
-    new_data.reserve (pattern.num_new);
+    new_data.reserve (new_storage_capacity (capacity));
     new_data.resize (pattern.self_first_new);
-    const auto self_begin = m_data.cbegin () + pattern.self_first_old;
     new_data.insert (new_data.end (), self_begin, self_begin + pattern.self_count);
     new_data.resize (pattern.num_new);
-
     for (const auto &chunk : pattern.recvs) {
       messages.receive (chunk.rank, new_data.data () + chunk.first, chunk.count * sizeof (TType));
     }
     messages.wait_all ();
-    m_data = std::move (new_data);
+    replace_data (std::move (new_data));
   }
 
   /**
@@ -444,7 +534,16 @@ struct t8_vector_handler: public t8_abstract_vector_handler
       SC_CHECK_MPI (mpiret);
     }
 
-    std::vector<TType> new_data (pattern.num_new);
+    /* The storage of the new data is the kept buffer if possible. */
+    const size_t capacity = std::max (pattern.num_new, pattern.min_capacity_new);
+    std::vector<TType> new_data;
+    if (can_reuse_buffer (capacity)) {
+      new_data = std::move (m_buffer);
+    }
+    else {
+      new_data.reserve (new_storage_capacity (capacity));
+    }
+    new_data.resize (pattern.num_new);
     const auto self_begin = m_data.begin () + pattern.self_first_old;
     std::move (self_begin, self_begin + pattern.self_count, new_data.begin () + pattern.self_first_new);
 
@@ -480,11 +579,13 @@ struct t8_vector_handler: public t8_abstract_vector_handler
       const int mpiret = sc_MPI_Waitall (t8_mpi_int (num_sends), send_requests.data (), sc_MPI_STATUSES_IGNORE);
       SC_CHECK_MPI (mpiret);
     }
-    m_data = std::move (new_data);
+    replace_data (std::move (new_data));
   }
 
   std::vector<TType> m_data;   /**< The data that is packed, unpacked and communicated via MPI. */
   TDataHandler m_data_handler; /**< Handler to pack and unpack single items. */
+  std::vector<TType> m_buffer; /**< Storage kept from the last repartitioning if buffer reuse is enabled, else empty. */
+  bool m_reuse_buffer = false; /**< True if a repartitioning keeps the storage it replaces, false if it frees it. */
 };
 
 /**

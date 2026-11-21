@@ -35,6 +35,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/competences/element_data_competences.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_vector/t8_vec.hxx>
+#include <cstdlib>
 #include <vector>
 
 /** Check that element data can be set for the handle and that exchanging data for the ghosts works. */
@@ -97,6 +98,57 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
       EXPECT_EQ ((*mesh)[ighost].get_element_data ().level, level);
       EXPECT_EQ ((*mesh)[ighost].get_element_data ().volume, (*mesh)[ighost].get_volume ());
     }
+  }
+}
+
+/** Check that element data follows the elements if the mesh is only partitioned, i.e. without adapting it.
+ * An adaptation without element data makes the load imbalanced, so the partitioning afterwards moves elements
+ * between the processes.
+ */
+TEST (t8_gtest_handle_data, repartition_element_data)
+{
+  const int level = 2;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences_basic,
+                                          t8_mesh_handle::data_mesh_competences_basic<data_per_element>>;
+  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  mesh->set_adapt (adapt_callback_coarsen_left_refine_middle<mesh_class>);
+  mesh->commit ();
+
+  // Create element data for all local mesh elements.
+  std::vector<data_per_element> element_data;
+  for (const auto &elem : *mesh) {
+    element_data.push_back ({ elem.get_level (), elem.get_volume () });
+  }
+  mesh->set_element_data (std::move (element_data));
+  /** The number of local elements before the partitioning. */
+  const t8_locidx_t num_local_elements_before = mesh->get_num_local_elements ();
+
+  mesh->set_partition ();
+  mesh->set_ghost ();
+  mesh->commit ();
+
+  // Check that the element data matches the elements, including the ghosts.
+  const auto &mesh_element_data = mesh->get_element_data ();
+  ASSERT_EQ (mesh_element_data.size (),
+             static_cast<size_t> (mesh->get_num_local_elements () + mesh->get_num_ghosts ()));
+  for (t8_locidx_t ielem = 0; ielem < mesh->get_num_local_elements () + mesh->get_num_ghosts (); ielem++) {
+    EXPECT_EQ (mesh_element_data[ielem].level, (*mesh)[ielem].get_level ()) << "ielem = " << ielem;
+    EXPECT_EQ (mesh_element_data[ielem].volume, (*mesh)[ielem].get_volume ()) << "ielem = " << ielem;
+  }
+
+  // Check that the partitioning moved elements between the processes.
+  int mpi_size;
+  int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpi_size);
+  SC_CHECK_MPI (mpiret);
+  if (mpi_size > 1) {
+    /** The number of elements by which the number of local elements changed on this process.
+     * Not const, since sc_MPI_Allreduce takes a non-const send buffer in builds without MPI. */
+    t8_locidx_t local_count_change = std::abs (mesh->get_num_local_elements () - num_local_elements_before);
+    /** The largest change of the number of local elements over all processes. */
+    t8_locidx_t max_count_change = 0;
+    mpiret = sc_MPI_Allreduce (&local_count_change, &max_count_change, 1, T8_MPI_LOCIDX, sc_MPI_MAX, sc_MPI_COMM_WORLD);
+    SC_CHECK_MPI (mpiret);
+    EXPECT_GT (max_count_change, 0);
   }
 }
 
