@@ -18,14 +18,27 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-cmake_minimum_required( VERSION 3.19 )
+# Post-install tests for t8code.
+#
+# This is a small downstream project that consumes an *installed* t8code via
+# find_package(), the same way an external project would. Each test case lives
+# in its own subdirectory and builds its own executable.
+#
+# Usually run via the "post_install_tests" target of the main t8code build.
+# Manual use against an install prefix:
+#   cmake -S <this dir> -B build-post-install -DCMAKE_PREFIX_PATH=<install prefix>
+#   cmake --build build-post-install
+#   ctest --test-dir build-post-install --output-on-failure
 
-project( T8CODE_POST_INSTALL_SANITY LANGUAGES C CXX )
+cmake_minimum_required( VERSION 3.20 )
+
+project( T8CODE_POST_INSTALL_TESTS LANGUAGES C CXX )
+
+# Must be called in the top-level directory, otherwise ctest finds no tests.
+enable_testing()
 
 find_package( T8CODE CONFIG REQUIRED )
 
-add_executable( t8code_post_install_sanity t8code_post_install_sanity.cxx )
-target_link_libraries( t8code_post_install_sanity PRIVATE T8CODE::T8 )
-
-enable_testing()
-add_test( NAME t8code_post_install_sanity COMMAND t8code_post_install_sanity )
+# Test cases
+add_subdirectory( sanity_check )
+add_subdirectory( header_checks )
