@@ -79,4 +79,16 @@ struct t8_mesh_deformation_method
   virtual void
   interpolate (t8_mesh_deformation_node& inner_node) const
     = 0;
+
+  /** Sets the dimension of the mesh.
+   * \param [in] mesh_dimension The dimension of the mesh. */
+  virtual void
+  set_dimension (const int mesh_dimension)
+  {
+    dimension = mesh_dimension;
+  }
+
+ protected:
+  /** The dimension of the mesh. */
+  int dimension = -1;
 };

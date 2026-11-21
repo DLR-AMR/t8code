@@ -42,6 +42,17 @@
                 "ref": "5.0.1",
                 "shallow": "TRUE"
             }
+        },
+        {
+            "name": "GMSH",
+            "depends_on_cmake_option": "T8CODE_FETCH_GMSH",
+            "cmake_option_install_value": "ON",
+            "source": {
+                "type": "git",
+                "url": "https://gitlab.onelab.info/gmsh/gmsh.git",
+                "ref": "gmsh_4_15_2",
+                "shallow": "TRUE"
+            }
         }
     ]
 }
