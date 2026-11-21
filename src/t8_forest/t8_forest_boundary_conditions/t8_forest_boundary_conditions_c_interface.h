@@ -35,6 +35,16 @@
 T8_EXTERN_C_BEGIN ();
 
 /**
+ * Indicates if a forest has boundary conditions.
+ * If this is true, \ref t8_forest_get_boundary_conditions and \ref t8_forest_get_boundary_condition
+ * are safe to use. The forest has to be committed.
+ *
+ * \return True if the forest has boundary conditions. False otherwise.
+ */
+int
+t8_forest_has_boundary_conditions (t8_forest_t forest);
+
+/**
  * Retrieves the boundary conditions of a forest element.
  * C version of this function.
  * \param [in]  forest              The forest the element lives in.
