@@ -32,7 +32,9 @@ if(T8CODE_ENABLE_VTK)
 endif()
 
 if (T8CODE_ENABLE_OCC)
-    find_dependency(OpenCASCADE)
+    # Prefer the OpenCASCADE installation t8code was built with.
+    find_dependency(OpenCASCADE CONFIG NO_CMAKE_PACKAGE_REGISTRY HINTS "@OpenCASCADE_DIR@"
+        COMPONENTS FoundationClasses ModelingData ModelingAlgorithms)
     # Expose the variable T8CODE_OCC_VERSION_USED to external CMake scripts linking against t8code
     # for example with find_package ( T8CODE REQUIRED )
     set (T8CODE_OCC_VERSION_USED "@T8CODE_OCC_VERSION_USED@")
