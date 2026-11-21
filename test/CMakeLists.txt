@@ -65,21 +65,20 @@ function( add_t8_test )
         set_target_properties( ${ADD_T8_TEST_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
     endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
-    # Split custom test command into a list by whitespace.
-    # If MPI is enabled, and no custom test command is provided, use mpirun -np 4 as the default command.
-    # If MPI is not enabled, use the custom test command as is.
-    if ( T8CODE_ENABLE_MPI )
-        if (${ADD_T8_TEST_NAME} MATCHES "_serial")
-            separate_arguments(T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND ${T8CODE_CUSTOM_SERIAL_TEST_COMMAND})
-        elseif ( T8CODE_CUSTOM_PARALLEL_TEST_COMMAND STREQUAL "" )
-            separate_arguments (T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND "mpirun -np 4")
-        else ()
-            separate_arguments (T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND ${T8CODE_CUSTOM_PARALLEL_TEST_COMMAND})
-        endif ()
-    else( T8CODE_ENABLE_MPI )
-        separate_arguments (T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND ${T8CODE_CUSTOM_SERIAL_TEST_COMMAND})
-    endif ( T8CODE_ENABLE_MPI )
-    add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_TEST_COMMAND_LIST} ${TEST_BUILD_DIR}/${ADD_T8_TEST_NAME} )
+    # Serial tests (and all tests without MPI) are run directly.
+    # Parallel tests are run via the MPI launcher found by FindMPI with T8CODE_NUM_PROCS_PARALLEL_TESTS processes.
+    # Setting the PROCESSORS property lets ctest -j N schedule serial and parallel tests together without
+    # oversubscribing the N available slots.
+    if ( T8CODE_ENABLE_MPI AND NOT ${ADD_T8_TEST_NAME} MATCHES "_serial" )
+        separate_arguments (T8CODE_MPIEXEC_PREFLAGS_LIST NATIVE_COMMAND "${MPIEXEC_PREFLAGS}")
+        separate_arguments (T8CODE_MPIEXEC_POSTFLAGS_LIST NATIVE_COMMAND "${MPIEXEC_POSTFLAGS}")
+        add_test( NAME ${ADD_T8_TEST_NAME}
+                  COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${T8CODE_NUM_PROCS_PARALLEL_TESTS}
+                          ${T8CODE_MPIEXEC_PREFLAGS_LIST} ${TEST_BUILD_DIR}/${ADD_T8_TEST_NAME} ${T8CODE_MPIEXEC_POSTFLAGS_LIST} )
+        set_tests_properties( ${ADD_T8_TEST_NAME} PROPERTIES PROCESSORS ${T8CODE_NUM_PROCS_PARALLEL_TESTS} )
+    else ()
+        add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${TEST_BUILD_DIR}/${ADD_T8_TEST_NAME} )
+    endif ()
     if ( T8CODE_CODE_COVERAGE )
         # Extent time that a single test is allowed to run to collect coverage information (as this naturally takes more time).
         # The default timeout of 1500 seconds is actually exceeded for some tests.
@@ -252,8 +251,8 @@ if(NOT APPLE)
     add_t8_cpp_test( NAME t8_gtest_compute_first_element_serial                 SOURCES t8_cmesh/t8_gtest_compute_first_element.cxx )
 endif()
 
-target_include_directories( T8 PUBLIC 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}> 
+target_include_directories( T8 PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/test>
 )
 
