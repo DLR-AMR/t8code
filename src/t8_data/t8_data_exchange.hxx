@@ -24,8 +24,8 @@
  * \file t8_data_exchange.hxx
  *
  * Building blocks to exchange distributed arrays of items between processes: the partition pattern of a
- * repartitioning, computed from global offsets, nonblocking byte messages and the repartitioning of plain bytes
- * without intermediate buffers.
+ * repartitioning, computed from global offsets, nonblocking byte messages, the repartitioning of plain bytes
+ * without intermediate buffers, and the ghost pattern with the ghost exchange of plain bytes.
  * They depend neither on the type of the items nor on the forest, so containers like \ref t8_vector_handler and
  * forest-internal arrays can share them.
  */
@@ -35,6 +35,7 @@
 
 #include <t8.h>
 #include <limits>
+#include <memory>
 #include <vector>
 
 /**
@@ -53,7 +54,8 @@ t8_mpi_int (const size_t count)
 }
 
 /**
- * A contiguous range of items that this process exchanges with one other process during a repartitioning.
+ * A contiguous range of items that this process exchanges with one other process, e.g. during a repartitioning or
+ * a ghost exchange.
  */
 struct t8_data_partition_chunk
 {
@@ -194,5 +196,103 @@ void
 t8_data_partition_bytes (const t8_data_partition_pattern &pattern, const void *data_in, void *data_out,
                          const size_t item_size,
                          const size_t max_message_bytes = static_cast<size_t> (std::numeric_limits<int>::max ()));
+
+/**
+ * Describes how this process takes part in exchanging the data of ghost items, e.g. of the ghost elements of a forest.
+ * The data holds the local items, followed by the ghost items. Every process sends some of its local items to the
+ * processes for which they are ghosts, and receives its ghost items from their owners into contiguous ranges.
+ */
+struct t8_data_ghost_pattern
+{
+  std::vector<int> send_ranks;      /**< The processes to send to, ascending, without empty sends. */
+  std::vector<size_t> send_offsets; /**< The items sent to send_ranks[i] are send_indices[send_offsets[i]] to
+                                         send_indices[send_offsets[i + 1] - 1]. One entry more than send_ranks,
+                                         first entry 0. */
+  std::vector<size_t> send_indices; /**< The local indices of the items to send, for each process in the order of
+                                         its ghost items. */
+  std::vector<t8_data_partition_chunk> recvs; /**< The ghost items to receive: the sending process, the index of the
+                                                   first one in the data and their number. Ascending ranks, without
+                                                   empty chunks. */
+  size_t num_local = 0;                       /**< The number of local items. */
+  size_t num_ghosts = 0;                      /**< The number of ghost items. */
+  sc_MPI_Comm comm = sc_MPI_COMM_NULL;        /**< The communicator of the exchange. */
+  int tag = 0;                                /**< The MPI tag of all messages. */
+};
+
+/**
+ * Check that a ghost pattern is consistent: the send offsets match the send ranks and indices, only local items are
+ * sent, and the received chunks lie within the ghost items.
+ * Meant for assertions at the start of a ghost exchange.
+ *
+ * \param[in] pattern A ghost pattern.
+ * \return True if the pattern is consistent, false otherwise.
+ */
+bool
+t8_data_ghost_pattern_is_valid (const t8_data_ghost_pattern &pattern);
+
+/**
+ * A byte buffer for messages that is reused, e.g. across the ghost exchanges of one forest, so that the messages do
+ * not pay for fresh memory each time. It only grows and keeps its largest size until destruction.
+ */
+struct t8_data_buffer
+{
+  /**
+   * Get the buffer with room for at least \a num_bytes bytes. Growing the buffer discards its content and
+   * invalidates pointers returned before.
+   *
+   * \param[in] num_bytes The number of bytes needed.
+   * \return The buffer. Its content is uninitialized after growing.
+   */
+  char *
+  get (const size_t num_bytes)
+  {
+    if (num_bytes > m_num_bytes) {
+      /* Free the old buffer first, so that the old and the new one do not occupy memory at the same time. */
+      m_bytes.reset ();
+      m_bytes = std::make_unique_for_overwrite<char[]> (num_bytes);
+      m_num_bytes = num_bytes;
+    }
+    return m_bytes.get ();
+  }
+
+ private:
+  std::unique_ptr<char[]> m_bytes; /**< The buffer, nullptr before the first call of \ref get. */
+  size_t m_num_bytes = 0;          /**< The number of bytes of the buffer. */
+};
+
+/**
+ * A nonblocking ghost exchange of items that are plain bytes.
+ * The constructor posts all messages: the receives directly into the ghost slots of the data, the sends from a
+ * gather buffer that collects the items for all processes. Each process gets its items as soon as they are gathered.
+ * \ref wait completes the exchange; in between, the local items may be read but no item may be modified.
+ */
+struct t8_data_ghost_bytes_exchange
+{
+  /**
+   * Post the ghost exchange.
+   *
+   * \param[in] pattern The ghost pattern of this process.
+   * \param[in,out] data The \a pattern.num_local local items followed by space for the \a pattern.num_ghosts ghost
+   *                     items, each of \a item_size bytes. The ghost items are filled when \ref wait returns.
+   * \param[in] item_size The number of bytes of one item. Must be equal on all processes.
+   * \param[in,out] send_buffer The gather buffer of the items to send. It must not be used otherwise until
+   *                            \ref wait returns.
+   * \param[in] max_message_bytes Larger messages are split into several messages. Only meant to be changed by
+   *                              tests; the default is the largest message size MPI can describe.
+   */
+  t8_data_ghost_bytes_exchange (const t8_data_ghost_pattern &pattern, void *data, const size_t item_size,
+                                t8_data_buffer &send_buffer,
+                                const size_t max_message_bytes
+                                = static_cast<size_t> (std::numeric_limits<int>::max ()));
+
+  /**
+   * Wait until the exchange is complete.
+   */
+  void
+  wait ();
+
+ private:
+  t8_data_messages m_messages; /**< The posted messages. */
+};
 
 #endif /* T8_DATA_EXCHANGE_HXX */

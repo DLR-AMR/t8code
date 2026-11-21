@@ -428,3 +428,129 @@ TYPED_TEST (handler_partition_test, reuse_trailing_capacity)
     EXPECT_EQ (handler.get_data ().data (), original_storage) << "shape " << shape;
   }
 }
+
+/**
+ * The local indices of the items that a process sends to another one in the ghost tests: Process r holds 10 + r items
+ * and sends its last two items to the next process in a ring and its items 2, 0 and 1 to the previous one.
+ *
+ * \param[in] sender The sending process.
+ * \param[in] receiver The receiving process.
+ * \param[in] mpisize The number of processes.
+ * \return The local indices on \a sender of the items for \a receiver, in the order of the ghosts of \a receiver.
+ */
+static std::vector<size_t>
+t8_test_ghost_send_indices (const int sender, const int receiver, const int mpisize)
+{
+  std::vector<size_t> indices;
+  if (sender == receiver) {
+    return indices;
+  }
+  const size_t num_local = 10 + sender;
+  if (receiver == (sender + 1) % mpisize) {
+    indices.insert (indices.end (), { num_local - 2, num_local - 1 });
+  }
+  if (receiver == (sender - 1 + mpisize) % mpisize) {
+    indices.insert (indices.end (), { 2, 0, 1 });
+  }
+  return indices;
+}
+
+/**
+ * Build the ghost pattern of the ghost tests, see \ref t8_test_ghost_send_indices.
+ *
+ * \param[in] mpirank The rank of this process.
+ * \param[in] mpisize The number of processes.
+ * \param[in] comm The communicator.
+ * \return The ghost pattern of \a mpirank.
+ */
+static t8_data_ghost_pattern
+t8_test_ghost_pattern (const int mpirank, const int mpisize, sc_MPI_Comm comm)
+{
+  t8_data_ghost_pattern pattern;
+  pattern.num_local = 10 + mpirank;
+  pattern.comm = comm;
+  pattern.tag = 0;
+  pattern.send_offsets.push_back (0);
+  for (int iproc = 0; iproc < mpisize; ++iproc) {
+    const std::vector<size_t> send_indices = t8_test_ghost_send_indices (mpirank, iproc, mpisize);
+    if (!send_indices.empty ()) {
+      pattern.send_ranks.push_back (iproc);
+      pattern.send_indices.insert (pattern.send_indices.end (), send_indices.begin (), send_indices.end ());
+      pattern.send_offsets.push_back (pattern.send_indices.size ());
+    }
+    const size_t num_received = t8_test_ghost_send_indices (iproc, mpirank, mpisize).size ();
+    if (num_received > 0) {
+      pattern.recvs.push_back ({ iproc, pattern.num_local + pattern.num_ghosts, num_received });
+      pattern.num_ghosts += num_received;
+    }
+  }
+  return pattern;
+}
+
+/**
+ * The global index of a local item of a process in the ghost tests.
+ *
+ * \param[in] rank The process.
+ * \param[in] local_index The local index of the item on \a rank.
+ * \return The global index of the item.
+ */
+static t8_gloidx_t
+t8_test_ghost_global_index (const int rank, const size_t local_index)
+{
+  /* Process p holds 10 + p items. */
+  return 10 * rank + rank * (rank - 1) / 2 + static_cast<t8_gloidx_t> (local_index);
+}
+
+/**
+ * The global indices of the items of a process in the ghost tests: its local items, followed by its ghost items in
+ * the order of their owners.
+ *
+ * \param[in] mpirank The rank of the process.
+ * \param[in] mpisize The number of processes.
+ * \return The global indices of the local and the ghost items of \a mpirank.
+ */
+static std::vector<t8_gloidx_t>
+t8_test_ghost_global_indices (const int mpirank, const int mpisize)
+{
+  std::vector<t8_gloidx_t> indices;
+  for (size_t iitem = 0; iitem < static_cast<size_t> (10 + mpirank); ++iitem) {
+    indices.push_back (t8_test_ghost_global_index (mpirank, iitem));
+  }
+  for (int iproc = 0; iproc < mpisize; ++iproc) {
+    for (const size_t index : t8_test_ghost_send_indices (iproc, mpirank, mpisize)) {
+      indices.push_back (t8_test_ghost_global_index (iproc, index));
+    }
+  }
+  return indices;
+}
+
+/**
+ * Exchange ghost items of plain bytes with the default message size and with messages split at odd byte counts.
+ * The send buffer is reused by all exchanges.
+ */
+TEST (data_ghost_exchange, bytes)
+{
+  const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int mpirank, mpisize;
+  int mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  const t8_data_ghost_pattern pattern = t8_test_ghost_pattern (mpirank, mpisize, comm);
+  ASSERT_TRUE (t8_data_ghost_pattern_is_valid (pattern));
+
+  std::vector<double> expected;
+  for (const t8_gloidx_t index : t8_test_ghost_global_indices (mpirank, mpisize)) {
+    expected.push_back (static_cast<double> (index));
+  }
+  ASSERT_EQ (expected.size (), pattern.num_local + pattern.num_ghosts);
+
+  t8_data_buffer send_buffer;
+  for (const size_t max_message_bytes : { static_cast<size_t> (std::numeric_limits<int>::max ()), size_t { 7 } }) {
+    std::vector<double> data (expected.begin (), expected.begin () + pattern.num_local);
+    data.resize (pattern.num_local + pattern.num_ghosts, -1.0);
+    t8_data_ghost_bytes_exchange exchange (pattern, data.data (), sizeof (double), send_buffer, max_message_bytes);
+    exchange.wait ();
+    EXPECT_EQ (data, expected) << "max_message_bytes " << max_message_bytes;
+  }
+}
