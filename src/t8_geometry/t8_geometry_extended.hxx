@@ -24,8 +24,7 @@
  * TODO: Add description
  */
 
-#ifndef T8_GEOMETRY_H
-#define T8_GEOMETRY_H
+#pragma once
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry_base.hxx>
@@ -81,5 +80,3 @@ struct t8_geometry_extended: t8_geometry
 };
 
 T8_EXTERN_C_END ();
-
-#endif /* !T8_GEOMETRY_H */
