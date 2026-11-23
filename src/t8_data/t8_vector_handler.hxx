@@ -234,7 +234,8 @@ struct t8_vector_handler: public t8_abstract_vector_handler
    * repartitioning, if its capacity suffices. Otherwise new storage with at least the capacity of the old storage is
    * allocated, so both storages grow to the largest number of items so far. Then no fresh memory is needed after
    * the first repartitionings, as long as the number of items stays within the capacities. This costs the memory
-   * of a second vector between repartitionings, see \ref release_buffer.
+   * of a second vector between repartitionings, see \ref release_buffer. The capacities are not shrunk
+   * automatically, see \ref shrink_to_fit.
    * Disabled by default: The old storage is freed and every repartitioning allocates new storage.
    *
    * \param[in] reuse True to keep the replaced storage, false to free it, including a kept buffer.
@@ -255,6 +256,31 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   release_buffer ()
   {
     m_buffer = std::vector<TType> ();
+  }
+
+  /**
+   * Free the memory that is allocated but not needed: the buffer kept for buffer reuse, see \ref release_buffer,
+   * and the capacity of the data beyond its size. With buffer reuse, both storages grow to the largest number of
+   * items so far and are not shrunk automatically. Call this when the number of items stays small for a longer
+   * time, e.g. after a strong coarsening. The setting of \ref set_buffer_reuse is not changed, so the next
+   * repartitioning allocates new storage again. The data itself is not changed.
+   */
+  void
+  shrink_to_fit ()
+  {
+    release_buffer ();
+    m_data.shrink_to_fit ();
+  }
+
+  /**
+   * Get the capacity of the buffer kept for buffer reuse, see \ref set_buffer_reuse.
+   *
+   * \return The number of items the kept buffer has room for, 0 if there is no buffer.
+   */
+  size_t
+  get_buffer_capacity () const
+  {
+    return m_buffer.capacity ();
   }
 
   /**
