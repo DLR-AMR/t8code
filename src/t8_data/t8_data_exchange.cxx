@@ -34,10 +34,14 @@ t8_data_partition_pattern
 t8_data_partition_pattern_from_offsets (const t8_gloidx_t *offsets_old, const t8_gloidx_t *offsets_new, const int rank,
                                         const int num_ranks, sc_MPI_Comm comm, const int tag)
 {
+  /* Both distributions have to be valid prefix sums of the same global number of items. */
   T8_ASSERT (0 <= rank && rank < num_ranks);
   T8_ASSERT (offsets_old[0] == 0 && offsets_new[0] == 0);
   T8_ASSERT (offsets_old[num_ranks] == offsets_new[num_ranks]);
 
+  /* The items of this process are the global indices [old_first, old_end) before and [new_first, new_end) after the
+   * repartitioning. Since the items keep their global order, the data that moves is always a few contiguous ranges
+   * of these indices, which is why a chunk is just a partner, a first index and a count. */
   const t8_gloidx_t old_first = offsets_old[rank];
   const t8_gloidx_t old_end = offsets_old[rank + 1];
   const t8_gloidx_t new_first = offsets_new[rank];
@@ -49,12 +53,19 @@ t8_data_partition_pattern_from_offsets (const t8_gloidx_t *offsets_old, const t8
   pattern.comm = comm;
   pattern.tag = tag;
 
-  /* Send the overlap of the old local range with the new range of each process. The first process to consider
-   * is the new owner of our first old item; the offsets are sorted, so it is found by binary search. */
+  /* Send the overlap of the old local range with the new range of each process. Every other process computes the
+   * same overlap as its receive, so both sides agree on all messages and their sizes without communication.
+   * The first process to consider is the new owner of our first old item: upper_bound finds the first offset that is
+   * greater than old_first, so the process before it is the last one that starts at or before old_first. Empty
+   * processes share their offset with the next one, so this is the one that really owns the item. The offsets are
+   * sorted, so the search is a binary search and independent of the number of processes. */
   if (old_first < old_end) {
     int iproc
       = static_cast<int> (std::upper_bound (offsets_new, offsets_new + num_ranks + 1, old_first) - offsets_new) - 1;
+    /* Go through the processes in ascending order until one starts behind our old range. Hence the sends are sorted
+     * by rank. */
     for (; iproc < num_ranks && offsets_new[iproc] < old_end; ++iproc) {
+      /* The overlap of our old range with the new range of iproc, in global indices. */
       const t8_gloidx_t begin = std::max (old_first, offsets_new[iproc]);
       const t8_gloidx_t end = std::min (old_end, offsets_new[iproc + 1]);
       if (begin >= end) {
@@ -62,50 +73,66 @@ t8_data_partition_pattern_from_offsets (const t8_gloidx_t *offsets_old, const t8
         continue;
       }
       if (iproc == rank) {
+        /* The items stay on this process. They are not sent, but copied or moved from their old to their new
+         * position. */
         pattern.self_first_old = static_cast<size_t> (begin - old_first);
         pattern.self_first_new = static_cast<size_t> (begin - new_first);
         pattern.self_count = static_cast<size_t> (end - begin);
       }
       else {
+        /* The chunk is given by the local index in the old data. The differences are not negative, so the conversion
+         * to size_t is safe. */
         pattern.sends.push_back ({ iproc, static_cast<size_t> (begin - old_first), static_cast<size_t> (end - begin) });
       }
     }
   }
 
-  /* Receive the overlap of the new local range with the old range of each process. */
+  /* Receive the overlap of the new local range with the old range of each process. This is the mirror of the sends
+   * above: The first process to consider is the old owner of our first new item, found by binary search. */
   if (new_first < new_end) {
     int iproc
       = static_cast<int> (std::upper_bound (offsets_old, offsets_old + num_ranks + 1, new_first) - offsets_old) - 1;
     for (; iproc < num_ranks && offsets_old[iproc] < new_end; ++iproc) {
+      /* The overlap of our new range with the old range of iproc, in global indices. */
       const t8_gloidx_t begin = std::max (new_first, offsets_old[iproc]);
       const t8_gloidx_t end = std::min (new_end, offsets_old[iproc + 1]);
       if (begin >= end || iproc == rank) {
         /* iproc is empty in the old partition, or this is the self chunk computed above. */
         continue;
       }
+      /* The chunk is given by the local index in the new data, where the received items are placed. */
       pattern.recvs.push_back ({ iproc, static_cast<size_t> (begin - new_first), static_cast<size_t> (end - begin) });
     }
   }
+  /* If no item stays, self_count is 0 and the self indices keep their default. */
   return pattern;
 }
 
 bool
 t8_data_partition_pattern_is_valid (const t8_data_partition_pattern &pattern)
 {
+  /* Count the old items that leave this process or stay on it. The items that stay are the self chunk, which is
+   * not part of the sends. */
   size_t num_sent = pattern.self_count;
   for (const auto &chunk : pattern.sends) {
+    /* A chunk to send is not empty and lies within the old items. */
     if (chunk.count == 0 || chunk.first + chunk.count > pattern.num_old) {
       return false;
     }
     num_sent += chunk.count;
   }
+  /* The same for the new items, which arrive from other processes or stay. */
   size_t num_received = pattern.self_count;
   for (const auto &chunk : pattern.recvs) {
+    /* A chunk to receive is not empty and lies within the new items. */
     if (chunk.count == 0 || chunk.first + chunk.count > pattern.num_new) {
       return false;
     }
     num_received += chunk.count;
   }
+  /* Every old item is sent or stays, and every new item is received or stays. Since all chunks lie within their
+   * items, equal counts mean no item is missing. That the chunks do not overlap, and that the self chunk lies within
+   * the old and the new items, is not checked separately. */
   return num_sent == pattern.num_old && num_received == pattern.num_new;
 }
 
