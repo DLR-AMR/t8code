@@ -29,6 +29,7 @@
 
 #include <sc_statistics.h>
 #include <t8_cmesh/t8_cmesh.h>
+#include <t8_forest/t8_forest_general.h>
 T8_EXTERN_C_BEGIN ();
 
 /** Return the dimension of a forest.
