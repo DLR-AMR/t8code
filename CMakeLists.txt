@@ -243,6 +243,8 @@ if(T8CODE_ENABLE_CGNS)
   )
 
   set(CGNS_LIBRARIES "${CGNS_LIBRARY}")
+  # Used as a hint in config.cmake.in so that dependent projects find the same library.
+  get_filename_component(CGNS_LIBRARY_DIR "${CGNS_LIBRARY}" DIRECTORY)
 
   message(STATUS "Found CGNS: ${CGNS_LIBRARY}")
 endif()
