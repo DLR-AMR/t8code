@@ -75,7 +75,7 @@ struct t8_openfoam_reader
   t8_openfoam_reader (t8_cmesh_t* pcmesh, t8_path foamfile, sc_MPI_Comm comm)
     : m_case_dir (get_case_dir (foamfile)), m_pcmesh (pcmesh), m_comm (comm)
   {
-    t8_cmesh_t cmesh = *pcmesh;
+    [[maybe_unused]] t8_cmesh_t cmesh = *pcmesh;
     T8_ASSERT (cmesh != NULL);
     T8_ASSERT (t8_cmesh_is_initialized (cmesh));
     T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
