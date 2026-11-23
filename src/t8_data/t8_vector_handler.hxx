@@ -141,6 +141,30 @@ struct t8_abstract_vector_handler
    */
   void
   sendrecv (const int dest, const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount);
+
+ protected:
+  /**
+   * A posted receive of a message of packed (serialized) data whose size was not known in advance.
+   */
+  struct packed_recv
+  {
+    std::unique_ptr<char[]> buffer; /**< The received bytes, valid when the request is complete. */
+    int num_bytes = 0;              /**< The size of the message in bytes. */
+    sc_MPI_Request request;         /**< The request of the receive. Complete it before using \a buffer. */
+  };
+
+  /**
+   * Wait for the size of the next message from a process, allocate a buffer of this size and post the nonblocking
+   * receive into it. Blocks until the message of \a rank has been announced, but not until it has arrived.
+   * Requires MPI.
+   *
+   * \param[in] rank The process to receive from.
+   * \param[in] tag The MPI tag of the message.
+   * \param[in] comm The communicator of the message.
+   * \return The posted receive. Complete its request before using the buffer.
+   */
+  static packed_recv
+  post_packed_recv (const int rank, const int tag, sc_MPI_Comm comm);
 };
 
 /**
@@ -444,36 +468,35 @@ struct t8_vector_handler: public t8_abstract_vector_handler
       SC_CHECK_MPI (mpiret);
     }
 
+    /* Allocate storage for the new distribution*/
     std::vector<TType> new_data (pattern.num_new);
+    /* Pointer to the start of the old items */
     const auto self_begin = m_data.begin () + pattern.self_first_old;
+    /* Move data that is already on the process into the new storage */
     std::move (self_begin, self_begin + pattern.self_count, new_data.begin () + pattern.self_first_new);
 
+    /* Prepare the receive. We can not do any assumption about the serialized data because
+     * we don't know the size in advantage (for example if each element sends a std::vector)*/
     const size_t num_recvs = pattern.recvs.size ();
-    std::vector<std::unique_ptr<char[]>> recv_buffers (num_recvs);
-    std::vector<int> recv_num_bytes (num_recvs);
+    std::vector<packed_recv> recvs;
+    recvs.reserve (num_recvs);
     std::vector<sc_MPI_Request> recv_requests (num_recvs);
     for (size_t irecv = 0; irecv < num_recvs; ++irecv) {
-      const t8_data_partition_chunk &chunk = pattern.recvs[irecv];
-      sc_MPI_Status status;
-      int mpiret = sc_MPI_Probe (chunk.rank, pattern.tag, comm, &status);
-      SC_CHECK_MPI (mpiret);
-      mpiret = sc_MPI_Get_count (&status, sc_MPI_PACKED, &recv_num_bytes[irecv]);
-      SC_CHECK_MPI (mpiret);
-      recv_buffers[irecv].reset (new char[recv_num_bytes[irecv]]);
-      mpiret = sc_MPI_Irecv (recv_buffers[irecv].get (), recv_num_bytes[irecv], sc_MPI_PACKED, chunk.rank, pattern.tag,
-                             comm, &recv_requests[irecv]);
-      SC_CHECK_MPI (mpiret);
+      /* Receive chunk after chunk given by the partition pattern; the size of each is probed. */
+      recvs.push_back (post_packed_recv (pattern.recvs[irecv].rank, pattern.tag, comm));
+      recv_requests[irecv] = recvs.back ().request;
     }
     if (num_recvs > 0) {
       const int mpiret = sc_MPI_Waitall (t8_mpi_int (num_recvs), recv_requests.data (), sc_MPI_STATUSES_IGNORE);
       SC_CHECK_MPI (mpiret);
     }
+    /* Unpack the receive buffers */
     for (size_t irecv = 0; irecv < num_recvs; ++irecv) {
       const t8_data_partition_chunk &chunk = pattern.recvs[irecv];
       int position = 0;
-      unpack_range (recv_buffers[irecv].get (), recv_num_bytes[irecv], position, new_data.data () + chunk.first,
+      unpack_range (recvs[irecv].buffer.get (), recvs[irecv].num_bytes, position, new_data.data () + chunk.first,
                     chunk.count, comm);
-      T8_ASSERT (position == recv_num_bytes[irecv]);
+      T8_ASSERT (position == recvs[irecv].num_bytes);
     }
 
     if (num_sends > 0) {

@@ -29,6 +29,26 @@
 #include <t8_data/t8_vector_handler.hxx>
 #include <memory>
 
+t8_abstract_vector_handler::packed_recv
+t8_abstract_vector_handler::post_packed_recv ([[maybe_unused]] const int rank, [[maybe_unused]] const int tag,
+                                              [[maybe_unused]] sc_MPI_Comm comm)
+{
+#if T8_ENABLE_MPI
+  packed_recv recv;
+  sc_MPI_Status status;
+  int mpiret = sc_MPI_Probe (rank, tag, comm, &status);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Get_count (&status, sc_MPI_PACKED, &recv.num_bytes);
+  SC_CHECK_MPI (mpiret);
+  recv.buffer.reset (new char[recv.num_bytes]);
+  mpiret = sc_MPI_Irecv (recv.buffer.get (), recv.num_bytes, sc_MPI_PACKED, rank, tag, comm, &recv.request);
+  SC_CHECK_MPI (mpiret);
+  return recv;
+#else
+  SC_ABORT ("t8_abstract_vector_handler::post_packed_recv requires MPI.");
+#endif
+}
+
 void
 t8_abstract_vector_handler::send ([[maybe_unused]] const int dest, [[maybe_unused]] const int tag,
                                   [[maybe_unused]] sc_MPI_Comm comm) const
