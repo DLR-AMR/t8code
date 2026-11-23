@@ -62,7 +62,6 @@ t8_openfoam_reader::read ()
   }
   else {
     t8_cmesh_destroy (m_pcmesh);
-    return;
   }
 
   *m_pcmesh = t8_cmesh_bcast (*m_pcmesh, 0, m_comm);
