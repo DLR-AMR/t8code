@@ -26,7 +26,7 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 /** In this test, we are given a forest with 3 global trees.
  * We adapt the forest so that all 6 compositions of empty

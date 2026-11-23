@@ -21,8 +21,8 @@
 */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_schemes.hxx>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_schemes.hxx>
+#include <t8_gtest_macros.hxx>
 
 /*
  * In this file we test whether the t8_element_count_leaves{_from_root}

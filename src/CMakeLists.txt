@@ -52,6 +52,8 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
   set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
 
   target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG=1 )
+else ()
+  target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG=0 )
 endif()
 
 if( T8CODE_EXPORT_COMPILE_COMMANDS )
@@ -351,6 +353,12 @@ install( DIRECTORY t8_types
   FILES_MATCHING
     PATTERN "*.hxx"
     PATTERN "*.h"
+)
+install( DIRECTORY t8_vector
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hxx"
 )
 install( DIRECTORY t8_vtk
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
