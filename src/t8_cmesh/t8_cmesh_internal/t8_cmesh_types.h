@@ -67,7 +67,8 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
 #define T8_CMESH_CAD_FACE_ATTRIBUTE_KEY             T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_EDGES  /**< Used to store which face is linked to which surface */
 #define T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY  T8_CMESH_CAD_FACE_ATTRIBUTE_KEY + 1                               /**< Used to store face parameters */
 #define T8_CMESH_LAGRANGE_POLY_DEGREE_KEY           T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES  /**< Used to store parameters of lagrangian polynomials */
-#define T8_CMESH_NEXT_POSSIBLE_KEY                  T8_CMESH_LAGRANGE_POLY_DEGREE_KEY + 1                             /**< The next free value for a t8code attribute key */
+#define T8_CMESH_CGNS_ZONE_ATTRIBUTE_KEY            T8_CMESH_LAGRANGE_POLY_DEGREE_KEY + 1                             /**< Used to store the index of the CGNS zone a tree was read from */
+#define T8_CMESH_NEXT_POSSIBLE_KEY                  T8_CMESH_CGNS_ZONE_ATTRIBUTE_KEY + 1                              /**< The next free value for a t8code attribute key */
 /* clang-format on */
 
 /** This structure holds the connectivity data of the coarse mesh.
