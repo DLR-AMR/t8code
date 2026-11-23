@@ -519,7 +519,8 @@ t8_forest_get_num_ghosts (const t8_forest_t forest);
 
 /** Query whether a ghost layer was constructed for a forest.
  * Unlike checking t8_forest_get_num_ghosts () > 0, this is also true on
- * processes without local elements (and thus without ghosts).
+ * processes without local elements (and thus without ghosts). And returns the same
+ * value for all processes.
  * \param [in]  forest  The forest. Must be committed.
  * \return      Non-zero if the forest has a ghost structure, 0 otherwise.
  * \note On a single process no ghost layer is constructed, so this returns 0.
