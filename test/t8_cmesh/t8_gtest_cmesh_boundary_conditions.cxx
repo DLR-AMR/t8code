@@ -557,7 +557,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_distributed_cm
 }
 
 /**
- * We create an empty cmesh and forest and expect that no boundary conditions are set.
+ * We create a simple cmesh and forest and expect that no boundary conditions are set.
  */
 TEST (t8_gtest_cmesh_boundary_conditions, test_no_boundary_conditions)
 {
