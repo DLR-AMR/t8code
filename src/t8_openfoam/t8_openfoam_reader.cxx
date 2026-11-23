@@ -52,14 +52,17 @@ t8_openfoam_reader::read ()
       /* Return the uninitialized cmesh (nullptr) */
       t8_global_errorf ("ERROR during OpenFOAM case reading.\n");
       t8_cmesh_destroy (m_pcmesh);
+      return;
     }
     if (!fill_cmesh ()) {
       t8_global_errorf ("ERROR during OpenFOAM cmesh build.\n");
       t8_cmesh_destroy (m_pcmesh);
+      return;
     }
   }
   else {
     t8_cmesh_destroy (m_pcmesh);
+    return;
   }
 
   *m_pcmesh = t8_cmesh_bcast (*m_pcmesh, 0, m_comm);
