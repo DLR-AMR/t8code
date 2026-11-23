@@ -35,7 +35,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_forest/t8_forest_io.h>
 
@@ -190,6 +190,71 @@ transfer_points (t8_forest_t forest_old, t8_forest_t forest_new, const t8_locidx
       }
     }
   }
+}
+
+/**
+ * Apply a tree reindexing to the coarse mesh stash in place.
+ *
+ * Updates the tree IDs stored in the stash according to the given mapping,
+ * allowing the coarse mesh to use the newly computed tree ordering.
+ *
+ * \param [in,out] stash         The coarse mesh stash to be modified.
+ * \param [in]     tree_reindex  Mapping from original global tree IDs to
+ *                              their new indices.
+ */
+static void
+t8_cmesh_tree_perform_reindex_inplace (t8_stash_t &stash, const std::map<t8_gloidx_t, t8_gloidx_t> &tree_reindex)
+{
+  T8_ASSERT (stash != nullptr);
+
+  /* Reindex tree class entries. */
+  for (size_t iclass = 0; iclass < stash->classes.elem_count; ++iclass) {
+    t8_stash_class_struct_t *sclass = static_cast<t8_stash_class_struct_t *> (sc_array_index (&stash->classes, iclass));
+
+    sclass->id = tree_reindex.at (sclass->id);
+  }
+
+  /* Reindex tree attributes. */
+  for (size_t iattr = 0; iattr < stash->attributes.elem_count; ++iattr) {
+    t8_stash_attribute_struct_t *attr
+      = static_cast<t8_stash_attribute_struct_t *> (sc_array_index (&stash->attributes, iattr));
+
+    attr->id = tree_reindex.at (attr->id);
+  }
+
+  /* Reindex face connections. */
+  for (size_t iface = 0; iface < stash->joinfaces.elem_count; ++iface) {
+    t8_stash_joinface_struct_t *join
+      = static_cast<t8_stash_joinface_struct_t *> (sc_array_index (&stash->joinfaces, iface));
+
+    const t8_gloidx_t old_id1 = join->id1;
+    const t8_gloidx_t old_id2 = join->id2;
+
+    const t8_gloidx_t new_id1 = tree_reindex.at (old_id1);
+
+    const t8_gloidx_t new_id2 = tree_reindex.at (old_id2);
+
+    const int old_face1 = join->face1;
+    const int old_face2 = join->face2;
+
+    if (new_id1 <= new_id2) {
+      join->id1 = new_id1;
+      join->id2 = new_id2;
+      join->face1 = old_face1;
+      join->face2 = old_face2;
+    }
+    else {
+      join->id1 = new_id2;
+      join->id2 = new_id1;
+      join->face1 = old_face2;
+      join->face2 = old_face1;
+    }
+  }
+
+  /* Restore the order expected by the stash/commit routines. */
+  t8_stash_class_sort (stash);
+  t8_stash_joinface_sort (stash);
+  t8_stash_attribute_sort (stash);
 }
 
 std::map<t8_gloidx_t, t8_gloidx_t>
@@ -428,60 +493,7 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   t8_debugf ("tree reindexing finished\n");
 
+  t8_cmesh_tree_perform_reindex_inplace (cmesh->stash, tree_reindex);
+
   return tree_reindex;
-}
-
-void
-t8_cmesh_tree_perform_reindex_inplace (t8_stash_t &stash, const std::map<t8_gloidx_t, t8_gloidx_t> &tree_reindex)
-{
-  T8_ASSERT (stash != nullptr);
-
-  /* Reindex tree class entries. */
-  for (size_t iclass = 0; iclass < stash->classes.elem_count; ++iclass) {
-    t8_stash_class_struct_t *sclass = static_cast<t8_stash_class_struct_t *> (sc_array_index (&stash->classes, iclass));
-
-    sclass->id = tree_reindex.at (sclass->id);
-  }
-
-  /* Reindex tree attributes. */
-  for (size_t iattr = 0; iattr < stash->attributes.elem_count; ++iattr) {
-    t8_stash_attribute_struct_t *attr
-      = static_cast<t8_stash_attribute_struct_t *> (sc_array_index (&stash->attributes, iattr));
-
-    attr->id = tree_reindex.at (attr->id);
-  }
-
-  /* Reindex face connections. */
-  for (size_t iface = 0; iface < stash->joinfaces.elem_count; ++iface) {
-    t8_stash_joinface_struct_t *join
-      = static_cast<t8_stash_joinface_struct_t *> (sc_array_index (&stash->joinfaces, iface));
-
-    const t8_gloidx_t old_id1 = join->id1;
-    const t8_gloidx_t old_id2 = join->id2;
-
-    const t8_gloidx_t new_id1 = tree_reindex.at (old_id1);
-
-    const t8_gloidx_t new_id2 = tree_reindex.at (old_id2);
-
-    const int old_face1 = join->face1;
-    const int old_face2 = join->face2;
-
-    if (new_id1 <= new_id2) {
-      join->id1 = new_id1;
-      join->id2 = new_id2;
-      join->face1 = old_face1;
-      join->face2 = old_face2;
-    }
-    else {
-      join->id1 = new_id2;
-      join->id2 = new_id1;
-      join->face1 = old_face2;
-      join->face2 = old_face1;
-    }
-  }
-
-  /* Restore the order expected by the stash/commit routines. */
-  t8_stash_class_sort (stash);
-  t8_stash_joinface_sort (stash);
-  t8_stash_attribute_sort (stash);
 }

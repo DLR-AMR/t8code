@@ -154,8 +154,6 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
     if (cmesh->reindex_trees) {
       auto start = std::chrono::high_resolution_clock::now ();
       std::map<t8_gloidx_t, t8_gloidx_t> reindexing_map = t8_cmesh_reindex_tree (cmesh);
-
-      t8_cmesh_tree_perform_reindex_inplace (stash, reindexing_map);
       auto stop = std::chrono::high_resolution_clock::now ();
       auto duration = duration_cast<std::chrono::microseconds> (stop - start);
       t8_productionf ("Time taken: %lims\n", duration.count ());
