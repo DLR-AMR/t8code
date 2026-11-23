@@ -211,20 +211,27 @@ t8_data_partition_bytes (const t8_data_partition_pattern &pattern, const void *d
 bool
 t8_data_ghost_pattern_is_valid (const t8_data_ghost_pattern &pattern)
 {
+  /* The send offsets are a prefix sum with one entry more than there are send ranks: They start at 0 and end at the
+   * number of items to send. The size is checked first, so that front () and back () are never called on an empty
+   * vector (a size of send_ranks.size () + 1 is at least 1). */
   if (pattern.send_offsets.size () != pattern.send_ranks.size () + 1 || pattern.send_offsets.front () != 0
       || pattern.send_offsets.back () != pattern.send_indices.size ()) {
     return false;
   }
+  /* Every process we send to gets at least one item, i.e. the offsets are strictly increasing. */
   for (size_t isend = 0; isend < pattern.send_ranks.size (); ++isend) {
     if (pattern.send_offsets[isend] >= pattern.send_offsets[isend + 1]) {
       return false;
     }
   }
+  /* Only local items are sent. The ghost items, which are stored after the local ones, are owned by other processes. */
   for (const size_t index : pattern.send_indices) {
     if (index >= pattern.num_local) {
       return false;
     }
   }
+  /* The received chunks are non-empty and lie within the ghost items, which are the indices
+   * [num_local, num_local + num_ghosts) of the data. */
   for (const auto &chunk : pattern.recvs) {
     if (chunk.count == 0 || chunk.first < pattern.num_local
         || chunk.first + chunk.count > pattern.num_local + pattern.num_ghosts) {
