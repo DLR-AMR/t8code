@@ -406,7 +406,8 @@ struct t8_vector_handler: public t8_abstract_vector_handler
 
 /**
  * Create an internal handler for the given data type. Can be used for complex data types that use
- * data structures implemented by t8code.
+ * data structures implemented by t8code. Useful if a process has no knowledge about the data at compile-time,
+ * for example 1 proc reads a cmesh and then distributes it.
  *
  * \param[in] type The type of the data handler to create.
  * \return A handler for the given data type.
