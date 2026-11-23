@@ -38,6 +38,7 @@ T8_EXTERN_C_BEGIN ();
  * Indicates if a forest has boundary conditions.
  * If this is true, \ref t8_forest_get_boundary_conditions and \ref t8_forest_get_boundary_condition
  * are safe to use. The forest has to be committed.
+ * \param [in] forest   The forest to query.
  *
  * \return True if the forest has boundary conditions. False otherwise.
  */
