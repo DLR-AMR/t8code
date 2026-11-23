@@ -3695,6 +3695,13 @@ t8_forest_get_num_ghosts (const t8_forest_t forest)
   return forest->ghosts->num_ghosts_elements;
 }
 
+int
+t8_forest_has_ghosts (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  return forest->ghosts != nullptr;
+}
+
 /* Currently this function is not used */
 
 /* Compute the offset array for a partition cmesh that should match the
