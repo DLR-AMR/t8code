@@ -36,7 +36,7 @@ set(VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/version.txt")
 # Custom command to generate the version file
 add_custom_command(
     OUTPUT ${VERSION_FILE}
-    COMMAND ${CMAKE_COMMAND} -E echo "Version ${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" > ${VERSION_FILE}
+    COMMAND ${CMAKE_COMMAND} -E echo "Version ${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}-${T8CODE_VERSION_POINT}" > ${VERSION_FILE}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt  # Change as needed
     )
 

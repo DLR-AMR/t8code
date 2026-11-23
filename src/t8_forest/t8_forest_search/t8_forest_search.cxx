@@ -21,7 +21,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /** \file t8_forest_search.cxx
- * Implements functions declared in \ref t8_forest_search.hxx 
+ * Implements functions declared in \ref t8_forest_search.hxx
  *  or the C interface \ref t8_forest_search.h.
  */
 

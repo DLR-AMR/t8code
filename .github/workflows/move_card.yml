@@ -118,6 +118,7 @@ jobs:
     # Don't run in parallel on the same PR. Otherwise multiple issues might be created for the same PR. 
     concurrency:
       group: pr-move-card-${{ github.event.pull_request.id }}
+      queue: max
     outputs:
       NUMBER_IS_SET: ${{ steps.get_pr_issue_link.outputs.NUMBER_IS_SET }}
       CLEAN_ISSUE_NUMBER: ${{ steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER }}

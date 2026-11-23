@@ -27,9 +27,9 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
-#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include <t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 #include "t8_test_data_dir.h"
 #include <string>
 
@@ -213,7 +213,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
    */
 
   /* Make sure that p4est is properly initialized. If not, do it here. */
-  if (!sc_package_is_registered (p4est_package_id)) {
+  if (!p4est_is_initialized ()) {
     p4est_init (NULL, SC_LP_ESSENTIAL);
   }
 

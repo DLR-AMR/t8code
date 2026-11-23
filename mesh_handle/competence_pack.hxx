@@ -65,7 +65,7 @@ using all_cache_element_competences
 using cache_face_element_competences
   = element_competence_pack<cache_face_areas, cache_face_centroids, cache_face_normals, cache_neighbors>;
 
-/** Predefined element data competence pack. 
+/** Predefined element data competence pack.
  *  Please note that you must combine this with \ref t8_mesh_handle::data_mesh_competences_basic. */
 using data_element_competences_basic = element_competence_pack<element_data_element_competence>;
 
@@ -91,13 +91,13 @@ struct mesh_competence_pack
 /** Empty competence pack. */
 using empty_mesh_competences = mesh_competence_pack<>;
 
-/** Predefined mesh competence pack to handle element data. 
+/** Predefined mesh competence pack to handle element data.
  * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::data_element_competences_basic.
  */
 template <T8MPISafeType TElementDataType>
 using data_mesh_competences_basic = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type>;
 
-/** Predefined mesh competence pack with the functionality to work with element data and to interpolate element data after adaptation. 
+/** Predefined mesh competence pack with the functionality to work with element data and to interpolate element data after adaptation.
  * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::data_element_competences_basic.
  */
 template <T8MPISafeType TElementDataType>
@@ -113,7 +113,7 @@ using dg_mesh_competences = mesh_competence_pack<remote_ranks_mesh_competence, f
  * \ref t8_mesh_handle::element_competence_pack or \ref t8_mesh_handle::mesh_competence_pack.
  *  A new competence pack is produced containing all competences of the given competence packs with duplicates removed.
  * \tparam TPacks The competence packs for which we should compute the unique union of the competences.
- *         Each competence pack is expected to be of the same type and of type 
+ *         Each competence pack is expected to be of the same type and of type
  *         \ref t8_mesh_handle::element_competence_pack or \ref t8_mesh_handle::mesh_competence_pack.
  */
 template <typename... TPacks>

@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This is step3 of the t8code tutorials.
+/** \file t8_step3_adapt_forest.cxx
+ * This is step3 of the t8code tutorials.
  * After generating a coarse mesh (step1) and building a uniform forest
  * on it (step2), we will now adapt (= refine and coarsen) the forest
  * according to our own criterion.
@@ -57,7 +58,7 @@
 #include <t8_forest/t8_forest_io.h>             /* save forest */
 #include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
-#include <t8_types/t8_vec.h>                    /* Basic operations on 3D vectors. */
+#include <t8_vector/t8_vec.h>                   /* Basic operations on 3D vectors. */
 #include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();

@@ -24,12 +24,12 @@
 #include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_cmesh/t8_cmesh.h>
-#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
-#include <test/t8_gtest_macros.hxx>
-#include <test/t8_gtest_schemes.hxx>
+#include <t8_cmesh_generator/t8_cmesh_example_sets.hxx>
+#include <t8_gtest_macros.hxx>
+#include <t8_gtest_schemes.hxx>
 
 /* This test program tests the forest ghost layer.
  * We adapt a forest and create its ghost layer. Afterwards, we

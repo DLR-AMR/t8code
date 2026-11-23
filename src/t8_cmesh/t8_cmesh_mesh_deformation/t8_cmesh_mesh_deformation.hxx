@@ -33,7 +33,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cad/t8_cad_handle.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 
 /** Struct for mesh deformation. */
 struct t8_cmesh_mesh_deformation
@@ -45,9 +45,9 @@ struct t8_cmesh_mesh_deformation
   /** Destructor */
   ~t8_cmesh_mesh_deformation () {};
 
-  /** 
+  /**
  * Computes the displacements of the surface vertices.
- * 
+ *
  * \param [in]  cad A pointer to the CAD-based geometry object.
  * \return Map from global vertex ID to 3D displacement vector
  */

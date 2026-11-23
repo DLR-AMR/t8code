@@ -77,7 +77,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::add_vertex_to_tree ([[maybe_unused]] const 
   T8_ASSERT (!is_committed ());
   T8_ASSERT (0 <= global_vertex_id);
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
 #if T8_ENABLE_DEBUG
   const bool is_local_tree = t8_cmesh_treeid_is_local_tree (cmesh, ltreeid);
@@ -143,7 +143,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::contains_all_vertices (const t8_cmesh_t cme
    * number of vertices for each tree and count down for each occurrence.
    * At the end the values must be zero. */
 
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (is_committed ());
 
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);

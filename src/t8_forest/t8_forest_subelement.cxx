@@ -30,6 +30,7 @@
 #include "t8_forest_types.h"
 #include "t8_forest_private.h"
 #include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement.hxx>
 #include <t8_element/t8_element.h>
@@ -66,10 +67,10 @@ t8_discard_subelements_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_un
   return 0;
 }
 
-/** Adapt callback for hanging node resolution. 
+/** Adapt callback for hanging node resolution.
  * We use the face enumeration to determine which subelement type to use for the transition cell.
- * Every face has a flag parameter, which is set to 1, if there is a neighbour with a higher level 
- * and to 0, if the level of the neighbour is at most the level of the element.   
+ * Every face has a flag parameter, which is set to 1, if there is a neighbour with a higher level
+ * and to 0, if the level of the neighbour is at most the level of the element.
  * If all faces are hanging, we use the normal 1:8 refinement and return 1.
  * Otherwise, we use subelements and add 1 to every type, to avoid refine = 1.
  * \param [in] forest       The forest to which the new elements belong.
@@ -201,6 +202,21 @@ t8_forest_has_local_subelements (const t8_forest_t forest)
 t8_forest_t
 t8_forest_remove_hanging_nodes (t8_forest_t forest)
 {
+  T8_ASSERT (t8_forest_is_committed (forest));
+#if T8_ENABLE_DEBUG
+  /* Every tree class of the forest needs a subelement implementation in the scheme. */
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+  for (int ieclass = T8_ECLASS_ZERO; ieclass < T8_ECLASS_COUNT; ++ieclass) {
+    const t8_eclass_t eclass = static_cast<t8_eclass_t> (ieclass);
+    SC_CHECK_ABORTF (cmesh->num_trees_per_eclass[eclass] == 0 || t8_eclass_scheme_is_subelement (scheme, eclass),
+                     "Cannot remove hanging nodes: the scheme of the forest has no subelements for trees of class %s. "
+                     "Hanging nodes can only be removed with the subelement scheme (t8_scheme_new_subelement) on "
+                     "forests of quadrilaterals and triangles.\n",
+                     t8_eclass_to_string[eclass]);
+  }
+#endif /* T8_ENABLE_DEBUG */
+
   t8_global_productionf ("Into t8_forest_remove_hanging_nodes.\n");
   t8_forest_t forest_new = t8_forest_new_adapt (forest, detail::t8_remove_hanging_nodes_callback, 0, 0, NULL);
   t8_global_productionf ("Done t8_forest_remove_hanging_nodes.\n");

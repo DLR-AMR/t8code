@@ -21,16 +21,21 @@
 */
 
 /* This file is part of the public interface, while
- * src/t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx 
+ * src/t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx
  * is not. */
 
 /** \file t8_cmesh_vertex_connectivity_types.hxx
- * In this file we collect the data types required for cmesh 
+ * In this file we collect the data types required for cmesh
  * global vertex id storage.
  */
 
 #ifndef T8_CMESH_VERTEX_CONNECTIVITY_TYPES_HXX
 #define T8_CMESH_VERTEX_CONNECTIVITY_TYPES_HXX
+
+#include <t8.h>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 /** Variable type for (tree_id, tree_vertex_id) pair */
 using tree_vertex_pair = std::pair<t8_locidx_t, int>;

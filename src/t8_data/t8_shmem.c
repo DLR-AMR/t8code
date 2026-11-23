@@ -80,7 +80,7 @@ t8_shmem_init (sc_MPI_Comm comm)
 
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
-    /* The inter/intra comms are not set. We need to set them to 
+    /* The inter/intra comms are not set. We need to set them to
      * initialize shared memory usage. */
     return sc_mpi_comm_get_and_attach (comm);
   }
@@ -227,14 +227,14 @@ t8_shmem_array_prefix (const void *sendbuf, t8_shmem_array_t recvarray, const in
 }
 
 /**
- * Computes the recvcounter- and displacement array for 
+ * Computes the recvcounter- and displacement array for
  * an MPI_Gatherv
- * 
+ *
  * \param[in] sendcount The number of items this proc sends
  * \param[in, out] recvcounts On input a zero-initialized array that is going to be filled with the number of elements send by rank i
  * \param[in, out] displs On input a zero-initialized array that is going to be filled with the displacements
  * \param[in] comm The MPI communicator to use
- * \returns   The total number of items 
+ * \returns   The total number of items
  */
 static int
 t8_compute_recvcounts_displs (int sendcount, int *recvcounts, int *displs, sc_MPI_Comm comm)
@@ -257,17 +257,17 @@ t8_compute_recvcounts_displs (int sendcount, int *recvcounts, int *displs, sc_MP
 
 #if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 /**
- * Allgathers sendbuffer of various sizes and writes them in the recvarray. 
+ * Allgathers sendbuffer of various sizes and writes them in the recvarray.
  * Can be used for SC_SHMEM_WINDOW, SC_SHMEM_WINDOW_PRESCAN
- * SC_SHMEM_BGQ or SC_SHMEMBGQ_PRESCAN (sc_shmem.h) 
- * 
+ * SC_SHMEM_BGQ or SC_SHMEMBGQ_PRESCAN (sc_shmem.h)
+ *
  * \param[in] sendbuf   The sendbuffer
  * \param[in] sendcount The number of items send by this proc
  * \param[in] sendtype The type of items to send
  * \param[in, out] recvarray The destination
  * \param[in] recvtype The type of items to receive
- * \param[in] intranode_comm The intranode communicator to use. 
- * \param[in] internode_comm  The internode communicator to use. 
+ * \param[in] intranode_comm The intranode communicator to use.
+ * \param[in] internode_comm  The internode communicator to use.
  */
 static void
 t8_shmem_array_allgatherv_common (void *sendbuf, const int sendcount, sc_MPI_Datatype sendtype,
@@ -322,15 +322,15 @@ t8_shmem_array_allgatherv_common (void *sendbuf, const int sendcount, sc_MPI_Dat
 #endif /* __bgq__ || SC_ENABLE_MPI_WINSHARED */
 
 /**
- * Allgathers sendbuffer of various sizes and writes them in the recvarray. 
- * Can be used for Basic or Prescan shared memory (sc_shmem.h) 
- * 
+ * Allgathers sendbuffer of various sizes and writes them in the recvarray.
+ * Can be used for Basic or Prescan shared memory (sc_shmem.h)
+ *
  * \param[in] sendbuf   The sendbuffer
  * \param[in] sendcount The number of items send by this proc
  * \param[in] sendtype The type of items to send
  * \param[in, out] recvarray The destination
  * \param[in] recvtype The type of items to receive
- * \param[in] comm The mpicommunicator to use. 
+ * \param[in] comm The mpicommunicator to use.
  */
 static void
 t8_shmem_array_allgatherv_basic (void *sendbuf, const int sendcount, sc_MPI_Datatype sendtype,

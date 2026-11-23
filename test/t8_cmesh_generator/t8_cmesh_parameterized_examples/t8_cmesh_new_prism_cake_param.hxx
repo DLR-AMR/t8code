@@ -20,14 +20,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_prism_cake_param.hxx 
+/** \file t8_cmesh_new_prism_cake_param.hxx
  * Parameterized prism cake example cmeshes.
  */
 #ifndef T8_CMESH_NEW_PRISM_CAKE_PARAM_HXX
 #define T8_CMESH_NEW_PRISM_CAKE_PARAM_HXX
 
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx"
+#include <t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx>
+#include <t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 namespace new_prism_cake

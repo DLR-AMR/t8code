@@ -27,11 +27,11 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass/t8_eclass.h>
-#include <t8_types/t8_vec.h>
+#include <t8_vector/t8_vec.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 #if T8_TEST_LEVEL_INT >= 1
 #define MAX_LEVEL_REF_COORD_TEST 3

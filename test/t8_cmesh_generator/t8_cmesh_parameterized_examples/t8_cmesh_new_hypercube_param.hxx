@@ -20,15 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_new_empty.hxx 
+/** \file t8_cmesh_new_empty.hxx
  * Parameterized hypercube example cmeshes from one primitive tree class.
  */
 #ifndef T8_CMESH_NEW_HYPERCUBE_PARAM_HXX
 #define T8_CMESH_NEW_HYPERCUBE_PARAM_HXX
 
 #include <t8_eclass/t8_eclass.h>
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx"
+#include <t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx>
+#include <t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 namespace new_hypercube_cmesh
@@ -36,7 +36,7 @@ namespace new_hypercube_cmesh
 /** Function to convert parameter values to a string.
  * \param [in] eclass eclass determines the dimension and the number of trees needed to construct a cube.
  * \param [in] comm  The mpi communicator to be used.
- * \param [in] do_bcast If this flag is nonzero the cmesh is only constructed on processor 0 and then 
+ * \param [in] do_bcast If this flag is nonzero the cmesh is only constructed on processor 0 and then
  *                      broadcasted to the other processors in \a comm.
  * \param [in] do_partition Create a partitioned cmesh.
  * \param [in] periodic If true, the coarse mesh will be periodic in each direction.

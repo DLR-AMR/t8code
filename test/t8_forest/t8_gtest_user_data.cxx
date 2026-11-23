@@ -29,8 +29,8 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
-#include <test/t8_gtest_schemes.hxx>
-#include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
+#include <t8_gtest_schemes.hxx>
+#include <t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
 /* Test t8_forest_set/get_user_data.
  * We build a forest and set user data for it.
@@ -99,7 +99,7 @@ TEST_P (forest_user_data, test_user_data)
   ASSERT_EQ (*get_data2, 42) << "User data value has changed.";
 }
 
-/* A test function that we can set for the 
+/* A test function that we can set for the
  * user function pointer of a forest. */
 static double
 t8_test_function_42 (int i)
@@ -107,7 +107,7 @@ t8_test_function_42 (int i)
   return 42.42 + i;
 }
 
-/* A second test function that we can set for the 
+/* A second test function that we can set for the
  * user function pointer of a forest. */
 static void
 t8_test_function_second (void)

@@ -79,7 +79,7 @@ struct t8_scheme_helpers: public t8_crtp_basic<TUnderlyingEclassScheme>
   inline int
   element_face_get_ancestor_face (const t8_element_t *element, const int ancestor_level, const int face) const
   {
-    auto underlying_impl = this->underlying ();  // Reference to the underlying scheme implementation
+    const auto &underlying_impl = this->underlying ();  // Reference to the underlying scheme implementation
 
     const int element_level = underlying_impl.element_get_level (element);
     T8_ASSERT (element_level >= ancestor_level);

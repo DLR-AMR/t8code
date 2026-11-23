@@ -22,9 +22,9 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_forest/t8_forest_types.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_forest/t8_forest_general.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <sc_options.h>
 #include <string>
@@ -76,19 +76,13 @@ t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree, const char **v
   t8_debugf ("Output to %s\n", vtuname_adapt.c_str ());
 
   t8_productionf ("The initial uniform forest:\n"
-                  "\tfirst_local_tree: %" T8_GLOIDX_FORMAT "\n"
-                  "\tlast_local_tree:  %" T8_GLOIDX_FORMAT "\n"
                   "\tlocal_num_trees:  %" T8_LOCIDX_FORMAT "\n"
                   "\tglobal_num_trees: %" T8_GLOIDX_FORMAT "\n",
-                  forest->first_local_tree, forest->last_local_tree, t8_forest_get_num_local_trees (forest),
-                  t8_forest_get_num_global_trees (forest));
+                  t8_forest_get_num_local_trees (forest), t8_forest_get_num_global_trees (forest));
 
   t8_productionf ("The adapted forest with one empty tree:\n"
-                  "\tfirst_local_tree: %" T8_GLOIDX_FORMAT "\n"
-                  "\tlast_local_tree:  %" T8_GLOIDX_FORMAT "\n"
                   "\tlocal_num_trees:  %" T8_LOCIDX_FORMAT "\n"
                   "\tglobal_num_trees: %" T8_GLOIDX_FORMAT "\n",
-                  forest_adapt->first_local_tree, forest_adapt->last_local_tree,
                   t8_forest_get_num_local_trees (forest_adapt), t8_forest_get_num_global_trees (forest_adapt));
 
   t8_forest_unref (&forest_adapt);

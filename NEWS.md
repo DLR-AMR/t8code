@@ -1,3 +1,29 @@
+# Ghost interface restructuring
+The ghost interface is one of the oldest parts of t8code and needed a restructuring to be fit for future changes. Until now, only face-neighbor ghosts communication was allowed. The new modular interface allows for arbitrary ghost definitions and is designed similar to the already known geometry and scheme interfaces.
+
+## What has changed?
+The ghost module consisted basically of two very large files, a source and a header file. This is now broken down into multiple files inside a ghost folder. There are now two relevant parts which are separated.
+
+### Ghost definitions
+Ghost definitions define, as the name suggests, what exactly a ghost is. This means that there now is the already known definition of a face-neighbor ghost. It is encapsulated in its own class, which derives from a common ghost definition base class `t8_forest_ghost_definition`.
+Every newly defined ghost definition has to either derive from this base class or from its derived class `t8_forest_ghost_definition_w_search`, which implements a tree-search based ghost definition. This means, that only the search data and search query have to be defined to have a valid ghost definition. In contrast, the base class requires the implementation of all functions, but there are still helper functions defined in `t8_forest_ghost_definition_helpers.hxx`.
+To use these ghost definitions, they can be added to the forest via `t8_forest_set_ghost_ext`.
+
+### Single face-neighbor ghost algorithm
+The face ghost versions 1 and 2 were dropped due to being outdated and not tested. Only the top-down search algorithm (formerly version 3), which was already the default, remains. Therefore, `t8_forest_ghost_definition_face` does not take a ghost version.
+
+### Ghost element access
+The second part of the ghost module is the ghost element access. This part is encapsulated in `t8_ghost.h` and `t8_ghost.cxx`.
+The ghost element access happens during the traversal of the elements of a process. Mostly, this is not needed by the user and automatically called when users want to access neighbors of elements. But in more complex neighborship relations, it can be necessary to access the ghost elements directly via the functions defined here.
+
+## What do I have to change?
+If you only used face-neighbor ghosts via `t8_forest_set_ghost`, you do not have to change anything. If you selected a face ghost version via `t8_forest_set_ghost_ext`, use `t8_forest_set_ghost` instead, since there is only one face ghost algorithm left:
+```diff
+- t8_forest_set_ghost_ext (forest_ghost, 1, T8_GHOST_FACES, <ghost_version>);
++ t8_forest_set_ghost (forest_ghost, 1, T8_GHOST_FACES);
+```
+If you used a custom ghost definition, you now have to derive from the base class or the search-based derived class and pass an object of it to `t8_forest_set_ghost_ext`. You can look at the already implemented face-neighbor ghost definition for an example.
+
 # cmesh generators
 
 In this update we pulled the cmesh initialization out of every cmesh generator function like t8_cmesh_from_msh_file or t8_cmesh_new_hypercube. This is a future proofing step for coming cmesh features like mesh deformation or curved cmeshes from every mesh reader. This also allows you to deactivate the negative volume check of the cmesh (t8_cmesh_disable_negative_volume_check, if you know what you are doing) or to activate profiling via t8_cmesh_set_profiling.

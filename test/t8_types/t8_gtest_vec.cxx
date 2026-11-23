@@ -23,10 +23,10 @@
 /* In this file we collect tests for the routines in t8_vec.hxx */
 
 #include <gtest/gtest.h>
-#include <t8_types/t8_vec.h>
-#include <t8_types/t8_vec.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
-#include <test/t8_gtest_memory_macros.hxx>
+#include <t8_vector/t8_vec.h>
+#include <t8_vector/t8_vec.hxx>
+#include <t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_memory_macros.hxx>
 #include <t8_helper_functions/t8_unrolled_for.hxx>
 
 #include <random>

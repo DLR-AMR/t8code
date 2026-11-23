@@ -30,16 +30,15 @@
 #include <vector>
 #include <unordered_map>
 #include <t8_cmesh/t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity_types.hxx>
-#include <t8_geometry/t8_geometry_handler.hxx>
+#include <t8_cmesh/t8_cmesh_geometry.hxx>
 
 /**
  * Compute the first element of a process in a partitioned mesh, via floor(process * global_num_elements / mpisize).
  * Prevents overflowing by using division with remainder to store partial results in uint64_t.
  * We also take into account that process <= mpisize.
  * Both process and global_num_elements can be written as:
- * 
+ *
  * global_num_elements = elem_over_size * mpisize + remainder_0
  * process = proc_over_size * mpisize + remainder_1
  * with:
@@ -48,13 +47,13 @@
  * and remainders:
  * remainder_0 = global_num_elements % mpisize
  * remainder_1 = process % mpisize
- * 
+ *
  * Putting this together in the computation of first_element = global_num_elements * process / mpisize gives:
- * 
+ *
  * = elem_over_size * proc_over_size * mpisize + elem_over_size * process % mpisize
  *   + proc_over_size * global_num_elements % mpisize + (remainder_0 * remainder_1) / mpisize
  *
- * Each variable is less than 2^32-1 taking into account that process <= mpisize 
+ * Each variable is less than 2^32-1 taking into account that process <= mpisize
  * we can assure that the first summand does not overflow
  *
  * This enables us to partition 2^64-1 elements over 2^32-1 processes.
@@ -64,7 +63,7 @@
  * \param[in] mpisize   The size of the MPI communicator
  * \param[in] global_num_elements   The number of elements in the global mesh
  * \return The first element of the process in the partitioned mesh
- * 
+ *
  * \warning This function assumes that process <= mpisize. mpisize has to be greater than 0.
  * Otherwise the result of process * global_num_elements / mpisize can exceed the range of uint64_t.
  */
@@ -94,28 +93,9 @@ t8_cmesh_get_first_element_of_process (const uint32_t process, const uint32_t mp
   return (sum_0 + sum_1 + sum_2 + sum_3);
 }
 
-/**
- * Create and register a geometry with the coarse mesh. The coarse mesh takes the ownership of the geometry.
- * @tparam geometry_type 
- * \param [in,out] cmesh The cmesh.
- * \param [in,out] args The constructor arguments of the geometry.
- * \return         A pointer to the geometry.
- */
-
-template <typename geometry_type, typename... _args>
-inline geometry_type *
-t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
-{
-  if (cmesh->geometry_handler == NULL) {
-    /* The handler was not constructed, do it now. */
-    cmesh->geometry_handler = new t8_geometry_handler ();
-  }
-  return cmesh->geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
-}
-
 /** Get the list of global trees and local vertex ids a global vertex is connected to.
  * Cmesh Interface function.
- *  
+ *
  * \param [in] cmesh A committed cmesh.
  * \param [in] global_vertex The global id of a vertex in \a cmesh.
  * \return The list of global tree ids and local vertex ids of \a global_vertex_id.

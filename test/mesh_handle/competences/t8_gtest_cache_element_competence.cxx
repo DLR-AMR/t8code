@@ -22,7 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_cache_competence.cxx
- * Checks that the cache is actually used if the element gets a cache competence as template parameter. 
+ * Checks that the cache is actually used if the element gets a cache competence as template parameter.
  */
 
 #include <gtest/gtest.h>
@@ -32,7 +32,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/competences/cache_element_competences.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <vector>
 
 /** Child of \ref t8_mesh_handle::cache_volume that allows to modify the cache variable for test purposes. */
@@ -40,7 +40,7 @@ template <typename TUnderlying>
 struct cache_volume_overwrite: public t8_mesh_handle::cache_volume<TUnderlying>
 {
   /** Overwrites the cache variable for the volume.
-   * \param [in] new_volume New volume. 
+   * \param [in] new_volume New volume.
    */
   void
   overwrite_cache (double new_volume) const
@@ -54,7 +54,7 @@ template <typename TUnderlying>
 struct cache_diameter_overwrite: public t8_mesh_handle::cache_diameter<TUnderlying>
 {
   /** Overwrites the cache variable for the diameter.
-   * \param [in] new_diameter New diameter. 
+   * \param [in] new_diameter New diameter.
    */
   void
   overwrite_cache (double new_diameter) const
@@ -68,7 +68,7 @@ template <typename TUnderlying>
 struct cache_vertex_coordinates_overwrite: public t8_mesh_handle::cache_vertex_coordinates<TUnderlying>
 {
   /** Overwrites the cache variable for the vertex coordinates.
-   * \param [in] new_vec New cache vector. 
+   * \param [in] new_vec New cache vector.
    */
   void
   overwrite_cache (std::vector<t8_3D_vec> new_vec) const
@@ -82,7 +82,7 @@ template <typename TUnderlying>
 struct cache_centroid_overwrite: public t8_mesh_handle::cache_centroid<TUnderlying>
 {
   /** Overwrites the cache variable for the centroid.
-   * \param [in] new_vec New point for the cache. 
+   * \param [in] new_vec New point for the cache.
    */
   void
   overwrite_cache (t8_3D_vec new_vec) const
@@ -98,7 +98,7 @@ struct cache_face_areas_overwrite: public t8_mesh_handle::cache_face_areas<TUnde
 {
   /** Overwrites the cache variable for the face area.
    * \param [in] face The face for which the cache should be set.
-   * \param [in] new_face_area New face area. 
+   * \param [in] new_face_area New face area.
    */
   void
   overwrite_cache (int face, double new_face_area) const
@@ -113,7 +113,7 @@ struct cache_face_centroids_overwrite: public t8_mesh_handle::cache_face_centroi
 {
   /** Overwrites the cache variable for the face centroid.
    * \param [in] face The face for which the cache should be set.
-   * \param [in] new_face_centroid New face centroid. 
+   * \param [in] new_face_centroid New face centroid.
    */
   void
   overwrite_cache (int face, t8_3D_vec new_face_centroid) const
@@ -128,7 +128,7 @@ struct cache_face_normals_overwrite: public t8_mesh_handle::cache_face_normals<T
 {
   /** Overwrites the cache variable for the face normal.
    * \param [in] face The face for which the cache should be set.
-   * \param [in] new_face_normal New face normal. 
+   * \param [in] new_face_normal New face normal.
    */
   void
   overwrite_cache (int face, t8_3D_vec new_face_normal) const
@@ -138,8 +138,8 @@ struct cache_face_normals_overwrite: public t8_mesh_handle::cache_face_normals<T
 };
 
 // --- Element-related cache tests. ---
-/** Use child of \ref t8_mesh_handle::cache_volume to check that the cache is actually set 
- * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+/** Use child of \ref t8_mesh_handle::cache_volume to check that the cache is actually set
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST (t8_gtest_cache_competence, cache_volume)
@@ -166,8 +166,8 @@ TEST (t8_gtest_cache_competence, cache_volume)
   }
 }
 
-/** Use child of \ref t8_mesh_handle::cache_diameter to check that the cache is actually set 
- * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+/** Use child of \ref t8_mesh_handle::cache_diameter to check that the cache is actually set
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST (t8_gtest_cache_competence, cache_diameter)
@@ -189,8 +189,8 @@ TEST (t8_gtest_cache_competence, cache_diameter)
   }
 }
 
-/** Use child of \ref t8_mesh_handle::cache_vertex_coordinates to check that the cache is actually set 
- * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+/** Use child of \ref t8_mesh_handle::cache_vertex_coordinates to check that the cache is actually set
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
@@ -216,8 +216,8 @@ TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
   }
 }
 
-/** Use child of \ref t8_mesh_handle::cache_centroid to check that the cache is actually set 
- * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+/** Use child of \ref t8_mesh_handle::cache_centroid to check that the cache is actually set
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST (t8_gtest_cache_competence, cache_centroid)
@@ -242,8 +242,8 @@ TEST (t8_gtest_cache_competence, cache_centroid)
 }
 
 // --- Face related cache tests. ---
-/** Use child of \ref t8_mesh_handle::cache_face_areas to check that the cache is actually set 
- * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+/** Use child of \ref t8_mesh_handle::cache_face_areas to check that the cache is actually set
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST (t8_gtest_cache_competence, cache_face_areas)
@@ -268,8 +268,8 @@ TEST (t8_gtest_cache_competence, cache_face_areas)
   }
 }
 
-/** Use child of \ref t8_mesh_handle::cache_face_centroids to check that the cache is actually set 
- * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+/** Use child of \ref t8_mesh_handle::cache_face_centroids to check that the cache is actually set
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST (t8_gtest_cache_competence, cache_face_centroids)
@@ -295,8 +295,8 @@ TEST (t8_gtest_cache_competence, cache_face_centroids)
   }
 }
 
-/** Use child of \ref t8_mesh_handle::cache_face_normals to check that the cache is actually set 
- * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+/** Use child of \ref t8_mesh_handle::cache_face_normals to check that the cache is actually set
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST (t8_gtest_cache_competence, cache_face_normals)

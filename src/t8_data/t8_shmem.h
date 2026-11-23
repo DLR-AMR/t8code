@@ -288,12 +288,12 @@ t8_shmem_array_destroy (t8_shmem_array_t *parray);
 
 /**
  * Perform a binary search in a t8_shmem_array.
- * 
+ *
  * \param [in]      array   The t8_shmem_array to search in.
  * \param [in]      value   The value to search for.
  * \param [in]      size    The number of elements in the array.
  * \param [in]      compare A function that compares an element of the array with the value.
- * 
+ *
  * \return The index of the element in \a array that matches \a value.
  */
 int

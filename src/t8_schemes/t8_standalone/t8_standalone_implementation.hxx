@@ -27,13 +27,15 @@
 #ifndef T8_STANDALONE_IMPLEMENTATION_HXX
 #define T8_STANDALONE_IMPLEMENTATION_HXX
 
-#include <t8_schemes/t8_scheme.hxx>
 #include <t8_eclass/t8_eclass.h>
 #include <sc_functions.h>
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <utility>
 #include <algorithm>
+
+/* Forward declaration, since only used as pointer here. Do not include t8_scheme.hxx, since it includes this file. */
+struct t8_scheme;
 
 /** A templated implementation of the scheme interface based on cutting planes. */
 template <t8_eclass TEclass>
@@ -611,7 +613,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   // Note to devs: element_is_ancestor currently cannot be static
   //               since it uses the non-static function element_new
   /** Query whether element A is an ancestor of the element B.
-   * An element A is ancestor of an element B if A == B or if B can 
+   * An element A is ancestor of an element B if A == B or if B can
    * be obtained from A via successive refinement.
    * \param [in] element_A An element of class \a eclass in scheme \a scheme.
    * \param [in] element_B An element of class \a eclass in scheme \a scheme.
@@ -621,7 +623,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   element_is_ancestor (const t8_element_t *element_A, const t8_element_t *element_B) const noexcept
   {
     /* We compute whether A is an ancestor of B by
-    
+
      - If level(A) > level(B) then A cannot be an ancestor.
      - Otherwise compute the ancestor of B at level(A)
      - Compare the computed ancestor with A.

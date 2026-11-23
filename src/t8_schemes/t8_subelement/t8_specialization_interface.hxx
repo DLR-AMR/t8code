@@ -20,16 +20,16 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_specialization_interface.hxx 
+/** \file t8_specialization_interface.hxx
  * Interface layer between \ref t8_subelement_scheme_common and the concrete subelement scheme specializations
  * (e.g. hanging node resolution).
  *
  * Each specialization should derive from t8_subelement_scheme_interface<TEclass, YourScheme> (so we use crtp here).
- * Every function listed in \ref t8_subelement_specialization has to be implemented as a public members 
+ * Every function listed in \ref t8_subelement_specialization has to be implemented as a public members
  * in the specialization.
  * If a required function is missing or has the wrong signature, the constructor of the interface fails.
  *
- * Note for devs: We do not use virtual functions because static cannot be combined with virtual and the crtp of the 
+ * Note for devs: We do not use virtual functions because static cannot be combined with virtual and the crtp of the
  * common scheme cannot be combined with this.
  */
 
@@ -61,7 +61,7 @@ inline constexpr bool t8_is_subelement_element_v<t8_subelement_element<TUnderlyi
 /** The functions every subelement scheme specialization has to provide (all public, all noexcept).
  * This concept is used to ensure that the specialization implements all functions necessary for a working subelement scheme.
  *
- * Please have a look at a specialization, preferably \ref t8_scheme_hanging_nodes_quads.hxx for function documentations 
+ * Please have a look at a specialization, preferably \ref t8_scheme_hanging_nodes_quads.hxx for function documentations
  * and variable descriptions.
  * Mostly, the argument is a subelement (subelement_type != 0); the non-subelement case is handled by the common layer,
  * which forwards to the underlying scheme.
@@ -72,10 +72,10 @@ concept t8_subelement_specialization =
   requires {
     typename t8_subelement_traits<TSpecialization>::SubelementType;
     typename t8_subelement_traits<TSpecialization>::UnderlyingScheme;
-  } 
-  && t8_is_subelement_element_v<typename t8_subelement_traits<TSpecialization>::SubelementType> 
+  }
+  && t8_is_subelement_element_v<typename t8_subelement_traits<TSpecialization>::SubelementType>
   && requires (const TSpecialization &spec, const typename t8_subelement_traits<TSpecialization>::SubelementType *subelem,
-               const t8_element_t *elem, const int subelement_type, const int face, const double *ref_coords, 
+               const t8_element_t *elem, const int subelement_type, const int face, const double *ref_coords,
                const size_t num_coords, double *out_coords) {
     /* Static shape information. Only compile for static member functions! */
     { TSpecialization::subelement_get_max_num_faces (subelem) } noexcept -> std::same_as<int>;
@@ -119,8 +119,8 @@ struct t8_subelement_scheme_interface: public t8_subelement_scheme_common<TEclas
   TUnderlyingScheme underlying_scheme {};
 
   /** Constructor. Checks the concept of the specialization.
-   * The check has to happen inside a member function body because of the crtp. While this class itself is 
-   * instantiated, TSpecialization is still incomplete. 
+   * The check has to happen inside a member function body because of the crtp. While this class itself is
+   * instantiated, TSpecialization is still incomplete.
    * When this constructor is instantiated (by the implicit constructor of TSpecialization), TSpecialization is complete.
    */
   t8_subelement_scheme_interface ()

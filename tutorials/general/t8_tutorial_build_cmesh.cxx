@@ -20,14 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/DLR-AMR/t8code/wiki/Build-Cmesh
+/** \file t8_tutorial_build_cmesh.cxx
+ * See also: https://github.com/DLR-AMR/t8code/wiki/Build-Cmesh
  *
  * This is a tutorial regarding the creation of a cmesh using the C++ interface of t8code.
  * In the following we will create two user defined meshes.
  * The first example is given by a periodic two dimensional mesh using linear
  * geometry consisting of four triangles and and two quads.
- * The second example is given by a non-periodic three dimensional mesh 
- * with linear geometry constructed using two tetrahedra, two prisms, one pyramid, and one 
+ * The second example is given by a non-periodic three dimensional mesh
+ * with linear geometry constructed using two tetrahedra, two prisms, one pyramid, and one
  * hexaedron.
  *
  * How you can experiment here:
@@ -71,7 +72,7 @@ T8_EXTERN_C_BEGIN ();
  *                   .
  *                   .
  *
- *               //point values for the last cell 
+ *               //point values for the last cell
  *               x_1,y_1,z_1         //(x,y,z) of first point of the last cell
  *               x_2,y_2,z_2         //(x,y,z) of second point of the last cell
  *                   .
@@ -83,7 +84,7 @@ T8_EXTERN_C_BEGIN ();
  * 2. Initialization of the mesh
  *    Example: t8_cmesh_t          cmesh;
  *             t8_cmesh_init (&cmesh);
- * 
+ *
  *
  * 3. Definition of the geometry
  *             t8_geometry_c      *linear_geom = [defineTheGeometry];
@@ -121,9 +122,9 @@ T8_EXTERN_C_BEGIN ();
  *
  * 7. Commit the mesh
  *             t8_cmesh_commit (cmesh, comm);
- *  */
+ */
 
-/* Definition of a two dimensional mesh with linear geometry and periodic boundaries.
+/** Definition of a two dimensional mesh with linear geometry and periodic boundaries.
  * The mesh consists of four triangles and two quads.
  *
  *  This is how the cmesh looks like. The numbers are the tree numbers:
@@ -199,30 +200,30 @@ t8_cmesh_new_periodic_hybrid_2d (sc_MPI_Comm comm)
   return cmesh;
 }
 
-/* Definition of a three dimensional mesh with linear geometry.
+/** Definition of a three dimensional mesh with linear geometry.
  * The mesh consists of two tetrahedra, two prisms, one pyramid, and one hexahedron.
- *  */
+ */
 t8_cmesh_t
 t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
 {
   /* Definition of the mesh according to the above scheme
    * // 1. Defining an array with all vertices
    * double vertices[ ] =
-   *     { 
-   *       0.43, 0, 2,          // Tetrahedron 1 vertices 
+   *     {
+   *       0.43, 0, 2,          // Tetrahedron 1 vertices
    0, 0, 1,
    0.86, -0.5, 1,
    0.86, 0.5, 1,
 
-   2.29, 0, 2,          // Tetrahedron 2 vertices 
+   2.29, 0, 2,          // Tetrahedron 2 vertices
    1.86, -0.5, 1,
-   2.72, 0, 1, 
+   2.72, 0, 1,
    1.86, 0.5, 1,
 
    0, 0, 0,             // Prism 1 vertices
    0.86, -0.5, 0,
    0.86, 0.5, 0,
-   0, 0, 1, 
+   0, 0, 1,
    0.86, -0.5, 1,
    0.86, 0.5, 1,
 
@@ -254,8 +255,8 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * t8_cmesh_init (&cmesh);
    *
    * // 3. Definition of the geometry
-   * t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);    // Use linear geometry 
-   * 
+   * t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);    // Use linear geometry
+   *
    * // 4. Definition of the classes of the different trees
    * t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
    * t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TET);
@@ -286,9 +287,9 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    *  */
 
   /* In many cases the points of the different trees are dependent of these of the previous trees
-   * or of these of the same tree. Then it is reasonable to define the different vertices dependent 
+   * or of these of the same tree. Then it is reasonable to define the different vertices dependent
    * of each other.
-   * Also the order of the scheme is not fixed. The definition of the face neighbors can be 
+   * Also the order of the scheme is not fixed. The definition of the face neighbors can be
    * before the definition of the vertices.
    * In the following example the tree classes are defined, then the face neighbors are set.
    * After that the vertices are defined for each tree separately.

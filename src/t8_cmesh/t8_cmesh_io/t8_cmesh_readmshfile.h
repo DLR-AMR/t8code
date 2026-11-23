@@ -60,7 +60,10 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]    master            If partition is true, a valid MPI rank that will
  *                                  read the file and store all the trees alone.
  * \param [in]    use_cad_geometry  Read the parameters of a parametric msh file and use the
- *                                  cad geometry.
+ *                                  cad geometry. The file has to be saved with parametric coordinates for this feature.
+ *                                  Either use `Mesh.SaveParametric = 1` in your geo script or activate the
+ *                                  checkbox during saving the mesh in the Gmsh GUI.
+ *                                  Will throw a warning if no parametric cells were found.
  */
 void
 t8_cmesh_from_msh_file (t8_cmesh_t *pcmesh, const char *fileprefix, int partition, sc_MPI_Comm comm, int dim,

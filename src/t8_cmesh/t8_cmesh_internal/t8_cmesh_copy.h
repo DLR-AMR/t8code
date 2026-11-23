@@ -35,7 +35,7 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * Copy the coarse mesh from \a cmesh_from to \a cmesh.
- * 
+ *
  * \param [in, out] cmesh The coarse mesh to copy to.
  * \param [in] cmesh_from The coarse mesh to copy from.
  * \param [in] comm The MPI communicator to use.

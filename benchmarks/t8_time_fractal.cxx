@@ -23,7 +23,6 @@
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_partition.h>
-#include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.h>

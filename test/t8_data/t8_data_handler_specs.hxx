@@ -22,7 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_data_handler_specs.hxx
- * This file provides a templated class that enlarges a data type by a check-int. 
+ * This file provides a templated class that enlarges a data type by a check-int.
  * Should only be used for testing purposes.
  */
 
@@ -36,7 +36,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 /**
  * A template class to handle data with an additional check value.
  *
- * This class is designed to store a piece of data along with an integer 
+ * This class is designed to store a piece of data along with an integer
  * value that can be used for additional checks or validations.
  *
  * \tparam TType The type of the data to be stored.
@@ -70,7 +70,7 @@ struct enlarged_data
 
 /**
  * A template class to create data of type T.
- * 
+ *
  * \tparam TType The type of the data to be stored.
  */
 template <typename TType>
@@ -84,7 +84,7 @@ struct data_creator
 
   /**
    * Create several data items.
-   * 
+   *
    * \param[in] num_data  The number of data items to create.
    */
   void

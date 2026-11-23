@@ -27,14 +27,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <gtest/gtest.h>
 #include <t8.h>
-#include <test/mesh_handle/t8_gtest_common.hxx>
+#include <mesh_handle/t8_gtest_common.hxx>
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
 #include <mesh_handle/competences/element_data_competences.hxx>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <vector>
 
 /** Check that element data can be set for the handle and that exchanging data for the ghosts works. */

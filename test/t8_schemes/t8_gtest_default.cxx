@@ -21,7 +21,7 @@
 */
 
 /** \file t8_gtest_default.cxx
-* Provide tests to check the functionality of the default-scheme. 
+* Provide tests to check the functionality of the default-scheme.
 */
 
 #include <gtest/gtest.h>
@@ -35,7 +35,7 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 TEST (gtest_default_scheme, is_default)
 {

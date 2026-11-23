@@ -411,17 +411,8 @@ t8_cmesh_is_empty (t8_cmesh_t cmesh);
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm);
 
-#if T8_ENABLE_METIS
-/* TODO: document this. */
-/* TODO: think about making this a pre-commit set_reorder function. */
-void
-t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
-
-/* TODO: think about a sensible interface for a parmetis reordering. */
-#endif
-
 /** Register a geometry in the cmesh. The cmesh takes ownership of the geometry.
- * \param [in,out] cmesh        The cmesh.
+ * \param [in,out] cmesh        The cmesh. Must be initialized but not committed.
  * \param [in]     geometry     The geometry to register.
  *
  * If no geometry is registered and cmesh is modified from another cmesh then
@@ -918,6 +909,7 @@ t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm);
  */
 int
 t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6]);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

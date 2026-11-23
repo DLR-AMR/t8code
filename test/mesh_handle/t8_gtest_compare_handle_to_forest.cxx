@@ -64,6 +64,12 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       // --- Compare elements. ---
       EXPECT_EQ (mesh_iterator->get_local_tree_id (), itree);
       EXPECT_EQ (mesh_iterator->get_local_element_id (), ielem);
+      EXPECT_TRUE (mesh_iterator->is_equal (*mesh_iterator));
+      auto mesh_iterator_copy = mesh_iterator;
+      mesh_iterator_copy++;
+      if (mesh_iterator_copy != mesh.cend ()) {
+        EXPECT_FALSE (mesh_iterator->is_equal (*mesh_iterator_copy));
+      }
       // --- Compare functionality. ---
       EXPECT_EQ (mesh_iterator->get_level (), scheme->element_get_level (tree_class, elem));
       EXPECT_EQ (mesh_iterator->get_num_faces (), scheme->element_get_num_faces (tree_class, elem));
@@ -82,6 +88,12 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       t8_3D_vec centroid;
       t8_forest_element_centroid (forest, itree, elem, centroid.data ());
       EXPECT_EQ (mesh_iterator->get_centroid (), centroid);
+      // --- Reference coordinates. ---
+      t8_3D_vec reference_coordinates = { 0.2, 0.3, 1 };
+      auto result_mesh_handle = mesh_iterator->get_reference_coordinates (reference_coordinates);
+      t8_3D_vec result_forest;
+      scheme->element_get_reference_coords (tree_class, elem, reference_coordinates.data (), 1, result_forest.data ());
+      EXPECT_EQ (result_mesh_handle, result_forest);
       // --- Face properties. ---
       // Note: Face-neighbor functionality is tested in t8_gtest_ghost.cxx.
       for (int iface = 0; iface < mesh_iterator->get_num_faces (); ++iface) {
@@ -97,6 +109,8 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
           EXPECT_EQ (mesh_iterator->face_vertex_to_element_vertex (iface, ivertex),
                      scheme->element_get_face_corner (tree_class, elem, iface, ivertex));
         }
+        EXPECT_EQ (mesh_iterator->get_face_orientation (iface),
+                   t8_forest_leaf_face_orientation (forest, itree, scheme, elem, iface));
       }
       // --- Evolve mesh iterator. ---
       mesh_iterator++;

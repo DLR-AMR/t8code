@@ -103,7 +103,7 @@ t8_get_number_of_vtk_nodes (const t8_element_shape_t eclass, const int curved_fl
  * \param[in] forest The forest of \a element.
  * \param[in] ltreeid The local id to the tree of \a element.
  * \param[in] element The element to process.
- * \param[in] curved_flag Flag to tell if we use curved or linear cells. 
+ * \param[in] curved_flag Flag to tell if we use curved or linear cells.
  * \param[in, out] out_coords An array to fill with the coordinates of the vertex.
  */
 void
