@@ -28,6 +28,7 @@
 #define T8_FOREST_IO_H
 
 #include <t8_vtk/t8_vtk.h>
+#include <t8_forest/t8_forest_general.h>
 T8_EXTERN_C_BEGIN ();
 
 /** TODO: implement */

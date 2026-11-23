@@ -32,6 +32,7 @@
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_subelement/t8_subelement_type.hxx>
 
