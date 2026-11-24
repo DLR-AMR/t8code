@@ -221,9 +221,11 @@ if( T8CODE_ENABLE_VTK )
 endif( T8CODE_ENABLE_VTK )
 
 if( T8CODE_ENABLE_OCC )
-    # We have to exclude the CMake package registry, because OpenCASCADE decided the build folder
-    # in the registry and not the install directory. Therefore, t8code would try to link against the
-    # build directory, which does not work and crashes.
+    # We have to exclude the CMake package registry, because OpenCASCADE decided to register the build folder
+    # in the registry and not the install directory. Therefore, t8code would try to look up the OCCT folder in the registry,
+    # would find the build folder and would try to link against it. Linking against a build folder does not work and therefore
+    # automatic searching for OCCT would fail. This happens only for self-built OCCT, since CMake then sets the registry.
+    # Other installations like apt are unaffected, since they do not rely on CMake.
     find_package( OpenCASCADE CONFIG NO_CMAKE_PACKAGE_REGISTRY
         COMPONENTS FoundationClasses ModelingData ModelingAlgorithms )
     if( NOT OpenCASCADE_FOUND )
