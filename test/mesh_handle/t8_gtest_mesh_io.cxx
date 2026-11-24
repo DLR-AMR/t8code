@@ -69,8 +69,7 @@ struct t8_mesh_io_test: public testing::TestWithParam<std::tuple<t8_eclass_t, in
     const t8_eclass_t eclass = std::get<0> (GetParam ());
     const int level = std::get<1> (GetParam ());
     // Create the mesh with ghosts to be able to test the output of ghost elements.
-    mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true, true,
-                                                                         false);
+    mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true, false);
     num_local_elements = mesh->get_num_local_elements ();
     num_ghosts = mesh->get_num_ghosts ();
 

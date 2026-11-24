@@ -546,7 +546,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   /** The normal vector of a face of the element.
    *  This function uses the cached version defined in TCompetence if available and calculates if not.
    * \param [in] face Index of a face of the element.
-   * \return The normal vector of the face with id \a face.
+   * \return The normal vector of the face with id \a face, always pointing outwards.
    */
   t8_3D_vec
   get_face_normal (const int face) const
