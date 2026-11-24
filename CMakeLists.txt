@@ -55,10 +55,12 @@ option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
 option( T8CODE_ENABLE_EIGEN "Enable t8code's features which rely on Eigen" OFF )
+option( T8CODE_ENABLE_GMSH "Enable t8code's features which rely on Gmsh" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 cmake_dependent_option( T8CODE_USE_SYSTEM_EIGEN "Use system-installed Eigen library" OFF "T8CODE_ENABLE_EIGEN" OFF )
+cmake_dependent_option( T8CODE_USE_SYSTEM_GMSH "Use system-installed Gmsh library" OFF "T8CODE_ENABLE_GMSH" OFF )
 
 option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
@@ -185,6 +187,20 @@ else()
     set( T8CODE_FETCH_EIGEN OFF )
 endif()
 
+# Gmsh is only downloaded if it is enabled and no system-installed Gmsh should be used.
+if( T8CODE_ENABLE_GMSH AND NOT T8CODE_USE_SYSTEM_GMSH )
+    set( T8CODE_FETCH_GMSH ON )
+    # Configure a minimal Gmsh: DEFAULT=OFF disables all optional modules, then only the mesh module
+    # (Delaunay triangulation via gmsh::algorithm) and HXT (constrained 3D Delaunay) are enabled.
+    # Gmsh is built as a shared library, the gmsh executable links against it instead of recompiling all sources.
+    set( DEFAULT OFF CACHE INTERNAL "Build a minimal Gmsh" FORCE )
+    set( ENABLE_MESH ON CACHE BOOL "Enable the Gmsh mesh module" FORCE )
+    set( ENABLE_HXT ON CACHE BOOL "Enable Gmsh's HXT library for constrained 3D Delaunay" FORCE )
+    set( ENABLE_BUILD_DYNAMIC ON CACHE BOOL "Build the Gmsh shared library" FORCE )
+else()
+    set( T8CODE_FETCH_GMSH OFF )
+endif()
+
 # Capture the list of variables before adding the thirdparty libraries to mark the added ones as advanced.
 get_cmake_property(_vars_before_thirdparty VARIABLES )
 
@@ -289,6 +305,13 @@ endif()
 
 if ( T8CODE_USE_SYSTEM_EIGEN )
     find_package( Eigen3 REQUIRED NO_MODULE )
+endif()
+
+if ( T8CODE_USE_SYSTEM_GMSH )
+    find_package( gmsh REQUIRED CONFIG )
+elseif( T8CODE_ENABLE_GMSH )
+    # The fetched Gmsh names its shared library target 'shared'. Provide the same target name as an installed Gmsh.
+    add_library( gmsh::shared ALIAS shared )
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
