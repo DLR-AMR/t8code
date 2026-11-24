@@ -26,6 +26,9 @@ Partitioning, balancing and creating ghost layer for forest. Explains the forest
 [step5](https://github.com/DLR-AMR/t8code/wiki/Step-5---Store-element-data) - 
 Associating user data with a forest's elements. Exchanging ghost values for element user data. Writing element user data to vtu.
 
+[step5 with std::vector](general/t8_step5_element_data_vector.cxx) - 
+Storing element user data in a std::vector, telling t8code how to pack it with a data handler, and partitioning it together with the forest.
+
 [step6](https://github.com/DLR-AMR/t8code/wiki/Step-6-Computing-stencils) - 
 Gather data from element's face neighbors and collect stencils in, e.g., finite difference computations.
 
