@@ -24,7 +24,8 @@
  *
  * This is a variant of step5 of the t8code tutorials, see t8_step5_element_data.cxx.
  * As in step5, we store data for the individual elements of a forest. This time we keep the data in a
- * std::vector, and t8code moves it to other processes together with the elements when the forest is partitioned.
+ * std::vector. t8code moves it to other processes together with the elements when the forest is partitioned, and
+ * it gets the data of the ghost elements from the processes that own them.
  * To send data to another process, t8code has to know how to pack it into an MPI message and how to unpack it
  * again. Our data type t8_step5_data_per_element holds a std::vector itself, so t8code cannot simply send its bytes.
  * We provide the packing information with a data handler for t8_step5_data_per_element.
@@ -32,9 +33,10 @@
  * The steps of this tutorial are:
  *  - Build an adapted forest as in step3, but do not partition it, so its elements are unevenly distributed.
  *  - Store the level, the volume and the vertex coordinates of each local element in a std::vector.
- *  - Partition the forest, which moves elements from one process to another.
+ *  - Partition the forest and create its ghost elements. Partitioning moves elements from one process to another.
  *  - Repartition the element data with t8_forest_partition_data, a t8_vector_handler and our data handler.
- *  - Check the data and write the element volumes to vtu.
+ *  - Check the data, exchange the data of the ghost elements with t8_forest_ghost_exchange_data and write the
+ *    element volumes to vtu.
  *
  * How you can experiment here:
  *   - Run the tutorial with several processes, e.g. with mpirun -np 4, and compare the MPI ranks of the elements
@@ -45,13 +47,14 @@
  *     data handler, see t8_step5_partition_element_data.
  */
 
-#include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes. */
-#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>             /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information */
-#include <t8_forest/t8_forest_partition.hxx>    /* t8_forest_partition_data for vector handlers. */
+#include <t8.h>                                          /* General t8code header, always include this. */
+#include <t8_cmesh/t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>                  /* A collection of exemplary cmeshes. */
+#include <t8_forest/t8_forest_general.h>                 /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>                      /* save forest */
+#include <t8_forest/t8_forest_geometrical.h>             /* geometrical information */
+#include <t8_forest/t8_forest_partition.hxx>             /* t8_forest_partition_data for vector handlers. */
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.hxx> /* t8_forest_ghost_exchange_data for vector handlers. */
 #include <t8_data/t8_vector_handler.hxx>        /* t8_vector_handler, a std::vector that t8code can communicate. */
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <tutorials/general/t8_step3.h>         /* Example forest adaptation from step 3. */
@@ -212,9 +215,9 @@ t8_step5_create_element_data (t8_forest_t forest)
   return element_data;
 }
 
-/** Partition a forest, i.e. distribute its elements evenly among the processes.
+/** Partition a forest, i.e. distribute its elements evenly among the processes, and create its ghost elements.
  * \param [in] forest  A committed forest. It stays valid, since we need it to repartition the element data.
- * \return             The partitioned forest.
+ * \return             The partitioned forest with ghost elements.
  */
 static t8_forest_t
 t8_step5_partition_forest (t8_forest_t forest)
@@ -225,6 +228,7 @@ t8_step5_partition_forest (t8_forest_t forest)
   t8_forest_t forest_partition;
   t8_forest_init (&forest_partition);
   t8_forest_set_partition (forest_partition, forest, 0);
+  t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
   t8_forest_commit (forest_partition);
   return forest_partition;
 }
@@ -255,6 +259,24 @@ t8_step5_partition_element_data (t8_forest_t forest, t8_forest_t forest_partitio
   return handler.take_data ();
 }
 
+/** Get the data of the ghost elements of a forest from the processes that own them.
+ * \param [in] forest        A committed forest with ghost elements.
+ * \param [in] element_data  One item per local element of \a forest.
+ * \return                   The items of the local elements, followed by one item per ghost element of \a forest.
+ */
+static std::vector<t8_step5_data_per_element>
+t8_step5_exchange_ghost_data (t8_forest_t forest, std::vector<t8_step5_data_per_element> element_data)
+{
+  /* As for the partitioning, the t8_vector_handler takes over our std::vector together with our data handler. */
+  t8_vector_handler handler (std::move (element_data), t8_step5_data_per_element_handler {});
+
+  /* Each process sends the items of its elements that are ghost elements of other processes, and appends the items
+   * of its own ghost elements, which it receives from their owners. */
+  t8_forest_ghost_exchange_data (forest, handler);
+
+  return handler.take_data ();
+}
+
 /** Check that the data of each local element of a forest belongs to this element.
  * \param [in] forest        A committed forest.
  * \param [in] element_data  One item per local element of \a forest.
@@ -276,18 +298,19 @@ t8_step5_element_data_matches (t8_forest_t forest, const std::vector<t8_step5_da
  * t8code writes element data to vtu as doubles. Each data field needs its own array with one entry per local
  * element, see step5.
  * \param [in] forest        A committed forest.
- * \param [in] element_data  One item per local element of \a forest.
+ * \param [in] element_data  One item per local element of \a forest, possibly followed by items of ghost elements.
  * \param [in] prefix        The prefix of the output files.
  */
 static void
 t8_step5_output_data_to_vtu (t8_forest_t forest, const std::vector<t8_step5_data_per_element> &element_data,
                              const char *prefix)
 {
-  /* Copy the volumes into their own array. */
+  /* Copy the volumes of the local elements into their own array. */
+  const t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   std::vector<double> element_volumes;
-  element_volumes.reserve (element_data.size ());
-  for (const t8_step5_data_per_element &item : element_data) {
-    element_volumes.push_back (item.volume);
+  element_volumes.reserve (num_local_elements);
+  for (t8_locidx_t ielement = 0; ielement < num_local_elements; ++ielement) {
+    element_volumes.push_back (element_data[ielement].volume);
   }
 
   /* The volume is one double per element, so its data field is of type T8_VTK_SCALAR. */
@@ -321,8 +344,8 @@ main (int argc, char **argv)
 
   t8_global_productionf (" [step5 vector] \n");
   t8_global_productionf (" [step5 vector] Hello, this is a variant of the step5 example of t8code.\n");
-  t8_global_productionf (" [step5 vector] We store element data in a std::vector and partition it together with "
-                         "the forest.\n");
+  t8_global_productionf (" [step5 vector] We store element data in a std::vector, partition it together with "
+                         "the forest and exchange the data of the ghost elements.\n");
   t8_global_productionf (" [step5 vector] \n");
 
   const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
@@ -357,6 +380,17 @@ main (int argc, char **argv)
   SC_CHECK_ABORT (t8_step5_element_data_matches (forest_partition, element_data),
                   "The element data does not match its elements.");
   t8_global_productionf (" [step5 vector] Each element of the partitioned forest has its data.\n");
+
+  /* Get the data of the ghost elements. */
+  element_data = t8_step5_exchange_ghost_data (forest_partition, std::move (element_data));
+  t8_global_productionf (" [step5 vector] Exchanged ghost data.\n");
+  const t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest_partition);
+  if (t8_forest_get_num_ghosts (forest_partition) > 0) {
+    /* Output the data of the first ghost element of this process. */
+    const t8_step5_data_per_element &ghost = element_data[num_local_elements];
+    t8_productionf (" [step5 vector] Ghost 0 has level %i, volume %e and %zu vertices.\n", ghost.level, ghost.volume,
+                    ghost.vertex_coordinates.size () / 3);
+  }
 
   /* Write the partitioned forest and the volume data to vtu. */
   t8_step5_output_data_to_vtu (forest_partition, element_data, prefix_forest_partition);

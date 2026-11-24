@@ -31,6 +31,8 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_data/t8_containers.h>
 #include <t8_data/t8_data_exchange.hxx>
+#include <t8_data/t8_vector_handler.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.hxx>
 
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.hxx>
@@ -571,4 +573,24 @@ t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t *element_data)
     forest->profile->ghost_waittime += sc_MPI_Wtime ();
   }
   t8_debugf ("Finished ghost_exchange_data\n");
+}
+
+void
+t8_forest_ghost_exchange_data (t8_forest_t forest, t8_abstract_vector_handler &handler)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  /* Without ghost layer, the pattern has no messages and the handler only drops trailing entries. */
+  const t8_data_ghost_pattern pattern = t8_forest_ghost_data_pattern (forest);
+  t8_data_buffer no_send_buffer;
+  t8_data_buffer &send_buffer
+    = forest->ghosts != nullptr ? t8_forest_ghost_send_buffer (forest->ghosts) : no_send_buffer;
+  if (forest->profile != nullptr) {
+    /* Measure the time of the whole exchange */
+    forest->profile->ghost_waittime = -sc_MPI_Wtime ();
+  }
+  handler.exchange_ghosts (pattern, send_buffer);
+  if (forest->profile != nullptr) {
+    forest->profile->ghost_waittime += sc_MPI_Wtime ();
+  }
 }

@@ -108,6 +108,19 @@ struct t8_abstract_vector_handler
     = 0;
 
   /**
+   * Exchange the data of the ghost items: Before the call, the handler holds the \a pattern.num_local local items,
+   * possibly followed by further entries, e.g. outdated ghost items, which are dropped. Afterwards it holds the local
+   * items followed by the \a pattern.num_ghosts ghost items, received from their owners.
+   * Every process of \a pattern.comm calls this with its pattern of the same ghost exchange.
+   *
+   * \param[in] pattern The ghost pattern of this process.
+   * \param[in,out] send_buffer The buffer for the outgoing items, e.g. kept across the ghost exchanges of a forest.
+   */
+  virtual void
+  exchange_ghosts (const t8_data_ghost_pattern &pattern, t8_data_buffer &send_buffer)
+    = 0;
+
+  /**
    * Pack the vector and send it to a process (blocking). Requires MPI.
    *
    * \param[in] dest The rank to send to.
@@ -381,6 +394,29 @@ struct t8_vector_handler: public t8_abstract_vector_handler
     }
   }
 
+  /**
+   * Exchange the items of the ghosts, see \ref t8_abstract_vector_handler::exchange_ghosts.
+   * Items with a bytewise data handler are gathered into \a send_buffer and received directly into their slots
+   * without packing. All other items are serialized, one message per process.
+   *
+   * \param[in] pattern The ghost pattern of this process.
+   * \param[in,out] send_buffer The buffer for the outgoing items.
+   */
+  void
+  exchange_ghosts (const t8_data_ghost_pattern &pattern, t8_data_buffer &send_buffer) override
+  {
+    T8_ASSERT (t8_data_ghost_pattern_is_valid (pattern));
+    T8_ASSERT (m_data.size () >= pattern.num_local);
+    m_data.resize (pattern.num_local + pattern.num_ghosts);
+    if constexpr (T8BytewiseDataHandler<TDataHandler, TType>) {
+      t8_data_ghost_bytes_exchange exchange (pattern, m_data.data (), sizeof (TType), send_buffer);
+      exchange.wait ();
+    }
+    else {
+      exchange_ghosts_serialized (pattern, send_buffer);
+    }
+  }
+
  private:
   /**
    * Compute the number of bytes needed to pack a range of items (without count prefix).
@@ -599,16 +635,40 @@ struct t8_vector_handler: public t8_abstract_vector_handler
     /* Move data that is already on the process into the new storage */
     std::move (self_begin, self_begin + pattern.self_count, new_data.begin () + pattern.self_first_new);
 
-    /* Prepare the receive. We can not do any assumption about the serialized data because
-     * we don't know the size in advantage (for example if each element sends a std::vector)*/
-    const size_t num_recvs = pattern.recvs.size ();
-    std::vector<packed_recv> recvs;
-    recvs.reserve (num_recvs);
+    receive_serialized (pattern.recvs, pattern.tag, comm, new_data.data ());
+
+    if (num_sends > 0) {
+      const int mpiret = sc_MPI_Waitall (t8_mpi_int (num_sends), send_requests.data (), sc_MPI_STATUSES_IGNORE);
+      SC_CHECK_MPI (mpiret);
+    }
+    replace_data (std::move (new_data));
+  }
+
+  /**
+   * Receive chunks of items that are serialized by the data handler and unpack them directly into their position.
+   * The size of an incoming chunk depends on its items, so the sources are probed in order and each receive is
+   * posted as soon as its size is known; the transfers overlap. The chunks are unpacked when all of them have
+   * arrived. All sends of this communication step have to be posted before, so that no process blocks in a probe
+   * while its own messages do not exist yet.
+   *
+   * \param[in] recvs The chunks to receive, one message each.
+   * \param[in] tag The MPI tag of the messages.
+   * \param[in] comm The MPI communicator.
+   * \param[out] items The array that the chunks are unpacked into, at their index \a first.
+   */
+  void
+  receive_serialized (const std::vector<t8_data_partition_chunk> &recvs, const int tag, sc_MPI_Comm comm,
+                      TType *items) const
+  {
+    /* We can not make any assumption about the size of serialized data (for example if each item holds a
+     * std::vector), so the size of every message is probed. */
+    const size_t num_recvs = recvs.size ();
+    std::vector<packed_recv> packed_recvs;
+    packed_recvs.reserve (num_recvs);
     std::vector<sc_MPI_Request> recv_requests (num_recvs);
     for (size_t irecv = 0; irecv < num_recvs; ++irecv) {
-      /* Receive chunk after chunk given by the partition pattern; the size of each is probed. */
-      recvs.push_back (post_packed_recv (pattern.recvs[irecv].rank, pattern.tag, comm));
-      recv_requests[irecv] = recvs.back ().request;
+      packed_recvs.push_back (post_packed_recv (recvs[irecv].rank, tag, comm));
+      recv_requests[irecv] = packed_recvs.back ().request;
     }
     if (num_recvs > 0) {
       const int mpiret = sc_MPI_Waitall (t8_mpi_int (num_recvs), recv_requests.data (), sc_MPI_STATUSES_IGNORE);
@@ -616,18 +676,57 @@ struct t8_vector_handler: public t8_abstract_vector_handler
     }
     /* Unpack the receive buffers */
     for (size_t irecv = 0; irecv < num_recvs; ++irecv) {
-      const t8_data_partition_chunk &chunk = pattern.recvs[irecv];
+      const t8_data_partition_chunk &chunk = recvs[irecv];
       int position = 0;
-      unpack_range (recvs[irecv].buffer.get (), recvs[irecv].num_bytes, position, new_data.data () + chunk.first,
+      unpack_range (packed_recvs[irecv].buffer.get (), packed_recvs[irecv].num_bytes, position, items + chunk.first,
                     chunk.count, comm);
-      T8_ASSERT (position == recvs[irecv].num_bytes);
+      T8_ASSERT (position == packed_recvs[irecv].num_bytes);
     }
+  }
+
+  /**
+   * Exchange the items of the ghosts if they are serialized by the data handler. The items for all processes are
+   * packed into \a send_buffer, one message per process, and each message is sent as soon as it is packed.
+   *
+   * \param[in] pattern The ghost pattern of this process.
+   * \param[in,out] send_buffer The buffer for the packed outgoing items.
+   */
+  void
+  exchange_ghosts_serialized (const t8_data_ghost_pattern &pattern, t8_data_buffer &send_buffer)
+  {
+    const sc_MPI_Comm comm = pattern.comm;
+
+    /* The message for process send_ranks[i] occupies the bytes [message_offsets[i], message_offsets[i + 1]). */
+    const size_t num_sends = pattern.send_ranks.size ();
+    std::vector<size_t> message_offsets (num_sends + 1, 0);
+    for (size_t isend = 0; isend < num_sends; ++isend) {
+      size_t num_bytes = 0;
+      for (size_t iitem = pattern.send_offsets[isend]; iitem < pattern.send_offsets[isend + 1]; ++iitem) {
+        num_bytes += m_data_handler.size (m_data[pattern.send_indices[iitem]], comm);
+      }
+      message_offsets[isend + 1] = message_offsets[isend] + num_bytes;
+    }
+
+    char *const packed = send_buffer.get (message_offsets.back ());
+    std::vector<sc_MPI_Request> send_requests (num_sends);
+    for (size_t isend = 0; isend < num_sends; ++isend) {
+      char *const message = packed + message_offsets[isend];
+      const int num_bytes = t8_mpi_int (message_offsets[isend + 1] - message_offsets[isend]);
+      int position = 0;
+      for (size_t iitem = pattern.send_offsets[isend]; iitem < pattern.send_offsets[isend + 1]; ++iitem) {
+        m_data_handler.pack (m_data[pattern.send_indices[iitem]], message, num_bytes, position, comm);
+      }
+      const int mpiret = sc_MPI_Isend (message, position, sc_MPI_PACKED, pattern.send_ranks[isend], pattern.tag, comm,
+                                       &send_requests[isend]);
+      SC_CHECK_MPI (mpiret);
+    }
+
+    receive_serialized (pattern.recvs, pattern.tag, comm, m_data.data ());
 
     if (num_sends > 0) {
       const int mpiret = sc_MPI_Waitall (t8_mpi_int (num_sends), send_requests.data (), sc_MPI_STATUSES_IGNORE);
       SC_CHECK_MPI (mpiret);
     }
-    replace_data (std::move (new_data));
   }
 
   std::vector<TType> m_data;   /**< The data that is packed, unpacked and communicated via MPI. */
