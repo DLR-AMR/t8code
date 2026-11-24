@@ -120,5 +120,5 @@ struct t8_dgm: public t8_mesh_deformation_method
   /** Elements with a smaller absolute signed volume are treated as degenerate. Set in \ref solve. */
   double volume_tolerance = 0.0;
 
-  friend class t8_dg_rbf;
+  friend struct t8_dg_rbf;
 };
