@@ -36,10 +36,12 @@ t8_abstract_vector_handler::post_packed_recv ([[maybe_unused]] const int rank, [
 #if T8_ENABLE_MPI
   packed_recv recv;
   sc_MPI_Status status;
+  /* Probe for the size of the data */
   int mpiret = sc_MPI_Probe (rank, tag, comm, &status);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Get_count (&status, sc_MPI_PACKED, &recv.num_bytes);
   SC_CHECK_MPI (mpiret);
+  /* Allocate the buffer and Recv the data. */
   recv.buffer.reset (new char[recv.num_bytes]);
   mpiret = sc_MPI_Irecv (recv.buffer.get (), recv.num_bytes, sc_MPI_PACKED, rank, tag, comm, &recv.request);
   SC_CHECK_MPI (mpiret);
