@@ -30,6 +30,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 #include <vector>
 #include <t8_data/t8_data_handler_specs.hxx>
+#include <t8_data/t8_enlarged_stdtypes.hxx>
 #include <t8_data/t8_vector_handler.hxx>
 #include <memory>
 
@@ -40,7 +41,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 struct pseudo_tree
 {
- public:
   std::vector<int> topo_data; /**< A vector of integers representing topological data. */
   std::vector<std::shared_ptr<t8_abstract_vector_handler>>
     tree_data; /**< A vector of pointers to t8_abstract_data_handler objects, representing tree data. */
@@ -50,7 +50,6 @@ struct pseudo_tree
 template <>
 struct t8_data_handler<pseudo_tree>
 {
- public:
   /**
    * Returns the size of a pseudo_tree.
    *
@@ -59,7 +58,7 @@ struct t8_data_handler<pseudo_tree>
    * \return An integer representing the size of the data.
    */
   int
-  size (const pseudo_tree &item, sc_MPI_Comm comm)
+  size (const pseudo_tree &item, sc_MPI_Comm comm) const
   {
     int int_size = 0;
     int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &int_size);
@@ -81,34 +80,34 @@ struct t8_data_handler<pseudo_tree>
   /**
    * Packs a pseudo_tree into a buffer for communication.
    *
-   * \param[in] data The data to be packed.
-   * \param[in] pos The current position in the buffer where the data should be packed.
+   * \param[in] item The data to be packed.
    * \param[in, out] buffer The buffer where the data will be packed.
-   * \param[in] num_bytes The number of bytes available in the buffer.
+   * \param[in] buffer_size The number of bytes available in the buffer.
+   * \param[in, out] position The current position in the buffer. Advanced by the packed bytes.
    * \param[in] comm The MPI communicator used for communication.
    */
   void
-  pack (const pseudo_tree &data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm)
+  pack (const pseudo_tree &item, void *buffer, const int buffer_size, int &position, sc_MPI_Comm comm) const
   {
-    const int data_size = data.topo_data.size ();
+    const int data_size = item.topo_data.size ();
     /* Pack number of topological data */
-    int mpiret = sc_MPI_Pack (&data_size, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
+    int mpiret = sc_MPI_Pack (&data_size, 1, sc_MPI_INT, buffer, buffer_size, &position, comm);
     SC_CHECK_MPI (mpiret);
     /* Pack topological data in one call */
-    mpiret = sc_MPI_Pack (data.topo_data.data (), data_size, sc_MPI_INT, buffer, num_bytes, &pos, comm);
+    mpiret = sc_MPI_Pack (item.topo_data.data (), data_size, sc_MPI_INT, buffer, buffer_size, &position, comm);
     SC_CHECK_MPI (mpiret);
     /* Pack number of tree-specific data */
-    const int tree_data_size = data.tree_data.size ();
-    mpiret = sc_MPI_Pack (&tree_data_size, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
+    const int tree_data_size = item.tree_data.size ();
+    mpiret = sc_MPI_Pack (&tree_data_size, 1, sc_MPI_INT, buffer, buffer_size, &position, comm);
     SC_CHECK_MPI (mpiret);
 
-    for (const auto &handler : data.tree_data) {
+    for (const auto &handler : item.tree_data) {
       const t8_data_handler_type type = handler->type ();
       /* Pack type of tree data */
-      mpiret = sc_MPI_Pack (&type, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
+      mpiret = sc_MPI_Pack (&type, 1, sc_MPI_INT, buffer, buffer_size, &position, comm);
       SC_CHECK_MPI (mpiret);
       /* Pack each data */
-      handler->pack_vector_prefix (buffer, num_bytes, pos, comm);
+      handler->pack_vector_prefix (buffer, buffer_size, position, comm);
     }
   }
 
@@ -116,34 +115,34 @@ struct t8_data_handler<pseudo_tree>
    * Unpacks a pseudo_tree from a buffer.
    *
    * \param[in] buffer A pointer to the buffer containing the packed data.
-   * \param[in] num_bytes The number of bytes in the buffer.
-   * \param[in] pos A reference to an integer representing the current position in the buffer.
-   * \param[in, out] data A pointer to the data structure where the unpacked data will be stored.
+   * \param[in] buffer_size The number of bytes in the buffer.
+   * \param[in, out] position The current position in the buffer. Advanced by the unpacked bytes.
+   * \param[out] item The unpacked data.
    * \param[in] comm The MPI communicator used for communication.
    */
   void
-  unpack (const void *buffer, const int num_bytes, int &pos, pseudo_tree &data, sc_MPI_Comm comm)
+  unpack (const void *buffer, const int buffer_size, int &position, pseudo_tree &item, sc_MPI_Comm comm) const
   {
     /* Clear existing tree data */
-    data.tree_data.clear ();
+    item.tree_data.clear ();
 
     /* Unpack number of topological data */
     int topo_data_size = 0;
-    int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &topo_data_size, 1, sc_MPI_INT, comm);
+    int mpiret = sc_MPI_Unpack (buffer, buffer_size, &position, &topo_data_size, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
-    data.topo_data.resize (topo_data_size);
-    mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, data.topo_data.data (), topo_data_size, sc_MPI_INT, comm);
+    item.topo_data.resize (topo_data_size);
+    mpiret = sc_MPI_Unpack (buffer, buffer_size, &position, item.topo_data.data (), topo_data_size, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
 
     /* Unpack number of tree-specific data */
     int num_handler = 0;
-    mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &num_handler, 1, sc_MPI_INT, comm);
+    mpiret = sc_MPI_Unpack (buffer, buffer_size, &position, &num_handler, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
 
-    data.tree_data.resize (num_handler);
-    for (auto &ihandler : data.tree_data) {
+    item.tree_data.resize (num_handler);
+    for (auto &ihandler : item.tree_data) {
       t8_data_handler_type type;
-      mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &type, 1, sc_MPI_INT, comm);
+      mpiret = sc_MPI_Unpack (buffer, buffer_size, &position, &type, 1, sc_MPI_INT, comm);
       SC_CHECK_MPI (mpiret);
 
       if (!is_internal_data (type)) {
@@ -163,19 +162,17 @@ struct t8_data_handler<pseudo_tree>
         ihandler = std::shared_ptr<t8_abstract_vector_handler> (create_internal_handler (type));
       }
       int outcount = 0;
-      ihandler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
+      ihandler->unpack_vector_prefix (buffer, buffer_size, position, outcount, comm);
     }
   }
 
   /**
    * Returns the type of the data handler.
    *
-   * This function returns the type of the data handler.
-   *
-   * \return An integer representing the type.
+   * \return The type of the data handler.
    */
-  constexpr t8_data_handler_type
-  type ()
+  t8_data_handler_type
+  type () const
   {
     return t8_data_handler_type (-1);
   }
