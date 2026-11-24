@@ -43,7 +43,7 @@ struct pseudo_tree
 {
   std::vector<int> topo_data; /**< A vector of integers representing topological data. */
   std::vector<std::shared_ptr<t8_abstract_vector_handler>>
-    tree_data; /**< A vector of pointers to t8_abstract_data_handler objects, representing tree data. */
+    tree_data; /**< A vector of pointers to t8_abstract_vector_handler objects, representing tree data. */
 };
 
 /** Data handler for for the \ref pseudo_tree structure. */
@@ -145,7 +145,7 @@ struct t8_data_handler<pseudo_tree>
       mpiret = sc_MPI_Unpack (buffer, buffer_size, &position, &type, 1, sc_MPI_INT, comm);
       SC_CHECK_MPI (mpiret);
 
-      if (!is_internal_data (type)) {
+      if (!t8_is_internal_data (type)) {
 
         /* TODO: This is currently only a placeholder for actual internal data types. */
         if (type.get () == 0) {
@@ -159,7 +159,7 @@ struct t8_data_handler<pseudo_tree>
         }
       }
       else {
-        ihandler = std::shared_ptr<t8_abstract_vector_handler> (create_internal_handler (type));
+        ihandler = t8_create_internal_handler (type);
       }
       int outcount = 0;
       ihandler->unpack_vector_prefix (buffer, buffer_size, position, outcount, comm);

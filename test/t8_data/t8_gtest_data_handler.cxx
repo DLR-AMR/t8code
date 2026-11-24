@@ -116,8 +116,7 @@ TYPED_TEST_P (data_handler_test, send_recv)
     t8_debugf ("Rank %d not sending data to itself\n", this->mpirank);
     return;
   }
-  int mpiret = this->data_handler->send (send_to, 0, this->comm);
-  SC_CHECK_MPI (mpiret);
+  this->data_handler->send (send_to, 0, this->comm);
 
   /* Compute the rank we this rank receives from. */
   int recv_from = (this->mpirank == 0) ? (this->mpisize - 1) : (this->mpirank - 1);
@@ -125,8 +124,7 @@ TYPED_TEST_P (data_handler_test, send_recv)
   /* Receive and unpack the data. */
   sc_MPI_Status status;
   int outcount;
-  mpiret = this->data_handler->recv (recv_from, 0, this->comm, &status, outcount);
-  SC_CHECK_MPI (mpiret);
+  this->data_handler->recv (recv_from, 0, this->comm, &status, outcount);
   this->recv_data = this->data_handler->get_data ();
 
   EXPECT_EQ (outcount, this->max_num_data);
@@ -169,10 +167,8 @@ TEST (data_handler_test, multiple_handler)
   if (send_to != mpirank) {
     sc_MPI_Status status;
     int outcount;
-    mpiret = int_handler.sendrecv (send_to, recv_from, 0, comm, &status, outcount);
-    SC_CHECK_MPI (mpiret);
-    mpiret = double_handler.sendrecv (send_to, recv_from, 0, comm, &status, outcount);
-    SC_CHECK_MPI (mpiret);
+    int_handler.sendrecv (send_to, recv_from, 0, comm, &status, outcount);
+    double_handler.sendrecv (send_to, recv_from, 0, comm, &status, outcount);
   }
   else {
     t8_debugf ("Rank %i not sending data to itself\n", mpirank);
@@ -289,12 +285,10 @@ TEST (data_handler_test, tree_test)
     t8_debugf ("Rank %d not sending data to itself\n", mpirank);
     return;
   }
-  mpiret = tree_handler.send (send_to, 0, comm);
-  SC_CHECK_MPI (mpiret);
+  tree_handler.send (send_to, 0, comm);
   sc_MPI_Status status;
   int outcount;
-  mpiret = tree_handler.recv (recv_from, 0, comm, &status, outcount);
-  SC_CHECK_MPI (mpiret);
+  tree_handler.recv (recv_from, 0, comm, &status, outcount);
 
   const std::vector<pseudo_tree> &recv_trees = tree_handler.get_data ();
 
