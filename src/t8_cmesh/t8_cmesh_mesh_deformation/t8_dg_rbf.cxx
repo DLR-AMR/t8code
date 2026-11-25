@@ -28,11 +28,33 @@
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_dgm.hxx>
 #include <t8_vector/t8_vec.hxx>
 #include <gmsh.h>
+#include <cmath>
+
+/** Rotates a position about a center, counter-clockwise about the x-, then the y- and then the z-axis. */
+static t8_3D_vec
+t8_dg_rbf_rotate (const t8_3D_vec& position, const t8_3D_vec& center, const t8_3D_vec& angles)
+{
+  t8_3D_vec relative = { position[0] - center[0], position[1] - center[1], position[2] - center[2] };
+  for (int axis = 0; axis < 3; ++axis) {
+    const int first = (axis + 1) % 3;
+    const int second = (axis + 2) % 3;
+    const double rotated_first = std::cos (angles[axis]) * relative[first] - std::sin (angles[axis]) * relative[second];
+    relative[second] = std::sin (angles[axis]) * relative[first] + std::cos (angles[axis]) * relative[second];
+    relative[first] = rotated_first;
+  }
+  return { relative[0] + center[0], relative[1] + center[1], relative[2] + center[2] };
+}
 
 void
 t8_dg_rbf::interpolate (t8_mesh_deformation_node& inner_node) const
 {
   t8_mesh_deformation_node inner_node_tmp = inner_node;
+  if (rotation_dg_rbf) {
+    /* The rotation DG-RBF returns the interpolated rotation angles as displacement. */
+    t8_mesh_deformation_node angle_node = inner_node;
+    rotation_dg_rbf->interpolate (angle_node);
+    inner_node_tmp.position = t8_dg_rbf_rotate (inner_node.position, rotation_center, angle_node.displacement);
+  }
   // Implementation for finding the Delaunay element containing the inner node
   const double tolerance = 1e-12;
   double num_steps = dgm.delaunay_elements.size ();
@@ -98,6 +120,31 @@ t8_dg_rbf::solve ()
   }
   volume_tolerance = 1e-12 * std::pow (max_coordinate, dimension);
   dgm.volume_tolerance = volume_tolerance;
+
+  if (rotation_enabled) {
+    /* The angles are interpolated with a DG-RBF without substeps, which carries the angles as displacement.
+     * Moving boundary nodes get the rotation angles of the body, the fixed ones zero. */
+    std::vector<t8_mesh_deformation_node> angle_nodes = boundary_nodes;
+    for (auto& node : angle_nodes) {
+      const bool is_moving = t8_norm (node.displacement) > 1e-12 * max_coordinate;
+      node.displacement = is_moving ? rotation_angles : t8_3D_vec { 0.0, 0.0, 0.0 };
+    }
+    rotation_dg_rbf = std::make_unique<t8_dg_rbf> (scale_factor_support_radius, false);
+    rotation_dg_rbf->set_dimension (dimension);
+    rotation_dg_rbf->set_boundary_nodes (angle_nodes);
+    rotation_dg_rbf->solve ();
+
+    /* The translation is the part of the displacement which remains after the rotation of the boundary node. */
+    for (size_t inode = 0; inode < boundary_nodes.size (); ++inode) {
+      auto& node = boundary_nodes[inode];
+      const t8_3D_vec rotated = t8_dg_rbf_rotate (node.position, rotation_center, angle_nodes[inode].displacement);
+      for (int coord = 0; coord < 3; ++coord) {
+        node.displacement[coord] = node.position[coord] + node.displacement[coord] - rotated[coord];
+      }
+      node.position = rotated;
+    }
+    dgm.set_boundary_nodes (boundary_nodes);
+  }
 
   bool no_flipped_elements = false;
   double substeps = 0;

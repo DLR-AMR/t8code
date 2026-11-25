@@ -43,9 +43,17 @@ struct t8_dg_rbf: public t8_mesh_deformation_method
  * Constructor for the DG-RBF method. DG-RBF only works with CPC2.
  * \param [in] scale_factor_support_radius The scaling factor for the support radius of the CPC2 deformation. Note: Default value is 1.5 so it only has to be specified for CPC2 use.
  * \param [in] substepping A boolean flag indicating whether substepping is enabled or not.
+ * \param [in] rotation_center The center of the rotation of the moving body.
+ * \param [in] rotation_angles The rotation angles of the moving body about the x-, y- and z-axis in radians
+ *                             (counter-clockwise, applied in this order). If nonzero, the rotation angles are
+ *                             interpolated to the inner nodes first and only the remaining translation is
+ *                             interpolated afterwards (paper Sec. 3.5).
  */
-  t8_dg_rbf (const double scale_factor_support_radius = 1.5, const bool substepping = false)
-    : scale_factor_support_radius (scale_factor_support_radius), substepping_enabled (substepping)
+  t8_dg_rbf (const double scale_factor_support_radius = 1.5, const bool substepping = false,
+             const t8_3D_vec& rotation_center = { 0.0, 0.0, 0.0 }, const t8_3D_vec& rotation_angles = { 0.0, 0.0, 0.0 })
+    : substepping_enabled (substepping), scale_factor_support_radius (scale_factor_support_radius),
+      rotation_enabled (rotation_angles[0] != 0.0 || rotation_angles[1] != 0.0 || rotation_angles[2] != 0.0),
+      rotation_center (rotation_center), rotation_angles (rotation_angles)
   {
   }
   /**
@@ -93,4 +101,12 @@ struct t8_dg_rbf: public t8_mesh_deformation_method
   std::vector<std::vector<std::unique_ptr<t8_rbf>>> local_rbfs;
   const t8_rbf_function_type rbf_type = T8_RBF_CPC2;
   double scale_factor_support_radius = 1.5;
+  /** A boolean flag indicating whether the rotation interpolation is used. */
+  bool rotation_enabled = false;
+  /** The center of the rotation of the moving body. */
+  t8_3D_vec rotation_center {};
+  /** The rotation angles of the moving body about the x-, y- and z-axis in radians. */
+  t8_3D_vec rotation_angles {};
+  /** DG-RBF interpolating the rotation angles, which are stored as displacement of its boundary nodes. */
+  std::unique_ptr<t8_dg_rbf> rotation_dg_rbf;
 };

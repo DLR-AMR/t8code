@@ -118,6 +118,8 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   int deformation_type_int = 0;
   double scale_factor_support_radius = 1.5;
   int substepping = 0;
+  t8_3D_vec rotation_center = { 0.0, 0.0, 0.0 };
+  t8_3D_vec rotation_angles_deg = { 0.0, 0.0, 0.0 };
 
   /* Initialize command line argument parser. */
   sc_options_t *opt = sc_options_new (argv[0]);
@@ -133,6 +135,15 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   sc_options_add_double (opt, 's', "scalefactor", &scale_factor_support_radius, 1.5,
                          "Scale factor for the support radius. Default: 1.5");
   sc_options_add_switch (opt, 'st', "substepping", &substepping, "Enable substepping for the DG-RBF method.");
+  sc_options_add_double (opt, 0, "rotcx", &rotation_center[0], 0.0, "x-coordinate of the rotation center (DG-RBF).");
+  sc_options_add_double (opt, 0, "rotcy", &rotation_center[1], 0.0, "y-coordinate of the rotation center (DG-RBF).");
+  sc_options_add_double (opt, 0, "rotcz", &rotation_center[2], 0.0, "z-coordinate of the rotation center (DG-RBF).");
+  sc_options_add_double (opt, 0, "rotax", &rotation_angles_deg[0], 0.0,
+                         "Rotation angle about the x-axis in degrees. Enables the rotation interpolation (DG-RBF).");
+  sc_options_add_double (opt, 0, "rotay", &rotation_angles_deg[1], 0.0,
+                         "Rotation angle about the y-axis in degrees. Enables the rotation interpolation (DG-RBF).");
+  sc_options_add_double (opt, 0, "rotaz", &rotation_angles_deg[2], 0.0,
+                         "Rotation angle about the z-axis in degrees. Enables the rotation interpolation (DG-RBF).");
 
   const int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
@@ -189,7 +200,12 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 #endif      /* T8_ENABLE_GMSH  */
     case 3: /* DG-RBF */
 #if T8_ENABLE_GMSH && T8_ENABLE_EIGEN
-      deformation.set_deformation_method<t8_dg_rbf> (scale_factor_support_radius, substepping);
+    {
+      const t8_3D_vec rotation_angles = { rotation_angles_deg[0] * M_PI / 180.0, rotation_angles_deg[1] * M_PI / 180.0,
+                                          rotation_angles_deg[2] * M_PI / 180.0 };
+      deformation.set_deformation_method<t8_dg_rbf> (scale_factor_support_radius, substepping, rotation_center,
+                                                     rotation_angles);
+    }
       method_name = "dg-rbf";
       break;
 #endif /*T8_ENABLE_GMSH && T8_ENABLE_EIGEN*/
