@@ -31,6 +31,7 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_touching_ranks.hxx>
+#include <t8_forest/t8_forest_ghost_overlap.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_data/t8_containers.h>
@@ -896,6 +897,27 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
  * \param [in,out] ghost   The forest's ghost structure.
  * \param [in] mirrors     The local leaves with the ranks they touch, sorted by rank, tree and index.
  */
+/** Make a rank a remote rank of the ghost layer without remote elements, if it is not one already. Its message
+ * contains no trees.
+ * \param [in,out] ghost        The forest's ghost structure. No remote elements are added after this call.
+ * \param [in]     remote_rank  The rank.
+ */
+static void
+t8_ghost_add_remote_rank (t8_forest_ghost_t ghost, int remote_rank)
+{
+  t8_ghost_remote_t remote_entry_lookup, *remote_entry;
+  size_t index;
+  remote_entry_lookup.remote_rank = remote_rank;
+  remote_entry = (t8_ghost_remote_t *) sc_hash_array_insert_unique (ghost->remote_ghosts, (void *) &remote_entry_lookup,
+                                                                    &index);
+  if (remote_entry != NULL) {
+    remote_entry->remote_rank = remote_rank;
+    remote_entry->num_elements = 0;
+    sc_array_init (&remote_entry->remote_trees, sizeof (t8_ghost_remote_tree_t));
+    *(int *) sc_array_push (ghost->remote_processes) = remote_rank;
+  }
+}
+
 static void
 t8_forest_ghost_fill_remote_mirrors (t8_forest_t forest, t8_forest_ghost_t ghost,
                                      const std::vector<t8_forest_mirror> &mirrors)
@@ -1707,6 +1729,8 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
  *
  * version 4 with the leaves touching the neighbors of the cover elements of the other ranks
  * (\ref t8_forest_touching_ranks_mirrors) for unbalanced_version = 2
+ *
+ * version 5, the overlap of a given width (\ref t8_forest_ghost_overlap_mirrors), for unbalanced_version = 3
  */
 void
 t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
@@ -1738,9 +1762,15 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
   }
 
   std::vector<t8_forest_mirror> mirrors;
+  std::vector<int> overlap_senders;
   if (forest->ghost_type != T8_GHOST_NONE) {
     const int min_dim = t8_forest_ghost_min_boundary_dim (forest->ghost_type, forest->dimension);
-    if (unbalanced_version == 2) {
+    if (unbalanced_version == 3) {
+      /* The local leaves in the overlap regions of other ranks, and the ranks with leaves in the own region */
+      t8_forest_ghost_overlap_mirrors (forest, forest->ghost_overlap_level, forest->ghost_overlap_layers, mirrors,
+                                       overlap_senders);
+    }
+    else if (unbalanced_version == 2) {
       /* The local leaves touching the parts of other ranks, from the neighbors of the cover elements of all ranks */
       t8_forest_touching_ranks_mirrors (forest, min_dim, mirrors);
     }
@@ -1763,7 +1793,22 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
     ghost = forest->ghosts;
 
-    if (unbalanced_version == 2) {
+    if (unbalanced_version == 3) {
+      t8_forest_ghost_fill_remote_mirrors (forest, ghost, mirrors);
+      /* The ranks that send overlap ghosts to this rank also get a message, empty if no local leaf is in their
+       * region, since every rank receives from the ranks it sends to */
+#if T8_ENABLE_DEBUG
+      /* The overlap relation is symmetric (see t8_forest_ghost_overlap.hxx): every sender also receives leaves */
+      for (const int sender : overlap_senders) {
+        T8_ASSERT (std::any_of (mirrors.begin (), mirrors.end (),
+                                [sender] (const t8_forest_mirror &mirror) { return mirror.rank == sender; }));
+      }
+#endif
+      for (const int sender : overlap_senders) {
+        t8_ghost_add_remote_rank (ghost, sender);
+      }
+    }
+    else if (unbalanced_version == 2) {
       t8_forest_ghost_fill_remote_mirrors (forest, ghost, mirrors);
       T8_ASSERT (t8_forest_ghost_check_remotes_with_search (forest, ghost));
     }
@@ -1844,6 +1889,14 @@ t8_forest_ghost_create_touching (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   t8_forest_ghost_create_ext (forest, 2);
+}
+
+void
+t8_forest_ghost_create_overlap (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  t8_forest_ghost_create_ext (forest, 3);
 }
 
 /** Return the array of remote ranks.

@@ -223,6 +223,14 @@ t8_forest_ghost_create_topdown (t8_forest_t forest);
 void
 t8_forest_ghost_create_touching (t8_forest_t forest);
 
+/** Create the ghost layer of a given width (ghost version 5), with the level and the number of layers set by
+ * \ref t8_forest_set_ghost_overlap, see t8_forest_ghost_overlap.hxx.
+ * \param [in,out]    forest     A committed forest.
+ * \note This function is collective.
+ */
+void
+t8_forest_ghost_create_overlap (t8_forest_t forest);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_GHOST_H */

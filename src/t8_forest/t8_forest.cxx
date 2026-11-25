@@ -3461,6 +3461,20 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
 }
 
 void
+t8_forest_set_ghost_overlap (t8_forest_t forest, int level, int layers)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  SC_CHECK_ABORT (level >= 0 && layers >= 0, "The level and the number of layers of the overlap must not be negative.");
+  forest->do_ghost = layers > 0;
+  if (forest->do_ghost) {
+    forest->ghost_type = T8_GHOST_VERTICES;
+    forest->ghost_algorithm = 5;
+    forest->ghost_overlap_level = level;
+    forest->ghost_overlap_layers = layers;
+  }
+}
+
+void
 t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type)
 {
   /* Use ghost version 4, the leaves touching the neighbors of the cover elements of the other ranks. */
@@ -3842,6 +3856,9 @@ t8_forest_commit (t8_forest_t forest)
         break;
       case 4:
         t8_forest_ghost_create_touching (forest);
+        break;
+      case 5:
+        t8_forest_ghost_create_overlap (forest);
         break;
       default:
         SC_ABORT ("Invalid choice of ghost algorithm");

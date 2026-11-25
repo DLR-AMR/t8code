@@ -436,6 +436,22 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
 void
 t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version);
 
+/** Set a ghost layer of a given width for overlapping domain decomposition: the leaves of other ranks that intersect
+ * the elements of level \a level within \a layers steps between elements sharing a vertex from the part of this rank
+ * (see t8_forest_ghost_overlap.hxx). The overlap is at least \a layers times the size of the elements of level
+ * \a level wide, independent of the refinement. With
+ * \a layers >= 1 it contains the vertex ghost layer, so the ghost type is \ref T8_GHOST_VERTICES. The scheme must
+ * implement boundaries (standalone). If the region reaches trees that the coarse mesh of a rank does not store, the
+ * coarse mesh must be replicated.
+ * \param [in, out] forest  The forest.
+ * \param [in]      level   The level of the region elements, at least 0.
+ * \param [in]      layers  The number of layers, at least 0. 0 disables the ghost layer.
+ * \note This setting can be combined with \ref t8_forest_set_adapt, \ref t8_forest_set_balance and
+ *       \ref t8_forest_set_partition. It replaces settings made with \ref t8_forest_set_ghost.
+ */
+void
+t8_forest_set_ghost_overlap (t8_forest_t forest, int level, int layers);
+
 /**
  *  Use assertions and document that the forest_set (..., from) and
  *  set_load are mutually exclusive.
