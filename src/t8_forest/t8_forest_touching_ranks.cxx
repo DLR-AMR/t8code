@@ -53,12 +53,7 @@ struct t8_forest_touching_query
     = default;
 };
 
-/** The maximal elements between the first position of this rank and the first position of the next rank with
- * elements, in SFC order, each with its local tree. The caller destroys the elements.
- * \param [in] forest  A committed forest with splitters.
- * \param [out] cover  The cover elements are appended.
- */
-static void
+void
 t8_forest_partition_cover (const t8_forest_t forest, std::vector<std::pair<t8_locidx_t, t8_element_t *>> &cover)
 {
   const t8_forest_splitters &splitters = t8_forest_get_splitters (forest);
