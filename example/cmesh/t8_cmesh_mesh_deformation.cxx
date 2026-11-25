@@ -106,7 +106,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   const char *msh_file = NULL;
   const char *brep_folder = NULL;
   int dim, level;
-  int rbf_type_int = 0;
+  int rbf_type_int = 1;
   double scale_factor_support_radius = 1.5;
 
   /* Initialize command line argument parser. */
@@ -117,9 +117,9 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
                          "Path to the folder containing the deformation geometry files (.brep)");
   sc_options_add_int (opt, 'd', "dimension", &dim, 0, "Dimension of the mesh (1, 2 or 3)");
   sc_options_add_int (opt, 'l', "level", &level, 2, "Uniform refinement level for the input mesh. Default: 2");
-  sc_options_add_int (opt, 't', "rbftype", &rbf_type_int, 0, "RBF type (0 for CPC2, 1 for TPS). Default: 0");
+  sc_options_add_int (opt, 't', "rbftype", &rbf_type_int, 1, "RBF type (0 for CPC2, 1 for TPS). Default: 1 (TPS)");
   sc_options_add_double (opt, 's', "scalefactor", &scale_factor_support_radius, 1.5,
-                         "Scale factor for the support radius. Default: 1.5");
+                         "Scale factor for the support radius (only used for CPC2). Default: 1.5");
 
   const int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
@@ -136,7 +136,6 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else {
-
     /* We will use MPI_COMM_WORLD as a communicator. */
     const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
