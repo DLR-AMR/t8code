@@ -62,10 +62,13 @@
  * \param [out]    mirrors  The local leaves with the ranks whose region they intersect, sorted by rank, tree and
  *                          index, without duplicates.
  * \param [out]    senders  The ranks other than this one that own a leaf intersecting the region of this rank, sorted.
+ * \param [out]    ranges   The ranges of the ranks other than this one that send overlap ghosts to this rank or
+ *                          receive them from it, sorted by rank. With them, the owners of the overlap ghosts are
+ *                          known (\ref t8_forest_touching_ranks_add).
  * \note This function is collective.
  */
 void
 t8_forest_ghost_overlap_mirrors (t8_forest_t forest, int level, int layers, std::vector<t8_forest_mirror> &mirrors,
-                                 std::vector<int> &senders);
+                                 std::vector<int> &senders, std::vector<t8_forest_rank_range> &ranges);
 
 #endif /* !T8_FOREST_GHOST_OVERLAP_HXX */

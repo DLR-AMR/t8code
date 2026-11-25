@@ -125,6 +125,18 @@ t8_forest_touching_ranks_require (t8_forest_t forest, const int min_dim);
 void
 t8_forest_touching_ranks_mirrors (t8_forest_t forest, const int min_dim, std::vector<t8_forest_mirror> &mirrors);
 
+/** Add ranks to the touching ranks of a forest, so that their ranges are known to the owner searches: the ranks that
+ * exchange overlap ghosts (\ref t8_forest_ghost_overlap.hxx) with this rank, which include the ranks touching it if
+ * the overlap has at least one layer. Ranks that are already present are kept.
+ * \param [in,out] forest   A committed forest with splitters.
+ * \param [in]     ranges   The ranges of other ranks, exact.
+ * \param [in]     min_dim  The touching ranks contain all ranks touching this one with dimension at least min_dim
+ *                          (if they did before or if \a ranges contains them). The smaller of it and the current one
+ *                          is kept.
+ */
+void
+t8_forest_touching_ranks_add (t8_forest_t forest, const std::vector<t8_forest_rank_range> &ranges, const int min_dim);
+
 /** Copy the touching ranks of a forest to a forest with the same partition.
  * \param [in,out] forest  A forest whose ranks own the same positions as those of \a from.
  * \param [in]     from    A forest, which may have touching ranks.

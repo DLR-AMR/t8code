@@ -1763,12 +1763,16 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
 
   std::vector<t8_forest_mirror> mirrors;
   std::vector<int> overlap_senders;
+  std::vector<t8_forest_rank_range> overlap_ranges;
   if (forest->ghost_type != T8_GHOST_NONE) {
     const int min_dim = t8_forest_ghost_min_boundary_dim (forest->ghost_type, forest->dimension);
     if (unbalanced_version == 3) {
       /* The local leaves in the overlap regions of other ranks, and the ranks with leaves in the own region */
       t8_forest_ghost_overlap_mirrors (forest, forest->ghost_overlap_level, forest->ghost_overlap_layers, mirrors,
-                                       overlap_senders);
+                                       overlap_senders, overlap_ranges);
+      /* The owners of the overlap ghosts are known from now on (the owner searches use the touching ranks). With at
+       * least one layer, these ranks include all ranks touching this one. */
+      t8_forest_touching_ranks_add (forest, overlap_ranges, forest->ghost_overlap_layers > 0 ? 0 : forest->dimension);
     }
     else if (unbalanced_version == 2) {
       /* The local leaves touching the parts of other ranks, from the neighbors of the cover elements of all ranks */

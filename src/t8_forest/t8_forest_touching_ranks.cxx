@@ -552,6 +552,32 @@ t8_forest_touching_ranks_require (t8_forest_t forest, const int min_dim)
 }
 
 void
+t8_forest_touching_ranks_add (t8_forest_t forest, const std::vector<t8_forest_rank_range> &ranges, const int min_dim)
+{
+  if (forest->touching_ranks == NULL) {
+    const t8_forest_splitters &splitters = t8_forest_get_splitters (forest);
+    forest->touching_ranks = new t8_forest_touching_ranks;
+    forest->touching_ranks->min_dim = min_dim;
+    if (splitters.has_elements) {
+      forest->touching_ranks->ranges.push_back ({ forest->mpirank, splitters.first_position, splitters.next_position });
+    }
+  }
+  t8_forest_touching_ranks *touching = forest->touching_ranks;
+  touching->min_dim = SC_MIN (touching->min_dim, min_dim);
+  std::set<int> present;
+  for (const t8_forest_rank_range &range : touching->ranges) {
+    present.insert (range.rank);
+  }
+  for (const t8_forest_rank_range &range : ranges) {
+    if (present.insert (range.rank).second) {
+      touching->ranges.push_back (range);
+    }
+  }
+  std::sort (touching->ranges.begin (), touching->ranges.end (),
+             [] (const t8_forest_rank_range &a, const t8_forest_rank_range &b) { return a.rank < b.rank; });
+}
+
+void
 t8_forest_touching_ranks_copy (t8_forest_t forest, const t8_forest_t from)
 {
   t8_forest_touching_ranks_destroy (forest);

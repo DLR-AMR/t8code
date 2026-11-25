@@ -39,6 +39,7 @@ struct t8_forest_overlap_query
   int level;                /**< The level of the element. */
   int source;               /**< The rank whose region contains the element. */
   t8_forest_position source_first; /**< The first position of the source rank, to send the notice to. */
+  t8_forest_position source_next;  /**< The first position after the source rank. */
 
   /** Order by all members, to remove duplicates. */
   friend auto
@@ -49,8 +50,10 @@ struct t8_forest_overlap_query
 /** A notice that a rank sends overlap ghosts to the owner of a position. */
 struct t8_forest_overlap_notice
 {
-  t8_forest_position target; /**< The first position of the receiving rank. */
-  int sender;                /**< The rank that sends overlap ghosts to it. */
+  t8_forest_position target;      /**< The first position of the receiving rank. */
+  int sender;                     /**< The rank that sends overlap ghosts to it. */
+  t8_forest_position sender_first; /**< The first position of the sender. */
+  t8_forest_position sender_next;  /**< The first position after the sender. */
 
   /** Order by all members, to remove duplicates. */
   friend auto
@@ -263,12 +266,14 @@ t8_forest_leaves_intersecting (const t8_forest_t forest, const t8_locidx_t ltree
 
 void
 t8_forest_ghost_overlap_mirrors (t8_forest_t forest, const int level, const int layers,
-                                 std::vector<t8_forest_mirror> &mirrors, std::vector<int> &senders)
+                                 std::vector<t8_forest_mirror> &mirrors, std::vector<int> &senders,
+                                 std::vector<t8_forest_rank_range> &ranges)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   SC_CHECK_ABORT (level >= 0 && layers >= 0, "The level and the number of layers of the overlap must not be negative.");
   mirrors.clear ();
   senders.clear ();
+  ranges.clear ();
   const t8_forest_splitters &splitters = t8_forest_get_splitters (forest);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   if (layers > 0) {
@@ -294,6 +299,7 @@ t8_forest_ghost_overlap_mirrors (t8_forest_t forest, const int level, const int 
       query.level = region_element.level;
       query.source = forest->mpirank;
       query.source_first = splitters.first_position;
+      query.source_next = splitters.next_position;
       queries.push_back (query);
     }
   }
@@ -307,6 +313,7 @@ t8_forest_ghost_overlap_mirrors (t8_forest_t forest, const int level, const int 
   std::vector<std::vector<t8_linearidx_t>> leaf_ids (t8_forest_get_num_local_trees (forest));
   std::vector<t8_locidx_t> leaves;
   std::vector<t8_forest_overlap_notice> notices;
+  std::vector<t8_forest_rank_range> receiver_ranges;
   for (const t8_forest_overlap_query &query : queries) {
     if (query.source == forest->mpirank) {
       continue;
@@ -328,7 +335,8 @@ t8_forest_ghost_overlap_mirrors (t8_forest_t forest, const int level, const int 
       mirrors.push_back ({ query.source, ltreeid, ileaf });
     }
     if (!leaves.empty ()) {
-      notices.push_back ({ query.source_first, forest->mpirank });
+      notices.push_back ({ query.source_first, forest->mpirank, splitters.first_position, splitters.next_position });
+      receiver_ranges.push_back ({ query.source, query.source_first, query.source_next });
     }
   }
   std::sort (mirrors.begin (), mirrors.end ());
@@ -343,8 +351,18 @@ t8_forest_ghost_overlap_mirrors (t8_forest_t forest, const int level, const int 
   for (const t8_forest_overlap_notice &notice : notices) {
     if (notice.sender != forest->mpirank) {
       senders.push_back (notice.sender);
+      ranges.push_back ({ notice.sender, notice.sender_first, notice.sender_next });
     }
   }
   std::sort (senders.begin (), senders.end ());
   senders.erase (std::unique (senders.begin (), senders.end ()), senders.end ());
+  /* The ranges of all ranks this rank exchanges overlap ghosts with, by rank */
+  ranges.insert (ranges.end (), receiver_ranges.begin (), receiver_ranges.end ());
+  std::sort (ranges.begin (), ranges.end (),
+             [] (const t8_forest_rank_range &a, const t8_forest_rank_range &b) { return a.rank < b.rank; });
+  ranges.erase (std::unique (ranges.begin (), ranges.end (),
+                             [] (const t8_forest_rank_range &a, const t8_forest_rank_range &b) {
+                               return a.rank == b.rank;
+                             }),
+                ranges.end ());
 }

@@ -34,6 +34,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_private.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <test/t8_gtest_macros.hxx>
@@ -331,6 +332,22 @@ struct forest_ghost_overlap: public testing::TestWithParam<t8_eclass_t>
                                                          t8_forest_get_leaf_element_in_tree (overlap, ltree, i));
       }
     }
+    /* The owners of the ghosts are known (deal.II looks them up for its ghost cells) */
+    std::map<t8_test_leaf, int> owner_of;
+    for (const auto &[leaf, owner] : t8_test_gather_leaves (overlap)) {
+      owner_of[leaf] = owner;
+    }
+    for (t8_locidx_t gtree = 0; gtree < t8_forest_ghost_num_trees (overlap); gtree++) {
+      const t8_eclass_t tree_class = t8_forest_ghost_get_tree_class (overlap, gtree);
+      const t8_gloidx_t gtreeid = t8_forest_ghost_get_global_treeid (overlap, gtree);
+      for (t8_locidx_t i = 0; i < t8_forest_ghost_tree_num_leaf_elements (overlap, gtree); i++) {
+        t8_element_t *ghost = t8_forest_ghost_get_leaf_element (overlap, gtree, i);
+        const int level = s->element_get_level (tree_class, ghost);
+        EXPECT_EQ (t8_forest_element_find_owner (overlap, gtreeid, ghost, tree_class),
+                   owner_of.at ({ gtreeid, level, s->element_get_linear_id (tree_class, ghost, level) }));
+      }
+    }
+
     t8_forest_ghost_exchange_data (overlap, data);
     for (t8_locidx_t gtree = 0; gtree < t8_forest_ghost_num_trees (overlap); gtree++) {
       const t8_eclass_t tree_class = t8_forest_ghost_get_tree_class (overlap, gtree);
