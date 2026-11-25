@@ -104,21 +104,21 @@ jobs:
     - name: Set test level
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
+    # We use -DMPIEXEC_PREFLAGS=--oversubscribe to activate oversubscription, which is required on the github runner.
     - name: build config variables
       run: |
         export CONFIG_OPTIONS="-GNinja -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
                                -DT8CODE_ENABLE_MPI=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${TEST_LEVEL_FLAG} -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} \
                                -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON \
                                -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON \
-                               -DT8CODE_ENABLE_OCC=OFF -DT8CODE_ENABLE_VTK=OFF"
+                               -DT8CODE_ENABLE_OCC=OFF -DT8CODE_ENABLE_VTK=OFF \
+                               -DMPIEXEC_PREFLAGS=--oversubscribe"
         echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # Run cmake
-    # NOTE 1: We use -DT8CODE_CUSTOM_PARALLEL_TEST_COMMAND to activate oversubscription, which is required on the github runner.
-    # NOTE 2: DT8CODE_CUSTOM_PARALLEL_TEST_COMMAND is not included in $CONFIG_OPTIONS because of whitespace issues.
     - name: echo cmake line
-      run: echo 'cmake ../ $CONFIG_OPTIONS -DT8CODE_CUSTOM_PARALLEL_TEST_COMMAND="mpirun --oversubscribe -np 4"'
+      run: echo cmake ../ $CONFIG_OPTIONS
     - name: cmake
-      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS -DT8CODE_CUSTOM_PARALLEL_TEST_COMMAND="mpirun --oversubscribe -np 4"
+      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     # On failure, upload logs
     - name: OnFailUploadLog
       if: failure()
@@ -134,17 +134,8 @@ jobs:
   #
   # Part 3: Run t8code tests
   # ------------------------
-    - name: serial tests (if MPI is enabled)
-      run: cd build && ctest -R _serial
-      if: ${{ inputs.MPI == 'ON' }}
-    - name: parallel tests (if MPI is enabled)
-      run: |
-        cd build
-        ctest -R _parallel
-      if: ${{ inputs.MPI == 'ON' }}
-    - name: tests (if MPI is disabled)
-      run: cd build && ctest $MAKEFLAGS
-      if: ${{ inputs.MPI == 'OFF' }}
+    - name: tests
+      run: cd build && ctest
     # On failure, upload logs
     - name: OnFailUploadLog
       if: failure()

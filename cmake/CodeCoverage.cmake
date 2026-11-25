@@ -70,10 +70,8 @@ function(setup_target_for_coverage)
     # Create baseline to make sure untouched files show up in the report.
     COMMAND ${LCOV_PATH} ${Coverage_LCOV_ARGS} --directory . --base-directory ${PROJECT_DIR} --capture --initial -output-file ${Coverage_NAME}.base
 
-    # Run serial tests and collect coverage information.
-    COMMAND ctest -T Test -T Coverage -j ${N} -R _serial
-    # Run parallel tests and collect coverage information without -j because the tests themselves are parallel in nature.
-    COMMAND ctest -T Test -T Coverage -R _parallel
+    # Run tests and collect coverage information.
+    COMMAND ctest -T Test -T Coverage -j ${N}
 
     # Generate report using lcov.
     COMMAND ${LCOV_PATH} ${Coverage_LCOV_ARGS} --directory . --base-directory ${PROJECT_DIR} --capture --output-file ${Coverage_NAME}.capture
