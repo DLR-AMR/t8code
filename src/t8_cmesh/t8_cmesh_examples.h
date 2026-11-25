@@ -74,16 +74,6 @@ t8_cmesh_new_from_p4est (t8_cmesh_t cmesh, p4est_connectivity_t *conn, sc_MPI_Co
 void
 t8_cmesh_new_from_p8est (t8_cmesh_t cmesh, p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition);
 
-/** Construct a cmesh that has no trees. We do not know a special use case,
- * this function is merely for debugging and to show the possibility.
- * \param [in,out]  cmesh      An initialized, but not committed cmesh, as created by \ref t8_cmesh_init.
- *                             The dimension of the cmesh must already be set via \ref t8_cmesh_set_dimension.
- *                             Committed in place.
- * \param [in]      comm       mpi communicator to be used with the new cmesh.
- */
-void
-t8_cmesh_new_empty (t8_cmesh_t cmesh, sc_MPI_Comm comm);
-
 /** Constructs a cmesh that consists only of one tree of a given element class.
  * \param [in,out]  cmesh      An initialized, but not committed cmesh, as created by \ref t8_cmesh_init.
  *                             Filled and committed in place.
