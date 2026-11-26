@@ -29,6 +29,7 @@
 #define T8_GEOMETRY_HELPERS_H
 
 #include <t8.h>
+#include <t8_eclass/t8_eclass.h>
 
 T8_EXTERN_C_BEGIN ();
 

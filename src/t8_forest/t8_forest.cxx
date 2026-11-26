@@ -3695,6 +3695,13 @@ t8_forest_get_num_ghosts (const t8_forest_t forest)
   return forest->ghosts->num_ghosts_elements;
 }
 
+int
+t8_forest_has_ghosts (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  return forest->ghosts != nullptr;
+}
+
 /* Currently this function is not used */
 
 /* Compute the offset array for a partition cmesh that should match the
@@ -4197,9 +4204,9 @@ t8_forest_compute_profile (t8_forest_t forest)
     sc_stats_set1 (&forest->stats[11], profile->ghost_waittime, "forest: Ghost waittime.");
     sc_stats_set1 (&forest->stats[12], profile->balance_runtime, "forest: Balance runtime.");
     sc_stats_set1 (&forest->stats[13], profile->balance_rounds, "forest: Balance rounds.");
-    sc_stats_set1 (&forest->stats[14], profile->balance_rounds, "forest: Tree offset runtime.");
-    sc_stats_set1 (&forest->stats[15], profile->balance_rounds, "forest: offset runtime.");
-    sc_stats_set1 (&forest->stats[16], profile->balance_rounds, "forest: first descendant runtime.");
+    sc_stats_set1 (&forest->stats[14], profile->cmesh_offsets_runtime, "forest: Tree offset runtime.");
+    sc_stats_set1 (&forest->stats[15], profile->forest_offsets_runtime, "forest: Offset runtime.");
+    sc_stats_set1 (&forest->stats[16], profile->first_descendant_runtime, "forest: First descendant runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, forest->stats);
     forest->stats_computed = 1;

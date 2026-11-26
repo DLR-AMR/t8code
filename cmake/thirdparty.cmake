@@ -87,3 +87,14 @@ foreach(INDEX RANGE ${DEPS_RANGE})
     # 3. Populate the thirdparty library
     FetchContent_MakeAvailable(${DEP_NAME})
 endforeach()
+
+# Treat the headers of sc and p4est as system headers (-isystem instead of -I).
+# This suppresses warnings caused by their macros (e.g. SC_EXTERN_C_BEGIN -> -Wredundant-decls)
+# in t8code and in projects that include t8code via FetchContent.
+# Can be replaced by the SYSTEM option of FetchContent_Declare once CMake >= 3.25 is required.
+foreach( _target IN ITEMS sc p4est )
+  if( TARGET ${_target} )
+    get_target_property( _include_dirs ${_target} INTERFACE_INCLUDE_DIRECTORIES )
+    set_target_properties( ${_target} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_include_dirs}" )
+  endif()
+endforeach()

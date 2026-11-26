@@ -57,8 +57,29 @@ t8_cmesh_set_boundary_conditions (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, TString
   handler->add_boundary_conditions (gtreeid, std::forward<TStringRange> (boundary_conditions));
 }
 
+/* To have this function in the c and cpp interface we have to declare the same definition twice.
+ * This means that the definition needs C linkage and therefore also this cpp declaration.
+ * We cannot have the same function twice, since the function signature is the same in c and cpp.
+ * The other boundary conditions are always distinguishable by their arguments and are therefore
+ * declared and defined twice. */
+T8_EXTERN_C_BEGIN ();
+/**
+ * Indicates if a cmesh has boundary conditions.
+ * If this is true, \ref t8_cmesh_get_boundary_conditions and \ref t8_cmesh_get_boundary_condition
+ * are safe to use. The cmesh has to be committed.
+ *
+ * \param [in] cmesh    The cmesh to query.
+ * \return True if the cmesh has boundary conditions. False otherwise.
+ */
+int
+t8_cmesh_has_boundary_conditions (t8_cmesh_t cmesh);
+T8_EXTERN_C_END ();
+
 /**
  * Retrieves the boundary conditions of a cmesh cell.
+ * Will abort if the cmesh does not have boundary conditions.
+ * When in doubt use \ref t8_cmesh_has_boundary_conditions beforehand.
+ * The cmesh has to be committed.
  *
  * \param [in] cmesh    The cmesh the cell lives in.
  * \param [in] ltreeid  The local cmesh id of the cell.
@@ -71,6 +92,9 @@ t8_cmesh_get_boundary_conditions (t8_cmesh_t cmesh, t8_locidx_t ltreeid);
 /**
  * Retrieves the boundary condition of one face of a cmesh cell.
  * Retrieving all boundary conditions at once via \ref t8_cmesh_get_boundary_conditions() will be faster.
+ * Will abort if the cmesh does not have boundary conditions.
+ * When in doubt use \ref t8_cmesh_has_boundary_conditions beforehand.
+ * The cmesh has to be committed.
  *
  * \param [in] cmesh    The cmesh the cell lives in.
  * \param [in] ltreeid  The local cmesh id of the cell.

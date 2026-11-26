@@ -206,12 +206,12 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
         break;
       }
       case 1: {
-        const Handle_Geom_Curve curve = cad->get_cad_curve (first_tree_entity_tag);
+        const Handle (Geom_Curve) curve = cad->get_cad_curve (first_tree_entity_tag);
         curve->D0 (uv_parameter[0], new_coords);
         break;
       }
       case 2: {
-        const Handle_Geom_Surface surface = cad->get_cad_surface (first_tree_entity_tag);
+        const Handle (Geom_Surface) surface = cad->get_cad_surface (first_tree_entity_tag);
         surface->D0 (uv_parameter[0], uv_parameter[1], new_coords);
         break;
       }
@@ -285,7 +285,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
     /* Contains the displacement whether it is a boundary node or an inner node. */
     t8_3D_vec final_displacement;
 
-    /* Check if this vertex is a boundary node. 
+    /* Check if this vertex is a boundary node.
        If so, we can use the already known displacement extracted from the new CAD geometry input given. */
     if (first_tree_entity_dim < mesh_dimension && first_tree_entity_dim >= 0) {
 

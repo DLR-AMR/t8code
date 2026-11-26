@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_step4.h
+/** \file t8_step4.h
  * This is the header file to the step4 example of t8code. It collects
  * functions of t8_step4 that we reuse in other examples.
  * In this example we discuss the forest creation process in more detail including
