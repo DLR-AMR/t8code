@@ -51,9 +51,9 @@ struct t8_cmesh_mesh_deformation
   /** Destructor */
   ~t8_cmesh_mesh_deformation () {};
 
-  /** 
+  /**
    * Computes the displacements of the surface vertices.
-   * 
+   *
    * \param [in]  cad A pointer to the CAD-based geometry object.
    * \param [in] scale_factor_support_radius The scale factor for the support radius.
    * \return Map from global vertex ID to RBF boundary node which contains the displacement and can then be used to calculate the weight of the boundary node.

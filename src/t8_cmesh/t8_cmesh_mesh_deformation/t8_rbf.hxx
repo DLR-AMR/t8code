@@ -35,8 +35,8 @@
 /** Support radius used for globally supported RBFs, which have no finite support. */
 constexpr double T8_RBF_GLOBAL_SUPPORT = std::numeric_limits<double>::infinity ();
 
-/** 
- * The available RBF function types. 
+/**
+ * The available RBF function types.
  */
 typedef enum {
   T8_RBF_CPC2 = 0,      /**< Compactly supported radial basis function (CPC2). */
@@ -51,19 +51,19 @@ struct t8_rbf_node
   t8_gloidx_t global_id;
   /** The old position of the node. */
   t8_3D_vec position;
-  /** The displacement. 
-   * For boundary nodes this is known and calculated from the different coordinates of the CAD geometries. 
+  /** The displacement.
+   * For boundary nodes this is known and calculated from the different coordinates of the CAD geometries.
    * For inner nodes this is the result of the interpolation. */
   t8_3D_vec displacement;
 };
 
 /**
- * This struct will be a single boundary node from the mesh deformation. 
- * The new position of this node can be directly calculated from the new incoming CAD geometry given. 
+ * This struct will be a single boundary node from the mesh deformation.
+ * The new position of this node can be directly calculated from the new incoming CAD geometry given.
  */
 struct t8_rbf_boundary_node: public t8_rbf_node
 {
-  /** The calculated RBF coefficient alpha. This is needed for the interpolation to distribute the influence of the boundary nodes. 
+  /** The calculated RBF coefficient alpha. This is needed for the interpolation to distribute the influence of the boundary nodes.
   * This weight represents the fixed influence assigned to each boundary node. */
   t8_3D_vec weight;
   /** The local support radius for the  boundary node. Only used for compactly supported RBFs. */
@@ -86,7 +86,7 @@ struct t8_rbf_function
   evaluate (const double distance, const double radius = T8_RBF_GLOBAL_SUPPORT) const
     = 0;
 
-  /** 
+  /**
    * Check if the radial basis function is compactly supported.
    * \return true if the function is compactly supported, false otherwise.
    */
@@ -95,9 +95,9 @@ struct t8_rbf_function
     = 0;
 };
 
-/**  
- * The CP C2 radial basis function which is compactly supported and will be used in the 
- * mesh deformation to move the inner nodes from the known movement of the boundary nodes. 
+/**
+ * The CP C2 radial basis function which is compactly supported and will be used in the
+ * mesh deformation to move the inner nodes from the known movement of the boundary nodes.
  */
 struct t8_rbf_cpc2: public t8_rbf_function
 {
@@ -110,10 +110,10 @@ struct t8_rbf_cpc2: public t8_rbf_function
   /**
    * Evaluate the radial basis function.
    * Formula: psi(x) = (1 - x)^4 * (4x + 1) for (1-x) > 0,
-   * where x = distance / support radius. The distance is the euclidean distance between two points. 
+   * where x = distance / support radius. The distance is the euclidean distance between two points.
    * \param [in] distance  The euclidean distance between two points.
    * \param [in] radius The support radius.
-   * \return The function value psi. It returns 0.0 if the node is out of the chosen radius and so has no impact.   
+   * \return The function value psi. It returns 0.0 if the node is out of the chosen radius and so has no impact.
    */
   double
   evaluate (const double distance, const double radius) const override
@@ -139,7 +139,7 @@ struct t8_rbf_cpc2: public t8_rbf_function
 };
 
 /**
- * The TPS radial basis function with global support. 
+ * The TPS radial basis function with global support.
  */
 struct t8_rbf_tps: public t8_rbf_function
 {
@@ -153,10 +153,10 @@ struct t8_rbf_tps: public t8_rbf_function
   /**
    * Evaluate the radial basis function.
    * Formula: psi(x) = x^2 * log(x),
-   * where x is the euclidean distance between two points. 
+   * where x is the euclidean distance between two points.
    * \param[in] distance  The euclidean distance between two points.
    * \param [in] radius The support radius (not used for TPS because it is globally supported).
-   * \return The function value psi.  
+   * \return The function value psi.
    */
   double
   evaluate (const double distance, [[maybe_unused]] const double radius) const override
@@ -178,14 +178,14 @@ struct t8_rbf_tps: public t8_rbf_function
   }
 };
 
-/**  
+/**
  * Struct for mesh deformation using Radial Basis Functions (RBF).
- * It handles the interpolation of the boundary displacements to the inner nodes. 
+ * It handles the interpolation of the boundary displacements to the inner nodes.
  */
 struct t8_rbf
 {
  public:
-  /** Constructor. 
+  /** Constructor.
    * \param [in] rbf_type        The RBF type to be used.
   */
   t8_rbf (const t8_rbf_function_type rbf_type)
@@ -225,10 +225,10 @@ struct t8_rbf
     }
   }
 
-  /** 
+  /**
    * Look up the displacement of a specific boundary node with its associated global ID.
    * \param [in] global_id The global ID of the boundary node.
-   * \return The displacement vector of the boundary node. 
+   * \return The displacement vector of the boundary node.
    */
   t8_3D_vec
   get_boundary_displacement (const t8_gloidx_t global_id) const
@@ -243,7 +243,7 @@ struct t8_rbf
   }
 
   /**
-   * Solves the linear system A * alpha = displacements to find the weight. 
+   * Solves the linear system A * alpha = displacements to find the weight.
    * This step is mandatory to later be able to interpolate the inner nodes.
    */
   void
