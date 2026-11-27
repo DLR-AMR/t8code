@@ -241,6 +241,7 @@ if( T8CODE_BUILD_MESH_HANDLE )
   add_t8_cpp_test( NAME t8_gtest_handle_ghost_parallel              SOURCES mesh_handle/t8_gtest_ghost.cxx )
   add_t8_cpp_test( NAME t8_gtest_adapt_partition_balance_parallel   SOURCES mesh_handle/t8_gtest_adapt_partition_balance.cxx )
   add_t8_cpp_test( NAME t8_gtest_interpolate_parallel               SOURCES mesh_handle/t8_gtest_interpolate.cxx )
+  add_t8_cpp_test( NAME t8_gtest_mesh_io_parallel                            SOURCES mesh_handle/t8_gtest_mesh_io.cxx )
 
   add_t8_cpp_test( NAME t8_gtest_custom_competence_serial           SOURCES mesh_handle/competences/t8_gtest_custom_competence.cxx )
   add_t8_cpp_test( NAME t8_gtest_cache_competence_serial            SOURCES mesh_handle/competences/t8_gtest_cache_element_competence.cxx )
@@ -254,3 +255,15 @@ if(NOT APPLE)
     add_t8_cpp_test( NAME t8_gtest_compute_first_element_serial                 SOURCES t8_cmesh/t8_gtest_compute_first_element.cxx )
 endif()
 
+target_include_directories( T8 PUBLIC 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}> 
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/test>
+)
+
+# Install test header files
+install( DIRECTORY .
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/test
+  FILES_MATCHING
+    PATTERN "*.hxx"
+    PATTERN "*.h"
+)

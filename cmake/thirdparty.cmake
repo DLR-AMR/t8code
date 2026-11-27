@@ -40,13 +40,25 @@ foreach(INDEX RANGE ${DEPS_RANGE})
 
     # If the DEP_CMAKE_OPTION field is non-empty, check the CMake option.
     if(NOT DEP_CMAKE_OPTION STREQUAL "")
+        string(JSON DEP_CMAKE_OPTION_VALUE GET "${DEPS_JSON}" "thirdparty" ${INDEX} "cmake_option_install_value")
         # If the named option variable does not exist in the CMake cache, abort.
         if(NOT DEFINED ${DEP_CMAKE_OPTION})
             message(FATAL_ERROR "Loading thirdparty library ${DEP_NAME} at index ${INDEX} references unknown CMake option '${DEP_CMAKE_OPTION}'. Aborting.")
         else()
-            # If the named option is defined but set to ON, skip this thirdparty library.
-            if(${${DEP_CMAKE_OPTION}})
-                message(STATUS "Skipping FetchContent-step for thirdparty library ${DEP_NAME} because CMake option '${DEP_CMAKE_OPTION}' is '${${DEP_CMAKE_OPTION}}'")
+            # Convert the option and the install value to ON/OFF for comparison,  since CMake options can be set to ON, OFF, TRUE, FALSE, 1, 0, etc.
+            if(${DEP_CMAKE_OPTION})
+                set(DEP_CMAKE_OPTION_IS_ON ON)
+            else()
+                set(DEP_CMAKE_OPTION_IS_ON OFF)
+            endif()
+            if (DEP_CMAKE_OPTION_VALUE)
+                set(DEP_INSTALL_IF_ON ON)
+            else()
+                set(DEP_INSTALL_IF_ON OFF)
+            endif()
+            # Skip this thirdparty library if the option does not match the install value.
+            if(NOT DEP_CMAKE_OPTION_IS_ON STREQUAL DEP_INSTALL_IF_ON)
+                message(STATUS "Skipping FetchContent-step for thirdparty library ${DEP_NAME} because CMake option '${DEP_CMAKE_OPTION}' is set to '${${DEP_CMAKE_OPTION}}'")
                 continue()
             endif()
         endif()
@@ -74,4 +86,15 @@ foreach(INDEX RANGE ${DEPS_RANGE})
 
     # 3. Populate the thirdparty library
     FetchContent_MakeAvailable(${DEP_NAME})
+endforeach()
+
+# Treat the headers of sc and p4est as system headers (-isystem instead of -I).
+# This suppresses warnings caused by their macros (e.g. SC_EXTERN_C_BEGIN -> -Wredundant-decls)
+# in t8code and in projects that include t8code via FetchContent.
+# Can be replaced by the SYSTEM option of FetchContent_Declare once CMake >= 3.25 is required.
+foreach( _target IN ITEMS sc p4est )
+  if( TARGET ${_target} )
+    get_target_property( _include_dirs ${_target} INTERFACE_INCLUDE_DIRECTORIES )
+    set_target_properties( ${_target} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_include_dirs}" )
+  endif()
 endforeach()

@@ -72,5 +72,6 @@ TabWidth: '2'
 UseTab: Never
 LineEnding: LF
 InsertNewlineAtEOF: 'true'
+TypenameMacros: ['Handle']
 
 ...

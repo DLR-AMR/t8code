@@ -52,6 +52,8 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
   set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
 
   target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG=1 )
+else ()
+  target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG=0 )
 endif()
 
 if( T8CODE_EXPORT_COMPILE_COMMANDS )
@@ -101,19 +103,26 @@ if( T8CODE_ENABLE_VTK )
 endif()
 
 if( T8CODE_ENABLE_OCC )
-    string (REGEX MATCH "^[0-9]+\\.[0-9]+"
-  T8CODE_OCC_VERSION_USED "${OCC_VERSION_STRING}")
+    set( T8CODE_OCC_VERSION_USED "${OpenCASCADE_MAJOR_VERSION}.${OpenCASCADE_MINOR_VERSION}" )
     # Define T8_OCC_VERSION_USED for internal and external use in source files.
     # Note, external libraries linking against t8code (i.e. using find_package ( T8CODE REQUIRED )) can
     # use T8_OCC_VERSION_USED in source code and T8CODE_OCC_VERSION_USED (defined in config.cmake.in) in their CMake scripts.
     target_compile_definitions( T8 PUBLIC T8_OCC_VERSION_USED="${T8CODE_OCC_VERSION_USED}" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_OCC=1 )
-    target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
-    target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
+    target_link_libraries( T8 PUBLIC TKBO TKPrim TKTopAlgo TKGeomAlgo TKBRep TKShHealing TKG3d TKG2d TKMath TKernel )
+    # Some OCCT packages, such as the one in Ubuntu 24.04, do not add the include directory to OpenCASCADE's targets.
+    get_target_property( T8CODE_OCC_TARGET_INCLUDE_DIRS TKernel INTERFACE_INCLUDE_DIRECTORIES )
+    if( NOT T8CODE_OCC_TARGET_INCLUDE_DIRS )
+        find_path( T8CODE_OCC_INCLUDE_DIR Standard.hxx
+            HINTS "${OpenCASCADE_INCLUDE_DIR}"
+            PATH_SUFFIXES opencascade
+            DOC "Directory containing the OpenCASCADE headers"
+            REQUIRED )
+        target_include_directories( T8 SYSTEM PUBLIC ${T8CODE_OCC_INCLUDE_DIR} )
+    endif()
     target_sources(T8 PRIVATE
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
       t8_cad/t8_cad_handle.cxx
-      t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.cxx
     )
     install( FILES
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
@@ -123,6 +132,24 @@ if( T8CODE_ENABLE_OCC )
     install( FILES
       t8_cad/t8_cad_handle.hxx
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cad
+    )
+endif()
+
+if( T8CODE_ENABLE_EIGEN )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_EIGEN=1 )
+    target_link_libraries( T8 PRIVATE Eigen3::Eigen )
+    target_sources(T8 PRIVATE
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.cxx
+    )
+    install( FILES
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_mesh_deformation/
+    )
+endif()
+
+if( T8CODE_ENABLE_OCC AND T8CODE_ENABLE_EIGEN )
+    target_sources(T8 PRIVATE
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.cxx
     )
     install( FILES
       t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx
@@ -357,6 +384,12 @@ install( DIRECTORY t8_types
   FILES_MATCHING
     PATTERN "*.hxx"
     PATTERN "*.h"
+)
+install( DIRECTORY t8_vector
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hxx"
 )
 install( DIRECTORY t8_vtk
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
