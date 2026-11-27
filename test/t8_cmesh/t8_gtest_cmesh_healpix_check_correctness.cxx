@@ -29,9 +29,9 @@
 #include <numbers>
 
 /** \file We cross reference our implementation with this of
- * xyf2loc from the HEALPix Julia source code. We evaluate
- * both implementation and compare them to eachother.
- * if the evaluation is close enough then the test passes.
+- xyf2loc from the HEALPix Julia source code. We evaluate
+- both implementation and compare them to eachother.
+- if the evaluation is close enough then the test passes.
  */
 
 struct t8_location_result
@@ -95,22 +95,27 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
   const int JPLL[12] = { 1, 3, 5, 7, 0, 2, 4, 6, 1, 3, 5, 7 };
 
 #if T8_TEST_LEVEL_INT >= 2
-  double radius = 0.5;
+  const double outer_radius = 0.5;
+  const double inner_radius = 0.25;
 #else
-  double radius = 10;
+  const double outer_radius = 10.0;
+  const double inner_radius = 4.0;
 #endif
   constexpr std::array<double, 7> test_samples = { 0.0, 0.001, 0.25, 0.5, 0.75, 0.999, 1.0 };
-  t8_geometry_healpix geom (radius);
 
-  // Build a batch containing all combinations of test_samples for a single evaluation call using std::array
+  // Construct t8_geometry_healpix with (inner_radius, outer_radius)
+  t8_geometry_healpix geom (outer_radius, inner_radius);
+
+  // Build 3D reference coordinates (xi, eta, zeta) with zeta = 1.0 (outer boundary)
   constexpr size_t num_samples = test_samples.size ();
   constexpr int num_coords = num_samples * num_samples;
-  std::array<double, num_coords * 2> ref_coords;
+  std::array<double, num_coords * 3> ref_coords;
   size_t coord_idx = 0;
   for (double xi : test_samples) {
     for (double eta : test_samples) {
       ref_coords[coord_idx++] = xi;
       ref_coords[coord_idx++] = eta;
+      ref_coords[coord_idx++] = 1.0;  // Outer surface of the shell matches xyf2loc at outer_radius
     }
   }
 
@@ -134,19 +139,19 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
 
       // Validate each point in the batch against xyf2loc reference
       for (int coord_index = 0; coord_index < num_coords; coord_index++) {
-        const double xi = ref_coords[coord_index * 2 + 0];
-        const double eta = ref_coords[coord_index * 2 + 1];
+        const double xi = ref_coords[coord_index * 3 + 0];
+        const double eta = ref_coords[coord_index * 3 + 1];
 
         // Clamped values used inside t8_geom_evaluate
         const double xi_clamped = std::clamp (xi, 1e-10, 1.0 - 1e-10);
         const double eta_clamped = std::clamp (eta, 1e-10, 1.0 - 1e-10);
 
-        // Pass the 0..11 global face index to xyf2loc
-        const t8_location_result ref_loc = xyf2loc (xi_clamped, eta_clamped, healpix_face, JRLL, JPLL, radius);
+        const t8_location_result ref_loc = xyf2loc (xi_clamped, eta_clamped, healpix_face, JRLL, JPLL, outer_radius);
 
-        const double ref_sin_theta = ref_loc.have_sintheta
-                                       ? ref_loc.sintheta
-                                       : std::sqrt (std::max (0.0, (radius * radius) - ref_loc.z * ref_loc.z));
+        const double ref_sin_theta
+          = ref_loc.have_sintheta
+              ? ref_loc.sintheta
+              : std::sqrt (std::max (0.0, (outer_radius * outer_radius) - ref_loc.z * ref_loc.z));
         const double ref_x = ref_sin_theta * std::cos (ref_loc.phi);
         const double ref_y = ref_sin_theta * std::sin (ref_loc.phi);
         const double ref_z = ref_loc.z;
@@ -156,7 +161,8 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
         // Allow a slightly relaxed tolerance near the poles where sin(theta) ~ 0
         // Scale the polar check and tolerance by the active radius
         const double base_tol
-          = (std::abs (ref_z) > 0.99 * radius) ? (16.0 * T8_PRECISION_SQRT_EPS) : (128.0 * T8_PRECISION_EPS);
+          = (std::abs (ref_z) > 0.99 * outer_radius) ? (16.0 * T8_PRECISION_SQRT_EPS) : (128.0 * T8_PRECISION_EPS);
+        const double adaptive_tol = std::max (base_tol * outer_radius, 1e-8);
 
         // Add a minimum absolute floor (e.g., 1e-8) to gracefully handle near-zero values
         // where microscopic rounding noise in reference data shouldn't trigger a failure.

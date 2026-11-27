@@ -32,7 +32,10 @@
 /* Test whether the healpix geometry has an equal radius all across the geometry. */
 TEST (t8_geometry_healpix_test, test_all_trees_are_on_unit_sphere)
 {
-  t8_geometry_healpix geom;
+  const double outer_radius = 1.0;
+  const double inner_radius = 0.5;
+
+  t8_geometry_healpix geom (outer_radius, inner_radius);
 
   std::random_device rd;
   std::mt19937 gen (rd ());
@@ -45,29 +48,41 @@ TEST (t8_geometry_healpix_test, test_all_trees_are_on_unit_sphere)
 #else
   const int num_gen_coords = 20;
 #endif
-  std::array<double, 10 + 2 * num_gen_coords> ref_coords = {
-    0.0, 0.0,                                // Corners
-    1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5,  // Center
+
+  std::array<double, 18 + 3 * num_gen_coords> ref_coords = {
+    0.0, 0.0, 1.0,  // Corner, outer surface
+    1.0, 0.0, 1.0,  // Corner, outer surface
+    0.0, 1.0, 1.0,  // Corner, outer surface
+    1.0, 1.0, 1.0,  // Corner, outer surface
+    0.5, 0.5, 1.0,  // Center, outer surface
+    0.5, 0.5, 0.0   // Center, inner surface
   };
 
   for (int coord_index = 0; coord_index < num_gen_coords; coord_index++) {
-    ref_coords[2 * coord_index + 10] = (dist (gen));
-    ref_coords[2 * coord_index + 11] = (dist (gen));
+    const size_t base = 18 + 3 * static_cast<size_t> (coord_index);
+    ref_coords[base + 0] = dist (gen);
+    ref_coords[base + 1] = dist (gen);
+    ref_coords[base + 2] = dist (gen);
   }
 
-  const size_t num_coords = ref_coords.size () / 2;
+  const size_t num_coords = ref_coords.size () / 3;
   std::vector<double> out_coords (num_coords * 3, 0.0);
   // Loop through all 12 base trees of the HEALPix projection
   for (t8_gloidx_t gtreeid = 0; gtreeid < 12; ++gtreeid) {
     geom.t8_geom_evaluate (nullptr, gtreeid, ref_coords.data (), num_coords, out_coords.data ());
 
     for (size_t i = 0; i < num_coords; ++i) {
+      const double xi = ref_coords[i * 3 + 0];
+      const double eta = ref_coords[i * 3 + 1];
+      const double zeta = ref_coords[i * 3 + 2];
+      const double expected_radius = inner_radius + zeta * (outer_radius - inner_radius);
+
       const std::span<const double> point (out_coords.data () + 3 * i, 3);
       const double distance = t8_norm (point);
-      // Expect distance to be 1.0 (Unit Sphere)
-      EXPECT_NEAR (distance, 1.0, T8_PRECISION_EPS)
-        << "Radius check failed at Tree ID: " << gtreeid << " for point index: " << i << " (xi=" << ref_coords[i * 2]
-        << ", eta=" << ref_coords[i * 2 + 1] << ")";
+
+      EXPECT_NEAR (distance, expected_radius, T8_PRECISION_EPS * outer_radius)
+        << "Radius check failed at Tree ID: " << gtreeid << " for point index: " << i << " (xi=" << xi
+        << ", eta=" << eta << ", zeta=" << zeta << ")";
     }
   }
 }
