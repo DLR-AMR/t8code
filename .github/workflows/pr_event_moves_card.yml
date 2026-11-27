@@ -34,7 +34,7 @@ on:
       CURRENT_COLUMN_NAME:
         type: string
         default: 'In-Box'
-        description: 'The name of the column the issue card was in before'
+        description: 'Comma-separated list of the columns the issue card may currently be in. The card is only moved if it is in one of them. IGNORE moves the card regardless of its current column'
       REPO_NODE_ID:
         type: string
         required: true
@@ -60,6 +60,8 @@ jobs:
           #ISSUE_NUMBER can be a list of referenced issue numbers separated by ","
           # Split ISSUE_NUMBER into an array
             IFS=',' read -r -a issue_numbers_array <<< "$ISSUE_NUMBER"
+          # CURRENT_COLUMN_NAME can be a list of allowed current columns separated by ","
+          IFS=',' read -r -a allowed_columns_array <<< "$CURRENT_COLUMN_NAME"
 
           # Get the projects associated with the organization
           projects=$(curl --request POST \
@@ -120,7 +122,14 @@ jobs:
                   current_status=$(echo $project_fields_and_issues | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .name')
 
                   echo "current_status is $current_status"
-                  if [[ "$current_status" == "$CURRENT_COLUMN_NAME" || "$CURRENT_COLUMN_NAME" == "IGNORE" ]]; then
+                  # True if the card is in one of the allowed columns or the current column is ignored, false otherwise
+                  move_card=false
+                  for allowed_column in "${allowed_columns_array[@]}"; do
+                    if [[ "$current_status" == "$allowed_column" || "$allowed_column" == "IGNORE" ]]; then
+                      move_card=true
+                    fi
+                  done
+                  if [[ "$move_card" == "true" ]]; then
                     # Extract the option id for the new status
                     Option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
                     echo "Option_id is $Option_id"
