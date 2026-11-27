@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>

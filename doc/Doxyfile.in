@@ -984,7 +984,7 @@ WARN_LOGFILE           =
 INPUT                  = @top_srcdir@/src \
                          @top_srcdir@/mesh_handle \
                          @top_srcdir@/test \
-                         @top_srcdir@/tutorials/mesh_handle
+                         @top_srcdir@/tutorials
 
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. Internally Doxygen uses the UTF-8 encoding. Doxygen uses
@@ -2442,6 +2442,7 @@ PREDEFINED             = T8_DOXYGEN \
 PREDEFINED += T8_EXTERN_C_BEGIN()=
 PREDEFINED += T8_EXTERN_C_END()=
 PREDEFINED += __attribute__((unused))=
+PREDEFINED += "Handle(x)=opencascade::handle<x>"
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

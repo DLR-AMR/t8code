@@ -205,12 +205,12 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
         break;
       }
       case 1: {
-        const Handle_Geom_Curve curve = cad->get_cad_curve (first_tree_entity_tag);
+        const Handle (Geom_Curve) curve = cad->get_cad_curve (first_tree_entity_tag);
         curve->D0 (uv_parameter[0], new_coords);
         break;
       }
       case 2: {
-        const Handle_Geom_Surface surface = cad->get_cad_surface (first_tree_entity_tag);
+        const Handle (Geom_Surface) surface = cad->get_cad_surface (first_tree_entity_tag);
         surface->D0 (uv_parameter[0], uv_parameter[1], new_coords);
         break;
       }

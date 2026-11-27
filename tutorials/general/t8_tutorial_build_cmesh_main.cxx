@@ -20,13 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This file is part of the t8code tutorial regarding the creation of a scmesh.
+/** \file t8_tutorial_build_cmesh_main.cxx
+ * This file is part of the t8code tutorial regarding the creation of a scmesh.
  * Here, we only wrap the main function. See t8_tutorial_build_cmesh.cxx for the documentation of
  * the 'build-cmesh'-tutorial
  */
 
 #include <tutorials/general/t8_tutorial_build_cmesh.h>
 
+/** Entry point of the program. */
 int
 main (int argc, char **argv)
 {

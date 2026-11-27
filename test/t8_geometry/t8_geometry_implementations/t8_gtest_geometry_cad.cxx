@@ -27,8 +27,8 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <test/t8_gtest_macros.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_macros.hxx>
+#include <t8_gtest_custom_assertion.hxx>
 #include <t8_element/t8_element.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_vector/t8_vec.hxx>
@@ -50,7 +50,7 @@
 #include <TopoDS_Edge.hxx>
 #include <t8_element/t8_element.h>
 
-#include <test/t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_custom_assertion.hxx>
 
 /* In this file we collect tests for t8code's OpenCASCADE geometry module.
  * These tests are
@@ -112,7 +112,7 @@ t8_euler_rotation (double *pos_vec, double *rot_vec, double *res_vec, double *ro
 TopoDS_Shape
 t8_create_cad_surface_shape_x_z ()
 {
-  Handle_Geom_Surface surface;
+  Handle (Geom_Surface) surface;
   TopoDS_Shape shape;
   TColgp_Array2OfPnt point_array (1, 3, 1, 3);
 
@@ -140,7 +140,7 @@ t8_create_cad_surface_shape_x_z ()
 TopoDS_Shape
 t8_create_cad_surface_shape_x_y ()
 {
-  Handle_Geom_Surface surface;
+  Handle (Geom_Surface) surface;
   TopoDS_Shape shape;
   TColgp_Array2OfPnt point_array (1, 3, 1, 3);
 
@@ -168,7 +168,7 @@ t8_create_cad_surface_shape_x_y ()
 TopoDS_Shape
 t8_create_cad_curve_shape ()
 {
-  Handle_Geom_Curve curve;
+  Handle (Geom_Curve) curve;
   TopoDS_Shape shape;
   TColgp_Array1OfPnt point_array (1, 5);
 
@@ -576,7 +576,7 @@ struct class_2d_element_cad_curve: public testing::TestWithParam<std::tuple<t8_e
     /* curvature prescribes if the linear of curved curve is used */
     curvature = std::get<1> (GetParam ());
     T8_ASSERT (0 <= eclass && eclass < T8_ECLASS_COUNT);
-    Handle_Geom_Curve cad_curve_linear, cad_curve_curved;
+    Handle (Geom_Curve) cad_curve_linear, cad_curve_curved;
     TColgp_Array1OfPnt point_array_linear (1, 2);
     TColgp_Array1OfPnt point_array_curved (1, 3);
 
@@ -725,7 +725,7 @@ struct class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_ecl
   {
     eclass = GetParam ();
     T8_ASSERT (0 <= eclass && eclass < T8_ECLASS_COUNT);
-    Handle_Geom_Surface cad_surface;
+    Handle (Geom_Surface) cad_surface;
     TColgp_Array2OfPnt point_array (1, 2, 1, 2);
 
     /*  x--> u-parameter
@@ -832,7 +832,7 @@ struct class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_ecl
   {
     eclass = GetParam ();
     T8_ASSERT (0 <= eclass && eclass < T8_ECLASS_COUNT);
-    Handle_Geom_Surface cad_surface;
+    Handle (Geom_Surface) cad_surface;
     TColgp_Array2OfPnt point_array (1, 3, 1, 3);
     TopoDS_Shape shape;
 
