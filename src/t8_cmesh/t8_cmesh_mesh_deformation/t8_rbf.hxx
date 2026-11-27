@@ -31,6 +31,7 @@
 #include <memory>
 #include <unordered_map>
 #include <t8_vector/t8_vec.hxx>
+#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation_method.hxx>
 
 /** Support radius used for globally supported RBFs, which have no finite support. */
 constexpr double T8_RBF_GLOBAL_SUPPORT = std::numeric_limits<double>::infinity ();
@@ -44,25 +45,19 @@ typedef enum {
   T8_RBF_FUNCTION_COUNT /**< The number of available RBF function types. */
 } t8_rbf_function_type;
 
-/** A struct representing a node in the mesh for the RBF interpolation, containing its global ID, position and displacement. */
-struct t8_rbf_node
-{
-  /** The global ID of the node. */
-  t8_gloidx_t global_id;
-  /** The old position of the node. */
-  t8_3D_vec position;
-  /** The displacement.
-   * For boundary nodes this is known and calculated from the different coordinates of the CAD geometries.
-   * For inner nodes this is the result of the interpolation. */
-  t8_3D_vec displacement;
-};
-
 /**
  * This struct will be a single boundary node from the mesh deformation.
  * The new position of this node can be directly calculated from the new incoming CAD geometry given.
  */
-struct t8_rbf_boundary_node: public t8_rbf_node
+struct t8_rbf_boundary_node: public t8_mesh_deformation_node
 {
+  /** Constructor. Copies the data of a generic mesh deformation node.
+   * \param [in] node  The boundary node of the mesh deformation.
+   */
+  explicit t8_rbf_boundary_node (const t8_mesh_deformation_node& node): t8_mesh_deformation_node (node)
+  {
+  }
+
   /** The calculated RBF coefficient alpha. This is needed for the interpolation to distribute the influence of the boundary nodes.
   * This weight represents the fixed influence assigned to each boundary node. */
   t8_3D_vec weight;
@@ -182,13 +177,15 @@ struct t8_rbf_tps: public t8_rbf_function
  * Struct for mesh deformation using Radial Basis Functions (RBF).
  * It handles the interpolation of the boundary displacements to the inner nodes.
  */
-struct t8_rbf
+struct t8_rbf: public t8_mesh_deformation_method
 {
  public:
   /** Constructor.
-   * \param [in] rbf_type        The RBF type to be used.
+   * \param [in] rbf_type        The mesh deformation/ RBF type to be used.
+   * \param [in] scale_factor_support_radius      The scaling factor for the support radius of the CPC2 deformation. Note: Default value is 1.5 so it only has to be specified for CPC2 use.
   */
-  t8_rbf (const t8_rbf_function_type rbf_type)
+  t8_rbf (const t8_rbf_function_type rbf_type, const double scale_factor_support_radius = 1.5)
+    : scale_factor_support_radius (scale_factor_support_radius)
   {
 
     if (rbf_type == T8_RBF_CPC2) {
@@ -207,39 +204,24 @@ struct t8_rbf
 
   /**
    * Transfers the boundary node data to the internal data structure of the RBF.
-   * \param [in] boundary_node_data Map of global vertex IDs to boundary nodes.
+   * \param [in] boundary_node_data Vector of boundary nodes.
    */
   void
-  set_boundary_nodes (std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node>&& boundary_node_data)
+  set_boundary_nodes (const std::vector<t8_mesh_deformation_node>& boundary_node_data) override
   {
     boundary_nodes.clear ();
-    boundary_node_index_map.clear ();
     boundary_nodes.reserve (boundary_node_data.size ());
-    boundary_node_index_map.reserve (boundary_node_data.size ());
-    for (auto& [global_vertex_id, boundary_node] : boundary_node_data) {
+    for (const auto& boundary_node : boundary_node_data) {
 
-      boundary_node.global_id = global_vertex_id;
-      /* Remember the position of this node in boundary_nodes for a fast lookup by its global ID. */
-      boundary_node_index_map[global_vertex_id] = boundary_nodes.size ();
-      boundary_nodes.push_back (std::move (boundary_node));
-    }
-  }
+      t8_rbf_boundary_node rbf_boundary_node (boundary_node);
 
-  /**
-   * Look up the displacement of a specific boundary node with its associated global ID.
-   * \param [in] global_id The global ID of the boundary node.
-   * \return The displacement vector of the boundary node.
-   */
-  t8_3D_vec
-  get_boundary_displacement (const t8_gloidx_t global_id) const
-  {
-    const auto found_node = boundary_node_index_map.find (global_id);
-    if (found_node != boundary_node_index_map.end ()) {
-      return boundary_nodes[found_node->second].displacement;
+      /* Calculate the local support radius based on the mean neighbor distance. Globally supported RBFs keep the default T8_RBF_GLOBAL_SUPPORT. */
+      if (rbf_function->is_compactly_supported ()) {
+        rbf_boundary_node.local_support_radius = scale_factor_support_radius * rbf_boundary_node.mean_neighbor_distance;
+      }
+
+      boundary_nodes.push_back (std::move (rbf_boundary_node));
     }
-    /* If the boundary node can not be found in the list of boundary nodes. */
-    t8_errorf ("ERROR: The boundary node %" T8_GLOIDX_FORMAT " is missing in the boundary node list.\n", global_id);
-    SC_ABORT ("A boundary node is not recognized as one.");
   }
 
   /**
@@ -247,14 +229,14 @@ struct t8_rbf
    * This step is mandatory to later be able to interpolate the inner nodes.
    */
   void
-  solve ();
+  solve () override;
 
   /**
    * Interpolates the inner node.
    * \param [in, out] inner_node   The inner node which will be interpolated.
    */
   void
-  interpolate (t8_rbf_node& inner_node) const
+  interpolate (t8_mesh_deformation_node& inner_node) const override
   {
     /* Reset the inner_node_displacement to zero. */
     inner_node.displacement.fill (0.0);
@@ -278,8 +260,8 @@ struct t8_rbf
  private:
   /** List of all registered support nodes. */
   std::vector<t8_rbf_boundary_node> boundary_nodes;
-  /** Map from global node IDs to their indices in the boundary_nodes vector. */
-  std::unordered_map<t8_gloidx_t, size_t> boundary_node_index_map;
   /** Pointer to the radial basis function. */
   std::unique_ptr<t8_rbf_function> rbf_function;
+  /** The scaling factor for the support radius of compactly supported RBFs. */
+  double scale_factor_support_radius;
 };
