@@ -149,9 +149,8 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
         const t8_location_result ref_loc = xyf2loc (xi_clamped, eta_clamped, healpix_face, JRLL, JPLL, outer_radius);
 
         const double ref_sin_theta
-          = ref_loc.have_sintheta
-              ? ref_loc.sintheta
-              : std::sqrt (std::max (0.0, (outer_radius * outer_radius) - ref_loc.z * ref_loc.z));
+          = ref_loc.have_sintheta ? ref_loc.sintheta
+                                  : std::sqrt (std::max (0.0, (outer_radius * outer_radius) - ref_loc.z * ref_loc.z));
         const double ref_x = ref_sin_theta * std::cos (ref_loc.phi);
         const double ref_y = ref_sin_theta * std::sin (ref_loc.phi);
         const double ref_z = ref_loc.z;
@@ -166,7 +165,6 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
 
         // Add a minimum absolute floor (e.g., 1e-8) to gracefully handle near-zero values
         // where microscopic rounding noise in reference data shouldn't trigger a failure.
-        const double adaptive_tol = std::max (base_tol * radius, 1e-8);
         EXPECT_NEAR (t8_out[idx3d + 0], ref_x, adaptive_tol)
           << "Mismatch in X | Tree ID: " << gtreeid << " (Layer: " << layer << ", Face: " << face << ")"
           << ", (xi, eta): (" << xi << ", " << eta << ")";
