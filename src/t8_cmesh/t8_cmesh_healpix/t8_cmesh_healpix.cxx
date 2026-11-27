@@ -71,11 +71,12 @@ struct t8_healpix_join healpix_joins[24]
  * before committing the mesh.
  *
  * @param[in] comm The MPI communicator used to manage parallel partitioning/commit.
- * @param[in] sphere_radius The radius of the sphere. Default to 1
+ * @param[in] sphere_outer_radius The outer radius of the sphere. Default to 1
+ * @param[in] sphere_inner_radius The inner radius of the sphere. Default to 0
  * @return t8_cmesh_t A committed coarse mesh object containing the HEALPix base structure.
  */
 t8_cmesh_t
-t8_cmesh_new_healpix (sc_MPI_Comm comm, double sphere_radius = 1)
+t8_cmesh_new_healpix (sc_MPI_Comm comm, double sphere_outer_radius = 1, double sphere_inner_radius = 0)
 {
   /* Initialization of the mesh */
   t8_cmesh_t cmesh;
@@ -84,10 +85,17 @@ t8_cmesh_new_healpix (sc_MPI_Comm comm, double sphere_radius = 1)
   const int ntrees = 12;
 
   /* Register geometry and retain the pointer */
-  t8_cmesh_register_geometry<t8_geometry_healpix> (cmesh, sphere_radius);
-
-  for (int itree = 0; itree < ntrees; itree++) {
-    t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_QUAD);
+  t8_cmesh_register_geometry<t8_geometry_healpix> (cmesh, sphere_outer_radius, sphere_inner_radius);
+  // If the mesh has no depth, set the class to quads to remove unnecessary elements
+  if (sphere_outer_radius == sphere_inner_radius) {
+    for (int itree = 0; itree < ntrees; itree++) {
+      t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_QUAD);
+    }
+  }
+  else {
+    for (int itree = 0; itree < ntrees; itree++) {
+      t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_HEX);
+    }
   }
   /* Explicit O(1) manual face joining */
   for (size_t i = 0; i < 24; ++i) {

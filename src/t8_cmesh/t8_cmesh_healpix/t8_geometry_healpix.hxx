@@ -31,17 +31,36 @@
 struct t8_geometry_healpix: public t8_geometry
 {
  private:
-  double sphere_radius;
+  double sphere_outer_radius;
+  double sphere_inner_radius = 0;
 
  public:
   /**
-   * @brief Constructs a HEALPix geometry with the specified sphere radius.
+   * @brief Constructs a HEALPix geometry with the specified sphere inner and outer radius.
    *
-   * @param radius The radius of the sphere.
+   * @param outer_radius The outer radius of the sphere.
+   * @param inner_radius The inner radius of the sphere.
+   */
+  t8_geometry_healpix (double outer_radius, double inner_radius): t8_geometry ("t8_geometry_healpix")
+  {
+    if (inner_radius > outer_radius) {
+      t8_errorf ("\n[t8_healpix] Warning inner radius is greater than outer radius \n[t8_healpix] defaulting to a "
+                 "radius of 1\n");
+    }
+    else if (inner_radius == outer_radius) {
+      t8_errorf ("\n[t8_healpix] Warning inner radius is equal to outer radius \n[t8_healpix] thickness is zero \n");
+    }
+    sphere_outer_radius = outer_radius;
+    sphere_inner_radius = inner_radius;
+  }
+  /**
+   * @brief Default constructor.
+   *
+   * Constructs a HEALPix geometry with a given sphere radius.
    */
   t8_geometry_healpix (double radius): t8_geometry ("t8_geometry_healpix")
   {
-    sphere_radius = radius;
+    sphere_outer_radius = radius;
   }
   /**
    * @brief Default constructor.
@@ -50,7 +69,7 @@ struct t8_geometry_healpix: public t8_geometry
    */
   t8_geometry_healpix (): t8_geometry ("t8_geometry_healpix")
   {
-    sphere_radius = 1;
+    sphere_outer_radius = 1;
   }
 
   /**

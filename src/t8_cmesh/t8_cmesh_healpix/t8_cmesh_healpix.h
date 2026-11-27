@@ -26,4 +26,4 @@
  * \return            A coarse mesh representing the HEALPix base grid.
  */
 t8_cmesh_t
-t8_cmesh_new_healpix (sc_MPI_Comm comm, double sphere_radius = 1);
+t8_cmesh_new_healpix (sc_MPI_Comm comm, double sphere_outer_radius = 1, double sphere_inner_radius = 0);
