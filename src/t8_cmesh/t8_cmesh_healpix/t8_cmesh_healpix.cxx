@@ -62,6 +62,20 @@ struct t8_healpix_join healpix_joins[24]
 
     };
 
+/**
+ * The main logic for the HEALPix topology.
+ *
+ * Registers the HEALPix geometry and sets up a 12-tree base coarse mesh consisting
+ * of quadrilateral faces. It explicitly establishes $O(1)$ manual
+ * face connectivity between neighboring trees according to the HEALPix adjacency table
+ * before committing the mesh.
+ *
+ * @param[in] comm The MPI communicator used to manage parallel partitioning/commit.
+ * @param[in] eclass The eclass that should be assigned
+ * @param[in] sphere_outer_radius The outer radius of the sphere.
+ * @param[in] sphere_inner_radius The inner radius of the sphere
+ * @return t8_cmesh_t A committed coarse mesh object containing the HEALPix base structure as a surface.
+ */
 t8_cmesh_t
 t8_healpix_init (sc_MPI_Comm comm, t8_eclass eclass, double sphere_outer_radius, double sphere_inner_radius)
 {
@@ -92,14 +106,14 @@ t8_healpix_init (sc_MPI_Comm comm, t8_eclass eclass, double sphere_outer_radius,
  * Creates and initializes a new coarse mesh (cmesh) with HEALPix topology.
  *
  * Registers the HEALPix geometry and sets up a 12-tree base coarse mesh consisting
- * of quadrilateral faces (`T8_ECLASS_QUAD`). It explicitly establishes $O(1)$ manual
+ * of quadrilateral faces (`T8_ECLASS_HEX`). It explicitly establishes $O(1)$ manual
  * face connectivity between neighboring trees according to the HEALPix adjacency table
  * before committing the mesh.
  *
  * @param[in] comm The MPI communicator used to manage parallel partitioning/commit.
- * @param[in] sphere_outer_radius The outer radius of the sphere. Default to 1
- * @param[in] sphere_inner_radius The inner radius of the sphere. Default to 0
- * @return t8_cmesh_t A committed coarse mesh object containing the HEALPix base structure.
+ * @param[in] sphere_outer_radius The outer radius of the sphere.
+ * @param[in] sphere_inner_radius The inner radius of the sphere
+ * @return t8_cmesh_t A committed coarse mesh object containing the HEALPix base structure as a surface.
  */
 t8_cmesh_t
 t8_cmesh_new_healpix_surface (sc_MPI_Comm comm, double sphere_outer_radius, double sphere_inner_radius)
@@ -108,6 +122,18 @@ t8_cmesh_new_healpix_surface (sc_MPI_Comm comm, double sphere_outer_radius, doub
   return cmesh;
 }
 
+/**
+ * Creates and initializes a new coarse mesh (cmesh) with HEALPix topology.
+ *
+ * Registers the HEALPix geometry and sets up a 12-tree base coarse mesh consisting
+ * of quadrilateral faces (`T8_ECLASS_QUAD`). It explicitly establishes $O(1)$ manual
+ * face connectivity between neighboring trees according to the HEALPix adjacency table
+ * before committing the mesh.
+ *
+ * @param[in] comm The MPI communicator used to manage parallel partitioning/commit.
+ * @param[in] sphere_radius The radius of the sphere.
+ * @return t8_cmesh_t A committed coarse mesh object containing the HEALPix base structure as a sphere.
+ */
 t8_cmesh_t
 t8_cmesh_new_healpix_sphere (sc_MPI_Comm comm, double sphere_radius)
 {
