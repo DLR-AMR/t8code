@@ -22,8 +22,15 @@
 
 #include <t8_cmesh/t8_cmesh.h>
 /** Creates a t8code cmesh consisting of 12 quadrilateral trees arranged
- * according to the HEALPix base decomposition
+ * according to the HEALPix base decomposition as a surface
  * \return            A coarse mesh representing the HEALPix base grid.
  */
 t8_cmesh_t
-t8_cmesh_new_healpix (sc_MPI_Comm comm, double sphere_outer_radius = 1, double sphere_inner_radius = 0);
+t8_cmesh_new_healpix_surface (sc_MPI_Comm comm, double sphere_outer_radius = 1, double sphere_inner_radius = 0);
+
+/** Creates a t8code cmesh consisting of 12 quadrilateral trees arranged
+ * according to the HEALPix base decomposition as a sphere
+ * \return            A coarse mesh representing the HEALPix base grid.
+ */
+t8_cmesh_t
+t8_cmesh_new_healpix_sphere (sc_MPI_Comm comm, double sphere_radius);

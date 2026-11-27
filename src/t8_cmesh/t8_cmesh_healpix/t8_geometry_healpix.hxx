@@ -47,9 +47,7 @@ struct t8_geometry_healpix: public t8_geometry
       t8_errorf ("\n[t8_healpix] Warning inner radius is greater than outer radius \n[t8_healpix] defaulting to a "
                  "radius of 1\n");
     }
-    else if (inner_radius == outer_radius) {
-      t8_errorf ("\n[t8_healpix] Warning inner radius is equal to outer radius \n[t8_healpix] thickness is zero \n");
-    }
+
     sphere_outer_radius = outer_radius;
     sphere_inner_radius = inner_radius;
   }

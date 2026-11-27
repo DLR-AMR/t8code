@@ -62,6 +62,32 @@ struct t8_healpix_join healpix_joins[24]
 
     };
 
+t8_cmesh_t
+t8_healpix_init (sc_MPI_Comm comm, t8_eclass eclass, double sphere_outer_radius, double sphere_inner_radius)
+{
+
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+
+  const int ntrees = 12;
+
+  /* Register geometry and retain the pointer */
+  t8_cmesh_register_geometry<t8_geometry_healpix> (cmesh, sphere_outer_radius, sphere_inner_radius);
+  // If the mesh has no depth, set the class to quads to remove unnecessary elements
+  for (int itree = 0; itree < ntrees; itree++) {
+    t8_cmesh_set_tree_class (cmesh, itree, eclass);
+  }
+
+  /* Explicit O(1) manual face joining */
+  for (size_t i = 0; i < 24; ++i) {
+    t8_cmesh_set_join (cmesh, healpix_joins[i].tree1, healpix_joins[i].tree2, healpix_joins[i].face1,
+                       healpix_joins[i].face2, healpix_joins[i].orient);
+  }
+
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
 /**
  * Creates and initializes a new coarse mesh (cmesh) with HEALPix topology.
  *
@@ -76,33 +102,15 @@ struct t8_healpix_join healpix_joins[24]
  * @return t8_cmesh_t A committed coarse mesh object containing the HEALPix base structure.
  */
 t8_cmesh_t
-t8_cmesh_new_healpix (sc_MPI_Comm comm, double sphere_outer_radius = 1, double sphere_inner_radius = 0)
+t8_cmesh_new_healpix_surface (sc_MPI_Comm comm, double sphere_outer_radius, double sphere_inner_radius)
 {
-  /* Initialization of the mesh */
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
+  t8_cmesh_t cmesh = t8_healpix_init (comm, T8_ECLASS_HEX, sphere_outer_radius, sphere_inner_radius);
+  return cmesh;
+}
 
-  const int ntrees = 12;
-
-  /* Register geometry and retain the pointer */
-  t8_cmesh_register_geometry<t8_geometry_healpix> (cmesh, sphere_outer_radius, sphere_inner_radius);
-  // If the mesh has no depth, set the class to quads to remove unnecessary elements
-  if (sphere_outer_radius == sphere_inner_radius) {
-    for (int itree = 0; itree < ntrees; itree++) {
-      t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_QUAD);
-    }
-  }
-  else {
-    for (int itree = 0; itree < ntrees; itree++) {
-      t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_HEX);
-    }
-  }
-  /* Explicit O(1) manual face joining */
-  for (size_t i = 0; i < 24; ++i) {
-    t8_cmesh_set_join (cmesh, healpix_joins[i].tree1, healpix_joins[i].tree2, healpix_joins[i].face1,
-                       healpix_joins[i].face2, healpix_joins[i].orient);
-  }
-
-  t8_cmesh_commit (cmesh, comm);
+t8_cmesh_t
+t8_cmesh_new_healpix_sphere (sc_MPI_Comm comm, double sphere_radius)
+{
+  t8_cmesh_t cmesh = t8_healpix_init (comm, T8_ECLASS_QUAD, sphere_radius, sphere_radius);
   return cmesh;
 }

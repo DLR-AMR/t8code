@@ -103,7 +103,7 @@ TEST (t8_healpix_geometry_test, test_batch_against_xyf2loc_reference)
 #endif
   constexpr std::array<double, 7> test_samples = { 0.0, 0.001, 0.25, 0.5, 0.75, 0.999, 1.0 };
 
-  // Construct t8_geometry_healpix with (inner_radius, outer_radius)
+  // Construct t8_geometry_healpix with (outer_radius, inner_radius)
   t8_geometry_healpix geom (outer_radius, inner_radius);
 
   // Build 3D reference coordinates (xi, eta, zeta) with zeta = 1.0 (outer boundary)
