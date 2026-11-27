@@ -54,7 +54,11 @@ option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
+
+option( T8CODE_ENABLE_CGNS "Enable t8code's features which rely on CGNS" OFF )
+
 option( T8CODE_ENABLE_EIGEN "Enable t8code's features which rely on Eigen" OFF )
+
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
@@ -251,6 +255,24 @@ if( T8CODE_ENABLE_OCC )
     endif()
     message("Found OpenCASCADE ${OpenCASCADE_VERSION}: ${OpenCASCADE_DIR}")
 endif( T8CODE_ENABLE_OCC )
+
+if(T8CODE_ENABLE_CGNS)
+  find_path(CGNS_INCLUDE_DIR
+    NAMES cgnslib.h
+    REQUIRED
+  )
+
+  find_library(CGNS_LIBRARY
+    NAMES cgns
+    REQUIRED
+  )
+
+  set(CGNS_LIBRARIES "${CGNS_LIBRARY}")
+  # Used as a hint in config.cmake.in so that dependent projects find the same library.
+  get_filename_component(CGNS_LIBRARY_DIR "${CGNS_LIBRARY}" DIRECTORY)
+
+  message(STATUS "Found CGNS: ${CGNS_LIBRARY}")
+endif()
 
 if ( T8CODE_USE_SYSTEM_SC )
     find_package( SC REQUIRED )

@@ -196,6 +196,9 @@ add_t8_cpp_test( NAME t8_gtest_vtk_writer_parallel          SOURCES t8_IO/t8_gte
 if( T8CODE_ENABLE_VTK )
     add_t8_cpp_test( NAME t8_gtest_vtk_reader_parallel      SOURCES t8_IO/t8_gtest_vtk_reader.cxx )
 endif()
+if( T8CODE_ENABLE_CGNS )
+    add_t8_cpp_test( NAME t8_gtest_cmesh_cgns_reader_serial SOURCES t8_IO/t8_gtest_cmesh_cgns_reader.cxx )
+endif()
 
 add_t8_cpp_test( NAME t8_gtest_nca_serial                   SOURCES t8_schemes/t8_gtest_nca.cxx )
 add_t8_cpp_test( NAME t8_gtest_pyra_connectivity_serial     SOURCES t8_schemes/t8_gtest_pyra_connectivity.cxx )

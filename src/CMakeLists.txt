@@ -157,6 +157,13 @@ if( T8CODE_ENABLE_OCC AND T8CODE_ENABLE_EIGEN )
     )
 endif()
 
+if(T8CODE_ENABLE_CGNS)
+  target_compile_definitions( T8 PUBLIC T8_ENABLE_CGNS=1 )
+  target_include_directories( T8 SYSTEM PUBLIC ${CGNS_INCLUDE_DIR} )
+  target_link_libraries( T8 PUBLIC ${CGNS_LIBRARIES} )
+  target_sources(T8 PRIVATE t8_cmesh/t8_cmesh_io/t8_cmesh_readcgnsfile.cxx)
+endif()
+
 if( T8CODE_BUILD_PEDANTIC )
   target_compile_options( T8 PUBLIC -pedantic )
   set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wpedantic")

@@ -19,7 +19,11 @@ set( T8CODE_BUILD_MESH_HANDLE @T8CODE_BUILD_MESH_HANDLE@ )
 
 set( T8CODE_ENABLE_VTK @T8CODE_ENABLE_VTK@ )
 set( T8CODE_ENABLE_OCC @T8CODE_ENABLE_OCC@ )
+
+set( T8CODE_ENABLE_CGNS @T8CODE_ENABLE_CGNS@ )
+
 set( T8CODE_ENABLE_EIGEN @T8CODE_ENABLE_EIGEN@ )
+
 
 set( T8CODE_USE_SYSTEM_SC @T8CODE_USE_SYSTEM_SC@ )
 set( T8CODE_USE_SYSTEM_P4EST @T8CODE_USE_SYSTEM_P4EST@ )
@@ -41,9 +45,17 @@ if (T8CODE_ENABLE_OCC)
     set (T8CODE_OCC_VERSION_USED "@T8CODE_OCC_VERSION_USED@")
 endif()
 
+<<<<<<< HEAD
+if (T8CODE_ENABLE_CGNS)
+    # CGNS does not ship a CMake config file, so it is located the same way as in the main CMakeLists.txt.
+    find_path( CGNS_INCLUDE_DIR NAMES cgnslib.h HINTS "@CGNS_INCLUDE_DIR@" REQUIRED )
+    find_library( CGNS_LIBRARY NAMES cgns HINTS "@CGNS_LIBRARY_DIR@" REQUIRED )
+    set( CGNS_LIBRARIES "${CGNS_LIBRARY}" )
+=======
 # Ensure that Eigen was found
 if(T8CODE_ENABLE_EIGEN)
     find_dependency(Eigen3)
+>>>>>>> main
 endif()
 
 include( "${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake" )
